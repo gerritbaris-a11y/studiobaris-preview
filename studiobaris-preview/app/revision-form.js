@@ -3,11 +3,11 @@
 import { useState } from "react";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
-const label = { display: "block", marginTop: 16, fontSize: 14, fontWeight: 600, color: "#222" };
 
 export default function RevisionForm({ slug, type, titel, intro, velden }) {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [open, setOpen] = useState({});
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -50,12 +50,22 @@ export default function RevisionForm({ slug, type, titel, intro, velden }) {
       <p style={{ color: "#555", marginBottom: 8 }}>{intro}</p>
       <form onSubmit={onSubmit}>
         {velden.map((f) => (
-          <label key={f.name} style={label}>
-            {f.label}
+          <div key={f.name} style={{ marginTop: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 14, fontWeight: 600, color: "#222" }}>
+              <span>{f.label}</span>
+              {f.info && (
+                <button type="button" onClick={() => setOpen({ ...open, [f.name]: !open[f.name] })}
+                  aria-label="Toelichting"
+                  style={{ width: 19, height: 19, borderRadius: "50%", border: "1.5px solid #FF8300", background: "#fff", color: "#9a4f00", cursor: "pointer", fontSize: 12, fontWeight: 700, lineHeight: 1, fontStyle: "italic" }}>i</button>
+              )}
+            </div>
+            {f.info && open[f.name] && (
+              <p style={{ fontSize: 13, color: "#555", margin: "6px 0 0", background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 8, padding: "8px 11px" }}>{f.info}</p>
+            )}
             {f.type === "textarea"
               ? <textarea style={{ ...veld, minHeight: 90 }} name={f.name} placeholder={f.placeholder || ""} />
               : <input style={veld} name={f.name} placeholder={f.placeholder || ""} />}
-          </label>
+          </div>
         ))}
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: "#FF8300", color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? "Versturen…" : "Versturen"}

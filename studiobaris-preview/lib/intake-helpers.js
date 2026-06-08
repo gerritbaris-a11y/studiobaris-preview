@@ -28,7 +28,7 @@ HARDE KADERS - hier wijk je nooit van af:
 2. Gebruik NOOIT placeholders zoals "[telefoonnummer]", "Lorem ipsum" of "voorbeeld".
 3. Schrijf alle teksten in vlot, correct Nederlands.
 4. Tone of voice: volg de aangeleverde tone-of-voice. Staat die er niet, gebruik professioneel en toegankelijk, en noteer dat in "_review.afgeleid".
-5. Teksten die je WEL mag formuleren op basis van de feiten: hero.kop (kort en krachtig), hero.kop_accent (de laatste paar woorden van de kop voor de accentkleur), hero.subkop, over_ons (2-3 zinnen), dienstomschrijvingen, cta-teksten, usps (3 concrete punten), voordelen (3 stuks met een passend emoji-icoon). Baseer alles op de feiten; voeg geen claims toe.
+5. Teksten die je WEL mag formuleren op basis van de feiten: hero.kop (kort en krachtig, ZONDER het accentdeel erin), hero.kop_accent (alleen de laatste paar woorden die de accentkleur krijgen — deze woorden mogen NIET ook in hero.kop staan; samen vormen hero.kop + hero.kop_accent de volledige kop, zonder enige herhaling), hero.subkop, over_ons (2-3 zinnen), dienstomschrijvingen, cta-teksten, usps (3 concrete punten), voordelen (3 stuks met een passend emoji-icoon). Baseer alles op de feiten; voeg geen claims toe.
 6. Kleuren: primaire_kleur = een diepe donkere basiskleur (hero/header), secundaire_kleur = een warme actiekleur (knoppen). Geldige hex-codes. Is er een kleurvoorkeur of logo, gebruik die als basis en noteer in "_review.afgeleid".
 7. reviews: alleen overnemen als ze expliciet zijn aangeleverd, anders [].
 8. projecten: alleen als er projecten/foto's worden genoemd, anders []. Verzin geen plaatsnamen.
@@ -36,10 +36,11 @@ HARDE KADERS - hier wijk je nooit van af:
 10. Kernwaarden: gebruik de aangeleverde kernwaarden als basis voor de 3 "voordelen" (titel = de waarde, tekst = korte concrete uitleg in de tone of voice). Verzin geen waarden die niet zijn aangeleverd; staan er geen, kies dan neutrale, passende en noteer in "_review.afgeleid".
 11. Branche kan meerdere zijn (bv. "Schilder, Timmerman"); verwerk dat natuurlijk in de teksten.
 12. Google Bedrijfsprofiel: als er een link is aangeleverd, zet die in bedrijf.google_business_url; anders leeg.
-13. Diensten met body: is er maar één brede dienst aangeleverd, splits die dan op in 3 tot 5 concrete onderdelen of fasen die duidelijk bij dat werk horen (bv. "badkamer van sloop tot oplevering" -> Sloop & demontage, Leidingwerk & installatie, Tegelwerk, Oplevering). Verzin GEEN losse diensten die niet bij het opgegeven werk horen.
+13. Diensten met body: zorg voor minimaal 3 dienstkaarten zodat de pagina strak oogt. Is er maar één brede dienst aangeleverd, splits die dan op in 3 tot 5 concrete onderdelen of fasen die duidelijk bij dat werk horen (bv. "badkamer van sloop tot oplevering" -> Sloop & demontage, Leidingwerk & installatie, Tegelwerk, Oplevering). Verzin GEEN losse diensten die niet bij het opgegeven werk horen.
 14. Branche: vertaal naar een herkenbaar, klantgericht vaklabel (bv. "Badkamer- & sanitairspecialist"), niet een generieke term als "Bouw & Klus".
-15. seo.noindex blijft altijd true.
-16. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.`;
+15. Regio: noem ALLE aangeleverde regio's en zet de volledige lijst in bedrijf.regio. Kort de lijst nooit in en laat geen plaatsen weg.
+16. seo.noindex blijft altijd true.
+17. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.`;
 
 export const SYSTEM_PROMPT_REVISE = `Je werkt een bestaande previewwebsite van StudioBaris bij op basis van een ingevuld formulier.
 Je krijgt: (A) de huidige website-JSON en (B) de antwoorden uit het formulier.

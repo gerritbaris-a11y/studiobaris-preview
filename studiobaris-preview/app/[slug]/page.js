@@ -56,6 +56,11 @@ export default async function Page({ params, searchParams }) {
 
   const wa = waLink(b.whatsapp || b.telefoon);
   const naamDelen = String(b.naam || "Bedrijf").split(" ");
+  const heroAcc = hero.kop_accent || "";
+  const heroKop = hero.kop || b.naam || "";
+  const heroKopBase = heroAcc && heroKop.toLowerCase().trim().endsWith(heroAcc.toLowerCase().trim())
+    ? heroKop.slice(0, heroKop.toLowerCase().lastIndexOf(heroAcc.toLowerCase())).trim()
+    : heroKop;
 
   const vars = {
     "--black": m.primaire_kleur || "#0F0F0F",
@@ -173,7 +178,7 @@ export default async function Page({ params, searchParams }) {
 
       <section className="hero">
         <span className="eyebrow">{b.branche || b.naam}</span>
-        <h1>{hero.kop || b.naam}{hero.kop_accent ? <> <span className="ac">{hero.kop_accent}</span></> : null}</h1>
+        <h1>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="hbtns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"} &rarr;</a>
@@ -274,6 +279,7 @@ export default async function Page({ params, searchParams }) {
             {b.telefoon && <a href={`tel:${b.telefoon}`}>&#128222; {b.telefoon}</a>}
             {b.email && <a href={`mailto:${b.email}`}>&#9993; {b.email}</a>}
             {b.openingstijden && <p style={{ color: "rgba(255,255,255,.6)", marginTop: ".4rem" }}>{b.openingstijden}</p>}
+            {b.regio && <p style={{ color: "rgba(255,255,255,.6)", marginTop: ".4rem" }}>Werkgebied: {b.regio}</p>}
           </div>
           <div><h4>Volg ons</h4><div className="fsoc">
             {wa && <a className="sb2 wa2" href={wa} aria-label="WhatsApp"><WaIcon s={18} /></a>}

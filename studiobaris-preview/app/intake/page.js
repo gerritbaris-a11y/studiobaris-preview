@@ -6,8 +6,8 @@ const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
 const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? "#FF8300" : "#d8dde3"), background: actief ? "#FFF4E8" : "#fff", color: actief ? "#9a4f00" : "#333", cursor: "pointer", fontSize: 14, fontWeight: 500 });
 
-const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Aannemer", "Schoonmaak"];
-const KERNWAARDEN = ["Eerlijk", "Betrouwbaar", "Transparant", "Vakkundig", "Snel", "Persoonlijk", "Netjes", "Flexibel"];
+const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
+const KERNWAARDEN = ["Vakmanschap", "Betrouwbaar", "Eerlijk", "Transparant", "Verantwoordelijk", "Klantgericht", "Goed bereikbaar", "Netjes werken", "Persoonlijk", "Afspraak = afspraak", "Duurzaam", "Passie voor het vak"];
 
 export default function IntakePage() {
   const [status, setStatus] = useState("idle");
