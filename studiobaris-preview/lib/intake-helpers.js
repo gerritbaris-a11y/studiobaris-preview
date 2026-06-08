@@ -1,7 +1,7 @@
 // Gedeelde helpers voor de intake- en herzieningsverwerking.
 
 export const CONTENT_SCHEMA = `{
-  "bedrijf": {"naam":"","branche":"","telefoon":"","whatsapp":"","email":"","adres":"","kvk":"","regio":"","openingstijden":"","socials":{"facebook":"","instagram":"","linkedin":""}},
+  "bedrijf": {"naam":"","branche":"","slogan":"","telefoon":"","whatsapp":"","email":"","adres":"","kvk":"","regio":"","openingstijden":"","google_business_url":"","socials":{"facebook":"","instagram":"","linkedin":""}},
   "merk": {"primaire_kleur":"","secundaire_kleur":"","accent_kleur":"#F8F9FA","tekst_kleur":"#334155","koppen_font":"Montserrat","tekst_font":"Inter","toon":"","logo_url":""},
   "hero": {"kop":"","kop_accent":"","subkop":"","cta_tekst":"Offerte aanvragen"},
   "over_ons": "",
@@ -32,8 +32,14 @@ HARDE KADERS - hier wijk je nooit van af:
 6. Kleuren: primaire_kleur = een diepe donkere basiskleur (hero/header), secundaire_kleur = een warme actiekleur (knoppen). Geldige hex-codes. Is er een kleurvoorkeur of logo, gebruik die als basis en noteer in "_review.afgeleid".
 7. reviews: alleen overnemen als ze expliciet zijn aangeleverd, anders [].
 8. projecten: alleen als er projecten/foto's worden genoemd, anders []. Verzin geen plaatsnamen.
-9. seo.noindex blijft altijd true.
-10. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.`;
+9. Slogan: zet de aangeleverde slogan in bedrijf.slogan. Is er geen, laat leeg.
+10. Kernwaarden: gebruik de aangeleverde kernwaarden als basis voor de 3 "voordelen" (titel = de waarde, tekst = korte concrete uitleg in de tone of voice). Verzin geen waarden die niet zijn aangeleverd; staan er geen, kies dan neutrale, passende en noteer in "_review.afgeleid".
+11. Branche kan meerdere zijn (bv. "Schilder, Timmerman"); verwerk dat natuurlijk in de teksten.
+12. Google Bedrijfsprofiel: als er een link is aangeleverd, zet die in bedrijf.google_business_url; anders leeg.
+13. Diensten met body: is er maar één brede dienst aangeleverd, splits die dan op in 3 tot 5 concrete onderdelen of fasen die duidelijk bij dat werk horen (bv. "badkamer van sloop tot oplevering" -> Sloop & demontage, Leidingwerk & installatie, Tegelwerk, Oplevering). Verzin GEEN losse diensten die niet bij het opgegeven werk horen.
+14. Branche: vertaal naar een herkenbaar, klantgericht vaklabel (bv. "Badkamer- & sanitairspecialist"), niet een generieke term als "Bouw & Klus".
+15. seo.noindex blijft altijd true.
+16. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.`;
 
 export const SYSTEM_PROMPT_REVISE = `Je werkt een bestaande previewwebsite van StudioBaris bij op basis van een ingevuld formulier.
 Je krijgt: (A) de huidige website-JSON en (B) de antwoorden uit het formulier.

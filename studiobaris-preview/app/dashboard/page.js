@@ -13,6 +13,16 @@ function statusKleur(s) {
   return "#555";
 }
 
+function RevList({ titel, items }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div style={{ marginTop: 4 }}>
+      <strong>{titel}:</strong>
+      <ul style={{ margin: "2px 0 0 16px" }}>{items.map((it, i) => <li key={i}>{it}</li>)}</ul>
+    </div>
+  );
+}
+
 export default async function Dashboard() {
   const rows = await getOverview();
 
@@ -49,8 +59,15 @@ export default async function Dashboard() {
                   <tr key={r.slug}>
                     <td style={td}>
                       <strong>{r.company_name || r.slug}</strong>
-                      {letOp.length > 0 && (
-                        <span title={letOp.join(" • ")} style={{ marginLeft: 6, cursor: "help", color: "#b45309" }}>ⓘ</span>
+                      {(letOp.length > 0 || (review.afgeleid || []).length > 0) && (
+                        <details style={{ marginTop: 6 }}>
+                          <summary style={{ cursor: "pointer", color: "#b45309", fontSize: 13 }}>Controlepunten</summary>
+                          <div style={{ marginTop: 6, fontSize: 13, color: "#444" }}>
+                            <RevList titel="Let op" items={review.let_op} />
+                            <RevList titel="Ontbreekt" items={review.ontbrekend} />
+                            <RevList titel="Afgeleid" items={review.afgeleid} />
+                          </div>
+                        </details>
                       )}
                     </td>
                     <td style={{ ...td, color: statusKleur(r.status), fontWeight: 600 }}>{r.status}</td>

@@ -106,7 +106,8 @@ export default async function Page({ params, searchParams }) {
     .vp .sh p{color:var(--gtext)}
     .vp .alt{background:var(--bg)}
     .vp .grid2,.vp .grid3{display:grid;gap:1.1rem;grid-template-columns:1fr}
-    .vp .dc{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .vp .dc{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:block;color:inherit}
+    .vp a.dc:hover,.vp a.pc:hover{border-color:var(--orange)}
     .vp .dph{background:#ECEFF3;color:var(--gsoft);height:120px;display:grid;place-items:center;font-size:.85rem;background-size:cover;background-position:center}
     .vp .db{padding:1.2rem}
     .vp .db h3{font-size:1.2rem;margin-bottom:.4rem}
@@ -116,11 +117,12 @@ export default async function Page({ params, searchParams }) {
     .vp .belic{width:52px;height:52px;border-radius:12px;background:var(--black);color:var(--orange);display:grid;place-items:center;margin:0 auto 1rem;font-size:1.4rem}
     .vp .bel h3{font-size:1.1rem;margin-bottom:.4rem}
     .vp .bel p{font-size:.93rem;color:var(--gtext)}
-    .vp .pc{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .vp .pc{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:block;color:inherit}
     .vp .pph{background:#ECEFF3;color:var(--gsoft);height:130px;display:grid;place-items:center;font-size:.85rem;background-size:cover;background-position:center}
     .vp .pb{padding:1rem 1.2rem}
     .vp .pb h3{font-size:1.05rem}
     .vp .pm{color:var(--gsoft);font-size:.85rem;margin-top:.2rem}
+    .vp .phnote{text-align:center;color:var(--gsoft);font-size:.9rem;margin-top:1rem}
     .vp .rev{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:1.3rem}
     .vp .stars{color:var(--orange);letter-spacing:2px;margin-bottom:.6rem}
     .vp .rq{font-size:.95rem;color:var(--gtext);margin-bottom:.9rem}
@@ -159,11 +161,11 @@ export default async function Page({ params, searchParams }) {
       )}
 
       <header className="hd"><div className="hd-in">
-        <div className="logo">{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span></div>
+        <div className="logo">{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span>{b.slogan ? <span style={{ display: "block", fontSize: ".72rem", fontWeight: 500, color: "var(--gsoft)", letterSpacing: ".3px" }}>{b.slogan}</span> : null}</div>
         <nav className="nav">
-          {diensten.length > 0 && <a href="#diensten">Diensten</a>}
-          {projecten.length > 0 && <a href="#werk">Projecten</a>}
-          {reviews.length > 0 && <a href="#reviews">Reviews</a>}
+          <a href="#diensten">Diensten</a>
+          <a href="#werk">Projecten</a>
+          <a href="#reviews">Reviews</a>
           <a href="#contact">Contact</a>
         </nav>
         <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
@@ -175,7 +177,7 @@ export default async function Page({ params, searchParams }) {
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="hbtns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"} &rarr;</a>
-          {projecten.length > 0 && <a className="bs" href="#werk">Bekijk ons werk</a>}
+          <a className="bs" href="#werk">Bekijk ons werk</a>
         </div>
         {usps.length > 0 && (
           <div className="trust">
@@ -191,10 +193,10 @@ export default async function Page({ params, searchParams }) {
           <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat we doen</span><h2>Onze specialiteiten</h2><p>Werk waar we onze naam onder zetten.</p></div>
           <div className="grid2">
             {diensten.map((d, i) => (
-              <div className="dc" key={i}>
+              <a className="dc" key={i} href={`/${params.slug}/dienst/${i}`}>
                 <div className="dph" style={d.beeld_url ? { backgroundImage: `url(${d.beeld_url})`, color: "transparent" } : undefined}>{d.beeld_url ? "" : "📷 Foto bij dienst"}</div>
-                <div className="db"><h3>{d.titel}</h3><p>{d.omschrijving}</p></div>
-              </div>
+                <div className="db"><h3>{d.titel}</h3><p>{d.omschrijving}</p><span className="dl">Lees meer &rarr;</span></div>
+              </a>
             ))}
           </div>
         </div></section>
@@ -211,34 +213,49 @@ export default async function Page({ params, searchParams }) {
         </div></section>
       )}
 
-      {projecten.length > 0 && (
-        <section className="sec" id="werk"><div className="in">
-          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Portfolio</span><h2>Een greep uit recent werk</h2></div>
-          <div className="grid3">
-            {projecten.map((p, i) => (
-              <div className="pc" key={i}>
-                <div className="pph" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
-                <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
-              </div>
-            ))}
-          </div>
-        </div></section>
-      )}
+      <section className="sec" id="werk"><div className="in">
+        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Portfolio</span><h2>Een greep uit recent werk</h2></div>
+        <div className="grid3">
+          {projecten.length > 0
+            ? projecten.map((p, i) => (
+                <a className="pc" key={i} href={`/${params.slug}/project/${i}`}>
+                  <div className="pph" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
+                  <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
+                </a>
+              ))
+            : [0, 1, 2].map((i) => (
+                <div className="pc" key={i} style={{ opacity: 0.7 }}>
+                  <div className="pph">📷 Projectfoto</div>
+                  <div className="pb"><h3>Jullie project hier</h3><div className="pm">Plaatsnaam</div></div>
+                </div>
+              ))}
+        </div>
+        {projecten.length === 0 && <p className="phnote">Voeg projectfoto's toe en deze sectie vult zich met jullie eigen werk.</p>}
+      </div></section>
 
-      {reviews.length > 0 && (
-        <section className="sec alt" id="reviews"><div className="in">
-          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Reviews</span><h2>Wat klanten zeggen</h2></div>
-          <div className="grid3">
-            {reviews.map((r, i) => (
-              <div className="rev" key={i}>
-                <div className="stars">{"★".repeat(Math.max(0, Math.min(5, r.score || 5)))}</div>
-                <p className="rq">&ldquo;{r.tekst}&rdquo;</p>
-                <div className="ra"><div className="av">{(r.naam || "?").charAt(0)}</div><div className="rn">{r.naam}</div></div>
-              </div>
-            ))}
-          </div>
-        </div></section>
-      )}
+      <section className="sec alt" id="reviews"><div className="in">
+        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Reviews</span><h2>Wat klanten zeggen</h2></div>
+        <div className="grid3">
+          {reviews.length > 0
+            ? reviews.map((r, i) => (
+                <div className="rev" key={i}>
+                  <div className="stars">{"★".repeat(Math.max(0, Math.min(5, r.score || 5)))}</div>
+                  <p className="rq">&ldquo;{r.tekst}&rdquo;</p>
+                  <div className="ra"><div className="av">{(r.naam || "?").charAt(0)}</div><div className="rn">{r.naam}</div></div>
+                </div>
+              ))
+            : [0, 1, 2].map((i) => (
+                <div className="rev" key={i} style={{ opacity: 0.7 }}>
+                  <div className="stars">★★★★★</div>
+                  <p className="rq">&ldquo;Hier verschijnt straks een review van een tevreden klant.&rdquo;</p>
+                  <div className="ra"><div className="av">?</div><div className="rn">Klantnaam</div></div>
+                </div>
+              ))}
+        </div>
+        {b.google_business_url
+          ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-d)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
+          : (reviews.length === 0 && <p className="phnote">Lever jullie (Google-)reviews aan en ze verschijnen hier.</p>)}
+      </div></section>
 
       <section className="fcta" id="contact">
         <h2>{cta.kop || "Klus in gedachten? Stuur 'm gewoon door."}</h2>
