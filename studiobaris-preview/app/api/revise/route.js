@@ -52,8 +52,8 @@ export async function POST(req) {
     });
     if (!r.ok) return NextResponse.json({ ok: false, error: "Opslaan mislukt: " + (await r.text()) }, { status: 500 });
 
-    const origin = new URL(req.url).origin;
-    return NextResponse.json({ ok: true, slug, conceptUrl: `${origin}/${slug}?concept=1`, review });
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
+    return NextResponse.json({ ok: true, slug, conceptUrl: `${SITE_URL}/${slug}?concept=1`, review });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
   }

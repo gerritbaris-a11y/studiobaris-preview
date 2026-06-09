@@ -141,12 +141,12 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Opslaan mislukt: " + (await insertRes.text()) }, { status: 500 });
     }
 
-    const origin = new URL(req.url).origin;
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
     return NextResponse.json({
       ok: true,
       slug,
-      url: `${origin}/${slug}`,
-      review: content._review || {},
+      url: `${SITE_URL}/${slug}`,
+      review,
     });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
