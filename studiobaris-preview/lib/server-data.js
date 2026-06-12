@@ -24,6 +24,11 @@ export async function getConcept(slug) {
   return data || null;
 }
 
+export async function getFull(slug) {
+  const data = await rpc("get_full", { p_slug: slug });
+  return data || null;
+}
+
 export async function getOverview() {
   const data = await rpc("get_overview", {});
   return Array.isArray(data) ? data : [];

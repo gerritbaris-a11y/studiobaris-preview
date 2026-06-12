@@ -8,6 +8,7 @@ const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7
 
 const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
 const KERNWAARDEN = ["Vakmanschap", "Betrouwbaar", "Eerlijk", "Transparant", "Verantwoordelijk", "Klantgericht", "Goed bereikbaar", "Netjes werken", "Persoonlijk", "Afspraak = afspraak", "Duurzaam", "Passie voor het vak"];
+const INTERESSE = ["Website", "Plugins", "Hosting", "Domeinnaam"];
 
 export default function IntakePage() {
   const [status, setStatus] = useState("idle");
@@ -16,10 +17,13 @@ export default function IntakePage() {
   const [branches, setBranches] = useState([]);
   const [waarden, setWaarden] = useState([]);
   const [regios, setRegios] = useState([""]);
+  const [socials, setSocials] = useState([""]);
+  const [interesse, setInteresse] = useState([]);
   const [heeftGoogle, setHeeftGoogle] = useState(false);
 
   const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
   const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
+  const setSocial = (i, val) => setSocials(socials.map((s, j) => (j === i ? val : s)));
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -36,7 +40,10 @@ export default function IntakePage() {
     fd.append("telefoon", f.telefoon.value);
     fd.append("adres", f.adres.value);
     fd.append("kvk", f.kvk.value);
-    fd.append("socials", f.socials.value);
+    fd.append("btw", f.btw.value);
+    fd.append("bron", f.bron.value);
+    fd.append("interesse", interesse.join(", "));
+    fd.append("socials", socials.filter((s) => s.trim()).join(", "));
     fd.append("google_business", heeftGoogle ? "ja" : "");
     fd.append("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
     fd.append("tone_of_voice", f.tone_of_voice.value);
@@ -52,20 +59,15 @@ export default function IntakePage() {
     } catch (err) { setError(String(err)); setStatus("fout"); }
   }
 
-  if (status === "klaar" && result) {
+  if (status === "klaar") {
     return (
-      <main style={{ maxWidth: 720, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
-        <div style={{ background: "#eafaf1", border: "1px solid #b7e4c7", borderRadius: 12, padding: 20 }}>
-          <h2 style={{ fontSize: 20, marginBottom: 8 }}>Previewsite staat klaar</h2>
-          <a href={result.url} target="_blank" rel="noreferrer" style={{ color: "#1d7a46", fontWeight: 700, fontSize: 17 }}>{result.url} →</a>
-        </div>
-        <div style={{ marginTop: 18, background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 12, padding: 20 }}>
-          <h3 style={{ fontSize: 16, marginBottom: 10 }}>Controlepunten (check vóór je deelt)</h3>
-          <ReviewList titel="Ontbrekende gegevens" items={result.review.ontbrekend} />
-          <ReviewList titel="Door AI afgeleid" items={result.review.afgeleid} />
-          <ReviewList titel="Let op" items={result.review.let_op} />
-        </div>
-        <button onClick={() => { setStatus("idle"); setResult(null); }} style={{ marginTop: 20, background: "#222", color: "#fff", border: "none", padding: "11px 20px", borderRadius: 10, fontWeight: 600, cursor: "pointer" }}>Nog een prospect</button>
+      <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center", color: "#222" }}>
+        <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
+        <h1 style={{ fontSize: 30 }}>Bedankt!</h1>
+        <p style={{ color: "#555", marginTop: 14, fontSize: 18, lineHeight: 1.6 }}>
+          We hebben je gegevens goed ontvangen en gaan er meteen mee aan de slag.
+          We nemen zo snel mogelijk contact met je op.
+        </p>
       </main>
     );
   }
@@ -121,7 +123,29 @@ export default function IntakePage() {
           <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" /></label>
           <label style={{ ...label, flex: 1 }}>KVK<input style={veld} name="kvk" /></label>
         </div>
-        <label style={label}>Sociale media (links)<input style={veld} name="socials" placeholder="Facebook / Instagram / LinkedIn" /></label>
+        <div style={{ display: "flex", gap: 14 }}>
+          <label style={{ ...label, flex: 1 }}>BTW-nummer<input style={veld} name="btw" /></label>
+          <label style={{ ...label, flex: 1 }}>Hoe bij ons terechtgekomen?<input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
+        </div>
+        <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
+        <div>
+          {INTERESSE.map((opt) => (
+            <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
+              <input type="checkbox" readOnly checked={interesse.includes(opt)} style={{ pointerEvents: "none" }} />{opt}
+            </span>
+          ))}
+        </div>
+
+        <div style={label}>Sociale media (links)</div>
+        {socials.map((s, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={`Link ${i + 1} (Facebook, Instagram, LinkedIn…)`} />
+            {socials.length > 1 && (
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>−</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid #FF8300", background: "#fff", color: "#9a4f00", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
 
         <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
           <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />

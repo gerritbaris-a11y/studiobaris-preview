@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
-import { getConcept } from "../../lib/server-data";
+import { getConcept, getFull } from "../../lib/server-data";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +31,13 @@ const WaIcon = ({ s = 20 }) => (
 
 export default async function Page({ params, searchParams }) {
   const isConcept = searchParams?.concept === "1";
+  const isReview = searchParams?.review === "1";
   let content;
   if (isConcept) {
     content = await getConcept(params.slug);
+    if (!content) notFound();
+  } else if (isReview) {
+    content = await getFull(params.slug);
     if (!content) notFound();
   } else {
     const row = await getPreview(params.slug);
@@ -159,9 +163,11 @@ export default async function Page({ params, searchParams }) {
     <div className="vp" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {isConcept && (
+      {(isConcept || isReview) && (
         <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
-          Conceptversie — nog niet gepubliceerd. Controleer en publiceer via het dashboard.
+          {isConcept
+            ? "Conceptversie — nog niet gepubliceerd. Controleer en publiceer via het dashboard."
+            : "Interne preview — deze site is nog niet online voor de klant. Zet hem online via het dashboard."}
         </div>
       )}
 
@@ -273,7 +279,7 @@ export default async function Page({ params, searchParams }) {
 
       <footer className="ft">
         <div className="ft-grid">
-          <div><h4>{b.naam}</h4><p style={{ color: "rgba(255,255,255,.7)" }}>{b.adres}{b.kvk ? <><br />KvK {b.kvk}</> : null}</p></div>
+          <div><h4>{b.naam}</h4><p style={{ color: "rgba(255,255,255,.7)" }}>{b.adres}{b.kvk ? <><br />KvK {b.kvk}</> : null}{b.btw ? <><br />BTW {b.btw}</> : null}</p></div>
           <div>
             <h4>Contact</h4>
             {b.telefoon && <a href={`tel:${b.telefoon}`}>&#128222; {b.telefoon}</a>}

@@ -1,5 +1,5 @@
 import { getOverview } from "../../lib/server-data";
-import PublishButton from "./dashboard-actions";
+import PublishButton, { PublishToggle } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,7 @@ export default async function Dashboard() {
                 <th style={th}>Versie</th>
                 <th style={th}>Contact</th>
                 <th style={th}>Links</th>
+                <th style={th}>Online</th>
                 <th style={th}>Concept</th>
               </tr>
             </thead>
@@ -59,6 +60,8 @@ export default async function Dashboard() {
                   <tr key={r.slug}>
                     <td style={td}>
                       <strong>{r.company_name || r.slug}</strong>
+                      {review.bron && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Via: {review.bron}</div>}
+                      {review.interesse && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Interesse: {review.interesse}</div>}
                       {(letOp.length > 0 || (review.afgeleid || []).length > 0) && (
                         <details style={{ marginTop: 6 }}>
                           <summary style={{ cursor: "pointer", color: "#b45309", fontSize: 13 }}>Controlepunten</summary>
@@ -77,9 +80,14 @@ export default async function Dashboard() {
                       <div style={{ color: "#777", fontSize: 13 }}>{r.lead_email || ""}</div>
                     </td>
                     <td style={td}>
-                      <a style={link} href={`/${r.slug}`} target="_blank" rel="noreferrer">Live ↗</a>
+                      {r.gepubliceerd && <a style={link} href={`/${r.slug}`} target="_blank" rel="noreferrer">Live ↗</a>}
+                      <a style={link} href={`/${r.slug}?review=1`} target="_blank" rel="noreferrer">Intern ↗</a>
                       <a style={link} href={`/intake/${r.slug}`} target="_blank" rel="noreferrer">Intake</a>
                       <a style={link} href={`/feedback/${r.slug}`} target="_blank" rel="noreferrer">Feedback</a>
+                    </td>
+                    <td style={td}>
+                      <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 600, color: r.gepubliceerd ? "#1d7a46" : "#999" }}>{r.gepubliceerd ? "● Online" : "○ Niet online"}</div>
+                      <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
                     </td>
                     <td style={td}>
                       {r.heeft_concept ? (

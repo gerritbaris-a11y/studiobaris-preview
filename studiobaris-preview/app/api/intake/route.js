@@ -6,6 +6,7 @@ import {
   validateContent,
 } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
+import { sendPreviewEmail } from "../../../lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,6 +87,7 @@ export async function POST(req) {
       `Regio('s) actief: ${v("regio")}`,
       `Adres: ${v("adres")}`,
       `KVK: ${v("kvk")}`,
+      `BTW-nummer: ${v("btw")}`,
       `Sociale media: ${v("socials")}`,
       `Google Bedrijfsprofiel: ${v("google_business") ? "ja" + (v("google_url") ? " (" + v("google_url") + ")" : "") : "niet aangegeven"}`,
       `Tone of voice: ${v("tone_of_voice")}`,
@@ -118,6 +120,9 @@ export async function POST(req) {
     // _review apart bewaren (interne notitie), niet in de publiek leesbare content
     const review = content._review || {};
     delete content._review;
+    // Lead-herkomst (intern, niet op de website): bewaren bij de controlepunten.
+    if (v("bron")) review.bron = v("bron");
+    if (v("interesse")) review.interesse = v("interesse");
 
     // Wegschrijven naar Supabase via beveiligde RPC (workflow-schema staat niet open voor REST)
     const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_preview`, {
@@ -142,12 +147,9 @@ export async function POST(req) {
     }
 
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
-    return NextResponse.json({
-      ok: true,
-      slug,
-      url: `${SITE_URL}/${slug}`,
-      review,
-    });
+    const url = `${SITE_URL}/${slug}`;
+    await sendPreviewEmail({ naam, url, review }).catch(() => {});
+    return NextResponse.json({ ok: true, slug, url, review });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
   }

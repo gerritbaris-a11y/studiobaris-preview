@@ -1,7 +1,7 @@
 // Gedeelde helpers voor de intake- en herzieningsverwerking.
 
 export const CONTENT_SCHEMA = `{
-  "bedrijf": {"naam":"","branche":"","slogan":"","telefoon":"","whatsapp":"","email":"","adres":"","kvk":"","regio":"","openingstijden":"","google_business_url":"","socials":{"facebook":"","instagram":"","linkedin":""}},
+  "bedrijf": {"naam":"","branche":"","slogan":"","telefoon":"","whatsapp":"","email":"","adres":"","kvk":"","btw":"","regio":"","openingstijden":"","google_business_url":"","socials":{"facebook":"","instagram":"","linkedin":""}},
   "merk": {"primaire_kleur":"","secundaire_kleur":"","accent_kleur":"#F8F9FA","tekst_kleur":"#334155","koppen_font":"Montserrat","tekst_font":"Inter","toon":"","logo_url":""},
   "hero": {"kop":"","kop_accent":"","subkop":"","cta_tekst":"Offerte aanvragen"},
   "over_ons": "",
