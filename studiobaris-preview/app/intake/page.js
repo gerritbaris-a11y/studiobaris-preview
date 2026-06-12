@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
+const hint = { display: "block", fontSize: 12.5, color: "#777", fontWeight: 400, margin: "3px 0 0", lineHeight: 1.4 };
 const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? "#FF8300" : "#d8dde3"), background: actief ? "#FFF4E8" : "#fff", color: actief ? "#9a4f00" : "#333", cursor: "pointer", fontSize: 14, fontWeight: 500 });
 
 const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
@@ -76,12 +77,13 @@ export default function IntakePage() {
     <main style={{ maxWidth: 720, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris · Workflow 1</p>
       <h1 style={{ fontSize: 30, margin: "6px 0 4px" }}>Nieuwe prospect — previewsite genereren</h1>
-      <p style={{ color: "#555", marginBottom: 8 }}>Vul in wat je hebt. Ontbrekende velden laat je leeg; Claude vult niets in wat er niet is.</p>
+      <p style={{ color: "#555", marginBottom: 8 }}>Vul in wat je hebt. Ontbrekende velden laat je leeg; Claude vult niets in wat er niet is. <strong>Hoe specifieker en vollediger je invult, hoe beter en overtuigender de website wordt.</strong></p>
 
       <form onSubmit={onSubmit}>
-        <label style={label}>Bedrijfsnaam *<input style={veld} name="naam" required /></label>
+        <label style={label}>Bedrijfsnaam *<span style={hint}>Zoals het bedrijf zich noemt — dit komt in de header, de hero en de footer.</span><input style={veld} name="naam" required /></label>
 
         <div style={label}>Branche (meerdere mogelijk)</div>
+        <span style={hint}>Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel.</span>
         <div>
           {BRANCHES.map((b) => (
             <span key={b} style={chip(branches.includes(b))} onClick={() => toggle(branches, setBranches, b)}>
@@ -91,11 +93,12 @@ export default function IntakePage() {
         </div>
         <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder="Anders, namelijk… (optioneel)" />
 
-        <label style={label}>Slogan (optioneel)<input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+        <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
 
-        <label style={label}>Diensten<textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot" /></label>
+        <label style={label}>Diensten<span style={hint}>Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok op de site — meer en specifieker geeft een vollere, sterkere pagina.</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
 
         <div style={label}>Kernwaarden (meerdere mogelijk)</div>
+        <span style={hint}>Kies de waarden die het bedrijf typeren. Hiervan maken we de drie "wat u krijgt"-blokken met uitleg.</span>
         <div>
           {KERNWAARDEN.map((w) => (
             <span key={w} style={chip(waarden.includes(w))} onClick={() => toggle(waarden, setWaarden, w)}>
@@ -105,6 +108,7 @@ export default function IntakePage() {
         </div>
 
         <div style={label}>Regio('s) actief</div>
+        <span style={hint}>Voeg elke plaats apart toe met "+". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid.</span>
         {regios.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input style={{ ...veld, marginTop: 0 }} value={r} onChange={(e) => setRegio(i, e.target.value)} placeholder={`Regio ${i + 1}`} />
@@ -119,15 +123,19 @@ export default function IntakePage() {
           <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" /></label>
           <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" /></label>
         </div>
+        <span style={hint}>Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp).</span>
         <div style={{ display: "flex", gap: 14 }}>
           <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" /></label>
           <label style={{ ...label, flex: 1 }}>KVK<input style={veld} name="kvk" /></label>
         </div>
+        <span style={hint}>Adres en KvK komen in de footer; een adres helpt ook de lokale vindbaarheid.</span>
         <div style={{ display: "flex", gap: 14 }}>
           <label style={{ ...label, flex: 1 }}>BTW-nummer<input style={veld} name="btw" /></label>
           <label style={{ ...label, flex: 1 }}>Hoe bij ons terechtgekomen?<input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
         </div>
+        <span style={hint}>BTW komt in de footer. "Hoe bij ons terechtgekomen" is alleen voor jou (op het dashboard), niet op de site.</span>
         <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
+        <span style={hint}>Alleen voor intern gebruik — wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
         <div>
           {INTERESSE.map((opt) => (
             <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
@@ -137,6 +145,7 @@ export default function IntakePage() {
         </div>
 
         <div style={label}>Sociale media (links)</div>
+        <span style={hint}>Voeg elke link apart toe met "+". Ze worden als icoon-links in de footer geplaatst.</span>
         {socials.map((s, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={`Link ${i + 1} (Facebook, Instagram, LinkedIn…)`} />
@@ -152,13 +161,14 @@ export default function IntakePage() {
           Heeft een Google Bedrijfsprofiel
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
+        <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
 
-        <label style={label}>Tone of voice<textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
-        <label style={label}>Kleurvoorkeur (optioneel)<input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
-        <label style={label}>Vrije onderzoeksnotities<textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+        <label style={label}>Tone of voice<span style={hint}>Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van álle teksten op de site.</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
+        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>Geef kleuren op, of laat leeg — dan leidt de AI het kleurenpalet af uit het logo.</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
+        <label style={label}>Vrije onderzoeksnotities<span style={hint}>Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter de AI het bedrijf begrijpt.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
-        <label style={label}>Logo (optioneel)<input style={{ ...veld, padding: 8 }} name="logo" type="file" accept="image/*" /></label>
-        <label style={label}>Foto's (optioneel, meerdere mogelijk)<input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept="image/*" multiple /></label>
+        <label style={label}>Logo (optioneel)<span style={hint}>Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan.</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept="image/*" /></label>
+        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>Echte projectfoto's vullen het portfolio en de dienstblokken — dat maakt de site veel overtuigender.</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept="image/*" multiple /></label>
 
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: "#FF8300", color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? "Bezig met genereren…" : "Genereer previewsite"}
