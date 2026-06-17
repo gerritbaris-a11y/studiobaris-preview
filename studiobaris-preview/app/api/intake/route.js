@@ -127,8 +127,9 @@ export async function POST(req) {
     const fout = validateContent(content);
     if (fout) return NextResponse.json({ ok: false, error: fout, raw }, { status: 422 });
 
-    // Echte afbeeldings-URL's injecteren
+    // Gekozen stijl + echte afbeeldings-URL's injecteren
     content.merk = content.merk || {};
+    content.merk.stijl = v("stijl") || "stoer";
     if (logoUrl) content.merk.logo_url = logoUrl;
     if (fotoUrls.length) {
       content.projecten = Array.isArray(content.projecten) ? content.projecten : [];

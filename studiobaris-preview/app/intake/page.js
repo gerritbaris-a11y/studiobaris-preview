@@ -10,6 +10,11 @@ const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7
 const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
 const KERNWAARDEN = ["Vakmanschap", "Betrouwbaar", "Eerlijk", "Transparant", "Verantwoordelijk", "Klantgericht", "Goed bereikbaar", "Netjes werken", "Persoonlijk", "Afspraak = afspraak", "Duurzaam", "Passie voor het vak"];
 const INTERESSE = ["Website", "Plugins", "Hosting", "Domeinnaam"];
+const STIJLEN = [
+  { id: "stoer", naam: "Direct & Stoer", uitleg: "Donkere hero, krachtig, grote bel-knoppen. Voor wie snel gebeld wil worden." },
+  { id: "modern", naam: "Strak & Modern", uitleg: "Licht, rustig en typografisch, met uitklapbare diensten." },
+  { id: "persoonlijk", naam: "Warm & Persoonlijk", uitleg: "De vakman centraal, met een persoonlijk verhaal en stappen." },
+];
 
 export default function IntakePage() {
   const [status, setStatus] = useState("idle");
@@ -20,6 +25,7 @@ export default function IntakePage() {
   const [regios, setRegios] = useState([""]);
   const [socials, setSocials] = useState([""]);
   const [interesse, setInteresse] = useState([]);
+  const [stijl, setStijl] = useState("stoer");
   const [heeftGoogle, setHeeftGoogle] = useState(false);
 
   const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
@@ -44,6 +50,7 @@ export default function IntakePage() {
     fd.append("btw", f.btw.value);
     fd.append("bron", f.bron.value);
     fd.append("interesse", interesse.join(", "));
+    fd.append("stijl", stijl);
     fd.append("socials", socials.filter((s) => s.trim()).join(", "));
     fd.append("google_business", heeftGoogle ? "ja" : "");
     fd.append("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
@@ -82,6 +89,20 @@ export default function IntakePage() {
 
       <form onSubmit={onSubmit}>
         <label style={label}>Bedrijfsnaam *<span style={hint}>Zoals het bedrijf zich noemt — dit komt in de header, de hero en de footer.</span><input style={veld} name="naam" required /></label>
+
+        <div style={label}>Kies een stijl voor de website</div>
+        <span style={hint}>Hoe wil je dat de site overkomt? Je keuze wordt meteen toegepast op de preview.</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginTop: 8 }}>
+          {STIJLEN.map((s) => (
+            <div key={s.id} onClick={() => setStijl(s.id)} style={{ cursor: "pointer", border: "1.5px solid " + (stijl === s.id ? "#FF8300" : "#d8dde3"), background: stijl === s.id ? "#FFF4E8" : "#fff", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="radio" readOnly checked={stijl === s.id} style={{ pointerEvents: "none" }} />
+                <strong style={{ color: "#222" }}>{s.naam}</strong>
+              </div>
+              <div style={{ fontSize: 12.5, color: "#777", marginTop: 3 }}>{s.uitleg}</div>
+            </div>
+          ))}
+        </div>
 
         <div style={label}>Branche (meerdere mogelijk)</div>
         <span style={hint}>Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel.</span>
