@@ -33,6 +33,25 @@ async function uploadImage(file, path) {
   return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
 }
 
+async function fetchSiteText(url) {
+  try {
+    let u = String(url).trim();
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    const res = await fetch(u, { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return "";
+    let html = await res.text();
+    html = html
+      .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&[a-z]+;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return html.slice(0, 5000);
+  } catch {
+    return "";
+  }
+}
+
 async function slugBeschikbaar(slug) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/preview_public?slug=eq.${encodeURIComponent(slug)}&select=slug`,
@@ -75,7 +94,8 @@ export async function POST(req) {
       fotoUrls.push(await uploadImage(fotos[i], `${slug}/foto-${i + 1}.${ext}`));
     }
 
-    // Onderzoekstekst opbouwen voor Claude
+    // Onderzoekstekst opbouwen voor Claude (incl. tekst van hun huidige website, indien opgegeven)
+    const oudeSite = v("oude_website") ? await fetchSiteText(v("oude_website")) : "";
     const docText = [
       `Naam: ${naam}`,
       `Branche (kan meerdere zijn): ${v("branche")}`,
@@ -97,6 +117,8 @@ export async function POST(req) {
       "",
       "Vrije onderzoeksnotities:",
       v("notities"),
+      v("oude_website") ? `Huidige website: ${v("oude_website")}` : "Huidige website: niet aangeleverd",
+      oudeSite ? `Tekst van hun huidige website (ter referentie — haal hier bruikbare feiten uit zoals diensten, regio en omschrijvingen; verzin niets):\n${oudeSite}` : "",
     ].join("\n");
 
     // Claude aanroepen + valideren

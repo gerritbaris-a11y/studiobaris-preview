@@ -50,6 +50,7 @@ export default function IntakePage() {
     fd.append("tone_of_voice", f.tone_of_voice.value);
     fd.append("kleurvoorkeur", f.kleurvoorkeur.value);
     fd.append("notities", f.notities.value);
+    fd.append("oude_website", f.oude_website.value);
     if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
     for (const file of f.fotos.files) fd.append("fotos", file);
     try {
@@ -165,6 +166,8 @@ export default function IntakePage() {
 
         <label style={label}>Tone of voice<span style={hint}>Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van álle teksten op de site.</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>Geef kleuren op, of laat leeg — dan leidt de AI het kleurenpalet af uit het logo.</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
+        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heeft de klant al een (oude) website? Plak de link — wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." /></label>
+
         <label style={label}>Vrije onderzoeksnotities<span style={hint}>Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter de AI het bedrijf begrijpt.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
         <label style={label}>Logo (optioneel)<span style={hint}>Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan.</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept="image/*" /></label>

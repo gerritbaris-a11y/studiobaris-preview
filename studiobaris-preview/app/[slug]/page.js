@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
+import ModernSite from "../styles/modern";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,8 @@ export default async function Page({ params, searchParams }) {
   }
 
   const c = content || {};
+  const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
+  if (stijl === "modern") return <ModernSite content={c} isConcept={isConcept} isReview={isReview} />;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   const hero = c.hero || {};
