@@ -1,0 +1,249 @@
+"use client";
+
+import { useState } from "react";
+
+const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
+const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
+const hint = { display: "block", fontSize: 12.5, color: "#777", fontWeight: 400, margin: "3px 0 0", lineHeight: 1.4 };
+const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? "#FF8300" : "#d8dde3"), background: actief ? "#FFF4E8" : "#fff", color: actief ? "#9a4f00" : "#333", cursor: "pointer", fontSize: 14, fontWeight: 500 });
+
+const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
+const KERNWAARDEN = ["Vakmanschap", "Betrouwbaar", "Eerlijk", "Transparant", "Verantwoordelijk", "Klantgericht", "Goed bereikbaar", "Netjes werken", "Persoonlijk", "Afspraak = afspraak", "Duurzaam", "Passie voor het vak"];
+const INTERESSE = ["Website", "Plugins", "Hosting", "Domeinnaam"];
+const STIJLEN = [
+  { id: "stoer", naam: "Direct & Stoer", uitleg: "Donkere hero, krachtig, grote bel-knoppen. Voor wie snel gebeld wil worden." },
+  { id: "modern", naam: "Strak & Modern", uitleg: "Licht, rustig en typografisch, met uitklapbare diensten." },
+  { id: "persoonlijk", naam: "Warm & Persoonlijk", uitleg: "De vakman centraal, met een persoonlijk verhaal en stappen." },
+];
+
+// Gedeeld formulier voor Workflow 1 (nieuwe prospect) én Workflow 2 (klant past aan).
+// mode="create"  -> genereert een nieuwe previewsite via /api/intake
+// mode="revise"  -> past een bestaande site aan via /api/revise (concept v2.0)
+export default function ProspectForm({
+  mode = "create",
+  slug = "",
+  titel,
+  intro,
+  submitLabel,
+  busyLabel,
+}) {
+  const revise = mode === "revise";
+
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
+  const [branches, setBranches] = useState([]);
+  const [waarden, setWaarden] = useState([]);
+  const [regios, setRegios] = useState([""]);
+  const [socials, setSocials] = useState([""]);
+  const [interesse, setInteresse] = useState([]);
+  const [stijl, setStijl] = useState(revise ? "" : "stoer");
+  const [heeftGoogle, setHeeftGoogle] = useState(false);
+
+  const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
+  const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
+  const setSocial = (i, val) => setSocials(socials.map((s, j) => (j === i ? val : s)));
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setStatus("bezig"); setError("");
+    const f = e.target;
+    const fd = new FormData();
+
+    // In revise-modus sturen we alleen wat is ingevuld (leeg = blijft zoals het is).
+    const put = (k, val) => {
+      const s = val == null ? "" : String(val).trim();
+      if (revise && !s) return;
+      fd.append(k, s);
+    };
+
+    if (revise) {
+      fd.append("slug", slug);
+      fd.append("type", "intake");
+      put("wijzigingen", f.wijzigingen.value);
+    }
+
+    put("naam", f.naam.value);
+    put("branche", [...branches, f.branche_anders.value].filter(Boolean).join(", "));
+    put("diensten", f.diensten.value);
+    put("slogan", f.slogan.value);
+    put("kernwaarden", waarden.join(", "));
+    put("regio", regios.filter((r) => r.trim()).join(", "));
+    put("email", f.email.value);
+    put("telefoon", f.telefoon.value);
+    put("adres", f.adres.value);
+    put("kvk", f.kvk.value);
+    put("btw", f.btw.value);
+    if (!revise) {
+      put("bron", f.bron.value);
+      put("interesse", interesse.join(", "));
+    }
+    if (stijl) fd.append("stijl", stijl);
+    put("socials", socials.filter((s) => s.trim()).join(", "));
+    fd.append("google_business", heeftGoogle ? "ja" : "");
+    put("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
+    put("tone_of_voice", f.tone_of_voice.value);
+    put("kleurvoorkeur", f.kleurvoorkeur.value);
+    put("notities", f.notities.value);
+    put("oude_website", f.oude_website.value);
+    if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
+    for (const file of f.fotos.files) fd.append("fotos", file);
+
+    try {
+      const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
+      setStatus("klaar");
+    } catch (err) { setError(String(err)); setStatus("fout"); }
+  }
+
+  if (status === "klaar") {
+    return (
+      <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center", color: "#222" }}>
+        <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
+        <h1 style={{ fontSize: 30 }}>Bedankt!</h1>
+        <p style={{ color: "#555", marginTop: 14, fontSize: 18, lineHeight: 1.6 }}>
+          {revise
+            ? "We hebben je aanpassingen ontvangen en werken je website bij. Je krijgt binnenkort de vernieuwde versie van ons te zien."
+            : "We hebben je gegevens goed ontvangen en gaan er meteen mee aan de slag. We nemen zo snel mogelijk contact met je op."}
+        </p>
+      </main>
+    );
+  }
+
+  const labelTekst = (verplicht, basis, reviseTekst) => (revise ? reviseTekst : basis) + (verplicht && !revise ? " *" : "");
+
+  return (
+    <main style={{ maxWidth: 720, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>
+        StudioBaris · {revise ? "Workflow 2 — aanpassen" : "Workflow 1"}
+      </p>
+      <h1 style={{ fontSize: 30, margin: "6px 0 4px" }}>{titel}</h1>
+      <p style={{ color: "#555", marginBottom: 8 }}>{intro}</p>
+
+      <form onSubmit={onSubmit}>
+        {revise && (
+          <div style={{ background: "#fff7ed", border: "1.5px solid #fcd9a8", borderRadius: 12, padding: "14px 16px", marginTop: 10 }}>
+            <label style={{ ...label, marginTop: 0 }}>
+              Wat moet er anders? *
+              <span style={hint}>Het belangrijkste veld. Schrijf in je eigen woorden wat er aangepast, weggehaald of toegevoegd moet worden. De rest van het formulier hoef je alleen in te vullen als je daar iets wilt corrigeren.</span>
+              <textarea style={{ ...veld, minHeight: 110 }} name="wijzigingen" required placeholder="Bijv. De slogan moet anders, mijn telefoonnummer klopt niet, graag mijn echte projectfoto's gebruiken, en de teksten mogen persoonlijker." />
+            </label>
+          </div>
+        )}
+
+        <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt — dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} /></label>
+
+        <div style={label}>{revise ? "Andere stijl? (optioneel)" : "Kies een stijl voor de website"}</div>
+        <span style={hint}>{revise ? "Laat ongekozen om de huidige stijl te behouden. Kies een stijl als je de hele look wilt omgooien." : "Hoe wil je dat de site overkomt? Je keuze wordt meteen toegepast op de preview."}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginTop: 8 }}>
+          {STIJLEN.map((s) => (
+            <div key={s.id} onClick={() => setStijl(s.id)} style={{ cursor: "pointer", border: "1.5px solid " + (stijl === s.id ? "#FF8300" : "#d8dde3"), background: stijl === s.id ? "#FFF4E8" : "#fff", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="radio" readOnly checked={stijl === s.id} style={{ pointerEvents: "none" }} />
+                <strong style={{ color: "#222" }}>{s.naam}</strong>
+              </div>
+              <div style={{ fontSize: 12.5, color: "#777", marginTop: 3 }}>{s.uitleg}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={label}>Branche (meerdere mogelijk)</div>
+        <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
+        <div>
+          {BRANCHES.map((b) => (
+            <span key={b} style={chip(branches.includes(b))} onClick={() => toggle(branches, setBranches, b)}>
+              <input type="checkbox" readOnly checked={branches.includes(b)} style={{ pointerEvents: "none" }} />{b}
+            </span>
+          ))}
+        </div>
+        <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder="Anders, namelijk… (optioneel)" />
+
+        <label style={label}>Slogan (optioneel)<span style={hint}>{revise ? "Vul in als de slogan anders moet." : "Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero."}</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+
+        <label style={label}>Diensten<span style={hint}>{revise ? "Vul in als er diensten bij moeten, weg moeten of anders omschreven moeten worden." : "Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok op de site — meer en specifieker geeft een vollere, sterkere pagina."}</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
+
+        <div style={label}>Kernwaarden (meerdere mogelijk)</div>
+        <span style={hint}>{revise ? "Alleen aanvinken als de waarden op de site aangepast moeten worden." : "Kies de waarden die het bedrijf typeren. Hiervan maken we de drie \"wat u krijgt\"-blokken met uitleg."}</span>
+        <div>
+          {KERNWAARDEN.map((w) => (
+            <span key={w} style={chip(waarden.includes(w))} onClick={() => toggle(waarden, setWaarden, w)}>
+              <input type="checkbox" readOnly checked={waarden.includes(w)} style={{ pointerEvents: "none" }} />{w}
+            </span>
+          ))}
+        </div>
+
+        <div style={label}>Regio('s) actief</div>
+        <span style={hint}>{revise ? "Vul in als het werkgebied op de site aangepast moet worden. Voeg elke plaats apart toe met \"+\"." : "Voeg elke plaats apart toe met \"+\". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid."}</span>
+        {regios.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input style={{ ...veld, marginTop: 0 }} value={r} onChange={(e) => setRegio(i, e.target.value)} placeholder={`Regio ${i + 1}`} />
+            {regios.length > 1 && (
+              <button type="button" onClick={() => setRegios(regios.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>−</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid #FF8300", background: "#fff", color: "#9a4f00", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Regio toevoegen</button>
+
+        <div style={{ display: "flex", gap: 14 }}>
+          <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" /></label>
+          <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" /></label>
+        </div>
+        <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
+        <div style={{ display: "flex", gap: 14 }}>
+          <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" /></label>
+          <label style={{ ...label, flex: 1 }}>KVK<input style={veld} name="kvk" /></label>
+        </div>
+        <span style={hint}>{revise ? "Alleen invullen als adres of KvK aangepast moet worden." : "Adres en KvK komen in de footer; een adres helpt ook de lokale vindbaarheid."}</span>
+        <label style={label}>BTW-nummer<span style={hint}>{revise ? "Alleen invullen als het BTW-nummer aangepast moet worden." : "Komt in de footer."}</span><input style={veld} name="btw" /></label>
+
+        {!revise && (
+          <>
+            <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
+            <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
+            <span style={hint}>Alleen voor intern gebruik — wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
+            <div>
+              {INTERESSE.map((opt) => (
+                <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
+                  <input type="checkbox" readOnly checked={interesse.includes(opt)} style={{ pointerEvents: "none" }} />{opt}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div style={label}>Sociale media (links)</div>
+        <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
+        {socials.map((s, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={`Link ${i + 1} (Facebook, Instagram, LinkedIn…)`} />
+            {socials.length > 1 && (
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>−</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid #FF8300", background: "#fff", color: "#9a4f00", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
+
+        <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
+          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />
+          Heeft een Google Bedrijfsprofiel
+        </label>
+        {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
+        <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
+
+        <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van álle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
+        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg — dan leidt de AI het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
+        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link — wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." /></label>
+
+        <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter de AI het bedrijf begrijpt."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+
+        <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept="image/*" /></label>
+        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's — die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken — dat maakt de site veel overtuigender."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept="image/*" multiple /></label>
+
+        <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: "#FF8300", color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+          {status === "bezig" ? (busyLabel || "Bezig…") : (submitLabel || "Versturen")}
+        </button>
+        {error && <p style={{ color: "#c0392b", marginTop: 14 }}>{error}</p>}
+      </form>
+    </main>
+  );
+}
