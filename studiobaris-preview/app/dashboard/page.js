@@ -23,6 +23,28 @@ function RevList({ titel, items }) {
   );
 }
 
+// Toont wat de klant in WF2/WF3 heeft ingezonden, zodat je kunt controleren of het is toegepast.
+function FeedbackBlok({ antwoorden, type, datum }) {
+  if (!antwoorden || typeof antwoorden !== "object") return null;
+  const entries = Object.entries(antwoorden).filter(([, val]) => val && String(val).trim());
+  if (entries.length === 0) return null;
+  const d = datum ? new Date(datum).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" }) : "";
+  return (
+    <details style={{ marginBottom: 8 }}>
+      <summary style={{ cursor: "pointer", color: "#1d6fd1", fontSize: 13, fontWeight: 600 }}>
+        Wat de klant vroeg{type === "feedback" ? " (feedback)" : ""}{d ? ` · ${d}` : ""}
+      </summary>
+      <div style={{ marginTop: 6, fontSize: 13, color: "#333", maxWidth: 340 }}>
+        {entries.map(([k, val]) => (
+          <div key={k} style={{ marginBottom: 6 }}>
+            <strong>{k}:</strong> <span style={{ whiteSpace: "pre-wrap" }}>{String(val)}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 export default async function Dashboard() {
   const rows = await getOverview();
 
@@ -48,7 +70,7 @@ export default async function Dashboard() {
                 <th style={th}>Contact</th>
                 <th style={th}>Links</th>
                 <th style={th}>Online</th>
-                <th style={th}>Concept</th>
+                <th style={th}>Concept & feedback</th>
               </tr>
             </thead>
             <tbody>
@@ -90,13 +112,14 @@ export default async function Dashboard() {
                       <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
                     </td>
                     <td style={td}>
+                      <FeedbackBlok antwoorden={r.laatste_feedback} type={r.laatste_feedback_type} datum={r.laatste_feedback_op} />
                       {r.heeft_concept ? (
                         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                           <a style={link} href={`/${r.slug}?concept=1`} target="_blank" rel="noreferrer">Bekijk concept ↗</a>
                           <PublishButton slug={r.slug} />
                         </div>
                       ) : (
-                        <span style={{ color: "#aaa", fontSize: 13 }}>—</span>
+                        <span style={{ color: r.laatste_feedback ? "#777" : "#aaa", fontSize: 13 }}>{r.laatste_feedback ? "verwerkt" : "—"}</span>
                       )}
                     </td>
                   </tr>
