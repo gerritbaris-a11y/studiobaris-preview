@@ -82,7 +82,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       )}
 
       <header className="hd"><div className="hd-in">
-        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
+        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}{b.slogan ? <span style={{ display: "block", fontSize: ".72rem", fontWeight: 500, color: "#9a8f80", letterSpacing: ".3px" }}>{b.slogan}</span> : null}</div>
         <nav className="nav"><a href="#diensten">Diensten</a><a href="#werk">Projecten</a><a href="#contact">Contact</a></nav>
         <a className="cta" href="#contact">{hero.cta_tekst || "Contact"}</a>
       </div></header>
