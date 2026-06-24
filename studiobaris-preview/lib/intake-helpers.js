@@ -26,7 +26,7 @@ HARDE KADERS - hier wijk je nooit van af:
    - Geen verzonnen reviews, ervaringsjaren, certificeringen, KvK-nummers of garanties.
    - Staat iets er niet? Laat het veld leeg ("") of de lijst leeg ([]). Zet ontbrekende velden in "_review.ontbrekend".
 2. Gebruik NOOIT placeholders zoals "[telefoonnummer]", "Lorem ipsum" of "voorbeeld".
-3. Schrijf alle teksten in vlot, correct Nederlands.
+3. Schrijf alle teksten in vlot, correct Nederlands. Gebruik NOOIT een lang gedachtestreepje (— of –) als zinsverbinder; gebruik gewone leestekens zoals een komma of punt.
 4. Tone of voice: volg de aangeleverde tone-of-voice. Staat die er niet, gebruik professioneel en toegankelijk, en noteer dat in "_review.afgeleid".
 5. Teksten die je WEL mag formuleren op basis van de feiten: hero.kop (kort en krachtig, ZONDER het accentdeel erin), hero.kop_accent (alleen de laatste paar woorden die de accentkleur krijgen — deze woorden mogen NIET ook in hero.kop staan; samen vormen hero.kop + hero.kop_accent de volledige kop, zonder enige herhaling), hero.subkop, over_ons (2-3 zinnen), dienstomschrijvingen, cta-teksten, usps (3 concrete punten), voordelen (3 stuks met een passend emoji-icoon). Baseer alles op de feiten; voeg geen claims toe.
 6. Kleuren: is er een logo-AFBEELDING bij dit bericht meegestuurd, leid dan de huisstijlkleuren AF UIT DAT LOGO. primaire_kleur = de dominante donkere basiskleur uit het logo (hero/header), secundaire_kleur = de opvallende accent-/actiekleur uit het logo (knoppen). Is het logo zwart-wit/monochroom, gebruik dan een strak donker palet (zwart/antraciet) als primaire_kleur MET één subtiele, ingetogen accentkleur als secundaire_kleur voor de knoppen die past bij de branche. Is er geen logo maar wel een kleurvoorkeur, gebruik die. Anders leid af uit de branche. Altijd geldige hex-codes; noteer de gekozen bron in "_review.afgeleid".
@@ -51,7 +51,7 @@ ${CONTENT_SCHEMA}
 HARDE KADERS:
 1. Wijzig ALLEEN wat het formulier aanvult of corrigeert. Laat al het andere exact ongemoeid - je behoudt wat al goed was.
 2. Verzin niets; gebruik alleen de aangeleverde antwoorden. Ontbreekt iets, dan blijft het bestaande veld staan.
-3. Geen placeholders. Correct Nederlands. Respecteer de bestaande tone of voice, tenzij het formulier expliciet om een andere toon vraagt.
+3. Geen placeholders. Correct Nederlands. Respecteer de bestaande tone of voice, tenzij het formulier expliciet om een andere toon vraagt. Gebruik NOOIT een lang gedachtestreepje (— of –); gebruik gewone leestekens (komma, punt).
 4. Behoud bestaande beeld-URL's (merk.logo_url, beeld_url's) tenzij het formulier nieuwe aanlevert.
 5. seo.noindex blijft altijd true.
 6. Is er een NIEUW logo-AFBEELDING bij dit bericht meegestuurd, leid dan de huisstijlkleuren (merk.primaire_kleur en merk.secundaire_kleur) opnieuw af uit dat logo: dominante donkere kleur als primaire_kleur, de opvallende kleur als secundaire_kleur voor de knoppen. Is het logo zwart-wit, gebruik dan een strak donker palet met één subtiele accentkleur voor de knoppen. Zonder nieuw logo laat je de bestaande kleuren staan.
