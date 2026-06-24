@@ -42,7 +42,7 @@ export default async function DienstPage({ params }) {
     <div className="dt" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <header className="hd">
-        <a className="logo" href={`/${params.slug}`}>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></a>
+        <a className="logo" href={`/${params.slug}`}>{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 36, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</a>
         <a className="back" href={`/${params.slug}`}>← Terug naar de site</a>
       </header>
       <section className="top"><div className="wrap"><div className="eyebrow">Dienst</div><h1>{d.titel}</h1></div></section>
