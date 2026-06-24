@@ -53,6 +53,18 @@ export default async function Page({ params, searchParams }) {
   if (stijl === "persoonlijk") return <PersoonlijkSite content={c} isConcept={isConcept} isReview={isReview} />;
   const b = c.bedrijf || {};
   const m = c.merk || {};
+  let sloganAcc = null;
+  if (b.slogan) {
+    const t = String(b.slogan).trim();
+    const ci = t.lastIndexOf(",");
+    if (ci > 0 && ci < t.length - 2) {
+      sloganAcc = [t.slice(0, ci + 1) + " ", t.slice(ci + 1).trim()];
+    } else {
+      const w = t.split(/\s+/);
+      const n = w.length >= 6 ? 3 : w.length >= 4 ? 2 : w.length >= 2 ? 1 : 0;
+      sloganAcc = n ? [w.slice(0, w.length - n).join(" ") + " ", w.slice(w.length - n).join(" ")] : [t, ""];
+    }
+  }
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
@@ -194,7 +206,7 @@ export default async function Page({ params, searchParams }) {
 
       <section className="hero">
         <span className="eyebrow">{b.branche || b.naam}</span>
-        <h1>{b.slogan ? b.slogan : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
+        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="hbtns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"} &rarr;</a>
