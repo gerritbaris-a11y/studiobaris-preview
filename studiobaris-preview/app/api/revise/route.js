@@ -90,6 +90,7 @@ export async function POST(req) {
     let antwoorden = {};
     let stijl = "";
     let logoUrl = "";
+    let logoImage = null;
     const fotoUrls = [];
     let oudeSite = "";
 
@@ -119,6 +120,11 @@ export async function POST(req) {
       if (logo && typeof logo === "object" && logo.size > 0) {
         const ext = (logo.name.split(".").pop() || "png").toLowerCase();
         logoUrl = await uploadImage(logo, `${slug}/logo-${stamp}.${ext}`);
+        const buf = Buffer.from(await logo.arrayBuffer());
+        const mt = /^image\/(jpeg|png|gif|webp)$/.test(logo.type || "")
+          ? logo.type
+          : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : ext === "gif" ? "image/gif" : "image/png";
+        logoImage = { data: buf.toString("base64"), media_type: mt };
       }
       const fotos = form.getAll("fotos").filter((f) => f && typeof f === "object" && f.size > 0);
       for (let i = 0; i < fotos.length; i++) {
@@ -150,7 +156,7 @@ export async function POST(req) {
       (mediaNotes ? `\n\n(C) Aangeleverde media / stijl:\n"""\n${mediaNotes}\n"""` : "") +
       (oudeSite ? `\n\n(D) Tekst van hun huidige/oude website (ter referentie — haal er bruikbare feiten uit, verzin niets):\n"""\n${oudeSite}\n"""` : "");
 
-    const raw = await callClaude(SYSTEM_PROMPT_REVISE, docText);
+    const raw = await callClaude(SYSTEM_PROMPT_REVISE, docText, logoImage);
     const content = extractJson(raw);
     const fout = validateContent(content);
     if (fout) return NextResponse.json({ ok: false, error: fout, raw }, { status: 422 });
