@@ -33,3 +33,29 @@ export async function getOverview() {
   const data = await rpc("get_overview", {});
   return Array.isArray(data) ? data : [];
 }
+
+export async function getBetaalinfo(slug) {
+  const data = await rpc("get_betaalinfo", { p_slug: slug });
+  return data || null;
+}
+
+export async function updateKlant(slug, { verzamelaar = null, status = null, maandbedrag = null }) {
+  return await rpc("update_klant", {
+    p_slug: slug,
+    p_verzamelaar: verzamelaar,
+    p_status: status,
+    p_maandbedrag: maandbedrag,
+  });
+}
+
+export async function setBetaling(slug, fields = {}) {
+  return await rpc("set_betaling", {
+    p_slug: slug,
+    p_status: fields.status ?? null,
+    p_provider: fields.provider ?? null,
+    p_klant_id: fields.klant_id ?? null,
+    p_abonnement_id: fields.abonnement_id ?? null,
+    p_mandaat_id: fields.mandaat_id ?? null,
+    p_voorwaarden: fields.voorwaarden === true,
+  });
+}
