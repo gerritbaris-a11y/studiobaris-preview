@@ -177,7 +177,7 @@ export default async function Page({ params, searchParams }) {
       )}
 
       <header className="hd"><div className="hd-in">
-        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 42, width: "auto", display: "block" }} /> : <>{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span>{b.slogan ? <span style={{ display: "block", fontSize: ".72rem", fontWeight: 500, color: "var(--gsoft)", letterSpacing: ".3px" }}>{b.slogan}</span> : null}</>}</div>
+        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 42, width: "auto", display: "block" }} /> : <>{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span></>}{b.slogan ? <span style={{ display: "block", fontSize: ".72rem", fontWeight: 500, color: "var(--gsoft)", letterSpacing: ".3px" }}>{b.slogan}</span> : null}</div>
         <nav className="nav">
           <a href="#diensten">Diensten</a>
           <a href="#werk">Projecten</a>
