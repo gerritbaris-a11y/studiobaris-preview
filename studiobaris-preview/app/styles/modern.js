@@ -103,7 +103,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
       )}
 
       <header className="hd"><div className="hd-in">
-        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}{b.slogan ? <small>{b.slogan}</small> : null}</div>
+        <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
         <nav className="nav">
           {diensten.length > 0 && <a href="#diensten">Diensten</a>}
           <a href="#werk">Projecten</a>
@@ -115,6 +115,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
       <section className="hero"><div className="wrap">
         <div className="eyebrow">{b.branche || b.naam}</div>
         <h1>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</h1>
+        {b.slogan && <p style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--orange)", margin: ".6rem 0 0" }}>{b.slogan}</p>}
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="btns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"}</a>
