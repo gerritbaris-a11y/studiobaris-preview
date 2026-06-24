@@ -13,6 +13,18 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
+  let sloganAcc = null;
+  if (b.slogan) {
+    const t = String(b.slogan).trim();
+    const ci = t.lastIndexOf(",");
+    if (ci > 0 && ci < t.length - 2) {
+      sloganAcc = [t.slice(0, ci + 1) + " ", t.slice(ci + 1).trim()];
+    } else {
+      const w = t.split(/\s+/);
+      const n = w.length >= 6 ? 3 : w.length >= 4 ? 2 : w.length >= 2 ? 1 : 0;
+      sloganAcc = n ? [w.slice(0, w.length - n).join(" ") + " ", w.slice(w.length - n).join(" ")] : [t, ""];
+    }
+  }
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
@@ -90,7 +102,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       <section className="hero"><div className="wrap">
         <div className="pf" style={m.logo_url ? { backgroundImage: `url(${m.logo_url})`, color: "transparent" } : undefined}>{m.logo_url ? "" : "foto"}</div>
         <div className="eyebrow">{b.branche || b.naam}</div>
-        <h1>{b.slogan ? b.slogan : b.naam}</h1>
+        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : b.naam}</h1>
         <p>{hero.subkop || c.over_ons || ""}</p>
         <a className="bp" href="#contact">{hero.cta_tekst || "Vraag een offerte aan"}</a>
         {usps.length > 0 && (
