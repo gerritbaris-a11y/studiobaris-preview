@@ -63,3 +63,7 @@ export async function setBetaling(slug, fields = {}) {
 export async function deleteKlant(slug) {
   return await rpc("delete_klant", { p_slug: slug });
 }
+
+export async function updateBedrijf(slug, velden) {
+  return await rpc("update_bedrijf", { p_slug: slug, p_velden: velden });
+}
