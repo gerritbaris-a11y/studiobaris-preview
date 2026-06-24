@@ -1,5 +1,5 @@
 import { getOverview } from "../../lib/server-data";
-import PublishButton, { PublishToggle } from "./dashboard-actions";
+import PublishButton, { PublishToggle, KlantNaam, KlantStatus, KlantBedrag, AkkoordLink } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +45,21 @@ function FeedbackBlok({ antwoorden, type, datum }) {
   );
 }
 
+function BetaalBadge({ status }) {
+  const map = {
+    actief: ["#1d7a46", "● Incasso actief"],
+    akkoord: ["#b45309", "○ Akkoord gestart"],
+    mislukt: ["#c0392b", "● Mislukt"],
+  };
+  const [kleur, label] = map[status] || ["#999", "○ Nog geen akkoord"];
+  return <span style={{ fontSize: 12, fontWeight: 600, color: kleur }}>{label}</span>;
+}
+
 export default async function Dashboard() {
   const rows = await getOverview();
 
   return (
-    <main style={{ maxWidth: 1100, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+    <main style={{ maxWidth: 1280, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 16px" }}>Dashboard — klanten & previews</h1>
 
@@ -65,12 +75,13 @@ export default async function Dashboard() {
             <thead>
               <tr>
                 <th style={th}>Bedrijf</th>
-                <th style={th}>Status</th>
+                <th style={th}>Fase</th>
                 <th style={th}>Versie</th>
                 <th style={th}>Contact</th>
                 <th style={th}>Links</th>
                 <th style={th}>Online</th>
                 <th style={th}>Concept & feedback</th>
+                <th style={th}>Betaling</th>
               </tr>
             </thead>
             <tbody>
@@ -84,6 +95,7 @@ export default async function Dashboard() {
                       <strong>{r.company_name || r.slug}</strong>
                       {review.bron && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Via: {review.bron}</div>}
                       {review.interesse && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Interesse: {review.interesse}</div>}
+                      <div style={{ marginTop: 6 }}><KlantNaam slug={r.slug} value={r.verzamelaar} /></div>
                       {(letOp.length > 0 || (review.afgeleid || []).length > 0) && (
                         <details style={{ marginTop: 6 }}>
                           <summary style={{ cursor: "pointer", color: "#b45309", fontSize: 13 }}>Controlepunten</summary>
@@ -95,7 +107,10 @@ export default async function Dashboard() {
                         </details>
                       )}
                     </td>
-                    <td style={{ ...td, color: statusKleur(r.status), fontWeight: 600 }}>{r.status}</td>
+                    <td style={td}>
+                      <KlantStatus slug={r.slug} value={r.pipeline_status} />
+                      <div style={{ marginTop: 4, fontSize: 11, color: statusKleur(r.status) }}>{r.status}</div>
+                    </td>
                     <td style={td}>{r.version}.0</td>
                     <td style={td}>
                       <div>{r.lead_phone || "—"}</div>
@@ -121,6 +136,11 @@ export default async function Dashboard() {
                       ) : (
                         <span style={{ color: r.laatste_feedback ? "#777" : "#aaa", fontSize: 13 }}>{r.laatste_feedback ? "verwerkt" : "—"}</span>
                       )}
+                    </td>
+                    <td style={td}>
+                      <div style={{ marginBottom: 6 }}><KlantBedrag slug={r.slug} value={r.maandbedrag} /></div>
+                      <BetaalBadge status={r.betaal_status} />
+                      <div style={{ marginTop: 6 }}><AkkoordLink slug={r.slug} /></div>
                     </td>
                   </tr>
                 );
