@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
+import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
 
@@ -68,11 +69,6 @@ export default async function Page({ params, searchParams }) {
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
-  const VDI = [
-    <svg key="a" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>,
-    <svg key="b" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2 7 21l5-2.8L17 21l-1.5-7.8"/></svg>,
-    <svg key="c" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>,
-  ];
   const projecten = c.projecten || [];
   const reviews = c.reviews || [];
   const usps = c.usps || [];
@@ -227,7 +223,7 @@ export default async function Page({ params, searchParams }) {
           <div className="grid2">
             {diensten.map((d, i) => (
               <a className="dc" key={i} href={`/${params.slug}/dienst/${i}`}>
-                <div className="dph" style={d.beeld_url ? { backgroundImage: `url(${d.beeld_url})`, color: "transparent" } : undefined}>{d.beeld_url ? "" : "📷 Foto bij dienst"}</div>
+                <div className="dph" style={{ backgroundImage: `url(${d.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                 <div className="db"><h3>{d.titel}</h3><p>{d.omschrijving}</p><span className="dl">Lees meer &rarr;</span></div>
               </a>
             ))}
@@ -240,7 +236,7 @@ export default async function Page({ params, searchParams }) {
           <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat u krijgt</span><h2>Wat u van ons mag verwachten</h2></div>
           <div className="grid3">
             {voordelen.map((v, i) => (
-              <div className="bel" key={i}><div className="belic">{VDI[i % 3]}</div><h3>{v.titel}</h3><p>{v.tekst}</p></div>
+              <div className="bel" key={i}><div className="belic">{voordeelIcon(v.titel, v.tekst)}</div><h3>{v.titel}</h3><p>{v.tekst}</p></div>
             ))}
           </div>
         </div></section>
@@ -252,18 +248,16 @@ export default async function Page({ params, searchParams }) {
           {projecten.length > 0
             ? projecten.map((p, i) => (
                 <a className="pc" key={i} href={`/${params.slug}/project/${i}`}>
-                  <div className="pph" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
+                  <div className="pph" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
               ))
             : [0, 1, 2].map((i) => (
-                <div className="pc" key={i} style={{ opacity: 0.7 }}>
-                  <div className="pph">📷 Projectfoto</div>
-                  <div className="pb"><h3>Jullie project hier</h3><div className="pm">Plaatsnaam</div></div>
+                <div className="pc" key={i}>
+                  <div className="pph" style={{ backgroundImage: `url(${nicheFoto(b.branche, i + 2)})`, color: "transparent" }}></div>
                 </div>
               ))}
         </div>
-        {projecten.length === 0 && <p className="phnote">Voeg projectfoto's toe en deze sectie vult zich met jullie eigen werk.</p>}
       </div></section>
 
       <section className="sec alt" id="reviews"><div className="in">
