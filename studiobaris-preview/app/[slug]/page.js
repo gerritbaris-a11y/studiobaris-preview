@@ -56,6 +56,11 @@ export default async function Page({ params, searchParams }) {
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
+  const VDI = [
+    <svg key="a" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>,
+    <svg key="b" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2 7 21l5-2.8L17 21l-1.5-7.8"/></svg>,
+    <svg key="c" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>,
+  ];
   const projecten = c.projecten || [];
   const reviews = c.reviews || [];
   const usps = c.usps || [];
@@ -189,8 +194,7 @@ export default async function Page({ params, searchParams }) {
 
       <section className="hero">
         <span className="eyebrow">{b.branche || b.naam}</span>
-        <h1>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</h1>
-        {b.slogan && <p style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--orange)", margin: ".7rem 0 0" }}>{b.slogan}</p>}
+        <h1>{b.slogan ? b.slogan : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="hbtns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"} &rarr;</a>
@@ -224,7 +228,7 @@ export default async function Page({ params, searchParams }) {
           <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat u krijgt</span><h2>Wat u van ons mag verwachten</h2></div>
           <div className="grid3">
             {voordelen.map((v, i) => (
-              <div className="bel" key={i}><div className="belic">{v.icoon || "✓"}</div><h3>{v.titel}</h3><p>{v.tekst}</p></div>
+              <div className="bel" key={i}><div className="belic">{VDI[i % 3]}</div><h3>{v.titel}</h3><p>{v.tekst}</p></div>
             ))}
           </div>
         </div></section>
