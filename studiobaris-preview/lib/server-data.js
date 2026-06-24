@@ -59,3 +59,7 @@ export async function setBetaling(slug, fields = {}) {
     p_voorwaarden: fields.voorwaarden === true,
   });
 }
+
+export async function deleteKlant(slug) {
+  return await rpc("delete_klant", { p_slug: slug });
+}
