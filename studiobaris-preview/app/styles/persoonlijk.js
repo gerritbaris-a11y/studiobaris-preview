@@ -90,8 +90,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       <section className="hero"><div className="wrap">
         <div className="pf" style={m.logo_url ? { backgroundImage: `url(${m.logo_url})`, color: "transparent" } : undefined}>{m.logo_url ? "" : "foto"}</div>
         <div className="eyebrow">{b.branche || b.naam}</div>
-        <h1>{b.naam}</h1>
-        {b.slogan && <p style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--orange)", margin: ".4rem 0 0" }}>{b.slogan}</p>}
+        <h1>{b.slogan ? b.slogan : b.naam}</h1>
         <p>{hero.subkop || c.over_ons || ""}</p>
         <a className="bp" href="#contact">{hero.cta_tekst || "Vraag een offerte aan"}</a>
         {usps.length > 0 && (
@@ -102,7 +101,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       {voordelen.length > 0 && (
         <section className="sec"><div className="wrap">
           <h2>Zo werken we samen</h2>
-          <p className="lead">Persoonlijk, eerlijk en zonder verrassingen — van eerste contact tot oplevering.</p>
+          <p className="lead">Persoonlijk, eerlijk en zonder verrassingen, van eerste contact tot oplevering.</p>
           <div className="steps">
             {voordelen.map((v, i) => (
               <div className="step" key={i}><div className="num">{i + 1}</div><div><h3>{v.titel}</h3><p>{v.tekst}</p></div></div>

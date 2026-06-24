@@ -16,6 +16,11 @@ export default function ModernSite({ content, isConcept, isReview }) {
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
+  const VDI = [
+    <svg key="a" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>,
+    <svg key="b" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2 7 21l5-2.8L17 21l-1.5-7.8"/></svg>,
+    <svg key="c" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>,
+  ];
   const projecten = c.projecten || [];
   const reviews = c.reviews || [];
   const usps = c.usps || [];
@@ -114,8 +119,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
 
       <section className="hero"><div className="wrap">
         <div className="eyebrow">{b.branche || b.naam}</div>
-        <h1>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</h1>
-        {b.slogan && <p style={{ fontSize: "1.25rem", fontWeight: 600, color: "var(--orange)", margin: ".6rem 0 0" }}>{b.slogan}</p>}
+        <h1>{b.slogan ? b.slogan : <>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="btns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"}</a>
@@ -144,7 +148,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
           <h2>Wat u van ons mag verwachten</h2>
           <div className="voord" style={{ marginTop: "1.8rem" }}>
             {voordelen.map((v, i) => (
-              <div className="vd" key={i}><div className="ic">{v.icoon || "✓"}</div><div><h3>{v.titel}</h3><p>{v.tekst}</p></div></div>
+              <div className="vd" key={i}><div className="ic">{VDI[i % 3]}</div><div><h3>{v.titel}</h3><p>{v.tekst}</p></div></div>
             ))}
           </div>
         </div></section>
