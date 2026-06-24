@@ -1,5 +1,5 @@
 import { getOverview } from "../../lib/server-data";
-import PublishButton, { PublishToggle, KlantNaam, KlantStatus, KlantBedrag, AkkoordLink } from "./dashboard-actions";
+import PublishButton, { PublishToggle, KlantNaam, KlantStatus, KlantBedrag, AkkoordLink, VerwijderKnop } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +125,7 @@ export default async function Dashboard() {
                     <td style={td}>
                       <div style={{ marginBottom: 6, fontSize: 12, fontWeight: 600, color: r.gepubliceerd ? "#1d7a46" : "#999" }}>{r.gepubliceerd ? "● Online" : "○ Niet online"}</div>
                       <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
+                      <div style={{ marginTop: 8 }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                     </td>
                     <td style={td}>
                       <FeedbackBlok antwoorden={r.laatste_feedback} type={r.laatste_feedback_type} datum={r.laatste_feedback_op} />

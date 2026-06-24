@@ -125,3 +125,27 @@ export function AkkoordLink({ slug }) {
     </button>
   );
 }
+
+export function VerwijderKnop({ slug, naam }) {
+  const [s, setS] = useState("idle");
+  async function go() {
+    if (!confirm(`Klant "${naam || slug}" definitief verwijderen?\n\nDit verwijdert de preview én alle inzendingen. Dit kan niet ongedaan gemaakt worden.`)) return;
+    setS("bezig");
+    try {
+      const res = await fetch("/api/klant/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await res.json();
+      if (d.ok) location.reload();
+      else { alert(d.error || "Verwijderen mislukt"); setS("idle"); }
+    } catch (e) { alert(String(e)); setS("idle"); }
+  }
+  return (
+    <button onClick={go} disabled={s === "bezig"}
+      style={{ background: "#fff", color: "#c0392b", border: "1px solid #e3b9b4", padding: "5px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+      {s === "bezig" ? "Bezig…" : "Verwijderen"}
+    </button>
+  );
+}
