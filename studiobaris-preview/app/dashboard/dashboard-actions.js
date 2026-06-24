@@ -149,3 +149,58 @@ export function VerwijderKnop({ slug, naam }) {
     </button>
   );
 }
+
+export function GegevensEditor({ slug, data = {} }) {
+  const [open, setOpen] = useState(false);
+  const [s, setS] = useState("idle");
+  const [v, setV] = useState({
+    slogan: data.b_slogan || "",
+    telefoon: data.b_telefoon || "",
+    whatsapp: data.b_whatsapp || "",
+    email: data.b_email || "",
+    adres: data.b_adres || "",
+    kvk: data.b_kvk || "",
+    btw: data.b_btw || "",
+  });
+  const set = (k, val) => setV({ ...v, [k]: val });
+
+  async function save() {
+    setS("bezig");
+    try {
+      const res = await fetch("/api/klant/gegevens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, ...v }),
+      });
+      const d = await res.json();
+      if (d.ok) location.reload();
+      else { alert(d.error || "Opslaan mislukt"); setS("idle"); }
+    } catch (e) { alert(String(e)); setS("idle"); }
+  }
+
+  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #d8dde3", borderRadius: 6, fontSize: 13, marginTop: 2 };
+  const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
+  const velden = [["slogan", "Slogan"], ["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <button onClick={() => setOpen(!open)}
+        style={{ background: "#fff", border: "1px solid #d8dde3", color: "#1d6fd1", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
+        {open ? "Sluiten" : "Gegevens bewerken"}
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 12px", width: 230 }}>
+          {velden.map(([k, label]) => (
+            <label key={k} style={lab}>{label}
+              <input style={inp} value={v[k]} onChange={(e) => set(k, e.target.value)} />
+            </label>
+          ))}
+          <button onClick={save} disabled={s === "bezig"}
+            style={{ marginTop: 10, background: "#1d7a46", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 7, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+            {s === "bezig" ? "Opslaan…" : "Opslaan"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

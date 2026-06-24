@@ -1,5 +1,5 @@
 import { getOverview } from "../../lib/server-data";
-import PublishButton, { PublishToggle, KlantNaam, KlantStatus, KlantBedrag, AkkoordLink, VerwijderKnop } from "./dashboard-actions";
+import PublishButton, { PublishToggle, KlantNaam, KlantStatus, KlantBedrag, AkkoordLink, VerwijderKnop, GegevensEditor } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +96,7 @@ export default async function Dashboard() {
                       {review.bron && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Via: {review.bron}</div>}
                       {review.interesse && <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>Interesse: {review.interesse}</div>}
                       <div style={{ marginTop: 6 }}><KlantNaam slug={r.slug} value={r.verzamelaar} /></div>
+                      <GegevensEditor slug={r.slug} data={r} />
                       {(letOp.length > 0 || (review.afgeleid || []).length > 0) && (
                         <details style={{ marginTop: 6 }}>
                           <summary style={{ cursor: "pointer", color: "#b45309", fontSize: 13 }}>Controlepunten</summary>
