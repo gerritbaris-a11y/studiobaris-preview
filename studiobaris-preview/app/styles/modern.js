@@ -1,5 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
+import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -28,11 +29,6 @@ export default function ModernSite({ content, isConcept, isReview }) {
   const hero = c.hero || {};
   const diensten = c.diensten || [];
   const voordelen = c.voordelen || [];
-  const VDI = [
-    <svg key="a" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>,
-    <svg key="b" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2 7 21l5-2.8L17 21l-1.5-7.8"/></svg>,
-    <svg key="c" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>,
-  ];
   const projecten = c.projecten || [];
   const reviews = c.reviews || [];
   const usps = c.usps || [];
@@ -160,7 +156,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
           <h2>Wat u van ons mag verwachten</h2>
           <div className="voord" style={{ marginTop: "1.8rem" }}>
             {voordelen.map((v, i) => (
-              <div className="vd" key={i}><div className="ic">{VDI[i % 3]}</div><div><h3>{v.titel}</h3><p>{v.tekst}</p></div></div>
+              <div className="vd" key={i}><div className="ic">{voordeelIcon(v.titel, v.tekst)}</div><div><h3>{v.titel}</h3><p>{v.tekst}</p></div></div>
             ))}
           </div>
         </div></section>
@@ -172,18 +168,16 @@ export default function ModernSite({ content, isConcept, isReview }) {
           {projecten.length > 0
             ? projecten.map((p, i) => (
                 <div className="pcard" key={i}>
-                  <div className="pimg" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
+                  <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </div>
               ))
-            : [0, 1].map((i) => (
-                <div className="pcard" key={i} style={{ opacity: 0.7 }}>
-                  <div className="pimg">📷 Projectfoto</div>
-                  <div className="pb"><h3>Jullie project hier</h3><div className="pm">Plaatsnaam</div></div>
+            : [0, 1, 2].map((i) => (
+                <div className="pcard" key={i}>
+                  <div className="pimg" style={{ backgroundImage: `url(${nicheFoto(b.branche, i + 2)})`, color: "transparent" }}></div>
                 </div>
               ))}
         </div>
-        {projecten.length === 0 && <p className="phnote">Lever projectfoto's aan en dit vult zich met jullie eigen werk.</p>}
       </div></section>
 
       <section className="sec"><div className="wrap">

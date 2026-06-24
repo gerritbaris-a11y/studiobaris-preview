@@ -1,5 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
+import { nicheFoto } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -139,15 +140,14 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
           {projecten.length > 0
             ? projecten.map((p, i) => (
                 <a className="pcard" key={i} href={`/${b.slug ? b.slug : ""}`} style={{ pointerEvents: "none" }}>
-                  <div className="pimg" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
+                  <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
               ))
-            : [0, 1].map((i) => (
-                <div className="pcard" key={i} style={{ opacity: 0.75 }}><div className="pimg">📷 Projectfoto</div><div className="pb"><h3>Jullie project hier</h3><div className="pm">Plaatsnaam</div></div></div>
+            : [0, 1, 2].map((i) => (
+                <div className="pcard" key={i}><div className="pimg" style={{ backgroundImage: `url(${nicheFoto(b.branche, i + 2)})`, color: "transparent" }}></div></div>
               ))}
         </div>
-        {projecten.length === 0 && <p className="phnote">Lever projectfoto's aan en dit vult zich met jullie eigen werk.</p>}
       </div></section>
 
       <section className="sec alt"><div className="wrap">
