@@ -34,7 +34,7 @@ export default function AkkoordKnop({ slug, voorwaardenUrl = "/voorwaarden" }) {
         <span>
           Ik heb de{" "}
           <a href={voorwaardenUrl} target="_blank" rel="noreferrer" style={{ color: "#1d6fd1" }}>algemene voorwaarden</a>{" "}
-          gelezen en ga ermee akkoord, inclusief de maandelijkse automatische incasso.
+          gelezen en ga ermee akkoord, inclusief de maandelijkse automatische incasso en een minimale looptijd van 12 maanden.
         </span>
       </label>
 

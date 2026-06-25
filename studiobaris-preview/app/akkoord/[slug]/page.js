@@ -72,8 +72,9 @@ export default async function AkkoordPage({ params, searchParams }) {
             <div style={{ fontSize: 15, color: "#444", lineHeight: 1.6 }}>
               Met dit akkoord ga je akkoord dat StudioBaris je website bouwt, het domein en de hosting
               verzorgt, en hiervoor maandelijks een vast bedrag incasseert. Je geeft daarvoor een
-              automatische incasso (SEPA-machtiging) af. Je kunt de incasso altijd stopzetten zoals
-              wettelijk toegestaan; opzeggen kan per maand.
+              automatische incasso (SEPA-machtiging) af. Je gaat een minimale looptijd van 12 maanden
+              aan, omdat wij de hosting en het domein voor minimaal een jaar voor je vastleggen. Daarna
+              is het abonnement maandelijks opzegbaar.
             </div>
             <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <span style={{ color: "#666" }}>Maandelijkse vergoeding</span>
