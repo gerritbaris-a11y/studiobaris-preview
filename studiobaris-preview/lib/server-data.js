@@ -67,3 +67,23 @@ export async function deleteKlant(slug) {
 export async function updateBedrijf(slug, velden) {
   return await rpc("update_bedrijf", { p_slug: slug, p_velden: velden });
 }
+
+// --- Beheerdashboard (monitoring van alle klant-apps) ---
+
+export async function getKlantOverzicht() {
+  const data = await rpc("sb_klant_overzicht", {});
+  return Array.isArray(data) ? data : [];
+}
+
+export async function klantInstellen(id, { projectLimit = null, reviewLimit = null, abonnementsvorm = null }) {
+  return await rpc("sb_klant_instellen", {
+    p_id: id,
+    p_project_limit: projectLimit,
+    p_review_limit: reviewLimit,
+    p_abonnementsvorm: abonnementsvorm,
+  });
+}
+
+export async function nieuweLogin(id, dagen = 14) {
+  return await rpc("sb_klant_nieuwe_login", { p_id: id, p_dagen: dagen });
+}
