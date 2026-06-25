@@ -44,6 +44,7 @@ export async function POST(req) {
       amount: { currency: "EUR", value: bedrag.toFixed(2) },
       customerId: klantId,
       sequenceType: "first",
+      method: "ideal",
       description: `Eerste maandtermijn website ${info.company_name || slug}`,
       redirectUrl: `${SITE_URL}/akkoord/${slug}?status=klaar`,
       webhookUrl: `${SITE_URL}/api/mollie/webhook`,
