@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ezgi Önen — Atelier layout preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --paper:#FBFAF8;
+    --muted:rgba(10,10,10,.5); --line:rgba(10,10,10,.14);
+    --head:'Montserrat', Georgia, serif; --body:'Inter', system-ui, sans-serif;
+    --maxw:1320px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--body);color:var(--ink);background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  img{max-width:100%;display:block;}
+  a{color:inherit;text-decoration:none;transition:opacity .2s;}
+  h1,h2,h3{font-family:var(--head);font-weight:600;line-height:1.1;letter-spacing:-.01em;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+  .label{font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+
+  .hd{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--line);}
+  .hd-in{max-width:var(--maxw);margin:0 auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .brand .nm{font-family:var(--head);font-size:20px;font-weight:600;}
+  .brand .rl{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+  .nav{display:flex;gap:26px;}
+  .nav a{font-size:12px;letter-spacing:.14em;text-transform:uppercase;}
+  .nav a:hover{opacity:.55;}
+
+  .intro{padding:84px 0 44px;}
+  .intro h1{font-size:40px;}
+  .intro .rl{display:block;margin-top:12px;font-family:var(--body);font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .intro p{margin-top:20px;max-width:54ch;font-size:17px;}
+
+  .work{max-width:var(--maxw);margin:0 auto;padding:0 24px 72px;}
+  .work-top{display:flex;justify-content:space-between;align-items:center;padding:14px 0;margin-bottom:30px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:30px 22px;}
+  .card{display:flex;flex-direction:column;}
+  .media{position:relative;aspect-ratio:3/4;overflow:hidden;background:rgba(10,10,10,.05);}
+  .media img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.8,.2,1);}
+  .card:hover .media img{transform:scale(1.04);}
+  .cap{padding:13px 2px 0;display:flex;flex-direction:column;gap:4px;}
+  .ttl{font-size:13px;letter-spacing:.06em;text-transform:uppercase;}
+  .mt{font-size:12px;color:var(--muted);}
+
+  .clients{padding:52px 0;border-top:1px solid var(--line);}
+  .clients .label{display:block;margin-bottom:20px;}
+  .clients .row{display:flex;flex-wrap:wrap;gap:16px 36px;}
+  .clients .row span{font-family:var(--head);font-size:20px;}
+
+  .info{padding:72px 0;border-top:1px solid var(--line);}
+  .info-grid{display:grid;grid-template-columns:1fr;gap:40px;}
+  .info .lead{font-family:var(--head);font-size:22px;line-height:1.35;}
+  .block{margin-top:30px;padding-top:24px;border-top:1px solid var(--line);}
+  .block .label{display:block;margin-bottom:14px;}
+  .disc{list-style:none;display:flex;flex-wrap:wrap;gap:10px 26px;}
+  .disc li{font-size:15px;}
+
+  .contact{padding:80px 0;border-top:1px solid var(--line);}
+  .contact .label{display:block;margin-bottom:18px;}
+  .contact h2{font-size:30px;max-width:18ch;margin-bottom:20px;}
+  .contact p{max-width:46ch;font-size:16px;margin-bottom:26px;}
+  .email{font-family:var(--head);font-size:30px;border-bottom:1px solid var(--line);padding-bottom:5px;display:inline-block;}
+  .email:hover{border-color:var(--ink);}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0 4px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;padding:12px 22px;border:1px solid var(--ink);color:var(--ink);transition:background .2s,color .2s;}
+  .btn:hover{background:var(--ink);color:var(--paper);}
+  .cform{margin-top:36px;display:flex;flex-direction:column;gap:4px;max-width:540px;}
+  .cform label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:16px;}
+  .cform input,.cform textarea{width:100%;padding:12px 0;border:none;border-bottom:1px solid var(--line);background:transparent;font-family:var(--body);font-size:16px;color:var(--ink);}
+  .cform input:focus,.cform textarea:focus{outline:none;border-color:var(--ink);}
+  .cform textarea{resize:vertical;min-height:110px;}
+  .cform button{align-self:flex-start;margin-top:26px;cursor:pointer;background:none;}
+  .soc{display:flex;gap:20px;margin-top:32px;}
+  .soc a,.soc span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .soc a:hover{color:var(--ink);}
+
+  .ft{border-top:1px solid var(--line);padding:44px 0 30px;}
+  .ft-in{max-width:var(--maxw);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .ft .mk{font-family:var(--head);font-size:18px;}
+  .ft .pl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+  .ft .bot{width:100%;margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+
+  .note{max-width:var(--maxw);margin:0 auto;padding:14px 24px;font-family:var(--body);font-size:12px;color:var(--muted);background:rgba(10,10,10,.04);border-bottom:1px solid var(--line);}
+
+  @media(min-width:768px){
+    .intro{padding:104px 0 56px;}
+    .intro h1{font-size:60px;}
+    .grid{grid-template-columns:repeat(3,1fr);gap:44px 30px;}
+    .info-grid{grid-template-columns:.9fr 1.1fr;gap:60px;}
+  }
+  @media(min-width:1200px){ .intro h1{font-size:70px;} }
+</style>
+</head>
+<body>
+
+<div class="note">Preview van de Atelier-layout voor Ezgi Önen. De teksten zijn echt; de beelden zijn nog tijdelijke placeholders — die vervangen we door haar eigen werk.</div>
+
+<header class="hd"><div class="hd-in">
+  <a href="#" class="brand">
+    <span class="nm">Ezgi Önen</span>
+    <span class="rl">Creative Producer &amp; Fashion Casting Specialist</span>
+  </a>
+  <nav class="nav"><a href="#work">Work</a><a href="#info">Info</a><a href="#contact">Contact</a></nav>
+</div></header>
+
+<section class="intro"><div class="wrap">
+  <h1>Creative Producer based in Amsterdam.<span class="rl">Creative Producer &amp; Fashion Casting Specialist</span></h1>
+  <p>Connecting creative vision with production reality. Specialised in fashion production and model casting.</p>
+</div></section>
+
+<section class="work" id="work">
+  <div class="work-top"><span class="label">Selected work</span><span class="label">02</span></div>
+  <div class="grid">
+    <a class="card" href="#">
+      <div class="media"><img src="https://picsum.photos/seed/ezgi-atelier-1/900/1150?grayscale" alt="Project 1"></div>
+      <div class="cap"><span class="ttl">Project 01</span></div>
+    </a>
+    <a class="card" href="#">
+      <div class="media"><img src="https://picsum.photos/seed/ezgi-atelier-2/900/1150?grayscale" alt="Project 2"></div>
+      <div class="cap"><span class="ttl">Project 02</span></div>
+    </a>
+    <a class="card" href="#" style="opacity:.5">
+      <div class="media"><div style="width:100%;height:100%;display:grid;place-items:center;color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase">+ Add work</div></div>
+      <div class="cap"><span class="ttl">Next project</span></div>
+    </a>
+  </div>
+</section>
+
+<section class="clients"><div class="wrap">
+  <span class="label">Selected clients</span>
+  <div class="row">
+    <span>Chanel</span><span>Tommy Hilfiger</span><span>Daily Paper</span><span>L'Officiel</span><span>Glamcult</span>
+  </div>
+</div></section>
+
+<section class="info" id="info"><div class="wrap"><div class="info-grid">
+  <div><span class="label">Info</span></div>
+  <div>
+    <p class="lead">Ezgi Önen is a Netherlands-based Creative Producer and Casting specialist, working at the intersection of fashion, editorial and commercial production. With a personal approach and a deep passion for the craft, she brings creative concepts to life with precision and care. Her client roster spans leading fashion houses, global brands and renowned publications.</p>
+    <div class="block">
+      <span class="label">Services</span>
+      <ul class="disc">
+        <li>Creative Production</li><li>Model Casting</li><li>Set &amp; Shoot Coordination</li><li>Brand Collaboration</li>
+      </ul>
+    </div>
+  </div>
+</div></div></section>
+
+<section class="contact" id="contact"><div class="wrap">
+  <span class="label">Contact</span>
+  <h2>Let's make something together.</h2>
+  <p>Available for fashion productions, castings and creative collaborations. Get in touch to discuss your next project.</p>
+  <a class="email" href="mailto:ezgionen1@gmail.com">ezgionen1@gmail.com</a>
+  <div class="actions">
+    <a class="btn" href="https://wa.me/31600000000" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.693.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
+      WhatsApp
+    </a>
+  </div>
+  <form class="cform" onsubmit="event.preventDefault();this.innerHTML='&lt;p style=&quot;font-size:15px&quot;&gt;Bedankt — je bericht is verzonden.&lt;/p&gt;';">
+    <label for="d-name">Name</label>
+    <input id="d-name" type="text" required>
+    <label for="d-email">Email</label>
+    <input id="d-email" type="email" required>
+    <label for="d-msg">Message</label>
+    <textarea id="d-msg" rows="5" required></textarea>
+    <button type="submit" class="btn">Send</button>
+  </form>
+  <div class="soc">
+    <a href="https://www.instagram.com/ezgionen1/" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.linkedin.com/in/ezgi-%C3%B6nen-59719918a" target="_blank" rel="noopener">LinkedIn</a>
+    <span>Amsterdam</span>
+  </div>
+</div></section>
+
+<footer class="ft"><div class="ft-in">
+  <div><div class="mk">Ezgi Önen</div><div class="pl">Amsterdam</div></div>
+  <div class="bot"><span>© 2026 Ezgi Önen</span><span>Website door StudioBaris</span></div>
+</div></footer>
+
+</body>
+</html>
