@@ -25,6 +25,9 @@ export default async function AkkoordPage({ params, searchParams }) {
 
   const naam = info.company_name || params.slug;
   const bedrag = euro(info.maandbedrag);
+  const aanbetaling = euro(info.aanbetaling);
+  const pakket = info.pakket || null;
+  const diensten = Array.isArray(info.diensten) ? info.diensten : [];
   const status = info.betaal_status;
   const netBetaald = searchParams && searchParams.status === "klaar";
 
@@ -76,15 +79,35 @@ export default async function AkkoordPage({ params, searchParams }) {
               aan, omdat wij de hosting en het domein voor minimaal een jaar voor je vastleggen. Daarna
               is het abonnement maandelijks opzegbaar.
             </div>
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+
+            {(pakket || diensten.length > 0) && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+                <div style={{ fontSize: 13, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Wat je afneemt</div>
+                {pakket && <div style={{ fontSize: 15, color: "#333", marginBottom: diensten.length ? 8 : 0 }}><strong>Pakket:</strong> {pakket}</div>}
+                {diensten.length > 0 && (
+                  <ul style={{ margin: 0, paddingLeft: 20, color: "#333", fontSize: 15, lineHeight: 1.7 }}>
+                    {diensten.map((d, i) => (<li key={i}>{d}</li>))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {aanbetaling && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span style={{ color: "#666" }}>Aanbetaling nu</span>
+                <strong style={{ fontSize: 22 }}>{aanbetaling}</strong>
+              </div>
+            )}
+            <div style={{ marginTop: aanbetaling ? 10 : 16, paddingTop: aanbetaling ? 0 : 16, borderTop: aanbetaling ? "none" : "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <span style={{ color: "#666" }}>Maandelijkse vergoeding</span>
               <strong style={{ fontSize: 24 }}>{bedrag}<span style={{ fontSize: 14, fontWeight: 400, color: "#888" }}> / maand</span></strong>
             </div>
           </div>
 
           <p style={{ fontSize: 13, color: "#777", margin: "14px 0 18px" }}>
-            Je betaalt zo eenmalig de eerste maand; daarmee geef je meteen de machtiging af.
-            Daarna wordt het bedrag elke maand automatisch afgeschreven.
+            {aanbetaling
+              ? `Je betaalt zo eenmalig de aanbetaling van ${aanbetaling}. Daarmee geef je meteen de automatische incasso af. Het maandbedrag wordt vanaf volgende maand automatisch afgeschreven.`
+              : "Je betaalt zo eenmalig de eerste maand; daarmee geef je meteen de machtiging af. Daarna wordt het bedrag elke maand automatisch afgeschreven."}
           </p>
 
           <AkkoordKnop slug={params.slug} />
