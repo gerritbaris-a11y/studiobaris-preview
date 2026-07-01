@@ -87,3 +87,27 @@ export async function klantInstellen(id, { projectLimit = null, reviewLimit = nu
 export async function nieuweLogin(id, dagen = 14) {
   return await rpc("sb_klant_nieuwe_login", { p_id: id, p_dagen: dagen });
 }
+
+// --- Akkoord-link aanmaken (werknemer-tool) ---
+
+export async function maakAkkoord({
+  companyName,
+  email = null,
+  phone = null,
+  pakket = null,
+  maandbedrag = null,
+  aanbetaling = null,
+  diensten = [],
+  verzamelaar = null,
+}) {
+  return await rpc("sb_akkoord_aanmaken", {
+    p_company_name: companyName,
+    p_pakket: pakket,
+    p_maandbedrag: maandbedrag,
+    p_aanbetaling: aanbetaling,
+    p_diensten: diensten,
+    p_verzamelaar: verzamelaar,
+    p_email: email,
+    p_phone: phone,
+  });
+}
