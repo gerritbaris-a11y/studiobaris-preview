@@ -22,10 +22,19 @@ export async function POST(req) {
     const info = await getBetaalinfo(slug);
     if (!info) return NextResponse.json({ ok: false, error: "Klant niet gevonden." }, { status: 404 });
 
-    const bedrag = Number(info.maandbedrag);
-    if (!bedrag || bedrag <= 0) {
+    const maand = Number(info.maandbedrag);
+    if (!maand || maand <= 0) {
       return NextResponse.json({ ok: false, error: "Er is nog geen maandbedrag ingesteld voor deze klant." }, { status: 400 });
     }
+    // Eerste betaling = de aanbetaling (indien ingesteld); anders de eerste maandtermijn.
+    const aanbetaling = Number(info.aanbetaling);
+    const eerste = aanbetaling > 0 ? aanbetaling : maand;
+    if (!eerste || eerste <= 0) {
+      return NextResponse.json({ ok: false, error: "Er is geen (aanbetalings)bedrag ingesteld voor deze klant." }, { status: 400 });
+    }
+    const eersteOmschrijving = aanbetaling > 0
+      ? `Aanbetaling website ${info.company_name || slug}`
+      : `Eerste maandtermijn website ${info.company_name || slug}`;
 
     // Klant (Mollie customer) aanmaken of hergebruiken.
     let klantId = info.betaal_klant_id;
@@ -41,11 +50,11 @@ export async function POST(req) {
 
     // Eerste betaling met machtiging (sequenceType: first).
     const payment = await mollie("/payments", "POST", {
-      amount: { currency: "EUR", value: bedrag.toFixed(2) },
+      amount: { currency: "EUR", value: eerste.toFixed(2) },
       customerId: klantId,
       sequenceType: "first",
       method: "ideal",
-      description: `Eerste maandtermijn website ${info.company_name || slug}`,
+      description: eersteOmschrijving,
       redirectUrl: `${SITE_URL}/akkoord/${slug}?status=klaar`,
       webhookUrl: `${SITE_URL}/api/mollie/webhook`,
       metadata: { slug },
