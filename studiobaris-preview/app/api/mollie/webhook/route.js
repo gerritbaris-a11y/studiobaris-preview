@@ -29,10 +29,12 @@ export async function POST(req) {
     if (payment.sequenceType === "first") {
       if (payment.status === "paid") {
         const info = await getBetaalinfo(slug);
-        // Geen dubbel abonnement aanmaken.
-        if (info && !info.betaal_abonnement_id && payment.customerId) {
+        const maand = Number(info && info.maandbedrag);
+        // Geen dubbel abonnement aanmaken. Abonnement draait op het MAANDBEDRAG
+        // (de eerste betaling kan een afwijkende aanbetaling zijn geweest).
+        if (info && !info.betaal_abonnement_id && payment.customerId && maand > 0) {
           const sub = await mollie(`/customers/${payment.customerId}/subscriptions`, "POST", {
-            amount: payment.amount,
+            amount: { currency: "EUR", value: maand.toFixed(2) },
             interval: "1 month",
             startDate: eenMaandVooruit(),
             description: `Maandelijkse website-vergoeding ${slug}`,
