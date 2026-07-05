@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBetaalinfo, setBetaling } from "../../../../lib/server-data";
-import { mollie, eenMaandVooruit } from "../../../../lib/mollie";
+import { mollie, eenMaandVooruit, inclBtw } from "../../../../lib/mollie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ export async function POST(req) {
         // (de eerste betaling kan een afwijkende aanbetaling zijn geweest).
         if (info && !info.betaal_abonnement_id && payment.customerId && maand > 0) {
           const sub = await mollie(`/customers/${payment.customerId}/subscriptions`, "POST", {
-            amount: { currency: "EUR", value: maand.toFixed(2) },
+            amount: { currency: "EUR", value: inclBtw(maand).toFixed(2) },
             interval: "1 month",
             startDate: eenMaandVooruit(),
             description: `Maandelijkse website-vergoeding ${slug}`,
