@@ -61,7 +61,10 @@ export default async function Dashboard() {
   return (
     <main style={{ maxWidth: 1280, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
-      <h1 style={{ fontSize: 28, margin: "6px 0 16px" }}>Dashboard — klanten & previews</h1>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", margin: "6px 0 16px" }}>
+        <h1 style={{ fontSize: 28, margin: 0 }}>Dashboard — klanten & previews</h1>
+        <a href="/leads" style={{ display: "inline-block", background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>📋 Leadlijst openen</a>
+      </div>
 
       {rows.length === 0 && (
         <p style={{ color: "#777" }}>
