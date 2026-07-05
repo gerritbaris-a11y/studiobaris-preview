@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBetaalinfo, setBetaling } from "../../../../lib/server-data";
-import { mollie, mollieConfigured } from "../../../../lib/mollie";
+import { mollie, mollieConfigured, inclBtw } from "../../../../lib/mollie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export async function POST(req) {
 
     // Eerste betaling met machtiging (sequenceType: first).
     const payment = await mollie("/payments", "POST", {
-      amount: { currency: "EUR", value: eerste.toFixed(2) },
+      amount: { currency: "EUR", value: inclBtw(eerste).toFixed(2) },
       customerId: klantId,
       sequenceType: "first",
       method: "ideal",
