@@ -26,9 +26,8 @@ const POTENTIE_KLEUR = {
   "Erg laag": "#cbd5e1",
 };
 
-const sel = { padding: "6px 8px", fontSize: 13, border: "1px solid #d1d5db", borderRadius: 7, background: "#fff", fontFamily: "inherit" };
-const th = { textAlign: "left", padding: "9px 10px", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, background: "#f8fafc" };
-const td = { padding: "10px", fontSize: 13.5, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
+const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
+const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 };
 
 function uniek(arr) {
   return Array.from(new Set(arr.filter(Boolean))).sort();
@@ -56,7 +55,8 @@ export default function LeadsClient({ leads: initieel, team }) {
       if (fVak && l.vakgebied !== fVak) return false;
       if (fPotentie && l.potentie !== fPotentie) return false;
       if (fStatus && (l.status || "nieuw") !== fStatus) return false;
-      if (fOwner === "__leeg__" ? l.owner : fOwner && l.owner !== fOwner) return false;
+      if (fOwner === "__leeg__") { if (l.owner) return false; }
+      else if (fOwner && l.owner !== fOwner) return false;
       if (q) {
         const hay = [l.bedrijfsnaam, l.plaats, l.vakgebied, l.email, l.telefoon].join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
@@ -78,12 +78,24 @@ export default function LeadsClient({ leads: initieel, team }) {
     setBezigId("");
   }
 
-  const telling = leads.length;
-
   return (
     <div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 14 }}>
-        <input value={zoek} onChange={(e) => setZoek(e.target.value)} placeholder="Zoek bedrijf, plaats, e-mail…" style={{ ...sel, minWidth: 220 }} />
+      <style>{`
+        .sb-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .sb-filters .sb-zoek { grid-column: 1 / -1; }
+        .sb-cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 640px) {
+          .sb-filters { grid-template-columns: repeat(3, 1fr); }
+          .sb-filters .sb-zoek { grid-column: 1 / -1; }
+          .sb-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1080px) {
+          .sb-cards { grid-template-columns: repeat(3, 1fr); }
+        }
+      `}</style>
+
+      <div className="sb-filters">
+        <input className="sb-zoek" value={zoek} onChange={(e) => setZoek(e.target.value)} placeholder="Zoek bedrijf, plaats, e-mail…" style={sel} />
         <select value={fProvincie} onChange={(e) => setFProvincie(e.target.value)} style={sel}>
           <option value="">Alle provincies</option>
           {provincies.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -105,69 +117,56 @@ export default function LeadsClient({ leads: initieel, team }) {
           <option value="__leeg__">Nog niet opgepakt</option>
           {teamNamen.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
-        <span style={{ fontSize: 13, color: "#888", marginLeft: "auto" }}>{zichtbaar.length} van {telling} leads</span>
       </div>
 
-      <div style={{ overflowX: "auto", border: "1px solid #e5e7eb", borderRadius: 12 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-          <thead>
-            <tr>
-              <th style={th}>Bedrijf</th>
-              <th style={th}>Plaats</th>
-              <th style={th}>Potentie</th>
-              <th style={th}>Contact</th>
-              <th style={th}>Status</th>
-              <th style={th}>Eigenaar</th>
-              <th style={th}>Actie</th>
-            </tr>
-          </thead>
-          <tbody>
-            {zichtbaar.map((l) => {
-              const status = l.status || "nieuw";
-              return (
-                <tr key={l.id} style={{ background: bezigId === l.id ? "#fffdf5" : "#fff" }}>
-                  <td style={td}>
-                    <strong>{l.bedrijfsnaam || "—"}</strong>
-                    <div style={{ fontSize: 12, color: "#888" }}>{[l.vakgebied, l.categorie].filter(Boolean).join(" · ")}</div>
-                  </td>
-                  <td style={td}>{l.plaats || "—"}<div style={{ fontSize: 12, color: "#888" }}>{l.provincie || ""}</div></td>
-                  <td style={td}>
-                    {l.potentie ? (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: POTENTIE_KLEUR[l.potentie] || "#666" }}>{l.potentie}{l.score ? ` · ${l.score}` : ""}</span>
-                    ) : "—"}
-                  </td>
-                  <td style={td}>
-                    {l.telefoon && <div>{l.telefoon}</div>}
-                    {l.email && <div style={{ color: "#64748b" }}>{l.email}</div>}
-                    {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontSize: 12 }}>website ↗</a> : <span style={{ fontSize: 12, color: "#b45309" }}>geen website</span>}
-                  </td>
-                  <td style={td}>
-                    <select value={status} onChange={(e) => patch(l.id, { status: e.target.value })}
-                      style={{ ...sel, color: STATUS_KLEUR[status], fontWeight: 600 }}>
-                      {Object.keys(STATUS_LABELS).map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                    </select>
-                  </td>
-                  <td style={td}>
-                    <select value={l.owner || ""} onChange={(e) => patch(l.id, { owner: e.target.value, status: (l.status === "nieuw" || !l.status) && e.target.value ? "opgepakt" : l.status })}
-                      style={sel}>
-                      <option value="">— niemand —</option>
-                      {teamNamen.map((n) => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                  </td>
-                  <td style={td}>
-                    <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
-                      style={{ display: "inline-block", background: "#FF8300", color: "#fff", padding: "6px 12px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, textDecoration: "none" }}>
-                      Preview aanvragen
-                    </a>
-                  </td>
-                </tr>
-              );
-            })}
-            {zichtbaar.length === 0 && (
-              <tr><td style={{ ...td, textAlign: "center", color: "#94a3b8", padding: 24 }} colSpan={7}>Geen leads die aan de filters voldoen.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div style={{ fontSize: 13, color: "#888", marginBottom: 10 }}>{zichtbaar.length} van {leads.length} leads</div>
+
+      <div className="sb-cards">
+        {zichtbaar.map((l) => {
+          const status = l.status || "nieuw";
+          return (
+            <div key={l.id} style={{ ...card, outline: bezigId === l.id ? "2px solid #FF8300" : "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                <strong style={{ fontSize: 16, lineHeight: 1.25 }}>{l.bedrijfsnaam || "—"}</strong>
+                {l.potentie && (
+                  <span style={{ flex: "0 0 auto", fontSize: 12, fontWeight: 700, color: POTENTIE_KLEUR[l.potentie] || "#666", whiteSpace: "nowrap" }}>{l.potentie}{l.score ? ` · ${l.score}` : ""}</span>
+                )}
+              </div>
+              <div style={{ fontSize: 13, color: "#64748b" }}>
+                {[l.vakgebied, l.plaats, l.provincie].filter(Boolean).join(" · ")}
+              </div>
+              <div style={{ fontSize: 14, display: "flex", flexWrap: "wrap", gap: "2px 14px" }}>
+                {l.telefoon && <a href={`tel:${l.telefoon.replace(/\s/g, "")}`} style={{ color: "#1A2E40", textDecoration: "none" }}>📞 {l.telefoon}</a>}
+                {l.email && <a href={`mailto:${l.email}`} style={{ color: "#2563eb", textDecoration: "none" }}>✉️ {l.email}</a>}
+                {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>🌐 website</a> : <span style={{ color: "#b45309" }}>geen website</span>}
+              </div>
+
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <label style={{ flex: 1, fontSize: 11, color: "#888" }}>Status
+                  <select value={status} onChange={(e) => patch(l.id, { status: e.target.value })}
+                    style={{ ...sel, color: STATUS_KLEUR[status], fontWeight: 600, marginTop: 3 }}>
+                    {Object.keys(STATUS_LABELS).map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                  </select>
+                </label>
+                <label style={{ flex: 1, fontSize: 11, color: "#888" }}>Eigenaar
+                  <select value={l.owner || ""} onChange={(e) => patch(l.id, { owner: e.target.value, status: (!l.status || l.status === "nieuw") && e.target.value ? "opgepakt" : l.status })}
+                    style={{ ...sel, marginTop: 3 }}>
+                    <option value="">— niemand —</option>
+                    {teamNamen.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
+                style={{ display: "block", textAlign: "center", background: "#FF8300", color: "#fff", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2 }}>
+                Preview aanvragen
+              </a>
+            </div>
+          );
+        })}
+        {zichtbaar.length === 0 && (
+          <div style={{ textAlign: "center", color: "#94a3b8", padding: 24 }}>Geen leads die aan de filters voldoen.</div>
+        )}
       </div>
     </div>
   );
