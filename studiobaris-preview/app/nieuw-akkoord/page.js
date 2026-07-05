@@ -27,6 +27,11 @@ function euro(n) {
   return "€ " + Number(n).toFixed(2).replace(".", ",");
 }
 
+// Bedragen zijn excl. btw; klant betaalt incl. 21% btw.
+function inclBtw(n) {
+  return Math.round((Number(n) || 0) * 1.21 * 100) / 100;
+}
+
 export default function NieuwAkkoordPage() {
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
@@ -171,7 +176,10 @@ export default function NieuwAkkoordPage() {
             <span style={{ flex: 1 }}>
               <strong>{p.label}</strong> <span style={{ color: "#888", fontSize: 13 }}>({p.omschrijving})</span>
             </span>
-            <strong>{euro(p.bedrag)}<span style={{ fontWeight: 400, color: "#888", fontSize: 13 }}> /mnd</span></strong>
+            <span style={{ textAlign: "right" }}>
+              <strong>{euro(p.bedrag)}<span style={{ fontWeight: 400, color: "#888", fontSize: 13 }}> /mnd</span></strong>
+              <span style={{ display: "block", fontSize: 11, color: "#888" }}>excl. btw · {euro(inclBtw(p.bedrag))} incl.</span>
+            </span>
           </label>
         ))}
       </div>
@@ -181,9 +189,15 @@ export default function NieuwAkkoordPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 18, color: "#666" }}>€</span>
           <input style={{ ...input, maxWidth: 160 }} inputMode="decimal" value={aanbetaling} onChange={(e) => setAanbetaling(e.target.value)} placeholder="0,00" />
+          <span style={{ fontSize: 12.5, color: "#888" }}>excl. btw</span>
         </div>
+        {Number(String(aanbetaling).replace(",", ".")) > 0 && (
+          <p style={{ fontSize: 12.5, color: "#555", marginTop: 6 }}>
+            Klant betaalt <strong>{euro(inclBtw(Number(String(aanbetaling).replace(",", "."))))}</strong> incl. btw.
+          </p>
+        )}
         <p style={{ fontSize: 12.5, color: "#777", marginTop: 8 }}>
-          Dit is de eerste betaling via de link. Hiermee geeft de klant meteen de automatische incasso (SEPA-machtiging) af voor het maandbedrag. De 2e helft van de websiteprijs factureer je later handmatig bij oplevering.
+          Bedragen zijn excl. btw; de klant betaalt incl. 21% btw. Dit is de eerste betaling via de link — hiermee geeft de klant meteen de automatische incasso (SEPA-machtiging) af voor het maandbedrag. De 2e helft van de websiteprijs factureer je later bij oplevering.
         </p>
       </div>
 
