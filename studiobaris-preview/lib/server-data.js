@@ -19,6 +19,47 @@ async function rpc(name, body) {
   return res.json();
 }
 
+// Directe tabel-toegang via PostgREST (service-role, server-only).
+async function rest(path, opts = {}) {
+  const k = key();
+  if (!k) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    cache: "no-store",
+    ...opts,
+    headers: {
+      apikey: k,
+      Authorization: `Bearer ${k}`,
+      "Content-Type": "application/json",
+      ...(opts.headers || {}),
+    },
+  });
+  if (!res.ok) return null;
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
+}
+
+// --- Leadlijst (de trechter) ---
+
+export async function getLeads() {
+  const data = await rest("leads?select=*&order=score.desc.nullslast,bedrijfsnaam.asc&limit=5000");
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getTeam() {
+  const data = await rest("app_users?select=naam,rol&order=rol.asc,naam.asc");
+  return Array.isArray(data) ? data : [];
+}
+
+export async function updateLead(id, fields) {
+  const body = { ...fields, updated_at: new Date().toISOString() };
+  if (fields.owner !== undefined && fields.owner) body.claimed_at = new Date().toISOString();
+  return await rest(`leads?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function getConcept(slug) {
   const data = await rpc("get_concept", { p_slug: slug });
   return data || null;
