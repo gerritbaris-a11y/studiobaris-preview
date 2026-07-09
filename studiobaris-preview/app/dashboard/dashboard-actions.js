@@ -126,6 +126,39 @@ export function AkkoordLink({ slug }) {
   );
 }
 
+// Alle deelbare links van een klant op één plek, met kopieer-knoppen.
+export function LinkChips({ slug, gepubliceerd }) {
+  const [copied, setCopied] = useState("");
+  function copy(path, key) {
+    try {
+      navigator.clipboard.writeText(window.location.origin + path);
+      setCopied(key); setTimeout(() => setCopied(""), 1400);
+    } catch {}
+  }
+  const chip = {
+    display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
+    borderRadius: 8, border: "1px solid #d8dde3", background: "#fff", color: "#334155",
+    cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", fontFamily: "inherit",
+  };
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      <a href={`/${slug}`} target="_blank" rel="noreferrer" style={chip}>
+        {gepubliceerd ? "Website ↗" : "Website (offline)"}
+      </a>
+      <a href={`/${slug}?review=1`} target="_blank" rel="noreferrer" style={chip}>Preview ↗</a>
+      <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
+        {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
+      </button>
+      <button onClick={() => copy(`/feedback/${slug}`, "f")} style={chip}>
+        {copied === "f" ? "Feedback gekopieerd ✓" : "Feedback kopiëren"}
+      </button>
+      <button onClick={() => copy(`/akkoord/${slug}`, "b")} style={chip}>
+        {copied === "b" ? "Betaallink gekopieerd ✓" : "Betaallink kopiëren"}
+      </button>
+    </div>
+  );
+}
+
 export function VerwijderKnop({ slug, naam }) {
   const [s, setS] = useState("idle");
   async function go() {
