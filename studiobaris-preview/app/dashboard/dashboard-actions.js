@@ -110,6 +110,28 @@ export function KlantBedrag({ slug, value }) {
   );
 }
 
+// Eenmalig verkoopbedrag (websiteprijs). Verkoper krijgt hiervan 50%.
+export function VerkoopBedrag({ slug, value }) {
+  const [v, setV] = useState(value != null ? String(value) : "");
+  const [saved, setSaved] = useState(false);
+  async function blur() {
+    const res = await fetch("/api/klant/verkoopbedrag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, bedrag: v }),
+    });
+    const d = await res.json();
+    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+  }
+  return (
+    <span style={{ whiteSpace: "nowrap" }} title="Eenmalig verkoopbedrag — verkoper krijgt 50%">
+      <span style={{ color: "#888", fontSize: 12 }}>Verkoop&nbsp;€</span>
+      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="0" inputMode="decimal"
+        style={{ width: 64, padding: "4px 6px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13, marginLeft: 3 }} />
+    </span>
+  );
+}
+
 export function AkkoordLink({ slug }) {
   const [copied, setCopied] = useState(false);
   async function copy() {

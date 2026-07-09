@@ -2,7 +2,7 @@ import { getOverview } from "../../lib/server-data";
 import { leesSessie } from "../../lib/auth";
 import {
   PublishButton, PublishToggle, KlantNaam, KlantStatus, KlantBedrag,
-  AkkoordLink, VerwijderKnop, GegevensEditor, LinkChips,
+  AkkoordLink, VerwijderKnop, GegevensEditor, LinkChips, VerkoopBedrag,
 } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
@@ -84,6 +84,7 @@ export default async function Dashboard() {
                 <KlantStatus slug={r.slug} value={r.pipeline_status} />
                 <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
                 <KlantBedrag slug={r.slug} value={r.maandbedrag} />
+                <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
                 <AkkoordLink slug={r.slug} />
                 <BetaalBadge status={r.betaal_status} />
                 <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
