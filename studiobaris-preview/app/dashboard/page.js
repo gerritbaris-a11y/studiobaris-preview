@@ -7,7 +7,6 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// Kleur per fase (achtergrond, tekst) — uit hetzelfde palet als de rest.
 const FASE_KLEUR = {
   "Nieuw": ["#f1f5f9", "#475569"],
   "Gebeld": ["#e6f1fb", "#0c447c"],
@@ -48,7 +47,8 @@ export default async function Dashboard() {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "6px 0 16px" }}>
         <h1 style={{ fontSize: 26, margin: 0 }}>Klanten en sites</h1>
-        <a href="/leads" style={{ background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>📋 Leadlijst openen</a>
+        <a href="/leads" style={{ background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Leadlijst openen</a>
+        <a href="/team" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Team &amp; omzet</a>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#888" }}>{rows.length} klanten</span>
       </div>
 
@@ -95,7 +95,7 @@ export default async function Dashboard() {
                 <GegevensEditor slug={r.slug} data={r} />
                 {r.heeft_concept && (
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <a href={`/${r.slug}?concept=1`} target="_blank" rel="noreferrer" style={{ color: "#1d6fd1", fontSize: 13 }}>Bekijk concept ↗</a>
+                    <a href={`/${r.slug}?concept=1`} target="_blank" rel="noreferrer" style={{ color: "#1d6fd1", fontSize: 13 }}>Bekijk concept</a>
                     <PublishButton slug={r.slug} />
                   </div>
                 )}
