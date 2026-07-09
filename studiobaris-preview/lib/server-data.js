@@ -50,6 +50,31 @@ export async function getTeam() {
   return Array.isArray(data) ? data : [];
 }
 
+// --- Login / accounts ---
+
+// Namen + rol + of er al een wachtwoord is ingesteld (voor de inlogpagina).
+export async function getTeamLogin() {
+  const data = await rest("app_users?select=id,naam,rol,password_hash&order=rol.asc,naam.asc");
+  return (Array.isArray(data) ? data : []).map((u) => ({
+    id: u.id, naam: u.naam, rol: u.rol, gezet: !!u.password_hash,
+  }));
+}
+
+export async function getUserByNaam(naam) {
+  const data = await rest(
+    `app_users?select=id,naam,rol,password_hash&naam=eq.${encodeURIComponent(naam)}&limit=1`
+  );
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
+
+export async function setUserWachtwoord(id, hash) {
+  return await rest(`app_users?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ password_hash: hash }),
+  });
+}
+
 export async function updateLead(id, fields) {
   const body = { ...fields, updated_at: new Date().toISOString() };
   if (fields.owner !== undefined && fields.owner) body.claimed_at = new Date().toISOString();
