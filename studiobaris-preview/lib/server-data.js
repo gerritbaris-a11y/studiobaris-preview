@@ -85,6 +85,17 @@ export async function updateLead(id, fields) {
   });
 }
 
+// Verkoopbedrag (eenmalige websiteprijs) opslaan bij een klant.
+export async function setVerkoopbedrag(slug, bedrag) {
+  return await rpc("sb_set_verkoopbedrag", { p_slug: slug, p_bedrag: bedrag });
+}
+
+// Omzet + 50%-commissie per persoon (verzamelaar).
+export async function getOmzet() {
+  const data = await rpc("sb_omzet_overzicht", {});
+  return Array.isArray(data) ? data : [];
+}
+
 export async function getConcept(slug) {
   const data = await rpc("get_concept", { p_slug: slug });
   return data || null;
