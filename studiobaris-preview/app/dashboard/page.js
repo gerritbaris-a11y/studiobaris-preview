@@ -1,4 +1,5 @@
 import { getOverview } from "../../lib/server-data";
+import { leesSessie } from "../../lib/auth";
 import {
   PublishButton, PublishToggle, KlantNaam, KlantStatus, KlantBedrag,
   AkkoordLink, VerwijderKnop, GegevensEditor, LinkChips,
@@ -31,10 +32,20 @@ function BetaalBadge({ status }) {
 
 export default async function Dashboard() {
   const rows = await getOverview();
+  const sessie = leesSessie();
 
   return (
     <main style={wrap}>
-      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888", margin: 0 }}>StudioBaris</p>
+        {sessie && (
+          <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
+            Ingelogd als <strong style={{ color: "#1A2E40" }}>{sessie.naam}</strong>
+            {" · "}
+            <a href="/api/auth/logout" style={{ color: "#1d6fd1" }}>Uitloggen</a>
+          </span>
+        )}
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "6px 0 16px" }}>
         <h1 style={{ fontSize: 26, margin: 0 }}>Klanten en sites</h1>
         <a href="/leads" style={{ background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>📋 Leadlijst openen</a>
