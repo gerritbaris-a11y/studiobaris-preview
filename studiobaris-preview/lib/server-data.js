@@ -96,6 +96,12 @@ export async function getOmzet() {
   return Array.isArray(data) ? data : [];
 }
 
+// Alle inzendingen (intake + feedback) van een klant, nieuwste eerst.
+export async function getInzendingen(slug) {
+  const data = await rpc("sb_inzendingen", { p_slug: slug });
+  return Array.isArray(data) ? data : [];
+}
+
 export async function getConcept(slug) {
   const data = await rpc("get_concept", { p_slug: slug });
   return data || null;
