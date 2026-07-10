@@ -66,6 +66,99 @@ async function bewaarKlant(slug, payload) {
   return res.json();
 }
 
+// De klantreis als klikbare fasebalk. Klik een fase om die te zetten.
+export const FASES = ["Nieuw", "Preview", "Akkoord", "Klant-intake", "Feedback 1", "Feedback 2", "Klaar"];
+const OUD_NAAR_NIEUW = {
+  "Gebeld": "Preview",
+  "Preview klaar": "Preview",
+  "Wachten op feedback 1": "Feedback 1",
+  "Wachten op feedback 2": "Feedback 2",
+  "Wachten op feedback 3": "Feedback 2",
+};
+
+export function FaseStepper({ slug, huidige }) {
+  const [bezig, setBezig] = useState(false);
+  const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";
+  const idx = Math.max(0, FASES.indexOf(norm));
+  async function zet(f) {
+    if (f === norm || bezig) return;
+    setBezig(true);
+    const d = await bewaarKlant(slug, { pipeline_status: f });
+    if (d && d.ok) location.reload();
+    else setBezig(false);
+  }
+  return (
+    <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 2 }}>
+      {FASES.map((f, i) => {
+        const done = i < idx;
+        const cur = i === idx;
+        const bg = cur ? "#1A2E40" : done ? "#e1f5ee" : "#f1f5f9";
+        const col = cur ? "#fff" : done ? "#0f6e56" : "#94a3b8";
+        return (
+          <button key={f} onClick={() => zet(f)} disabled={bezig} title={"Zet fase op " + f}
+            style={{ flex: "0 0 auto", fontSize: 11.5, fontWeight: cur ? 700 : 600, padding: "6px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: bg, color: col, whiteSpace: "nowrap" }}>
+            {f}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const INZENDING_LABEL = { intake: "Klant-intake", feedback: "Feedback" };
+
+export function InzendingenKnop({ slug }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState(null);
+  const [laden, setLaden] = useState(false);
+  async function toggle() {
+    if (open) { setOpen(false); return; }
+    setOpen(true);
+    if (data === null) {
+      setLaden(true);
+      try {
+        const res = await fetch("/api/klant/inzendingen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug }),
+        });
+        const d = await res.json();
+        setData(d.ok ? d.inzendingen || [] : []);
+      } catch { setData([]); }
+      setLaden(false);
+    }
+  }
+  return (
+    <div style={{ width: "100%" }}>
+      <button onClick={toggle}
+        style={{ background: "#fff", border: "1px solid #d8dde3", color: "#1A2E40", padding: "6px 11px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+        {open ? "Verberg inzendingen" : "Bekijk wat de klant invulde"}
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px" }}>
+          {laden && <div style={{ color: "#888", fontSize: 13 }}>Laden...</div>}
+          {!laden && data && data.length === 0 && (
+            <div style={{ color: "#888", fontSize: 13 }}>De klant heeft nog niets ingevuld.</div>
+          )}
+          {!laden && data && data.map((s, i) => (
+            <div key={i} style={{ borderTop: i === 0 ? "none" : "1px solid #eef1f4", paddingTop: i === 0 ? 0 : 9, marginTop: i === 0 ? 0 : 9 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1A2E40" }}>
+                {INZENDING_LABEL[s.type] || s.type}
+                <span style={{ color: "#94a3b8", fontWeight: 500 }}> - {new Date(s.created_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}</span>
+              </div>
+              {Object.entries(s.antwoorden || {}).map(([k, v]) => (
+                <div key={k} style={{ fontSize: 13, marginTop: 3, lineHeight: 1.35 }}>
+                  <span style={{ color: "#888" }}>{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function KlantNaam({ slug, value }) {
   const [v, setV] = useState(value || "");
   const [saved, setSaved] = useState(false);
