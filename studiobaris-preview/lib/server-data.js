@@ -85,6 +85,11 @@ export async function updateLead(id, fields) {
   });
 }
 
+// Contactpersoon van de klant (voor de aanhef in het verkoop-appje).
+export async function setContactpersoon(slug, naam) {
+  return await rpc("sb_set_contactpersoon", { p_slug: slug, p_naam: naam });
+}
+
 // Verkoopbedrag (eenmalige websiteprijs) opslaan bij een klant.
 export async function setVerkoopbedrag(slug, bedrag) {
   return await rpc("sb_set_verkoopbedrag", { p_slug: slug, p_bedrag: bedrag });
