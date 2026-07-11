@@ -11,6 +11,36 @@ function dt(s) {
   return new Date(s).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// De versie die de plugin hoort te draaien. Sites die zich melden met een
+// oudere versie krijgen automatisch een update; hier zie je of dat gelukt is.
+const NIEUWSTE_PLUGIN = "1.0.0";
+
+function PluginBadge({ versie, gezien }) {
+  if (!versie) {
+    return (
+      <div>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: "#94a3b8" }}>nog niet gemeld</span>
+        <div style={{ color: "#bbb", fontSize: 11 }}>site heeft zich nog niet gemeld</div>
+      </div>
+    );
+  }
+  const actueel = String(versie) === NIEUWSTE_PLUGIN;
+  return (
+    <div>
+      <span style={{
+        fontSize: 12.5, fontWeight: 700, padding: "3px 9px", borderRadius: 999,
+        background: actueel ? "#e1f5ee" : "#faeeda",
+        color: actueel ? "#0f6e56" : "#854f0b",
+      }}>
+        v{versie}{actueel ? "" : " - verouderd"}
+      </span>
+      <div style={{ color: "#999", fontSize: 11, marginTop: 3 }}>
+        gezien {dt(gezien)}
+      </div>
+    </div>
+  );
+}
+
 const wrap = { maxWidth: 1100, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
 const th = { textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888", padding: "8px 10px", borderBottom: "2px solid #eee", whiteSpace: "nowrap" };
 const td = { padding: "12px 10px", borderBottom: "1px solid #f0f0f0", fontSize: 13, verticalAlign: "top" };
@@ -59,6 +89,7 @@ export default async function BeheerPage() {
               <th style={th}>Abonnement</th>
               <th style={th}>Projecten</th>
               <th style={th}>Reviews</th>
+              <th style={th}>Plugin</th>
               <th style={th}>Laatste activiteit</th>
               <th style={th}>AI deze maand</th>
               <th style={th}>AI totaal</th>
@@ -67,7 +98,7 @@ export default async function BeheerPage() {
           </thead>
           <tbody>
             {klanten.length === 0 ? (
-              <tr><td style={td} colSpan={8}>Nog geen klanten.</td></tr>
+              <tr><td style={td} colSpan={9}>Nog geen klanten.</td></tr>
             ) : (
               klanten.map((k) => (
                 <tr key={k.id}>
@@ -78,6 +109,7 @@ export default async function BeheerPage() {
                   <td style={td}>{k.abonnementsvorm || <span style={{ color: "#bbb" }}>—</span>}</td>
                   <td style={td}>{k.projecten}</td>
                   <td style={td}>{k.reviews}</td>
+                  <td style={td}><PluginBadge versie={k.plugin_versie} gezien={k.plugin_gezien_op} /></td>
                   <td style={td}>{dt(k.laatste_activiteit)}</td>
                   <td style={td}>{euro(k.ai_kosten_maand)}</td>
                   <td style={td}>{euro(k.ai_kosten_totaal)}<div style={{ color: "#999", fontSize: 11 }}>{Number(k.ai_tokens).toLocaleString("nl-NL")} tok.</div></td>
