@@ -159,6 +159,116 @@ export function InzendingenKnop({ slug }) {
   );
 }
 
+// Contactpersoon bij de klant - wordt de aanhef in het verkoop-appje.
+export function Contactpersoon({ slug, value }) {
+  const [v, setV] = useState(value || "");
+  const [saved, setSaved] = useState(false);
+  async function blur() {
+    if (v === (value || "")) return;
+    const res = await fetch("/api/klant/contactpersoon", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, naam: v }),
+    });
+    const d = await res.json();
+    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+  }
+  return (
+    <span style={{ whiteSpace: "nowrap" }} title="Voornaam van de klant - wordt de aanhef in het appje">
+      <span style={{ color: "#888", fontSize: 12 }}>Contact&nbsp;</span>
+      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="voornaam"
+        style={{ width: 90, padding: "4px 7px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13 }} />
+    </span>
+  );
+}
+
+// Het verkoop-appje, kant-en-klaar met naam en de juiste links erin.
+function bouwAppje({ contact, bedrijf, slug, afzender, origin }) {
+  const naam = (contact && contact.trim()) || bedrijf || "";
+  const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
+  const demoLink = "https://demo.studiobaris.nl";
+  const groet = afzender || "Gerrit";
+
+  return [
+    "Hoi " + naam + ",",
+    "",
+    "Ik kwam je bedrijf tegen en heb direct een cadeautje voor je klaargezet. De meeste goede vakmannen hebben via mond-tot-mondreclame gelukkig werk zat, dus een website om meer klanten te krijgen is vaak helemaal niet nodig.",
+    "",
+    "Maar je wilt natuurlijk wel dat je online reputatie klopt als mensen je opzoeken, zeker met alle beunhazen van tegenwoordig. Daarom heb ik het werk alvast voor je gedaan: ik heb een gloednieuwe website-opzet voor jouw bedrijf ontworpen.",
+    "",
+    "Geen gedoe met 's avonds achter een laptop kruipen, want ik lever er een handige app bij: hiermee zet je op de klus in 10 seconden een foto en review live op je nieuwe site. Gewoon vanaf je telefoon. Je site blijft zo moeiteloos actief, waardoor je stijgt in Google en voortaan de mooiste klussen eruit pikt.",
+    "",
+    "Kijk zelf maar of het ontwerp bij je past, ik heb twee links voor je:",
+    "",
+    "1. Jouw kant-en-klare website: " + previewLink,
+    "(volledig ontworpen voor jouw bedrijf, binnen 1 week live en jouw eigendom)",
+    "",
+    "2. Hoe je nieuwe app werkt: " + demoLink,
+    "(wij regelen de hosting, beveiliging en alle updates voor de site en de app)",
+    "",
+    "Al ergens hosting lopen? Geen probleem, wij helpen je helemaal mee met het gratis omzetten.",
+    "",
+    "Tot eind augustus loopt er een actie waarbij de inrichting en app-koppeling helemaal gratis zijn (volledig fiscaal aftrekbaar). Binnenkort komt er een update waarmee je ook direct naar social media pusht, vanaf dan wordt het een stuk duurder.",
+    "",
+    "P.S. Je bent trouwens niet het proefkonijn: al meer dan 50 zzp'ers hebben hun laptop definitief dichtgeklapt en swipen hun projecten nu live vanaf de bouwplaats.",
+    "",
+    "Lijkt het je wat om jouw nieuwe site te bekijken? Stuur gerust een appje terug. Zo niet, ook even goede vrienden!",
+    "",
+    "Enfin, een lang verhaal maar met een goed doel.",
+    "",
+    "Groet, " + groet + " (www.studiobaris.nl)",
+  ].join("\n");
+}
+
+export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon }) {
+  const [status, setStatus] = useState("idle");
+
+  function tekst() {
+    return bouwAppje({
+      contact,
+      bedrijf,
+      slug,
+      afzender,
+      origin: typeof window !== "undefined" ? window.location.origin : "",
+    });
+  }
+
+  async function kopieer() {
+    try {
+      await navigator.clipboard.writeText(tekst());
+      setStatus("gekopieerd");
+      setTimeout(() => setStatus("idle"), 1800);
+    } catch {
+      setStatus("fout");
+      setTimeout(() => setStatus("idle"), 1800);
+    }
+  }
+
+  function openWhatsapp() {
+    const nr = String(telefoon || "").replace(/[^0-9]/g, "").replace(/^06/, "316");
+    const url = "https://wa.me/" + (nr ? nr : "") + "?text=" + encodeURIComponent(tekst());
+    window.open(url, "_blank", "noopener");
+  }
+
+  const knop = {
+    display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
+    borderRadius: 8, border: "1px solid #25D366", background: "#25D366", color: "#fff",
+    cursor: "pointer", fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap",
+  };
+  const knop2 = { ...knop, background: "#fff", color: "#0f6e56" };
+
+  return (
+    <span style={{ display: "inline-flex", gap: 6 }}>
+      <button onClick={openWhatsapp} style={knop} title="Opent WhatsApp met de tekst er al in">
+        Appje versturen
+      </button>
+      <button onClick={kopieer} style={knop2}>
+        {status === "gekopieerd" ? "Gekopieerd!" : status === "fout" ? "Kopieren mislukt" : "Tekst kopieren"}
+      </button>
+    </span>
+  );
+}
+
 export function KlantNaam({ slug, value }) {
   const [v, setV] = useState(value || "");
   const [saved, setSaved] = useState(false);
