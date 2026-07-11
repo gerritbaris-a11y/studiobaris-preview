@@ -18,25 +18,28 @@ const NIEUWSTE_PLUGIN = "1.0.0";
 function PluginBadge({ versie, gezien }) {
   if (!versie) {
     return (
-      <div>
-        <span style={{ fontSize: 12.5, fontWeight: 600, color: "#94a3b8" }}>nog niet gemeld</span>
-        <div style={{ color: "#bbb", fontSize: 11 }}>site heeft zich nog niet gemeld</div>
-      </div>
+      <span style={{
+        fontSize: 12, fontWeight: 600, padding: "3px 9px", borderRadius: 999,
+        background: "#f1f5f9", color: "#94a3b8", whiteSpace: "nowrap",
+      }}>
+        geen contact
+      </span>
     );
   }
   const actueel = String(versie) === NIEUWSTE_PLUGIN;
   return (
-    <div>
+    <div style={{ whiteSpace: "nowrap" }}>
       <span style={{
         fontSize: 12.5, fontWeight: 700, padding: "3px 9px", borderRadius: 999,
         background: actueel ? "#e1f5ee" : "#faeeda",
         color: actueel ? "#0f6e56" : "#854f0b",
       }}>
-        v{versie}{actueel ? "" : " - verouderd"}
+        v{versie}
       </span>
-      <div style={{ color: "#999", fontSize: 11, marginTop: 3 }}>
-        gezien {dt(gezien)}
-      </div>
+      {!actueel && (
+        <div style={{ color: "#854f0b", fontSize: 11, marginTop: 3 }}>verouderd</div>
+      )}
+      <div style={{ color: "#999", fontSize: 11, marginTop: 2 }}>{dt(gezien)}</div>
     </div>
   );
 }
