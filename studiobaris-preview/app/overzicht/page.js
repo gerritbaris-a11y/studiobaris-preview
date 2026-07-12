@@ -128,6 +128,8 @@ export default async function OverzichtPage({ searchParams }) {
         <a href="/leads" style={{ color: "#1d6fd1", fontSize: 14 }}>Leads</a>
         <a href="/klanten" style={{ color: "#1d6fd1", fontSize: 14 }}>Klanten</a>
         <a href="/team" style={{ color: "#1d6fd1", fontSize: 14 }}>Team &amp; omzet</a>
+        <a href="/vragen" style={{ color: "#1d6fd1", fontSize: 14 }}>Vragen</a>
+        <a href="/kosten" style={{ color: "#1d6fd1", fontSize: 14 }}>Kosten</a>
         <a href="/beheer" style={{ color: "#1d6fd1", fontSize: 14 }}>Beheer</a>
       </div>
       <p style={{ color: "#777", fontSize: 14, marginBottom: 16 }}>
