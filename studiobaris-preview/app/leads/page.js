@@ -53,7 +53,7 @@ export default async function LeadsPage() {
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
         <h1 style={{ fontSize: 28, margin: "6px 0" }}>Leads</h1>
-        <a href="/dashboard" style={{ color: "#1d6fd1", fontSize: 14 }}>naar Klanten &amp; previews</a>
+        <a href="/klanten" style={{ background: "#FF8300", color: "#fff", padding: "7px 13px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Mijn klanten</a>
         {sessie && (
           <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
             Ingelogd als <strong style={{ color: "#1A2E40" }}>{sessie.naam}</strong>
