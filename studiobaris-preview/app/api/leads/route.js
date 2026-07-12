@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { updateLead } from "../../../lib/server-data";
+import { updateLead, getLead, log } from "../../../lib/server-data";
+import { leesSessie } from "../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,8 +31,26 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Niets om bij te werken." }, { status: 400 });
     }
 
+    // Eerst de oude stand ophalen, zodat we in het logboek kunnen zetten
+    // wat er precies veranderde (en dus waar leads sneuvelen).
+    const oud = await getLead(id);
+
     const res = await updateLead(id, fields);
     if (!res) return NextResponse.json({ ok: false, error: "Bijwerken mislukt." }, { status: 500 });
+
+    const sessie = leesSessie();
+    const wie = sessie ? sessie.naam : null;
+    const bedrijf = oud ? oud.bedrijfsnaam : null;
+
+    if (fields.status !== undefined && (!oud || oud.status !== fields.status)) {
+      await log({ persoon: wie, soort: "lead_status", leadId: id, bedrijf,
+                  van: oud ? oud.status || "nieuw" : null, naar: fields.status });
+    }
+    if (fields.owner !== undefined && (!oud || (oud.owner || null) !== (fields.owner || null))) {
+      await log({ persoon: wie, soort: "lead_owner", leadId: id, bedrijf,
+                  van: oud ? oud.owner : null, naar: fields.owner || null });
+    }
+
     return NextResponse.json({ ok: true, lead: Array.isArray(res) ? res[0] : res });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
