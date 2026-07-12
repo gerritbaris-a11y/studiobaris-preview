@@ -1,6 +1,6 @@
 import { getOverview } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips } from "../dashboard/dashboard-actions";
+import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag } from "../dashboard/dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +56,10 @@ export default async function KlantenPage() {
       </div>
 
       <p style={{ color: "#777", marginBottom: 18, fontSize: 14 }}>
-        Per klant zie je in welke fase hij zit en heb je alle links bij de hand. Vul de voornaam in en klik op
-        &quot;Appje versturen&quot;: WhatsApp opent met de complete verkooptekst, de juiste aanhef en de juiste links erin.
+        Hier haal je de sale binnen. Je ziet in welke fase de klant zit en hebt alle links bij de hand: zijn preview,
+        zijn eigen demo-app en de betaallink. Vul de voornaam in en klik op &quot;Appje versturen&quot;: WhatsApp opent
+        met de complete verkooptekst, de juiste aanhef en de juiste links erin. Zodra hij akkoord is, zet je de fase op
+        Akkoord en vul je het verkoopbedrag in — daarna neemt Gerrit de bouw en de feedback over.
       </p>
 
       {rows.length === 0 && (
@@ -85,7 +87,7 @@ export default async function KlantenPage() {
 
             <BetaalBadge status={r.betaal_status} />
 
-            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig={beheer} />
+            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
@@ -97,6 +99,13 @@ export default async function KlantenPage() {
                 telefoon={r.lead_phone}
                 demoGevuld={r.demo_gevuld}
               />
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+              <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
+              <span style={{ fontSize: 12.5, color: "#94a3b8" }}>
+                Vul in waarvoor je 'm hebt verkocht. Jouw commissie is 50% hiervan.
+              </span>
             </div>
           </div>
         ))}
