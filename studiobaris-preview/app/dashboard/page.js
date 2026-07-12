@@ -43,6 +43,7 @@ export default async function Dashboard() {
         <h1 style={{ fontSize: 26, margin: 0 }}>Klanten en sites</h1>
         <a href="/intake" style={{ background: "#FF8300", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>+ Nieuwe intake</a>
         <a href="/leads" style={{ background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Leadlijst openen</a>
+        <a href="/overzicht" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Overzicht</a>
         <a href="/team" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Team &amp; omzet</a>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#888" }}>{rows.length} klanten</span>
       </div>
@@ -69,7 +70,7 @@ export default async function Dashboard() {
                 <span style={{ fontSize: 12, fontWeight: 600, color: r.gepubliceerd ? "#0f6e56" : "#94a3b8", whiteSpace: "nowrap" }}>{r.gepubliceerd ? "● Online" : "○ Offline"}</span>
               </div>
 
-              <FaseStepper slug={r.slug} huidige={r.pipeline_status} />
+              <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", alignItems: "center" }}>
                 <BetaalBadge status={r.betaal_status} />

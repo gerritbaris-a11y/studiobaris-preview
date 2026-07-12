@@ -76,14 +76,15 @@ const OUD_NAAR_NIEUW = {
   "Wachten op feedback 3": "Feedback 2",
 };
 
-export function FaseStepper({ slug, huidige }) {
+export function FaseStepper({ slug, huidige, bedrijf }) {
   const [bezig, setBezig] = useState(false);
   const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";
   const idx = Math.max(0, FASES.indexOf(norm));
   async function zet(f) {
     if (f === norm || bezig) return;
     setBezig(true);
-    const d = await bewaarKlant(slug, { pipeline_status: f });
+    // van + bedrijf meesturen, zodat het logboek weet wat er precies veranderde.
+    const d = await bewaarKlant(slug, { pipeline_status: f, van: norm, bedrijf: bedrijf || slug });
     if (d && d.ok) location.reload();
     else setBezig(false);
   }
