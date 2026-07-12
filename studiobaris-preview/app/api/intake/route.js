@@ -8,6 +8,7 @@ import {
 import { callClaude } from "../../../lib/anthropic";
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
+import { log } from "../../../lib/server-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -185,6 +186,14 @@ export async function POST(req) {
     } catch (e) {
       console.error("demo-app aanmaken mislukt:", e && e.message);
     }
+
+    await log({
+      persoon: v("bron") || null,
+      soort: "preview",
+      slug,
+      bedrijf: naam,
+      naar: "Preview",
+    });
 
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
     const url = `${SITE_URL}/${slug}`;
