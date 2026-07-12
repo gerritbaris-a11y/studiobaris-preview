@@ -73,6 +73,36 @@ export async function importeerLeads(rijen, bron) {
   return data || null;
 }
 
+// Eén lead ophalen (om de vorige status te kennen voordat we hem wijzigen).
+export async function getLead(id) {
+  const data = await rest(`leads?select=id,bedrijfsnaam,status,owner&id=eq.${encodeURIComponent(id)}&limit=1`);
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
+
+// Logboek: wie deed wat, wanneer. Mag nooit de actie zelf laten mislukken.
+export async function log({ persoon, soort, leadId = null, slug = null, bedrijf = null, van = null, naar = null, details = null }) {
+  try {
+    return await rpc("sb_log", {
+      p_persoon: persoon || null,
+      p_soort: soort,
+      p_lead: leadId,
+      p_slug: slug,
+      p_bedrijf: bedrijf,
+      p_van: van,
+      p_naar: naar,
+      p_details: details,
+    });
+  } catch {
+    return null;
+  }
+}
+
+// Overzichtsrapport: trechter, waar leads sneuvelen, wie wat doet.
+export async function getRapport(dagen = 30, persoon = null) {
+  const data = await rpc("sb_rapport", { p_dagen: Number(dagen) || 30, p_persoon: persoon || null });
+  return data || null;
+}
+
 export async function getTeam() {
   const data = await rest("app_users?select=naam,rol&order=rol.asc,naam.asc");
   return Array.isArray(data) ? data : [];
