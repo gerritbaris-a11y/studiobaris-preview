@@ -83,7 +83,7 @@ export default async function KlantenPage() {
               </span>
             </div>
 
-            <FaseStepper slug={r.slug} huidige={r.pipeline_status} />
+            <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
 
             <BetaalBadge status={r.betaal_status} />
 
