@@ -45,6 +45,34 @@ export async function getLeads() {
   return Array.isArray(data) ? data : [];
 }
 
+// Leads zoeken op de server. Met 7.900+ rijen sturen we nooit alles naar de browser.
+export async function zoekLeads({ naam, tab, zoek, provincie, vakgebied, potentie, wie, limiet }) {
+  const data = await rpc("sb_leads_zoek", {
+    p_naam: naam || "",
+    p_tab: tab || "werk",
+    p_zoek: zoek || null,
+    p_provincie: provincie || null,
+    p_vakgebied: vakgebied || null,
+    p_potentie: potentie || null,
+    p_wie: wie || "alles",
+    p_limiet: Number(limiet) || 30,
+  });
+  return data || { totaal: 0, rijen: [] };
+}
+
+// Provincies, vakgebieden en tellingen voor de filters.
+export async function getLeadFacetten(naam) {
+  const data = await rpc("sb_lead_facetten", { p_naam: naam || "" });
+  return data || { provincies: [], vakgebieden: [], werk: 0, afgerond: 0, socials: 0, totaal: 0 };
+}
+
+// Bulk-import van een leadlijst. Bestaande leads worden bijgewerkt; hun status
+// en eigenaar blijven staan.
+export async function importeerLeads(rijen, bron) {
+  const data = await rpc("sb_leads_import", { p_rijen: rijen, p_bron: bron || null });
+  return data || null;
+}
+
 export async function getTeam() {
   const data = await rest("app_users?select=naam,rol&order=rol.asc,naam.asc");
   return Array.isArray(data) ? data : [];
