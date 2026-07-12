@@ -7,6 +7,7 @@ import {
 } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
 import { sendPreviewEmail } from "../../../lib/email";
+import { maakDemoApp } from "../../../lib/demo-app";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -175,10 +176,20 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Opslaan mislukt: " + (await insertRes.text()) }, { status: 500 });
     }
 
+    // Persoonlijke demo-app klaarzetten: de klant-app in het jasje van deze klant,
+    // gevuld met zijn eigen naam, kleuren, projecten en reviews.
+    // Mag de intake nooit laten mislukken.
+    let demo = null;
+    try {
+      demo = await maakDemoApp(slug, content);
+    } catch (e) {
+      console.error("demo-app aanmaken mislukt:", e && e.message);
+    }
+
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
     const url = `${SITE_URL}/${slug}`;
     await sendPreviewEmail({ naam, url, review }).catch(() => {});
-    return NextResponse.json({ ok: true, slug, url, review });
+    return NextResponse.json({ ok: true, slug, url, review, demo });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
   }
