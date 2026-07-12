@@ -4,6 +4,21 @@ import LeadsClient from "./leads-client";
 
 export const dynamic = "force-dynamic";
 
+// Bedrijven zonder website maar mét social media: die zijn wél online actief en
+// missen alleen het belangrijkste. Hoogste kans op conversie, dus die gaan naar
+// Gerrit. De rest van het team krijgt ze niet in de lijst.
+const SOCIALS_VOOR = "Gerrit";
+
+function alleenSocials(l) {
+  const heeftSite = String(l.website || "").trim() !== "";
+  const heeftSocial =
+    Number(l.social_count || 0) > 0 ||
+    String(l.facebook || "").trim() !== "" ||
+    String(l.instagram || "").trim() !== "" ||
+    String(l.linkedin || "").trim() !== "";
+  return !heeftSite && heeftSocial;
+}
+
 function euro(n) {
   const v = Number(n || 0);
   return "€ " + v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -44,6 +59,15 @@ export default async function LeadsPage() {
   const sessie = leesSessie();
   const [leads, team, omzet] = await Promise.all([getLeads(), getTeam(), getOmzet()]);
   const mijn = sessie ? omzet.find((o) => o.persoon === sessie.naam) : null;
+  const naam = sessie ? sessie.naam : "";
+
+  // Social-only leads zijn van Gerrit. Heeft een collega er al eentje opgepakt,
+  // dan blijft die van hem staan - we trekken geen lopende leads onder iemand vandaan.
+  const zichtbaar = leads
+    .map((l) => ({ ...l, alleen_socials: alleenSocials(l) }))
+    .filter((l) => !l.alleen_socials || naam === SOCIALS_VOOR || (l.owner && l.owner === naam));
+
+  const socialsVanMij = zichtbaar.filter((l) => l.alleen_socials).length;
 
   return (
     <main style={{ maxWidth: 1320, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
@@ -66,12 +90,19 @@ export default async function LeadsPage() {
         Pak een lead op (zet 'm op je naam), zoek info op en vraag een preview aan. Alles wat je hier doet zien je collega's live.
       </p>
 
-      {leads.length === 0 ? (
+      {naam === SOCIALS_VOOR && socialsVanMij > 0 && (
+        <div style={{ background: "#f0f7ff", border: "1px solid #bfdcff", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "#0c447c" }}>
+          <strong>{socialsVanMij}</strong> {socialsVanMij === 1 ? "lead heeft" : "leads hebben"} wél social media maar géén website.
+          Die staan alleen bij jou in de lijst; ze zijn te herkennen aan het blauwe label.
+        </div>
+      )}
+
+      {zichtbaar.length === 0 ? (
         <div style={{ background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 12, padding: "16px 18px", color: "#7c4a03" }}>
           Nog geen leads ingeladen (of de server-key ontbreekt). Zodra de leadlijst is ingelezen verschijnen ze hier.
         </div>
       ) : (
-        <LeadsClient leads={leads} team={team} mij={sessie ? sessie.naam : ""} />
+        <LeadsClient leads={zichtbaar} team={team} mij={naam} />
       )}
     </main>
   );

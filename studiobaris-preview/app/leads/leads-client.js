@@ -185,7 +185,16 @@ export default function LeadsClient({ leads: initieel, team, mij }) {
                 {l.telefoon && <a href={`tel:${l.telefoon.replace(/\s/g, "")}`} style={{ color: "#1A2E40", textDecoration: "none", fontWeight: 600 }}>{l.telefoon}</a>}
                 {l.email && <a href={`mailto:${l.email}`} style={{ color: "#2563eb", textDecoration: "none" }}>{l.email}</a>}
                 {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>website</a> : <span style={{ color: "#b45309" }}>geen website</span>}
+                {l.facebook && <a href={l.facebook} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>facebook</a>}
+                {l.instagram && <a href={l.instagram} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>instagram</a>}
+                {l.linkedin && <a href={l.linkedin} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>linkedin</a>}
               </div>
+
+              {l.alleen_socials && (
+                <div style={{ display: "inline-flex", alignItems: "center", alignSelf: "flex-start", gap: 6, background: "#f0f7ff", border: "1px solid #bfdcff", color: "#0c447c", borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                  Wel social media, geen website
+                </div>
+              )}
 
               {/* Eigenaar */}
               <div style={{ fontSize: 13 }}>
