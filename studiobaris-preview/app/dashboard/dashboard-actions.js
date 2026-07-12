@@ -183,10 +183,12 @@ export function Contactpersoon({ slug, value }) {
 }
 
 // Het verkoop-appje, kant-en-klaar met naam en de juiste links erin.
-function bouwAppje({ contact, bedrijf, slug, afzender, origin }) {
+function bouwAppje({ contact, bedrijf, slug, afzender, origin, heeftDemo }) {
   const naam = (contact && contact.trim()) || bedrijf || "";
   const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
-  const demoLink = "https://demo.studiobaris.nl";
+  // Persoonlijke demo-app: de app in het jasje van deze klant (eigen naam, kleuren,
+  // projecten en reviews). Staat die er onverhoopt niet, dan de algemene demo.
+  const demoLink = heeftDemo ? "https://demo.studiobaris.nl/" + slug : "https://demo.studiobaris.nl";
   const groet = afzender || "Gerrit";
 
   return [
@@ -203,7 +205,7 @@ function bouwAppje({ contact, bedrijf, slug, afzender, origin }) {
     "1. Jouw kant-en-klare website: " + previewLink,
     "(volledig ontworpen voor jouw bedrijf, binnen 1 week live en jouw eigendom)",
     "",
-    "2. Hoe je nieuwe app werkt: " + demoLink,
+    "2. Jouw eigen app, alvast ingericht: " + demoLink,
     "(wij regelen de hosting, beveiliging en alle updates voor de site en de app)",
     "",
     "Al ergens hosting lopen? Geen probleem, wij helpen je helemaal mee met het gratis omzetten.",
@@ -220,17 +222,12 @@ function bouwAppje({ contact, bedrijf, slug, afzender, origin }) {
   ].join("\n");
 }
 
-export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon }) {
+export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, heeftDemo }) {
   const [status, setStatus] = useState("idle");
 
   function tekst() {
-    return bouwAppje({
-      contact,
-      bedrijf,
-      slug,
-      afzender,
-      origin: typeof window !== "undefined" ? window.location.origin : "",
-    });
+    return bouwAppje({ contact, bedrijf, slug, afzender,
+      origin: typeof window !== "undefined" ? window.location.origin : "", heeftDemo });
   }
 
   async function kopieer() {
@@ -352,8 +349,31 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo }) {
   const [copied, setCopied] = useState("");
+  const [demoBezig, setDemoBezig] = useState(false);
+
+  // Voor previews van voor deze functie, of om de demo bij te werken na een wijziging.
+  async function maakDemo() {
+    setDemoBezig(true);
+    try {
+      const res = await fetch("/api/klant/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const j = await res.json();
+      if (j.ok) {
+        window.location.reload();
+        return;
+      }
+      alert(j.error || "Demo-app maken mislukt.");
+    } catch (e) {
+      alert("Demo-app maken mislukt.");
+    }
+    setDemoBezig(false);
+  }
+
   function copy(path, key) {
     try {
       navigator.clipboard.writeText(window.location.origin + path);
@@ -371,6 +391,24 @@ export function LinkChips({ slug, gepubliceerd }) {
         {gepubliceerd ? "Website ↗" : "Website (offline)"}
       </a>
       <a href={`/${slug}?review=1`} target="_blank" rel="noreferrer" style={chip}>Preview ↗</a>
+      {heeftDemo ? (
+        <a
+          href={`https://demo.studiobaris.nl/${slug}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{ ...chip, borderColor: "#FF8300", color: "#a35400", background: "#fff7ed" }}
+        >
+          Demo-app ↗
+        </a>
+      ) : (
+        <button
+          onClick={maakDemo}
+          disabled={demoBezig}
+          style={{ ...chip, borderColor: "#FF8300", color: "#a35400" }}
+        >
+          {demoBezig ? "Demo-app maken…" : "Demo-app maken"}
+        </button>
+      )}
       <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
         {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
       </button>

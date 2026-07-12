@@ -80,7 +80,7 @@ export default async function Dashboard() {
                 )}
               </div>
 
-              <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} />
+              <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} />
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />
@@ -90,6 +90,7 @@ export default async function Dashboard() {
                   contact={r.contactpersoon}
                   afzender={r.verzamelaar || (sessie ? sessie.naam : "")}
                   telefoon={r.lead_phone}
+                  heeftDemo={r.heeft_demo}
                 />
               </div>
 
