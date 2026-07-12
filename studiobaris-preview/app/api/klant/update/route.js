@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { updateKlant } from "../../../../lib/server-data";
+import { updateKlant, log } from "../../../../lib/server-data";
+import { leesSessie } from "../../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,19 @@ export async function POST(req) {
 
     const res = await updateKlant(slug, { verzamelaar, status, maandbedrag });
     if (!res) return NextResponse.json({ ok: false, error: "Opslaan mislukt (server-key?)." }, { status: 500 });
+
+    if (status) {
+      const sessie = leesSessie();
+      await log({
+        persoon: sessie ? sessie.naam : null,
+        soort: "klant_fase",
+        slug,
+        bedrijf: body.bedrijf ? String(body.bedrijf) : null,
+        van: body.van ? String(body.van) : null,
+        naar: status,
+      });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
