@@ -349,7 +349,7 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
 
@@ -406,7 +406,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld }) {
         >
           {demoGevuld ? "Demo-app ↗" : "Demo-app (leeg) ↗"}
         </a>
-      ) : (
+      ) : magMaken ? (
         <button
           onClick={maakDemo}
           disabled={demoBezig}
@@ -414,7 +414,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld }) {
         >
           {demoBezig ? "Demo-app maken…" : "Demo-app maken"}
         </button>
-      )}
+      ) : null}
       <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
         {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
       </button>
