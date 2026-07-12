@@ -14,13 +14,11 @@ function key() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY;
 }
 
-// Het wachtwoord van een demo-account leiden we af uit de servergeheim + slug.
-// Zo hoeft het nergens opgeslagen te worden en kan de klant-app het opnieuw
-// berekenen wanneer iemand de demo opent.
-export function demoWachtwoord(slug) {
-  const geheim = key() || "sb";
-  const h = crypto.createHmac("sha256", geheim).update("sbdemo:" + slug).digest("base64url");
-  return "Demo-" + h.slice(0, 24);
+// Elk demo-account krijgt een eigen willekeurig wachtwoord. Dat bewaren we bij het
+// demo-bedrijf in de database, zodat de klant-app de demo kan openen. Het gaat om
+// wegwerpaccounts met voorbeeldgegevens; er staat niets van een klant in.
+export function nieuwWachtwoord() {
+  return "Demo-" + crypto.randomBytes(18).toString("base64url");
 }
 
 export function demoEmail(slug) {
@@ -46,9 +44,7 @@ async function sb(path, opts = {}) {
 }
 
 // Zorgt dat er een inlogaccount is voor deze demo en geeft het gebruikers-id terug.
-async function zorgVoorAccount(slug) {
-  const wachtwoord = demoWachtwoord(slug);
-
+async function zorgVoorAccount(slug, wachtwoord) {
   // Bestaat de demo al? Dan kennen we de eigenaar en zetten we alleen het wachtwoord goed.
   const bestaand = await sb(
     `/rest/v1/companies?demo_van_slug=eq.${encodeURIComponent(slug)}&select=id,owner_id&limit=1`
@@ -93,7 +89,8 @@ export async function maakDemoApp(slug, content) {
   const bedrijf = c.bedrijf || {};
   const naam = bedrijf.naam || slug;
 
-  const owner = await zorgVoorAccount(slug);
+  const wachtwoord = nieuwWachtwoord();
+  const owner = await zorgVoorAccount(slug, wachtwoord);
 
   const projecten = (Array.isArray(c.projecten) ? c.projecten : [])
     .filter((p) => p && (p.titel || p.beeld_url))
@@ -120,6 +117,7 @@ export async function maakDemoApp(slug, content) {
       p_primair: merk.primaire_kleur || "",
       p_accent: merk.secundaire_kleur || merk.primaire_kleur || "",
       p_telefoon: bedrijf.telefoon || "",
+      p_wachtwoord: wachtwoord,
       p_projecten: projecten,
       p_reviews: reviews,
     }),
