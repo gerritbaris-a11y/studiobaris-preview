@@ -45,7 +45,7 @@ async function verify(token) {
 }
 
 // Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /leads.
-const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/intake", "/team"];
+const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/intake", "/team", "/leads/import"];
 
 export async function middleware(req) {
   const path = req.nextUrl.pathname;
