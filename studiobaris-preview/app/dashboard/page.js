@@ -80,7 +80,7 @@ export default async function Dashboard() {
                 )}
               </div>
 
-              <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken />
+              <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken volledig />
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />

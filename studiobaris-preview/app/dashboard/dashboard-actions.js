@@ -349,7 +349,7 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
 
@@ -415,15 +415,19 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken 
           {demoBezig ? "Demo-app maken…" : "Demo-app maken"}
         </button>
       ) : null}
-      <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
-        {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
-      </button>
-      <button onClick={() => copy(`/feedback/${slug}`, "f")} style={chip}>
-        {copied === "f" ? "Feedback gekopieerd ✓" : "Feedback kopiëren"}
-      </button>
-      <button onClick={() => copy(`/akkoord/${slug}`, "b")} style={chip}>
-        {copied === "b" ? "Betaallink gekopieerd ✓" : "Betaallink kopiëren"}
-      </button>
+      {volledig && (
+        <>
+          <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
+            {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
+          </button>
+          <button onClick={() => copy(`/feedback/${slug}`, "f")} style={chip}>
+            {copied === "f" ? "Feedback gekopieerd ✓" : "Feedback kopiëren"}
+          </button>
+          <button onClick={() => copy(`/akkoord/${slug}`, "b")} style={chip}>
+            {copied === "b" ? "Betaallink gekopieerd ✓" : "Betaallink kopiëren"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
