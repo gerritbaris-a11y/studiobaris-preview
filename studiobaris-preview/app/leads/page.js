@@ -1,23 +1,8 @@
-import { getLeads, getTeam, getOmzet } from "../../lib/server-data";
-import { leesSessie } from "../../lib/auth";
+import { zoekLeads, getLeadFacetten, getOmzet } from "../../lib/server-data";
+import { leesSessie, isBeheer } from "../../lib/auth";
 import LeadsClient from "./leads-client";
 
 export const dynamic = "force-dynamic";
-
-// Bedrijven zonder website maar mét social media: die zijn wél online actief en
-// missen alleen het belangrijkste. Hoogste kans op conversie, dus die gaan naar
-// Gerrit. De rest van het team krijgt ze niet in de lijst.
-const SOCIALS_VOOR = "Gerrit";
-
-function alleenSocials(l) {
-  const heeftSite = String(l.website || "").trim() !== "";
-  const heeftSocial =
-    Number(l.social_count || 0) > 0 ||
-    String(l.facebook || "").trim() !== "" ||
-    String(l.instagram || "").trim() !== "" ||
-    String(l.linkedin || "").trim() !== "";
-  return !heeftSite && heeftSocial;
-}
 
 function euro(n) {
   const v = Number(n || 0);
@@ -55,32 +40,43 @@ function OmzetBalk({ naam, cijfers }) {
   );
 }
 
-export default async function LeadsPage() {
+export default async function LeadsPage({ searchParams }) {
   const sessie = leesSessie();
-  const [leads, team, omzet] = await Promise.all([getLeads(), getTeam(), getOmzet()]);
-  const mijn = sessie ? omzet.find((o) => o.persoon === sessie.naam) : null;
   const naam = sessie ? sessie.naam : "";
+  const sp = (await searchParams) || {};
 
-  // Social-only leads zijn van Gerrit. Heeft een collega er al eentje opgepakt,
-  // dan blijft die van hem staan - we trekken geen lopende leads onder iemand vandaan.
-  const zichtbaar = leads
-    .map((l) => ({ ...l, alleen_socials: alleenSocials(l) }))
-    .filter((l) => !l.alleen_socials || naam === SOCIALS_VOOR || (l.owner && l.owner === naam));
+  const filters = {
+    tab: sp.tab === "afgerond" ? "afgerond" : "werk",
+    zoek: sp.zoek || "",
+    provincie: sp.provincie || "",
+    vakgebied: sp.vakgebied || "",
+    potentie: sp.potentie || "",
+    wie: sp.wie || "alles",
+    limiet: Number(sp.limiet) > 0 ? Math.min(Number(sp.limiet), 300) : 30,
+  };
 
-  const socialsVanMij = zichtbaar.filter((l) => l.alleen_socials).length;
+  const [resultaat, facetten, omzet] = await Promise.all([
+    zoekLeads({ naam, ...filters }),
+    getLeadFacetten(naam),
+    getOmzet(),
+  ]);
+  const mijn = omzet.find((o) => o.persoon === naam) || null;
 
   return (
     <main style={{ maxWidth: 1320, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
 
-      {sessie && <OmzetBalk naam={sessie.naam} cijfers={mijn} />}
+      {sessie && <OmzetBalk naam={naam} cijfers={mijn} />}
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
         <h1 style={{ fontSize: 28, margin: "6px 0" }}>Leads</h1>
         <a href="/klanten" style={{ background: "#FF8300", color: "#fff", padding: "7px 13px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Mijn klanten</a>
+        {isBeheer(sessie) && (
+          <a href="/leads/import" style={{ color: "#1d6fd1", fontSize: 14 }}>Leads importeren</a>
+        )}
         {sessie && (
           <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
-            Ingelogd als <strong style={{ color: "#1A2E40" }}>{sessie.naam}</strong>
+            Ingelogd als <strong style={{ color: "#1A2E40" }}>{naam}</strong>
             {" · "}
             <a href="/api/auth/logout" style={{ color: "#1d6fd1" }}>Uitloggen</a>
           </span>
@@ -90,20 +86,20 @@ export default async function LeadsPage() {
         Pak een lead op (zet 'm op je naam), zoek info op en vraag een preview aan. Alles wat je hier doet zien je collega's live.
       </p>
 
-      {naam === SOCIALS_VOOR && socialsVanMij > 0 && (
+      {naam === "Gerrit" && facetten.socials > 0 && (
         <div style={{ background: "#f0f7ff", border: "1px solid #bfdcff", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "#0c447c" }}>
-          <strong>{socialsVanMij}</strong> {socialsVanMij === 1 ? "lead heeft" : "leads hebben"} wél social media maar géén website.
-          Die staan alleen bij jou in de lijst; ze zijn te herkennen aan het blauwe label.
+          <strong>{facetten.socials}</strong> bedrijven hebben wél social media maar géén website — de hoogste kans op conversie.
+          Die staan alleen bij jou in de lijst, bovenaan, met een blauw label.
         </div>
       )}
 
-      {zichtbaar.length === 0 ? (
-        <div style={{ background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 12, padding: "16px 18px", color: "#7c4a03" }}>
-          Nog geen leads ingeladen (of de server-key ontbreekt). Zodra de leadlijst is ingelezen verschijnen ze hier.
-        </div>
-      ) : (
-        <LeadsClient leads={zichtbaar} team={team} mij={naam} />
-      )}
+      <LeadsClient
+        leads={resultaat.rijen || []}
+        totaal={resultaat.totaal || 0}
+        facetten={facetten}
+        mij={naam}
+        filters={filters}
+      />
     </main>
   );
 }
