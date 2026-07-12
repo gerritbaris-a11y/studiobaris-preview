@@ -183,12 +183,12 @@ export function Contactpersoon({ slug, value }) {
 }
 
 // Het verkoop-appje, kant-en-klaar met naam en de juiste links erin.
-function bouwAppje({ contact, bedrijf, slug, afzender, origin, heeftDemo }) {
+function bouwAppje({ contact, bedrijf, slug, afzender, origin, demoGevuld }) {
   const naam = (contact && contact.trim()) || bedrijf || "";
   const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
   // Persoonlijke demo-app: de app in het jasje van deze klant (eigen naam, kleuren,
   // projecten en reviews). Staat die er onverhoopt niet, dan de algemene demo.
-  const demoLink = heeftDemo ? "https://demo.studiobaris.nl/" + slug : "https://demo.studiobaris.nl";
+  const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "https://demo.studiobaris.nl";
   const groet = afzender || "Gerrit";
 
   return [
@@ -222,12 +222,12 @@ function bouwAppje({ contact, bedrijf, slug, afzender, origin, heeftDemo }) {
   ].join("\n");
 }
 
-export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, heeftDemo }) {
+export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevuld }) {
   const [status, setStatus] = useState("idle");
 
   function tekst() {
     return bouwAppje({ contact, bedrijf, slug, afzender,
-      origin: typeof window !== "undefined" ? window.location.origin : "", heeftDemo });
+      origin: typeof window !== "undefined" ? window.location.origin : "", demoGevuld });
   }
 
   async function kopieer() {
@@ -349,7 +349,7 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
 
@@ -396,9 +396,15 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo }) {
           href={`https://demo.studiobaris.nl/${slug}`}
           target="_blank"
           rel="noreferrer"
-          style={{ ...chip, borderColor: "#FF8300", color: "#a35400", background: "#fff7ed" }}
+          title={demoGevuld ? "De app in het jasje van deze klant" : "Let op: deze preview heeft geen projecten of reviews, dus de demo is leeg"}
+          style={{
+            ...chip,
+            borderColor: demoGevuld ? "#FF8300" : "#d8dde3",
+            color: demoGevuld ? "#a35400" : "#94a3b8",
+            background: demoGevuld ? "#fff7ed" : "#fff",
+          }}
         >
-          Demo-app ↗
+          {demoGevuld ? "Demo-app ↗" : "Demo-app (leeg) ↗"}
         </a>
       ) : (
         <button
