@@ -103,6 +103,27 @@ export async function getRapport(dagen = 30, persoon = null) {
   return data || null;
 }
 
+// Vragen die klanten via de app stellen (automatisch ingedeeld).
+export async function getVragen({ status = "", categorie = "", bedrijf = "", limiet = 100 } = {}) {
+  const data = await rpc("sb_vragen", {
+    p_status: status || null,
+    p_categorie: categorie || null,
+    p_bedrijf: bedrijf || null,
+    p_limiet: Number(limiet) || 100,
+  });
+  return data || { per_categorie: [], open: 0, totaal: 0, rijen: [] };
+}
+
+export async function zetVraagStatus(id, status, notitie = null) {
+  return await rpc("sb_vraag_status", { p_id: id, p_status: status, p_notitie: notitie });
+}
+
+// Wat elke klant ons kost: AI-verbruik, foto's en opslag.
+export async function getKosten() {
+  const data = await rpc("sb_kosten", {});
+  return data || { gemiddelden: {}, klanten: [] };
+}
+
 export async function getTeam() {
   const data = await rest("app_users?select=naam,rol&order=rol.asc,naam.asc");
   return Array.isArray(data) ? data : [];
