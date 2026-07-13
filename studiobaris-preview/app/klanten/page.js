@@ -1,6 +1,6 @@
-import { getOverview } from "../../lib/server-data";
+import { getOverview, getMijnLeads } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag } from "../dashboard/dashboard-actions";
+import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop } from "../dashboard/dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +21,9 @@ function BetaalBadge({ status }) {
 // Verkopers zien hun eigen klanten, beheer ziet alles.
 export default async function KlantenPage() {
   const sessie = leesSessie();
-  const alles = await getOverview();
-  const beheer = isBeheer(sessie);
   const naam = sessie ? sessie.naam : "";
+  const [alles, mijnLeads] = await Promise.all([getOverview(), getMijnLeads(naam)]);
+  const beheer = isBeheer(sessie);
 
   const rows = beheer
     ? alles
@@ -62,9 +62,41 @@ export default async function KlantenPage() {
         Akkoord en vul je het verkoopbedrag in — daarna neemt Gerrit de bouw en de feedback over.
       </p>
 
-      {rows.length === 0 && (
+      {/* Leads die je hebt opgepakt maar waar nog geen preview van is. */}
+      {mijnLeads.length > 0 && (
+        <div style={{ ...card, marginBottom: 16, background: "#f8fafc" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: 16, margin: 0 }}>Opgepakt, nog geen preview</h2>
+            <span style={{ fontSize: 13, color: "#94a3b8" }}>{mijnLeads.length} {mijnLeads.length === 1 ? "lead" : "leads"} staan op jouw naam</span>
+            <a href="/leads?wie=mij" style={{ marginLeft: "auto", fontSize: 13, color: "#1d6fd1" }}>Naar de leadlijst</a>
+          </div>
+          <div style={{ display: "grid", gap: 8 }}>
+            {mijnLeads.map((l) => (
+              <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px" }}>
+                <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14.5 }}>{l.bedrijfsnaam}</div>
+                  <div style={{ fontSize: 12.5, color: "#64748b" }}>
+                    {[l.vakgebied, l.plaats].filter(Boolean).join(" · ")}
+                    {l.status === "benaderd" && <span style={{ color: "#2563eb", fontWeight: 600 }}> · benaderd</span>}
+                    {l.alleen_socials && <span style={{ color: "#0c447c", fontWeight: 600 }}> · geen website</span>}
+                  </div>
+                </div>
+                {l.telefoon && (
+                  <a href={`tel:${String(l.telefoon).replace(/\s/g, "")}`} style={{ fontSize: 13, fontWeight: 600, color: "#1A2E40", textDecoration: "none" }}>{l.telefoon}</a>
+                )}
+                <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
+                  style={{ background: "#FF8300", color: "#fff", padding: "8px 13px", borderRadius: 9, fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+                  Preview maken
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {rows.length === 0 && mijnLeads.length === 0 && (
         <div style={{ background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 12, padding: "16px 18px", color: "#7c4a03" }}>
-          Je hebt nog geen klanten. Pak een lead op in de <a href="/leads" style={{ color: "#7c4a03", fontWeight: 700 }}>leadlijst</a> en vraag een preview aan.
+          Je hebt nog geen klanten. Pak een lead op in de <a href="/leads" style={{ color: "#7c4a03", fontWeight: 700 }}>leadlijst</a> en maak een preview.
         </div>
       )}
 
@@ -99,6 +131,10 @@ export default async function KlantenPage() {
                 telefoon={r.lead_phone}
                 demoGevuld={r.demo_gevuld}
               />
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+              <AppLinkKnop bedrijf={r.company_name} />
             </div>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
