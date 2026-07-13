@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getBetaalinfo, setBetaling } from "../../../../lib/server-data";
+import { getBetaalinfo, setBetaling, setRest } from "../../../../lib/server-data";
 import { mollie, eenMaandVooruit, inclBtw } from "../../../../lib/mollie";
 
 export const runtime = "nodejs";
@@ -24,6 +24,16 @@ export async function POST(req) {
     const payment = await mollie(`/payments/${id}`);
     const slug = payment && payment.metadata && payment.metadata.slug;
     if (!slug) return new NextResponse("geen slug", { status: 200 });
+
+    // Restbetaling (tweede helft van het websitebedrag, bij oplevering).
+    if (payment.metadata && payment.metadata.soort === "rest") {
+      if (payment.status === "paid") {
+        await setRest(slug, "betaald", payment.id);
+      } else if (["failed", "canceled", "expired"].includes(payment.status)) {
+        await setRest(slug, "mislukt", payment.id);
+      }
+      return new NextResponse("ok", { status: 200 });
+    }
 
     // Alleen handelen op de eerste (machtigings)betaling.
     if (payment.sequenceType === "first") {
