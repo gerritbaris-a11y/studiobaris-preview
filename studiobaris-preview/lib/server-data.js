@@ -75,7 +75,7 @@ export async function importeerLeads(rijen, bron) {
 
 // Eén lead ophalen (om de vorige status te kennen voordat we hem wijzigen).
 export async function getLead(id) {
-  const data = await rest(`leads?select=id,bedrijfsnaam,status,owner&id=eq.${encodeURIComponent(id)}&limit=1`);
+  const data = await rest(`leads?select=id,bedrijfsnaam,status,owner,vakgebied,plaats,provincie,adres,telefoon,email,website,facebook,instagram,linkedin,google_maps&id=eq.${encodeURIComponent(id)}&limit=1`);
   return Array.isArray(data) && data[0] ? data[0] : null;
 }
 
