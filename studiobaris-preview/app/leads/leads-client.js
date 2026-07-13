@@ -31,12 +31,10 @@ const FASE_PILLS = ["nieuw", "opgepakt", "benaderd", "preview"];
 const DONE = ["klant", "afgewezen"];
 
 const REDENEN = [
-  "Heeft al een goede website",
-  "Geen interesse",
-  "Niet bereikbaar",
-  "Past niet bij ons",
-  "Later opnieuw benaderen",
-  "Gegevens kloppen niet",
+  "Goede website",
+  "Niet actief",
+  "Geen ZZP / eenmanszaak",
+  "Overig",
 ];
 const PER_KEER = 10;
 
@@ -99,6 +97,11 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   // vindbaar in het archief, gefilterd op die reden.
   async function archiveer(l, reden) {
     if (!reden) return;
+    if (reden === "Overig") {
+      const eigen = window.prompt("Waarom archiveer je " + (l.bedrijfsnaam || "deze lead") + "?");
+      if (!eigen || !eigen.trim()) return;
+      reden = "Overig: " + eigen.trim();
+    }
     setBezigId(l.id);
     setLeads((prev) => prev.filter((x) => x.id !== l.id));
     try {
@@ -120,22 +123,6 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: l.id, archief_reden: null }),
       });
-    } catch {}
-    setBezigId("");
-  }
-
-  async function verwijder(l) {
-    if (!confirm("Lead \"" + (l.bedrijfsnaam || "") + "\" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
-    setBezigId(l.id);
-    setLeads((prev) => prev.filter((x) => x.id !== l.id));
-    try {
-      const res = await fetch("/api/leads", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: l.id }),
-      });
-      const j = await res.json();
-      if (!j.ok) alert(j.error || "Verwijderen mislukt.");
     } catch {}
     setBezigId("");
   }
@@ -360,12 +347,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                     {REDENEN.map((r) => (<option key={r} value={r}>{r}</option>))}
                   </select>
                 )}
-                {beheer && (
-                  <button onClick={() => verwijder(l)} title="Definitief verwijderen"
-                    style={{ border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 }}>
-                    Verwijderen
-                  </button>
-                )}
+
               </div>
             </div>
           );
