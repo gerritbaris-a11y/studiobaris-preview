@@ -538,3 +538,58 @@ export function GegevensEditor({ slug, data = {} }) {
     </div>
   );
 }
+
+// De inloglink naar de app van deze klant. Handig als hij 'm kwijt is.
+export function AppLinkKnop({ bedrijf }) {
+  const [bezig, setBezig] = useState(false);
+  const [url, setUrl] = useState("");
+  const [fout, setFout] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function haal() {
+    setBezig(true); setFout(""); setUrl("");
+    try {
+      const res = await fetch("/api/klant/applink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bedrijf }),
+      });
+      const j = await res.json();
+      if (j.ok) setUrl(j.url);
+      else setFout(j.error || "Lukt niet.");
+    } catch {
+      setFout("Lukt niet.");
+    }
+    setBezig(false);
+  }
+
+  const chip = {
+    display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
+    borderRadius: 8, border: "1px solid #d8dde3", background: "#fff", color: "#334155",
+    cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
+  };
+
+  if (url) {
+    return (
+      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%" }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#1A2E40" }}>App-inlog</span>
+        <input readOnly value={url} onFocus={(e) => e.target.select()}
+          style={{ flex: "1 1 240px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #d8dde3", borderRadius: 7, fontFamily: "inherit", color: "#334155" }} />
+        <button onClick={() => { try { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} }}
+          style={{ ...chip, background: copied ? "#ecfdf5" : "#fff" }}>
+          {copied ? "Gekopieerd ✓" : "Kopieer"}
+        </button>
+        <span style={{ fontSize: 11.5, color: "#94a3b8" }}>14 dagen geldig</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <button onClick={haal} disabled={bezig} style={chip}>
+        {bezig ? "Bezig…" : "App-inloglink maken"}
+      </button>
+      {fout && <span style={{ fontSize: 12, color: "#b45309" }}>{fout}</span>}
+    </div>
+  );
+}
