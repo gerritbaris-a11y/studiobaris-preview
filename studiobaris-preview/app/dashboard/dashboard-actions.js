@@ -184,51 +184,101 @@ export function Contactpersoon({ slug, value }) {
 }
 
 // Het verkoop-appje, kant-en-klaar met naam en de juiste links erin.
-function bouwAppje({ contact, bedrijf, slug, afzender, origin, demoGevuld }) {
+function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }) {
   const naam = (contact && contact.trim()) || bedrijf || "";
   const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
-  // Persoonlijke demo-app: de app in het jasje van deze klant (eigen naam, kleuren,
-  // projecten en reviews). Staat die er onverhoopt niet, dan de algemene demo.
+  // Persoonlijke demo-app: de app in het jasje van deze klant. Is die er (nog) niet
+  // of is hij leeg, dan de algemene demo.
   const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "https://demo.studiobaris.nl";
   const groet = afzender || "Gerrit";
+  const zin = (persoonlijk && persoonlijk.trim()) || "[PERSOONLIJKE ZIN — vul deze nog in]";
 
   return [
     "Hoi " + naam + ",",
     "",
-    "Ik kwam je bedrijf tegen en heb direct een cadeautje voor je klaargezet. De meeste goede vakmannen hebben via mond-tot-mondreclame gelukkig werk zat, dus een website om meer klanten te krijgen is vaak helemaal niet nodig.",
+    zin,
     "",
-    "Maar je wilt natuurlijk wel dat je online reputatie klopt als mensen je opzoeken, zeker met alle beunhazen van tegenwoordig. Daarom heb ik het werk alvast voor je gedaan: ik heb een gloednieuwe website-opzet voor jouw bedrijf ontworpen.",
+    "De meeste goede vakmannen hebben via mond-tot-mondreclame werk zat, dus een site voor méér klanten heb je vast niet nodig.",
     "",
-    "Geen gedoe met 's avonds achter een laptop kruipen, want ik lever er een handige app bij: hiermee zet je op de klus in 10 seconden een foto en review live op je nieuwe site. Gewoon vanaf je telefoon. Je site blijft zo moeiteloos actief, waardoor je stijgt in Google en voortaan de mooiste klussen eruit pikt.",
+    "Maar je wilt wél dat je online reputatie klopt als mensen je opzoeken, tussen alle beunhazen van nu.",
     "",
-    "Kijk zelf maar of het ontwerp bij je past, ik heb twee links voor je:",
+    "En 's avonds achter een laptop kruipen voor je site — daar heeft niemand zin in. Daarom heb ik iets anders gebouwd: een website die je bijhoudt via een app op je telefoon.",
     "",
-    "1. Jouw kant-en-klare website: " + previewLink,
-    "(volledig ontworpen voor jouw bedrijf, binnen 1 week live en jouw eigendom)",
+    "Sta je op de klus? Foto maken, review erbij, en binnen 10 seconden staat het live op je site.",
     "",
-    "2. Jouw eigen app, alvast ingericht: " + demoLink,
-    "(wij regelen de hosting, beveiliging en alle updates voor de site en de app)",
+    "Onder andere Timmer- en Onderhoudsbedrijf Emiel en PM Sanitairzaken gingen je voor. Die swipen hun klussen nu live vanaf de bouwplaats. 😉",
     "",
-    "Al ergens hosting lopen? Geen probleem, wij helpen je helemaal mee met het gratis omzetten.",
+    "Ik heb alvast een complete website-opzet voor jouw bedrijf ontworpen, inclusief de app-koppeling. Je kunt 'm hier direct bekijken:",
     "",
-    "Tot eind augustus loopt er een actie waarbij de inrichting en app-koppeling helemaal gratis zijn (volledig fiscaal aftrekbaar). Binnenkort komt er een update waarmee je ook direct naar social media pusht, vanaf dan wordt het een stuk duurder.",
+    "Jouw website: " + previewLink,
+    "Jouw app: " + demoLink,
     "",
-    "P.S. Je bent trouwens niet het proefkonijn: al meer dan 50 zzp'ers hebben hun laptop definitief dichtgeklapt en swipen hun projecten nu live vanaf de bouwplaats.",
+    "Het inrichten doe ik tot eind augustus gratis. Kijk eerst maar even of het ontwerp je bevalt — vind je 'm niks, dan is de prijs toch niet interessant. En bevalt-ie wel, dan vertel ik je precies wat het kost. Geen kleine lettertjes.",
     "",
-    "Lijkt het je wat om jouw nieuwe site te bekijken? Stuur gerust een appje terug. Zo niet, ook even goede vrienden!",
+    "Laat gerust weten wat je ervan vindt — ook als het niks voor je is. Dan weet ik het, en zijn we ook even goede vrienden. 👍",
     "",
-    "Enfin, een lang verhaal maar met een goed doel.",
-    "",
-    "Groet, " + groet + " (www.studiobaris.nl)",
+    "Groet,",
+    groet + " (www.studiobaris.nl)",
   ].join("\n");
 }
 
-export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevuld }) {
+// De persoonlijke openingszin. Zonder deze zin is het appje niet af.
+export function PersoonlijkeZin({ slug, value }) {
+  const [v, setV] = useState(value || "");
+  const [saved, setSaved] = useState(false);
+
+  async function blur() {
+    if (v === (value || "")) return;
+    const res = await fetch("/api/klant/persoonlijk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, tekst: v }),
+    });
+    const d = await res.json();
+    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1400); }
+  }
+
+  const leeg = !v.trim();
+  return (
+    <div style={{ width: "100%" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#1A2E40" }}>
+          Persoonlijke zin
+        </span>
+        <span style={{ fontSize: 11.5, color: "#94a3b8" }}>
+          Waar je ze mee raakt. Iets wat je op hun socials of site zag.
+        </span>
+        {saved && <span style={{ fontSize: 11.5, color: "#0f6e56", fontWeight: 700 }}>opgeslagen ✓</span>}
+      </div>
+      <textarea
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onBlur={blur}
+        rows={2}
+        placeholder="Bijv: kwam die badkamer in Voorburg tegen op je Facebook. Strak werk."
+        style={{
+          width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13.5,
+          border: "1px solid " + (leeg ? "#fcd9a8" : saved ? "#1d7a46" : "#d8dde3"),
+          background: leeg ? "#fffbf5" : "#fff",
+          borderRadius: 8, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5,
+        }}
+      />
+    </div>
+  );
+}
+
+export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevuld, persoonlijk }) {
   const [status, setStatus] = useState("idle");
 
+  // Wat ontbreekt er nog voordat dit appje de deur uit kan?
+  const mist = [];
+  if (!contact || !String(contact).trim()) mist.push("de voornaam van de klant");
+  if (!persoonlijk || !String(persoonlijk).trim()) mist.push("de persoonlijke zin");
+  if (!telefoon || !String(telefoon).trim()) mist.push("een telefoonnummer");
+  const klaar = mist.length === 0;
+
   function tekst() {
-    return bouwAppje({ contact, bedrijf, slug, afzender,
-      origin: typeof window !== "undefined" ? window.location.origin : "", demoGevuld });
+    return bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld });
   }
 
   async function kopieer() {
@@ -250,19 +300,33 @@ export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevu
 
   const knop = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
-    borderRadius: 8, border: "1px solid #25D366", background: "#25D366", color: "#fff",
-    cursor: "pointer", fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap",
+    borderRadius: 8,
+    border: "1px solid " + (klaar ? "#25D366" : "#e2e8f0"),
+    background: klaar ? "#25D366" : "#e2e8f0",
+    color: klaar ? "#fff" : "#94a3b8",
+    cursor: klaar ? "pointer" : "not-allowed",
+    fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap",
   };
-  const knop2 = { ...knop, background: "#fff", color: "#0f6e56" };
+  const knop2 = { ...knop, background: "#fff", color: klaar ? "#0f6e56" : "#94a3b8", border: "1px solid " + (klaar ? "#25D366" : "#e2e8f0") };
 
   return (
-    <span style={{ display: "inline-flex", gap: 6 }}>
-      <button onClick={openWhatsapp} style={knop} title="Opent WhatsApp met de tekst er al in">
+    <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+      <button
+        onClick={() => klaar && openWhatsapp()}
+        disabled={!klaar}
+        style={knop}
+        title={klaar ? "Opent WhatsApp met de tekst er al in" : "Nog niet compleet: " + mist.join(", ")}
+      >
         Appje versturen
       </button>
-      <button onClick={kopieer} style={knop2}>
+      <button onClick={() => klaar && kopieer()} disabled={!klaar} style={knop2}>
         {status === "gekopieerd" ? "Gekopieerd!" : status === "fout" ? "Kopieren mislukt" : "Tekst kopieren"}
       </button>
+      {!klaar && (
+        <span style={{ fontSize: 12, color: "#b45309", fontWeight: 600 }}>
+          Nog invullen: {mist.join(", ")}
+        </span>
+      )}
     </span>
   );
 }

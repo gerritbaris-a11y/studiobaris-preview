@@ -3,7 +3,7 @@ import { leesSessie } from "../../lib/auth";
 import {
   PublishButton, PublishToggle, KlantNaam, KlantBedrag,
   AkkoordLink, VerwijderKnop, GegevensEditor, LinkChips, VerkoopBedrag,
-  FaseStepper, InzendingenKnop, Contactpersoon, AppjeKnop, AppLinkKnop,
+  FaseStepper, InzendingenKnop, Contactpersoon, AppjeKnop, AppLinkKnop, PersoonlijkeZin,
 } from "./dashboard-actions";
 
 export const dynamic = "force-dynamic";
@@ -83,6 +83,8 @@ export default async function Dashboard() {
 
               <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken volledig heeftRest={Number(r.restbedrag) > 0} restBetaald={r.rest_status === "betaald"} stijl={r.stijl} />
 
+              <PersoonlijkeZin slug={r.slug} value={r.persoonlijk} />
+
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />
                 <AppjeKnop
@@ -92,6 +94,7 @@ export default async function Dashboard() {
                   afzender={r.verzamelaar || (sessie ? sessie.naam : "")}
                   telefoon={r.lead_phone}
                   demoGevuld={r.demo_gevuld}
+                  persoonlijk={r.persoonlijk}
                 />
               </div>
 
