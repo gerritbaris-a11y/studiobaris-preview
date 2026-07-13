@@ -74,6 +74,7 @@ export const config = {
     "/dashboard/:path*",
     "/leads/:path*",
     "/klanten/:path*",
+    "/vergelijk/:path*",
     "/overzicht/:path*",
     "/vragen/:path*",
     "/kosten/:path*",
