@@ -16,7 +16,15 @@ async function rpc(name, body) {
     cache: "no-store",
   });
   if (!res.ok) return null;
-  return res.json();
+  // Functies die niets teruggeven (void) leveren een leeg antwoord op.
+  // Dat is geen fout: gewoon true teruggeven in plaats van op JSON stuklopen.
+  const tekst = await res.text();
+  if (!tekst) return true;
+  try {
+    return JSON.parse(tekst);
+  } catch {
+    return true;
+  }
 }
 
 // Directe tabel-toegang via PostgREST (service-role, server-only).
