@@ -8,7 +8,7 @@ import {
 import { callClaude } from "../../../lib/anthropic";
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
-import { log } from "../../../lib/server-data";
+import { log, updateKlant, updateLead, getLead } from "../../../lib/server-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -187,8 +187,42 @@ export async function POST(req) {
       console.error("demo-app aanmaken mislukt:", e && e.message);
     }
 
+    // De preview op naam zetten van de collega die hem maakte. Daar hangt zijn
+    // omzet aan vast, en hierdoor verschijnt de klant bij "Mijn klanten".
+    const verzamelaar = v("verzamelaar");
+    if (verzamelaar) {
+      try {
+        await updateKlant(slug, { verzamelaar, status: "Preview" });
+      } catch (e) {
+        console.error("verzamelaar zetten mislukt:", e && e.message);
+      }
+    }
+
+    // De lead afsluiten: status op preview en de koppeling met deze preview leggen.
+    const leadId = v("lead_id");
+    if (leadId) {
+      try {
+        const oudeLead = await getLead(leadId);
+        await updateLead(leadId, {
+          status: "preview",
+          preview_slug: slug,
+          owner: (oudeLead && oudeLead.owner) || verzamelaar || null,
+        });
+        await log({
+          persoon: verzamelaar || null,
+          soort: "lead_status",
+          leadId,
+          bedrijf: naam,
+          van: oudeLead ? oudeLead.status || "nieuw" : null,
+          naar: "preview",
+        });
+      } catch (e) {
+        console.error("lead koppelen mislukt:", e && e.message);
+      }
+    }
+
     await log({
-      persoon: v("bron") || null,
+      persoon: verzamelaar || v("bron") || null,
       soort: "preview",
       slug,
       bedrijf: naam,
