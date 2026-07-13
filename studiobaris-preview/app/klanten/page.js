@@ -1,6 +1,6 @@
 import { getOverview, getMijnLeads } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop } from "../dashboard/dashboard-actions";
+import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin } from "../dashboard/dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +121,8 @@ export default async function KlantenPage() {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig heeftRest={Number(r.restbedrag) > 0} restBetaald={r.rest_status === "betaald"} stijl={r.stijl} />
 
+            <PersoonlijkeZin slug={r.slug} value={r.persoonlijk} />
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
               <AppjeKnop
@@ -130,6 +132,7 @@ export default async function KlantenPage() {
                 afzender={r.verzamelaar || naam}
                 telefoon={r.lead_phone}
                 demoGevuld={r.demo_gevuld}
+                persoonlijk={r.persoonlijk}
               />
             </div>
 
