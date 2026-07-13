@@ -350,7 +350,7 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig, heeftRest, restBetaald }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
   const [open, setOpen] = useState(false);
@@ -365,7 +365,18 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
     { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" },
     { key: "i", naam: "Klant-intake", url: PREVIEW + "/intake/" + slug, verborgen: !volledig, hint: "Stuur dit na akkoord" },
     { key: "f", naam: "Feedback", url: PREVIEW + "/feedback/" + slug, verborgen: !volledig, hint: "Voor feedbackronde 1 en 2" },
-    { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Aanbetaling + machtiging" },
+    { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Helft vooraf + maandelijkse incasso" },
+    {
+      key: "r",
+      naam: restBetaald ? "Restbedrag (voldaan)" : "Restbetaling",
+      url: PREVIEW + "/restbetaling/" + slug,
+      uit: !heeftRest,
+      hint: !heeftRest
+        ? "Vul eerst een verkoopbedrag in"
+        : restBetaald
+          ? "Het restbedrag is al betaald"
+          : "De tweede helft, te sturen bij oplevering",
+    },
   ].filter((l) => !l.verborgen);
 
   function copy(url, key) {
@@ -414,9 +425,9 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
             title={l.hint + (l.uit ? "" : "\n" + l.url)}
             style={{
               ...chip,
-              borderColor: l.uit ? "#e5e7eb" : l.key === "d" ? (l.leeg ? "#d8dde3" : "#FF8300") : "#d8dde3",
-              color: l.uit ? "#cbd5e1" : l.key === "d" && !l.leeg ? "#a35400" : "#334155",
-              background: copied === l.key ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
+              borderColor: l.uit ? "#e5e7eb" : l.key === "r" && restBetaald ? "#a7f3d0" : l.key === "d" ? (l.leeg ? "#d8dde3" : "#FF8300") : "#d8dde3",
+              color: l.uit ? "#cbd5e1" : l.key === "r" && restBetaald ? "#065f46" : l.key === "d" && !l.leeg ? "#a35400" : "#334155",
+              background: copied === l.key ? "#ecfdf5" : l.key === "r" && restBetaald ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
               cursor: l.uit ? "not-allowed" : "pointer",
             }}
           >
