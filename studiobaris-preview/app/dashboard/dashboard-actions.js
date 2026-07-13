@@ -350,7 +350,7 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig, heeftRest, restBetaald }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig, heeftRest, restBetaald, stijl }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
   const [open, setOpen] = useState(false);
@@ -416,6 +416,9 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#1A2E40", color: "#1A2E40", fontWeight: 700 }}>
           {open ? "Links verbergen" : "Alle links"}
         </button>
+        <a href={`/vergelijk/${slug}`} style={{ ...chip, borderColor: "#7c3aed", color: "#6d28d9", background: "#faf5ff" }}>
+          Stijl kiezen{stijl ? ` (${stijl})` : ""}
+        </a>
 
         {links.map((l) => (
           <button
