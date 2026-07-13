@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { updateLead, getLead, log, verwijderLead } from "../../../lib/server-data";
-import { leesSessie, isBeheer } from "../../../lib/auth";
+import { updateLead, getLead, log } from "../../../lib/server-data";
+import { leesSessie } from "../../../lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,14 +9,7 @@ const STATUSSEN = ["nieuw", "opgepakt", "benaderd", "preview", "klant", "afgewez
 
 // Vaste redenen om een lead te archiveren. Zo kunnen we later filteren en
 // bijvoorbeeld alle "later opnieuw benaderen" in één keer terughalen.
-export const REDENEN = [
-  "Heeft al een goede website",
-  "Geen interesse",
-  "Niet bereikbaar",
-  "Past niet bij ons",
-  "Later opnieuw benaderen",
-  "Gegevens kloppen niet",
-];
+export const REDENEN = ["Goede website", "Niet actief", "Geen ZZP / eenmanszaak"];
 
 export async function POST(req) {
   try {
@@ -45,8 +38,9 @@ export async function POST(req) {
       fields.website = w || null;
     }
     if (body.archief_reden !== undefined) {
-      const reden = body.archief_reden ? String(body.archief_reden) : null;
-      if (reden && !REDENEN.includes(reden)) {
+      const reden = body.archief_reden ? String(body.archief_reden).slice(0, 120) : null;
+      // Vaste redenen, of een eigen omschrijving die met "Overig: " begint.
+      if (reden && !REDENEN.includes(reden) && !reden.startsWith("Overig")) {
         return NextResponse.json({ ok: false, error: "Onbekende reden." }, { status: 400 });
       }
       fields.archief_reden = reden;
@@ -84,25 +78,3 @@ export async function POST(req) {
   }
 }
 
-// Lead definitief verwijderen. Alleen beheer, want dit is niet terug te draaien.
-export async function DELETE(req) {
-  const sessie = leesSessie();
-  if (!sessie || !isBeheer(sessie)) {
-    return NextResponse.json({ ok: false, error: "Alleen beheer mag leads verwijderen." }, { status: 403 });
-  }
-  try {
-    const { id } = await req.json();
-    if (!id) return NextResponse.json({ ok: false, error: "id ontbreekt." }, { status: 400 });
-    const oud = await getLead(id);
-    await verwijderLead(id);
-    await log({
-      persoon: sessie.naam,
-      soort: "lead_verwijderd",
-      bedrijf: oud ? oud.bedrijfsnaam : null,
-      van: oud ? oud.status : null,
-    });
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
-  }
-}
