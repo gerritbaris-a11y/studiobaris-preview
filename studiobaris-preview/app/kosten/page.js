@@ -13,7 +13,7 @@ const STANDAARD = {
   verkeer: 0.09,      // euro per GB uitgaand verkeer
   weergaven: 300,     // geschat aantal keer per maand dat de projectfoto's geladen worden
   domein: 0.92,       // 11 euro per jaar / 12
-  vast: 0,            // vaste platformkosten p/m. Nu 0: Vercel en Supabase draaien gratis.
+  vast: 45,           // vaste platformkosten p/m (Supabase Pro + Vercel Pro). Pas aan wat je echt betaalt.
   maandbedrag: 29.95, // wat de klant betaalt, excl. btw
 };
 
@@ -163,8 +163,9 @@ export default async function KostenPage({ searchParams }) {
           <strong>Waar komen deze cijfers vandaan.</strong> AI is echt gemeten verbruik uit de app (een projecttekst
           kost ongeveer {euro(Number(gem.ai_per_project || 0), 4)}; reviews gebruiken geen AI). Opslag is het werkelijke
           aantal megabytes aan foto&apos;s. Verkeer is een schatting: opslag × {t.weergaven} weergaven × {euro(t.verkeer, 3)} per GB.
-          Domein is €11 per jaar. Vaste platformkosten staan op {euro(t.vast)} omdat Vercel en Supabase nu binnen de gratis
-          grenzen draaien — zet ze bij als dat verandert, dan zie je het terug bij Resultaat.
+          Domein is €11 per jaar. De vaste platformkosten ({euro(t.vast)} p/m voor Supabase en Vercel) worden bewust
+          <strong> niet</strong> over de klanten verdeeld — ze bestaan ook zonder hen. Ze staan apart bij Resultaat.
+          Klopt het bedrag niet, pas het aan via <code>/kosten?vast=…</code>.
         </p>
       </div>
     </main>
