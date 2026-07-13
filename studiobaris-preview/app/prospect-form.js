@@ -35,8 +35,13 @@ export default function ProspectForm({
   submitLabel,
   busyLabel,
   thema = null,
+  prefill = null,       // gegevens van de lead, om het formulier voor te vullen
+  leadId = "",          // welke lead dit is (koppelt de preview aan de lead)
+  afzender = "",        // wie het invult (verkoper) - bepaalt de omzettoekenning
 }) {
   const revise = mode === "revise";
+  const intern = Boolean(afzender);
+  const v = prefill || {};
   const A = (thema && thema.accent) || "#FF8300";
   const Atint = hexNaarRgba(A, 0.12);
   const geThematiseerd = !!(thema && thema.accent);
@@ -47,7 +52,8 @@ export default function ProspectForm({
   const [error, setError] = useState("");
   const [branches, setBranches] = useState([]);
   const [waarden, setWaarden] = useState([]);
-  const [regios, setRegios] = useState([""]);
+  const [regios, setRegios] = useState([(prefill && prefill.plaats) || ""]);
+  const [resultaat, setResultaat] = useState(null);
   const [socials, setSocials] = useState([""]);
   const [interesse, setInteresse] = useState([]);
   const [stijl, setStijl] = useState(revise ? "" : "stoer");
@@ -87,8 +93,12 @@ export default function ProspectForm({
     put("kvk", f.kvk.value);
     put("btw", f.btw.value);
     if (!revise) {
-      put("bron", f.bron.value);
+      // Intern ingevuld? Dan is de bron de verkoper zelf; dat bepaalt bij wie
+      // de klant en de omzet terechtkomen.
+      put("bron", intern ? afzender : (f.bron ? f.bron.value : ""));
       put("interesse", interesse.join(", "));
+      if (intern) fd.append("verzamelaar", afzender);
+      if (leadId) fd.append("lead_id", leadId);
     }
     if (stijl) fd.append("stijl", stijl);
     put("socials", socials.filter((s) => s.trim()).join(", "));
@@ -105,11 +115,39 @@ export default function ProspectForm({
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
+      setResultaat(data);
       setStatus("klaar");
     } catch (err) { setError(String(err)); setStatus("fout"); }
   }
 
   if (status === "klaar") {
+    const s2 = resultaat && resultaat.slug;
+    if (intern && s2) {
+      return (
+        <main style={{ maxWidth: 640, margin: "12vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+          <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
+          <h1 style={{ fontSize: 30, margin: 0 }}>De preview staat klaar</h1>
+          <p style={{ color: "#555", marginTop: 12, fontSize: 17, lineHeight: 1.6 }}>
+            De website-opzet is gemaakt en er staat een demo-app klaar in het jasje van deze klant.
+            Je vindt hem terug bij <strong>Mijn klanten</strong>, met het verkoopbericht er kant-en-klaar naast.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
+            <a href={"https://preview.studiobaris.nl/" + s2 + "?review=1"} target="_blank" rel="noreferrer"
+              style={{ background: "#1A2E40", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
+              Bekijk de preview
+            </a>
+            <a href="/klanten"
+              style={{ background: "#FF8300", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
+              Naar Mijn klanten
+            </a>
+            <a href="/leads"
+              style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
+              Volgende lead
+            </a>
+          </div>
+        </main>
+      );
+    }
     return (
       <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center", color: "#222" }}>
         <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
@@ -152,7 +190,7 @@ export default function ProspectForm({
           </div>
         )}
 
-        <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} /></label>
+        <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>
 
         {!geThematiseerd && (
           <>
@@ -210,12 +248,12 @@ export default function ProspectForm({
         <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Regio toevoegen</button>
 
         <div style={{ display: "flex", gap: 14 }}>
-          <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" /></label>
-          <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" /></label>
+          <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" defaultValue={v.email || ""} /></label>
+          <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" defaultValue={v.telefoon || ""} /></label>
         </div>
         <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
         <div style={{ display: "flex", gap: 14 }}>
-          <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" /></label>
+          <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" defaultValue={v.adres || ""} /></label>
           <label style={{ ...label, flex: 1 }}>KVK<input style={veld} name="kvk" /></label>
         </div>
         <span style={hint}>{revise ? "Alleen invullen als adres of KvK aangepast moet worden." : "Adres en KvK komen in de footer; een adres helpt ook de lokale vindbaarheid."}</span>
@@ -223,7 +261,9 @@ export default function ProspectForm({
 
         {!revise && (
           <>
-            <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
+            {!intern && (
+              <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
+            )}
             <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
             <span style={hint}>Alleen voor intern gebruik - wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
             <div>
@@ -257,7 +297,7 @@ export default function ProspectForm({
 
         <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leidt de AI het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
-        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." /></label>
+        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
 
         <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter de AI het bedrijf begrijpt."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
