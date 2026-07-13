@@ -238,6 +238,11 @@ export async function setBetaling(slug, fields = {}) {
   });
 }
 
+// Stand van de restbetaling (de tweede helft van het websitebedrag).
+export async function setRest(slug, status, paymentId = null) {
+  return await rpc("sb_set_rest", { p_slug: slug, p_status: status, p_payment: paymentId });
+}
+
 export async function deleteKlant(slug) {
   return await rpc("delete_klant", { p_slug: slug });
 }
