@@ -163,23 +163,64 @@ export function InzendingenKnop({ slug }) {
 // Contactpersoon bij de klant - wordt de aanhef in het verkoop-appje.
 export function Contactpersoon({ slug, value }) {
   const [v, setV] = useState(value || "");
-  const [saved, setSaved] = useState(false);
-  async function blur() {
-    if (v === (value || "")) return;
+  const [opgeslagen, setOpgeslagen] = useState(value || "");
+  const [bezig, setBezig] = useState(false);
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
     const res = await fetch("/api/klant/contactpersoon", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, naam: v }),
     });
     const d = await res.json();
-    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+    if (d.ok) setOpgeslagen(v);
+    setBezig(false);
+  }
+
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
+      title="Voornaam van de klant - wordt de aanhef in het appje">
+      <span style={{ color: "#888", fontSize: 12 }}>Contact</span>
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
+        placeholder="voornaam"
+        style={{ width: 100, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+      />
+      <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
+    </span>
+  );
+}
+
+// Kleine opslaanknop bij een veld. Verschijnt zodra je iets hebt gewijzigd,
+// en bevestigt daarna dat het is opgeslagen. Enter werkt ook.
+function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {
+  if (opgeslagen && !gewijzigd) {
+    return (
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#0f6e56", whiteSpace: "nowrap" }}>
+        Opgeslagen ✓
+      </span>
+    );
   }
   return (
-    <span style={{ whiteSpace: "nowrap" }} title="Voornaam van de klant - wordt de aanhef in het appje">
-      <span style={{ color: "#888", fontSize: 12 }}>Contact&nbsp;</span>
-      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="voornaam"
-        style={{ width: 90, padding: "4px 7px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13 }} />
-    </span>
+    <button
+      onClick={onClick}
+      disabled={!gewijzigd || bezig}
+      style={{
+        fontSize: 12.5, fontWeight: 700, padding: "6px 11px", borderRadius: 8, whiteSpace: "nowrap",
+        border: "1px solid " + (gewijzigd ? "#1A2E40" : "#e2e8f0"),
+        background: gewijzigd ? "#1A2E40" : "#fff",
+        color: gewijzigd ? "#fff" : "#cbd5e1",
+        cursor: gewijzigd && !bezig ? "pointer" : "default",
+        fontFamily: "inherit",
+      }}
+    >
+      {bezig ? "Bezig…" : "Opslaan"}
+    </button>
   );
 }
 
@@ -206,7 +247,7 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
     "",
     "Sta je op de klus? Foto maken, review erbij, en binnen 10 seconden staat het live op je site.",
     "",
-    "Onder andere Timmer- en Onderhoudsbedrijf Emiel en PM Sanitairzaken gingen je voor. Die swipen hun klussen nu live vanaf de bouwplaats. 😉",
+    "Onder andere Timmer- en Onderhoudsbedrijf Emiel en PM Sanitairzaken gingen je voor. Die swipen hun klussen nu live vanaf de bouwplaats.",
     "",
     "Ik heb alvast een complete website-opzet voor jouw bedrijf ontworpen, inclusief de app-koppeling. Je kunt 'm hier direct bekijken:",
     "",
@@ -215,7 +256,7 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
     "",
     "Het inrichten doe ik tot eind augustus gratis. Kijk eerst maar even of het ontwerp je bevalt — vind je 'm niks, dan is de prijs toch niet interessant. En bevalt-ie wel, dan vertel ik je precies wat het kost. Geen kleine lettertjes.",
     "",
-    "Laat gerust weten wat je ervan vindt — ook als het niks voor je is. Dan weet ik het, en zijn we ook even goede vrienden. 👍",
+    "Laat gerust weten wat je ervan vindt — ook als het niks voor je is. Dan weet ik het, en zijn we ook even goede vrienden.",
     "",
     "Groet,",
     groet + " (www.studiobaris.nl)",
@@ -225,44 +266,49 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
 // De persoonlijke openingszin. Zonder deze zin is het appje niet af.
 export function PersoonlijkeZin({ slug, value }) {
   const [v, setV] = useState(value || "");
-  const [saved, setSaved] = useState(false);
+  const [opgeslagen, setOpgeslagen] = useState(value || "");
+  const [bezig, setBezig] = useState(false);
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+  const leeg = !(opgeslagen || "").trim();
 
-  async function blur() {
-    if (v === (value || "")) return;
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
     const res = await fetch("/api/klant/persoonlijk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, tekst: v }),
     });
     const d = await res.json();
-    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1400); }
+    if (d.ok) setOpgeslagen(v);
+    setBezig(false);
   }
 
-  const leeg = !v.trim();
   return (
     <div style={{ width: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#1A2E40" }}>
           Persoonlijke zin
         </span>
         <span style={{ fontSize: 11.5, color: "#94a3b8" }}>
           Waar je ze mee raakt. Iets wat je op hun socials of site zag.
         </span>
-        {saved && <span style={{ fontSize: 11.5, color: "#0f6e56", fontWeight: 700 }}>opgeslagen ✓</span>}
       </div>
-      <textarea
-        value={v}
-        onChange={(e) => setV(e.target.value)}
-        onBlur={blur}
-        rows={2}
-        placeholder="Bijv: kwam die badkamer in Voorburg tegen op je Facebook. Strak werk."
-        style={{
-          width: "100%", boxSizing: "border-box", padding: "8px 10px", fontSize: 13.5,
-          border: "1px solid " + (leeg ? "#fcd9a8" : saved ? "#1d7a46" : "#d8dde3"),
-          background: leeg ? "#fffbf5" : "#fff",
-          borderRadius: 8, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5,
-        }}
-      />
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <textarea
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          rows={2}
+          placeholder="Bijv: kwam die badkamer in Voorburg tegen op je Facebook. Strak werk."
+          style={{
+            flex: 1, minWidth: 0, boxSizing: "border-box", padding: "8px 10px", fontSize: 13.5,
+            border: "1px solid " + (gewijzigd ? "#FF8300" : leeg ? "#fcd9a8" : "#d8dde3"),
+            background: leeg && !gewijzigd ? "#fffbf5" : "#fff",
+            borderRadius: 8, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5,
+          }}
+        />
+        <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={!leeg} bezig={bezig} onClick={bewaar} />
+      </div>
     </div>
   );
 }
@@ -333,15 +379,29 @@ export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevu
 
 export function KlantNaam({ slug, value }) {
   const [v, setV] = useState(value || "");
-  const [saved, setSaved] = useState(false);
-  async function blur() {
-    if (v === (value || "")) return;
+  const [opgeslagen, setOpgeslagen] = useState(value || "");
+  const [bezig, setBezig] = useState(false);
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
     const d = await bewaarKlant(slug, { verzamelaar: v });
-    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+    if (d.ok) setOpgeslagen(v);
+    setBezig(false);
   }
+
   return (
-    <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="Naam"
-      style={{ width: 120, padding: "4px 7px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13 }} />
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} title="Wie behandelt deze klant">
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
+        placeholder="Naam"
+        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+      />
+      <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
+    </span>
   );
 }
 
@@ -361,16 +421,30 @@ export function KlantStatus({ slug, value }) {
 
 export function KlantBedrag({ slug, value }) {
   const [v, setV] = useState(value != null ? String(value) : "");
-  const [saved, setSaved] = useState(false);
-  async function blur() {
+  const [opgeslagen, setOpgeslagen] = useState(value != null ? String(value) : "");
+  const [bezig, setBezig] = useState(false);
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
     const d = await bewaarKlant(slug, { maandbedrag: v });
-    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+    if (d.ok) setOpgeslagen(v);
+    setBezig(false);
   }
+
   return (
-    <span style={{ whiteSpace: "nowrap" }}>€&nbsp;
-      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="0" inputMode="decimal"
-        style={{ width: 54, padding: "4px 6px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13 }} />
-      <span style={{ color: "#888", fontSize: 12 }}> /mnd</span>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+      <span style={{ color: "#888", fontSize: 12 }}>€</span>
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
+        placeholder="0" inputMode="decimal"
+        style={{ width: 60, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+      />
+      <span style={{ color: "#888", fontSize: 12 }}>/mnd</span>
+      <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
   );
 }
@@ -378,21 +452,39 @@ export function KlantBedrag({ slug, value }) {
 // Eenmalig verkoopbedrag (websiteprijs). Verkoper krijgt hiervan 50%.
 export function VerkoopBedrag({ slug, value }) {
   const [v, setV] = useState(value != null ? String(value) : "");
-  const [saved, setSaved] = useState(false);
-  async function blur() {
+  const [opgeslagen, setOpgeslagen] = useState(value != null ? String(value) : "");
+  const [bezig, setBezig] = useState(false);
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
     const res = await fetch("/api/klant/verkoopbedrag", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, bedrag: v }),
     });
     const d = await res.json();
-    if (d.ok) { setSaved(true); setTimeout(() => setSaved(false), 1200); }
+    if (d.ok) {
+      setOpgeslagen(v);
+      // De aanbetaling en de restbetaling worden hieruit berekend: even verversen.
+      setTimeout(() => window.location.reload(), 700);
+    }
+    setBezig(false);
   }
+
   return (
-    <span style={{ whiteSpace: "nowrap" }} title="Eenmalig verkoopbedrag — verkoper krijgt 50%">
-      <span style={{ color: "#888", fontSize: 12 }}>Verkoop&nbsp;€</span>
-      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={blur} placeholder="0" inputMode="decimal"
-        style={{ width: 64, padding: "4px 6px", border: "1px solid " + (saved ? "#1d7a46" : "#d8dde3"), borderRadius: 6, fontSize: 13, marginLeft: 3 }} />
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
+      title="Eenmalig verkoopbedrag (excl. btw). De helft wordt de aanbetaling, de helft het restbedrag.">
+      <span style={{ color: "#888", fontSize: 12 }}>Verkoop €</span>
+      <input
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
+        placeholder="0" inputMode="decimal"
+        style={{ width: 70, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+      />
+      <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
   );
 }
