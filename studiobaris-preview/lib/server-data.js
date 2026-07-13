@@ -243,6 +243,11 @@ export async function setRest(slug, status, paymentId = null) {
   return await rpc("sb_set_rest", { p_slug: slug, p_status: status, p_payment: paymentId });
 }
 
+// De stijl van een preview omzetten. Dezelfde inhoud, andere weergave.
+export async function setStijl(slug, stijl) {
+  return await rpc("sb_set_stijl", { p_slug: slug, p_stijl: stijl });
+}
+
 export async function deleteKlant(slug) {
   return await rpc("delete_klant", { p_slug: slug });
 }
