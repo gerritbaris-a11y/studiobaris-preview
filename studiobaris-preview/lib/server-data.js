@@ -46,7 +46,7 @@ export async function getLeads() {
 }
 
 // Leads zoeken op de server. Met 7.900+ rijen sturen we nooit alles naar de browser.
-export async function zoekLeads({ naam, tab, zoek, provincie, vakgebied, potentie, wie, limiet }) {
+export async function zoekLeads({ naam, tab, zoek, provincie, vakgebied, potentie, wie, limiet, reden }) {
   const data = await rpc("sb_leads_zoek", {
     p_naam: naam || "",
     p_tab: tab || "werk",
@@ -56,8 +56,19 @@ export async function zoekLeads({ naam, tab, zoek, provincie, vakgebied, potenti
     p_potentie: potentie || null,
     p_wie: wie || "alles",
     p_limiet: Number(limiet) || 30,
+    p_reden: reden || null,
   });
   return data || { totaal: 0, rijen: [] };
+}
+
+// Leads die ik heb opgepakt maar waar nog geen preview van is.
+export async function getMijnLeads(naam) {
+  const data = await rpc("sb_mijn_leads", { p_naam: naam || "" });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function verwijderLead(id) {
+  return await rpc("sb_lead_verwijder", { p_id: id });
 }
 
 // Provincies, vakgebieden en tellingen voor de filters.
