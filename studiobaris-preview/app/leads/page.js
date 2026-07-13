@@ -46,13 +46,14 @@ export default async function LeadsPage({ searchParams }) {
   const sp = (await searchParams) || {};
 
   const filters = {
-    tab: sp.tab === "afgerond" ? "afgerond" : "werk",
+    tab: sp.tab === "afgerond" ? "afgerond" : sp.tab === "archief" ? "archief" : "werk",
     zoek: sp.zoek || "",
     provincie: sp.provincie || "",
     vakgebied: sp.vakgebied || "",
     potentie: sp.potentie || "",
     wie: sp.wie || "alles",
     limiet: Number(sp.limiet) > 0 ? Math.min(Number(sp.limiet), 300) : 30,
+    reden: sp.reden || "",
   };
 
   const [resultaat, facetten, omzet] = await Promise.all([
@@ -99,6 +100,7 @@ export default async function LeadsPage({ searchParams }) {
         facetten={facetten}
         mij={naam}
         filters={filters}
+        beheer={isBeheer(sessie)}
       />
     </main>
   );

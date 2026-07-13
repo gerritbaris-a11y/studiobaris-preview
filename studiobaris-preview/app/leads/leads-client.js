@@ -29,18 +29,28 @@ const POTENTIE_KLEUR = {
 
 const FASE_PILLS = ["nieuw", "opgepakt", "benaderd", "preview"];
 const DONE = ["klant", "afgewezen"];
+
+const REDENEN = [
+  "Heeft al een goede website",
+  "Geen interesse",
+  "Niet bereikbaar",
+  "Past niet bij ons",
+  "Later opnieuw benaderen",
+  "Gegevens kloppen niet",
+];
 const PER_KEER = 10;
 
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
-export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters }) {
+export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer }) {
   const router = useRouter();
   const params = useSearchParams();
 
   const [leads, setLeads] = useState(initieel || []);
   const [bezigId, setBezigId] = useState("");
   const [zoek, setZoek] = useState(filters.zoek || "");
+  const [siteVeld, setSiteVeld] = useState({});
   const eersteRender = useRef(true);
 
   // Nieuwe gegevens van de server overnemen zodra de filters wijzigen.
@@ -85,6 +95,69 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
     patch(l.id, { owner: mij || "", status: (l.status || "nieuw") === "nieuw" ? "opgepakt" : l.status });
   }
 
+  // Archiveren met een reden: de lead verdwijnt uit de werkstapel maar blijft
+  // vindbaar in het archief, gefilterd op die reden.
+  async function archiveer(l, reden) {
+    if (!reden) return;
+    setBezigId(l.id);
+    setLeads((prev) => prev.filter((x) => x.id !== l.id));
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id, archief_reden: reden }),
+      });
+    } catch {}
+    setBezigId("");
+  }
+
+  async function terugUitArchief(l) {
+    setBezigId(l.id);
+    setLeads((prev) => prev.filter((x) => x.id !== l.id));
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id, archief_reden: null }),
+      });
+    } catch {}
+    setBezigId("");
+  }
+
+  async function verwijder(l) {
+    if (!confirm("Lead \"" + (l.bedrijfsnaam || "") + "\" definitief verwijderen? Dit kan niet ongedaan worden gemaakt.")) return;
+    setBezigId(l.id);
+    setLeads((prev) => prev.filter((x) => x.id !== l.id));
+    try {
+      const res = await fetch("/api/leads", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id }),
+      });
+      const j = await res.json();
+      if (!j.ok) alert(j.error || "Verwijderen mislukt.");
+    } catch {}
+    setBezigId("");
+  }
+
+  // De brondata klopt niet altijd: soms heeft een "alleen social"-bedrijf wel
+  // degelijk een site. Corrigeer je dat hier, dan telt hij niet meer mee.
+  async function bewaarSite(l) {
+    const w = (siteVeld[l.id] || "").trim();
+    if (!w) return;
+    setBezigId(l.id);
+    setLeads((prev) => prev.map((x) => (x.id === l.id ? { ...x, website: w, alleen_socials: false } : x)));
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id, website: w }),
+      });
+    } catch {}
+    setSiteVeld((v) => ({ ...v, [l.id]: "" }));
+    setBezigId("");
+  }
+
   const tab = filters.tab || "werk";
   const tabBtn = (key, label, n) => (
     <button onClick={() => zet({ tab: key === "werk" ? "" : key })}
@@ -120,7 +193,29 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         {tabBtn("werk", "Werkstapel", f.werk)}
         {tabBtn("afgerond", "Afgerond", f.afgerond)}
+        {tabBtn("archief", "Archief", f.archief || 0)}
       </div>
+
+      {tab === "archief" && (f.redenen || []).length > 0 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+          <button onClick={() => zet({ reden: "" })}
+            style={{ ...sel, width: "auto", cursor: "pointer", fontWeight: 700,
+              border: "1px solid " + (!filters.reden ? "#1A2E40" : "#d8dde3"),
+              background: !filters.reden ? "#1A2E40" : "#fff",
+              color: !filters.reden ? "#fff" : "#475569" }}>
+            Alle redenen
+          </button>
+          {(f.redenen || []).map((r) => (
+            <button key={r.reden} onClick={() => zet({ reden: r.reden })}
+              style={{ ...sel, width: "auto", cursor: "pointer", fontWeight: 700,
+                border: "1px solid " + (filters.reden === r.reden ? "#1A2E40" : "#d8dde3"),
+                background: filters.reden === r.reden ? "#1A2E40" : "#fff",
+                color: filters.reden === r.reden ? "#fff" : "#475569" }}>
+              {r.reden} ({r.aantal})
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="sb-filters">
         <input className="sb-zoek" value={zoek} onChange={(e) => setZoek(e.target.value)}
@@ -220,12 +315,58 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 <button onClick={() => patch(l.id, { status: "afgewezen" })} style={pill(status === "afgewezen", STATUS_KLEUR.afgewezen)}>Afgewezen</button>
               </div>
 
-              {!done && (
+              {/* De brondata klopt niet altijd. Kom je toch een website tegen? Vul 'm hier in. */}
+              {l.alleen_socials && tab !== "archief" && (
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input
+                    value={siteVeld[l.id] || ""}
+                    onChange={(e) => setSiteVeld((v) => ({ ...v, [l.id]: e.target.value }))}
+                    placeholder="Toch een website? Plak 'm hier"
+                    style={{ ...sel, fontSize: 12.5, padding: "7px 9px" }}
+                  />
+                  <button onClick={() => bewaarSite(l)} disabled={!(siteVeld[l.id] || "").trim()}
+                    style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "7px 11px", cursor: "pointer", fontSize: 12.5, fontWeight: 700, color: "#334155", whiteSpace: "nowrap" }}>
+                    Opslaan
+                  </button>
+                </div>
+              )}
+
+              {!done && tab !== "archief" && (
                 <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
                   style={{ display: "block", textAlign: "center", background: "#FF8300", color: "#fff", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2 }}>
                   Preview aanvragen
                 </a>
               )}
+
+              {/* Archiveren met een reden, of terug uit het archief. */}
+              <div style={{ display: "flex", gap: 6, alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: 8, marginTop: 2 }}>
+                {tab === "archief" ? (
+                  <>
+                    <span style={{ fontSize: 12, color: "#94a3b8", flex: 1 }}>
+                      Gearchiveerd{l.archief_reden ? ": " + l.archief_reden : ""}
+                    </span>
+                    <button onClick={() => terugUitArchief(l)}
+                      style={{ border: "1px solid #1A2E40", background: "#fff", color: "#1A2E40", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 }}>
+                      Terug in de lijst
+                    </button>
+                  </>
+                ) : (
+                  <select
+                    defaultValue=""
+                    onChange={(e) => { archiveer(l, e.target.value); e.target.value = ""; }}
+                    style={{ ...sel, fontSize: 12.5, padding: "7px 9px", flex: 1 }}
+                  >
+                    <option value="">Archiveren…</option>
+                    {REDENEN.map((r) => (<option key={r} value={r}>{r}</option>))}
+                  </select>
+                )}
+                {beheer && (
+                  <button onClick={() => verwijder(l)} title="Definitief verwijderen"
+                    style={{ border: "1px solid #fecaca", background: "#fff", color: "#b91c1c", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 }}>
+                    Verwijderen
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
