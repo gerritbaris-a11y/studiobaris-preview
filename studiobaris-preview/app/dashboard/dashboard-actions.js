@@ -353,8 +353,29 @@ export function AkkoordLink({ slug }) {
 export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Voor previews van voor deze functie, of om de demo bij te werken na een wijziging.
+  const PREVIEW = "https://preview.studiobaris.nl";
+  const DEMO = "https://demo.studiobaris.nl";
+
+  // Alle links van deze klant, op één plek. Elke link is te kopiëren én te openen.
+  const links = [
+    { key: "w", naam: "Website", url: PREVIEW + "/" + slug, uit: !gepubliceerd, hint: gepubliceerd ? "De live website" : "Nog offline - eerst publiceren" },
+    { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" },
+    { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" },
+    { key: "i", naam: "Klant-intake", url: PREVIEW + "/intake/" + slug, verborgen: !volledig, hint: "Stuur dit na akkoord" },
+    { key: "f", naam: "Feedback", url: PREVIEW + "/feedback/" + slug, verborgen: !volledig, hint: "Voor feedbackronde 1 en 2" },
+    { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Aanbetaling + machtiging" },
+  ].filter((l) => !l.verborgen);
+
+  function copy(url, key) {
+    try {
+      navigator.clipboard.writeText(url);
+      setCopied(key);
+      setTimeout(() => setCopied(""), 1600);
+    } catch {}
+  }
+
   async function maakDemo() {
     setDemoBezig(true);
     try {
@@ -364,10 +385,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         body: JSON.stringify({ slug }),
       });
       const j = await res.json();
-      if (j.ok) {
-        window.location.reload();
-        return;
-      }
+      if (j.ok) { window.location.reload(); return; }
       alert(j.error || "Demo-app maken mislukt.");
     } catch (e) {
       alert("Demo-app maken mislukt.");
@@ -375,59 +393,68 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
     setDemoBezig(false);
   }
 
-  function copy(path, key) {
-    try {
-      navigator.clipboard.writeText(window.location.origin + path);
-      setCopied(key); setTimeout(() => setCopied(""), 1400);
-    } catch {}
-  }
   const chip = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
     borderRadius: 8, border: "1px solid #d8dde3", background: "#fff", color: "#334155",
     cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", fontFamily: "inherit",
   };
+
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-      <a href={`/${slug}`} target="_blank" rel="noreferrer" style={chip}>
-        {gepubliceerd ? "Website ↗" : "Website (offline)"}
-      </a>
-      <a href={`/${slug}?review=1`} target="_blank" rel="noreferrer" style={chip}>Preview ↗</a>
-      {heeftDemo ? (
-        <a
-          href={`https://demo.studiobaris.nl/${slug}`}
-          target="_blank"
-          rel="noreferrer"
-          title={demoGevuld ? "De app in het jasje van deze klant" : "Let op: deze preview heeft geen projecten of reviews, dus de demo is leeg"}
-          style={{
-            ...chip,
-            borderColor: demoGevuld ? "#FF8300" : "#d8dde3",
-            color: demoGevuld ? "#a35400" : "#94a3b8",
-            background: demoGevuld ? "#fff7ed" : "#fff",
-          }}
-        >
-          {demoGevuld ? "Demo-app ↗" : "Demo-app (leeg) ↗"}
-        </a>
-      ) : magMaken ? (
-        <button
-          onClick={maakDemo}
-          disabled={demoBezig}
-          style={{ ...chip, borderColor: "#FF8300", color: "#a35400" }}
-        >
-          {demoBezig ? "Demo-app maken…" : "Demo-app maken"}
+    <div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+        <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#1A2E40", color: "#1A2E40", fontWeight: 700 }}>
+          {open ? "Links verbergen" : "Alle links"}
         </button>
-      ) : null}
-      {volledig && (
-        <>
-          <button onClick={() => copy(`/intake/${slug}`, "i")} style={chip}>
-            {copied === "i" ? "Intake gekopieerd ✓" : "Intake kopiëren"}
+
+        {links.map((l) => (
+          <button
+            key={l.key}
+            onClick={() => !l.uit && copy(l.url, l.key)}
+            disabled={l.uit}
+            title={l.hint + (l.uit ? "" : "\n" + l.url)}
+            style={{
+              ...chip,
+              borderColor: l.uit ? "#e5e7eb" : l.key === "d" ? (l.leeg ? "#d8dde3" : "#FF8300") : "#d8dde3",
+              color: l.uit ? "#cbd5e1" : l.key === "d" && !l.leeg ? "#a35400" : "#334155",
+              background: copied === l.key ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
+              cursor: l.uit ? "not-allowed" : "pointer",
+            }}
+          >
+            {copied === l.key ? "Gekopieerd ✓" : l.naam + (l.uit ? " (nvt)" : l.leeg ? " (leeg)" : "")}
           </button>
-          <button onClick={() => copy(`/feedback/${slug}`, "f")} style={chip}>
-            {copied === "f" ? "Feedback gekopieerd ✓" : "Feedback kopiëren"}
+        ))}
+
+        {!heeftDemo && magMaken && (
+          <button onClick={maakDemo} disabled={demoBezig} style={{ ...chip, borderColor: "#FF8300", color: "#a35400" }}>
+            {demoBezig ? "Demo-app maken…" : "+ Demo-app maken"}
           </button>
-          <button onClick={() => copy(`/akkoord/${slug}`, "b")} style={chip}>
-            {copied === "b" ? "Betaallink gekopieerd ✓" : "Betaallink kopiëren"}
-          </button>
-        </>
+        )}
+      </div>
+
+      {/* Uitgeklapt: de volledige links, zichtbaar en los te kopiëren. */}
+      {open && (
+        <div style={{ marginTop: 10, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
+          {links.map((l) => (
+            <div key={l.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#1A2E40", minWidth: 92 }}>{l.naam}</span>
+              <input
+                readOnly
+                value={l.uit ? "—" : l.url}
+                onFocus={(e) => e.target.select()}
+                style={{ flex: "1 1 260px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #d8dde3", borderRadius: 7, background: "#fff", color: l.uit ? "#cbd5e1" : "#334155", fontFamily: "inherit" }}
+              />
+              <button onClick={() => !l.uit && copy(l.url, "x" + l.key)} disabled={l.uit} style={{ ...chip, padding: "6px 10px", cursor: l.uit ? "not-allowed" : "pointer" }}>
+                {copied === "x" + l.key ? "✓" : "Kopieer"}
+              </button>
+              {!l.uit && (
+                <a href={l.url} target="_blank" rel="noreferrer" style={{ ...chip, padding: "6px 10px" }}>Open ↗</a>
+              )}
+            </div>
+          ))}
+          <p style={{ fontSize: 11.5, color: "#94a3b8", margin: 0 }}>
+            Tip: de knop &quot;Appje versturen&quot; zet de preview- en demo-link al kant-en-klaar in een WhatsApp-bericht.
+          </p>
+        </div>
       )}
     </div>
   );
