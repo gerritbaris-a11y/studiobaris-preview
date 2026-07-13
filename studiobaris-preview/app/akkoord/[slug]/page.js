@@ -33,8 +33,12 @@ export default async function AkkoordPage({ params, searchParams }) {
   const naam = info.company_name || params.slug;
   const maandExcl = Number(info.maandbedrag) || 0;
   const aanbExcl = Number(info.aanbetaling) || 0;
+  const restExcl = Number(info.restbedrag) || 0;
+  const websiteExcl = Number(info.websiteprijs) || 0;
   const maandInclStr = maandExcl ? euro(inclBtw(maandExcl)) : null;
   const aanbInclStr = aanbExcl ? euro(inclBtw(aanbExcl)) : null;
+  const restInclStr = restExcl ? euro(inclBtw(restExcl)) : null;
+  const websiteInclStr = websiteExcl ? euro(inclBtw(websiteExcl)) : null;
   const pakket = info.pakket || null;
   const diensten = Array.isArray(info.diensten) ? info.diensten : [];
   const status = info.betaal_status;
@@ -101,18 +105,40 @@ export default async function AkkoordPage({ params, searchParams }) {
               </div>
             )}
 
-            {aanbInclStr && (
+            {websiteInclStr && (
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <span style={{ color: "#666" }}>Aanbetaling nu</span>
+                <span style={{ color: "#666" }}>Je website, eenmalig</span>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ fontSize: 22 }}>{aanbInclStr}</strong>
+                  <strong style={{ fontSize: 20 }}>{websiteInclStr}</strong>
                   <div style={{ fontSize: 12, color: "#888" }}>incl. btw</div>
-                  <div style={subStyle}>{btwSub(aanbExcl)}</div>
+                  <div style={subStyle}>{btwSub(websiteExcl)}</div>
                 </div>
               </div>
             )}
-            <div style={{ marginTop: aanbInclStr ? 12 : 16, paddingTop: aanbInclStr ? 0 : 16, borderTop: aanbInclStr ? "none" : "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <span style={{ color: "#666" }}>Maandelijkse vergoeding</span>
+
+            {aanbInclStr && (
+              <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start", background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 10, padding: "12px 14px" }}>
+                <span style={{ color: "#7c4a03", fontWeight: 700 }}>Je betaalt nu (de helft)</span>
+                <div style={{ textAlign: "right" }}>
+                  <strong style={{ fontSize: 22, color: "#7c4a03" }}>{aanbInclStr}</strong>
+                  <div style={{ fontSize: 12, color: "#a35400" }}>incl. btw</div>
+                  <div style={{ ...subStyle, color: "#a35400" }}>{btwSub(aanbExcl)}</div>
+                </div>
+              </div>
+            )}
+
+            {restInclStr && (
+              <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <span style={{ color: "#666" }}>Rest bij oplevering</span>
+                <div style={{ textAlign: "right" }}>
+                  <strong style={{ fontSize: 18, color: "#333" }}>{restInclStr}</strong>
+                  <div style={{ fontSize: 12, color: "#888" }}>incl. btw · pas als je site live staat</div>
+                  <div style={subStyle}>{btwSub(restExcl)}</div>
+                </div>
+              </div>
+            )}
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <span style={{ color: "#666" }}>Maandelijkse vergoeding<br /><span style={{ fontSize: 12, color: "#999" }}>hosting, onderhoud en de app</span></span>
               <div style={{ textAlign: "right" }}>
                 <strong style={{ fontSize: 24 }}>{maandInclStr}<span style={{ fontSize: 14, fontWeight: 400, color: "#888" }}> / maand</span></strong>
                 <div style={{ fontSize: 12, color: "#888" }}>incl. btw</div>
@@ -123,7 +149,7 @@ export default async function AkkoordPage({ params, searchParams }) {
 
           <p style={{ fontSize: 13, color: "#777", margin: "14px 0 18px" }}>
             {aanbInclStr
-              ? `Je betaalt zo eenmalig de aanbetaling van ${aanbInclStr} (incl. btw). Daarmee geef je meteen de automatische incasso af. Het maandbedrag wordt vanaf volgende maand automatisch afgeschreven.`
+              ? `Je betaalt nu ${aanbInclStr} incl. btw: de helft van je website. De andere helft (${restInclStr} incl. btw) betaal je pas als je site live staat. Met deze betaling geef je meteen de automatische incasso af voor het maandbedrag, dat vanaf volgende maand wordt afgeschreven.`
               : "Je betaalt zo eenmalig de eerste maand (incl. btw); daarmee geef je meteen de machtiging af. Daarna wordt het bedrag elke maand automatisch afgeschreven."}
           </p>
 
