@@ -346,6 +346,18 @@ export async function roepKlantSite(id, pad) {
     let data = null;
     try { data = JSON.parse(tekst); } catch { data = { rauw: tekst.slice(0, 200) }; }
     if (!res.ok) {
+      // 404 = de site kent dit endpoint nog niet, dus draait een oude plugin.
+      // Dat is geen storing maar een eenmalige klus: die site moet handmatig
+      // naar 1.1.1 of hoger, daarna kan hij zichzelf bijwerken.
+      if (res.status === 404) {
+        return {
+          ok: false,
+          error:
+            "Deze site draait nog een plugin van vóór 1.1.1 en kan zichzelf nog niet op afstand bijwerken. " +
+            "Installeer de nieuwste zip eenmalig via WordPress (Plugins > Nieuwe plugin > Uploaden). Daarna gaat het vanzelf.",
+          data,
+        };
+      }
       return { ok: false, error: (data && data.error) || `Site gaf ${res.status} terug.`, data };
     }
     return { ok: true, data };
