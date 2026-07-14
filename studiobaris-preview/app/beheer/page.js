@@ -67,21 +67,21 @@ export default async function BeheerPage() {
           <div style={{ fontSize: 26, fontWeight: 800 }}>{klanten.length}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>AI-kosten deze maand</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerking deze maand</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{euro(totMaand)}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>AI-kosten totaal</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerking totaal</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{euro(totTotaal)}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>AI-tokens totaal</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerkte tekst totaal</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{Number(totTokens).toLocaleString("nl-NL")}</div>
         </div>
       </div>
 
       <p style={{ fontSize: 12, color: "#999", marginBottom: 8 }}>
-        Let op: Vercel, Supabase en GitHub rekenen op accountniveau af — die staan hierboven niet per klant. AI is wél per klant gemeten.
+        Let op: Vercel, Supabase en GitHub rekenen op accountniveau af — die staan hierboven niet per klant. Verwerking is wél per klant gemeten.
       </p>
 
       <div style={{ overflowX: "auto", border: "1px solid #eee", borderRadius: 12 }}>
@@ -94,8 +94,8 @@ export default async function BeheerPage() {
               <th style={th}>Reviews</th>
               <th style={th}>Plugin</th>
               <th style={th}>Laatste activiteit</th>
-              <th style={th}>AI deze maand</th>
-              <th style={th}>AI totaal</th>
+              <th style={th}>Verwerking deze maand</th>
+              <th style={th}>Verwerking totaal</th>
               <th style={th}>Instellingen & inlog</th>
             </tr>
           </thead>
