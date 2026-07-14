@@ -43,11 +43,11 @@ export async function GET() {
 
     uit.incasso_aan = (uit.herhaling || []).includes("directdebit");
     uit.ideal_machtiging = (uit.machtiging || []).includes("ideal");
-    uit.oordeel = uit.ideal_machtiging
-      ? "iDEAL kan een machtiging afgeven. De akkoordlink hoort te werken."
-      : uit.incasso_aan
-        ? "Incasso staat aan, maar iDEAL geeft geen machtiging af. Kies een andere eerste methode."
-        : "SEPA-incasso staat NIET aan op het Mollie-account. Daardoor kan geen enkele methode een machtiging afgeven en faalt de akkoordlink.";
+    uit.oordeel = !uit.incasso_aan
+      ? "SEPA-incasso staat NIET aan op het Mollie-account. Zonder incasso kan Mollie geen machtiging vastleggen en geen maandbedrag afschrijven: de akkoordlink faalt met 'The payment method selected does not accept recurring payments'."
+      : uit.ideal_machtiging
+        ? "Incasso staat aan en iDEAL kan een machtiging afgeven. De akkoordlink hoort te werken."
+        : "Incasso staat aan, maar iDEAL geeft geen machtiging af. Kies een andere eerste betaalmethode.";
     return NextResponse.json(uit);
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
