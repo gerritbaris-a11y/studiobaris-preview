@@ -54,6 +54,7 @@ export default async function VragenPage({ searchParams }) {
         <a href="/dashboard" style={{ color: "#1d6fd1", fontSize: 14 }}>Dashboard</a>
         <a href="/overzicht" style={{ color: "#1d6fd1", fontSize: 14 }}>Overzicht</a>
         <a href="/kosten" style={{ color: "#1d6fd1", fontSize: 14 }}>Kosten</a>
+        <a href="/storingen" style={{ color: "#1d6fd1", fontSize: 14 }}>Storingen</a>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#888" }}>
           {data.open} open · {data.totaal} totaal
         </span>
