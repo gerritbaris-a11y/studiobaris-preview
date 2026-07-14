@@ -383,3 +383,11 @@ export async function roepKlantSite(id, pad) {
     clearTimeout(t);
   }
 }
+
+// "Vandaag": de urgentie-afleiding uit de database. Geeft een lijst taken terug,
+// elk met reden, kleur (rust/amber/sage/grijs/klei), lane en actielabel.
+// p_wie leeg = alles (beheer); een verkopersnaam = alleen die previews/leads.
+export async function getVandaag(wie = "") {
+  const data = await rpc("sb_vandaag", { p_wie: wie || "" });
+  return Array.isArray(data) ? data : [];
+}
