@@ -130,6 +130,7 @@ export default async function OverzichtPage({ searchParams }) {
         <a href="/team" style={{ color: "#1d6fd1", fontSize: 14 }}>Team &amp; omzet</a>
         <a href="/vragen" style={{ color: "#1d6fd1", fontSize: 14 }}>Vragen</a>
         <a href="/kosten" style={{ color: "#1d6fd1", fontSize: 14 }}>Kosten</a>
+        <a href="/storingen" style={{ color: "#1d6fd1", fontSize: 14 }}>Storingen</a>
         <a href="/beheer" style={{ color: "#1d6fd1", fontSize: 14 }}>Beheer</a>
       </div>
       <p style={{ color: "#777", fontSize: 14, marginBottom: 16 }}>
