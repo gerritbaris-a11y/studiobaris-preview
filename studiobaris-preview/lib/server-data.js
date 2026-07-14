@@ -345,6 +345,22 @@ export async function roepKlantSite(id, pad) {
     const tekst = await res.text();
     let data = null;
     try { data = JSON.parse(tekst); } catch { data = { rauw: tekst.slice(0, 200) }; }
+    // De site vertelt zelf welke versie hij draait. Dat vastleggen, want anders
+    // leren we de versie alleen als de site projecten ophaalt - en een site zonder
+    // projectpagina's (zoals onze eigen marketingsite) doet dat nooit.
+    if (data && data.versie && data.versie !== klant.plugin_versie) {
+      try {
+        await rest(`companies?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({
+            plugin_versie: String(data.versie).slice(0, 20),
+            plugin_gezien_op: new Date().toISOString(),
+          }),
+        });
+      } catch {}
+    }
+
     if (!res.ok) {
       // 404 = de site kent dit endpoint nog niet, dus draait een oude plugin.
       // Dat is geen storing maar een eenmalige klus: die site moet handmatig
