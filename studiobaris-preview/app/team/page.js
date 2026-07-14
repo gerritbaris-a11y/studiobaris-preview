@@ -9,7 +9,7 @@ function euro(n) {
   return "€ " + v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "system-ui, sans-serif", color: "#222" };
+const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
 
 export default async function TeamPage() {
   const sessie = leesSessie();
@@ -43,18 +43,18 @@ export default async function TeamPage() {
     const o = omzetVan(t.naam);
     const cel = (label, waarde, kleur) => (
       <div style={{ flex: "1 1 90px", minWidth: 90 }}>
-        <div style={{ fontSize: 11, color: "#94a3b8" }}>{label}</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: kleur || "#1A2E40" }}>{waarde}</div>
+        <div style={{ fontSize: 11, color: "#9A9084" }}>{label}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: kleur || "#2B2724" }}>{waarde}</div>
       </div>
     );
     return (
-      <div key={t.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div key={t.id} style={{ background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ width: 34, height: 34, borderRadius: 10, background: t.rol === "beheer" ? "#1A2E40" : "#FF8300", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 10, background: t.rol === "beheer" ? "#2B2724" : "#C05A38", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>
             {t.naam.charAt(0).toUpperCase()}
           </span>
           <div style={{ fontSize: 16, fontWeight: 700 }}>{t.naam}</div>
-          <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, background: t.rol === "beheer" ? "#e6f1fb" : "#fff7ed", color: t.rol === "beheer" ? "#0c447c" : "#9a3412" }}>
+          <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, background: t.rol === "beheer" ? "#e6f1fb" : "#fff7ed", color: t.rol === "beheer" ? "#9E3B2E" : "#9a3412" }}>
             {t.rol === "beheer" ? "Beheer" : "Verkoop"}
           </span>
           <span style={{ fontSize: 12, color: t.gezet ? "#0f6e56" : "#b45309" }}>
@@ -78,23 +78,23 @@ export default async function TeamPage() {
   return (
     <main style={wrap}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888", margin: 0 }}>StudioBaris</p>
+        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
         {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
-            Ingelogd als <strong style={{ color: "#1A2E40" }}>{sessie.naam}</strong>
+          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
+            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
             {" · "}
-            <a href="/api/auth/logout" style={{ color: "#1d6fd1" }}>Uitloggen</a>
+            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
           </span>
         )}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "6px 0 16px" }}>
         <h1 style={{ fontSize: 26, margin: 0 }}>Team &amp; omzet</h1>
-        <a href="/dashboard" style={{ color: "#1d6fd1", fontSize: 14 }}>→ naar Klanten</a>
-        <a href="/leads" style={{ color: "#1d6fd1", fontSize: 14 }}>→ naar Leads</a>
+        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>→ naar Klanten</a>
+        <a href="/leads" style={{ color: "#C05A38", fontSize: 14 }}>→ naar Leads</a>
       </div>
 
-      <div style={{ background: "linear-gradient(135deg,#12283d,#1A2E40)", color: "#fff", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
+      <div style={{ background: "linear-gradient(135deg,#2B2724,#2B2724)", color: "#fff", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Totaal — hele team</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           {totVak("Verkocht", euro(totaal.verkoopbedrag))}
@@ -106,14 +106,14 @@ export default async function TeamPage() {
 
       {verkopers.length > 0 && (
         <>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Verkoop</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#9A9084", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Verkoop</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 20 }}>
             {verkopers.map(persoonCard)}
           </div>
         </>
       )}
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Beheer</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#9A9084", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Beheer</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {beheer.map(persoonCard)}
       </div>

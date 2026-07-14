@@ -21,7 +21,7 @@ export function ResetKnop({ id, naam, gezet }) {
   return (
     <button onClick={go} disabled={s === "bezig" || !gezet}
       title={gezet ? "Wachtwoord resetten" : "Nog geen wachtwoord ingesteld"}
-      style={{ background: "#fff", color: gezet ? "#c0392b" : "#b8c0c9", border: "1px solid " + (gezet ? "#e3b9b4" : "#e5e7eb"), padding: "5px 10px", borderRadius: 6, fontSize: 12, cursor: gezet ? "pointer" : "default", whiteSpace: "nowrap" }}>
+      style={{ background: "#fff", color: gezet ? "#c0392b" : "#b8c0c9", border: "1px solid " + (gezet ? "#e3b9b4" : "#ECE4D7"), padding: "5px 10px", borderRadius: 6, fontSize: 12, cursor: gezet ? "pointer" : "default", whiteSpace: "nowrap" }}>
       {s === "bezig" ? "Bezig…" : "Wachtwoord resetten"}
     </button>
   );
