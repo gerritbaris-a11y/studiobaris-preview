@@ -8,5 +8,5 @@ export const dynamic = "force-dynamic";
 export default function Home() {
   const sessie = leesSessie();
   if (!sessie) redirect("/login");
-  redirect(isBeheer(sessie) ? "/dashboard" : "/leads");
+  redirect("/vandaag");
 }
