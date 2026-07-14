@@ -104,7 +104,7 @@ export default function VandaagClient({ taken, naam, beheer }) {
           <div>
             <h1 style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 29 }}>{dagdeelGroet()}, {naam}</h1>
             <p style={{ color: KLEUR.gedempt, fontSize: 15, marginTop: 4 }}>
-              {nu.length === 0 ? "Niets urgents op dit moment." : `${nu.length} ${nu.length === 1 ? "ding vraagt" : "dingen vragen"} nú je aandacht.`}
+              {open.length === 0 ? "Niets meer te doen. Mooi werk." : `${open.length} ${open.length === 1 ? "ding vraagt" : "dingen vragen"} je aandacht${nu.length ? `, waarvan ${nu.length} nú` : ""}.`}
             </p>
           </div>
           <div style={{ display: "inline-flex", background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, padding: 3 }}>
@@ -128,9 +128,10 @@ export default function VandaagClient({ taken, naam, beheer }) {
 
 // --- Variant A: werkstapel (top 3 groot, rest compact) ---
 function Werkstapel({ taken, nu, afhandelen, sleutel }) {
-  const top = [...nu].slice(0, 3);
-  const topSleutels = top.map((t) => taken.indexOf(t));
-  const rest = taken.filter((t) => !top.includes(t));
+  // De taken komen al op prioriteit binnen. Toon de drie belangrijkste groot,
+  // ongeacht hun baan - anders voelt het scherm leeg terwijl er werk ligt.
+  const top = taken.slice(0, 3);
+  const rest = taken.slice(3);
 
   return (
     <>
