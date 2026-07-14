@@ -81,10 +81,11 @@ export default async function KostenPage({ searchParams }) {
         <a href="/dashboard" style={{ color: "#1d6fd1", fontSize: 14 }}>Dashboard</a>
         <a href="/overzicht" style={{ color: "#1d6fd1", fontSize: 14 }}>Overzicht</a>
         <a href="/vragen" style={{ color: "#1d6fd1", fontSize: 14 }}>Vragen</a>
+        <a href="/storingen" style={{ color: "#1d6fd1", fontSize: 14 }}>Storingen</a>
         <a href="/beheer" style={{ color: "#1d6fd1", fontSize: 14 }}>Beheer</a>
       </div>
       <p style={{ color: "#777", fontSize: 14, marginBottom: 16 }}>
-        Wat één klant ons per maand écht kost. Alleen kosten die met die klant meebewegen: zijn AI-verbruik,
+        Wat één klant ons per maand écht kost. Alleen kosten die met die klant meebewegen: zijn verwerkingsverbruik,
         zijn foto-opslag, het verkeer naar zijn site en zijn domeinnaam. Vaste platformkosten staan apart —
         die verdelen we niet over de klanten, want ze bestaan ook zonder hen.
       </p>
@@ -112,7 +113,7 @@ export default async function KostenPage({ searchParams }) {
           Aan te passen via de adresbalk, bijvoorbeeld <code>/kosten?vast=25&amp;weergaven=500</code>.
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 24px", fontSize: 13.5, color: "#334155" }}>
-          <span>AI: <strong>gemeten</strong> ({euro(Number(gem.ai_per_project || 0), 4)} per project)</span>
+          <span>Verwerking: <strong>gemeten</strong> ({euro(Number(gem.ai_per_project || 0), 4)} per project)</span>
           <span>Opslag: <strong>{euro(t.opslag, 3)}</strong> per GB p/m</span>
           <span>Verkeer: <strong>{euro(t.verkeer, 3)}</strong> per GB × <strong>{t.weergaven}</strong> weergaven p/m</span>
           <span>Domein: <strong>{euro(t.domein)}</strong> p/m (€11 per jaar)</span>
@@ -130,7 +131,7 @@ export default async function KostenPage({ searchParams }) {
                 <th style={{ padding: "6px 8px 8px" }}>Live</th>
                 <th style={{ padding: "6px 8px 8px" }}>Foto&apos;s</th>
                 <th style={{ padding: "6px 8px 8px" }}>Opslag</th>
-                <th style={{ padding: "6px 8px 8px", textAlign: "right" }}>AI</th>
+                <th style={{ padding: "6px 8px 8px", textAlign: "right" }}>Verwerking</th>
                 <th style={{ padding: "6px 8px 8px", textAlign: "right" }}>Opslag</th>
                 <th style={{ padding: "6px 8px 8px", textAlign: "right" }}>Verkeer</th>
                 <th style={{ padding: "6px 8px 8px", textAlign: "right" }}>Domein</th>
@@ -160,8 +161,8 @@ export default async function KostenPage({ searchParams }) {
           </table>
         </div>
         <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 12, lineHeight: 1.6 }}>
-          <strong>Waar komen deze cijfers vandaan.</strong> AI is echt gemeten verbruik uit de app (een projecttekst
-          kost ongeveer {euro(Number(gem.ai_per_project || 0), 4)}; reviews gebruiken geen AI). Opslag is het werkelijke
+          <strong>Waar komen deze cijfers vandaan.</strong> Verwerking is echt gemeten verbruik uit de app (een projecttekst
+          kost ongeveer {euro(Number(gem.ai_per_project || 0), 4)}; reviews kosten niets). Opslag is het werkelijke
           aantal megabytes aan foto&apos;s. Verkeer is een schatting: opslag × {t.weergaven} weergaven × {euro(t.verkeer, 3)} per GB.
           Domein is €11 per jaar. De vaste platformkosten ({euro(t.vast)} p/m voor Supabase en Vercel) worden bewust
           <strong> niet</strong> over de klanten verdeeld — ze bestaan ook zonder hen. Ze staan apart bij Resultaat.
