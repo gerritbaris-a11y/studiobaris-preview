@@ -3,8 +3,8 @@ import { leesSessie } from "../../lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 1180, margin: "4vh auto", padding: "0 20px", fontFamily: "system-ui, sans-serif", color: "#222" };
-const kaart = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "16px 18px" };
+const wrap = { maxWidth: 1180, margin: "4vh auto", padding: "0 20px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
+const kaart = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "16px 18px" };
 
 // Rekentarieven. Alleen dingen die we echt betalen.
 // Aan te passen via de adresbalk, bijvoorbeeld: /kosten?vast=25&weergaven=500
@@ -24,9 +24,9 @@ function euro(n, d = 2) {
 function Cijfer({ label, waarde, kleur, sub }) {
   return (
     <div style={{ ...kaart, flex: "1 1 165px", minWidth: 165 }}>
-      <div style={{ fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#94a3b8", fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 25, fontWeight: 800, color: kleur || "#1A2E40", lineHeight: 1.15 }}>{waarde}</div>
-      {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 3 }}>{sub}</div>}
+      <div style={{ fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#9A9084", fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 25, fontWeight: 800, color: kleur || "#2B2724", lineHeight: 1.15 }}>{waarde}</div>
+      {sub && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 3 }}>{sub}</div>}
     </div>
   );
 }
@@ -66,25 +66,25 @@ export default async function KostenPage({ searchParams }) {
   return (
     <main style={wrap}>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888", margin: 0 }}>StudioBaris</p>
+        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
         {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
-            Ingelogd als <strong style={{ color: "#1A2E40" }}>{sessie.naam}</strong>
+          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
+            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
             {" · "}
-            <a href="/api/auth/logout" style={{ color: "#1d6fd1" }}>Uitloggen</a>
+            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
           </span>
         )}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 6px" }}>
         <h1 style={{ fontSize: 26, margin: 0 }}>Kosten per klant</h1>
-        <a href="/dashboard" style={{ color: "#1d6fd1", fontSize: 14 }}>Dashboard</a>
-        <a href="/overzicht" style={{ color: "#1d6fd1", fontSize: 14 }}>Overzicht</a>
-        <a href="/vragen" style={{ color: "#1d6fd1", fontSize: 14 }}>Vragen</a>
-        <a href="/storingen" style={{ color: "#1d6fd1", fontSize: 14 }}>Storingen</a>
-        <a href="/beheer" style={{ color: "#1d6fd1", fontSize: 14 }}>Beheer</a>
+        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>Dashboard</a>
+        <a href="/overzicht" style={{ color: "#C05A38", fontSize: 14 }}>Overzicht</a>
+        <a href="/vragen" style={{ color: "#C05A38", fontSize: 14 }}>Vragen</a>
+        <a href="/storingen" style={{ color: "#C05A38", fontSize: 14 }}>Storingen</a>
+        <a href="/beheer" style={{ color: "#C05A38", fontSize: 14 }}>Beheer</a>
       </div>
-      <p style={{ color: "#777", fontSize: 14, marginBottom: 16 }}>
+      <p style={{ color: "#6B6258", fontSize: 14, marginBottom: 16 }}>
         Wat één klant ons per maand écht kost. Alleen kosten die met die klant meebewegen: zijn verwerkingsverbruik,
         zijn foto-opslag, het verkeer naar zijn site en zijn domeinnaam. Vaste platformkosten staan apart —
         die verdelen we niet over de klanten, want ze bestaan ook zonder hen.
@@ -109,10 +109,10 @@ export default async function KostenPage({ searchParams }) {
 
       <div style={{ ...kaart, marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, margin: "0 0 6px" }}>Rekentarieven</h2>
-        <p style={{ fontSize: 12.5, color: "#94a3b8", margin: "0 0 10px" }}>
+        <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 10px" }}>
           Aan te passen via de adresbalk, bijvoorbeeld <code>/kosten?vast=25&amp;weergaven=500</code>.
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 24px", fontSize: 13.5, color: "#334155" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 24px", fontSize: 13.5, color: "#524A40" }}>
           <span>Verwerking: <strong>gemeten</strong> ({euro(Number(gem.ai_per_project || 0), 4)} per project)</span>
           <span>Opslag: <strong>{euro(t.opslag, 3)}</strong> per GB p/m</span>
           <span>Verkeer: <strong>{euro(t.verkeer, 3)}</strong> per GB × <strong>{t.weergaven}</strong> weergaven p/m</span>
@@ -126,7 +126,7 @@ export default async function KostenPage({ searchParams }) {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 820 }}>
             <thead>
-              <tr style={{ textAlign: "left", color: "#94a3b8", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <tr style={{ textAlign: "left", color: "#9A9084", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <th style={{ padding: "6px 8px 8px 0" }}>Klant</th>
                 <th style={{ padding: "6px 8px 8px" }}>Live</th>
                 <th style={{ padding: "6px 8px 8px" }}>Foto&apos;s</th>
@@ -141,26 +141,26 @@ export default async function KostenPage({ searchParams }) {
             </thead>
             <tbody>
               {rijen.map((r) => (
-                <tr key={r.id} style={{ borderTop: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "9px 8px 9px 0", fontWeight: 700, color: "#1A2E40" }}>{r.naam}</td>
+                <tr key={r.id} style={{ borderTop: "1px solid #F4EEE3" }}>
+                  <td style={{ padding: "9px 8px 9px 0", fontWeight: 700, color: "#2B2724" }}>{r.naam}</td>
                   <td style={{ padding: "9px 8px" }}>{r.live}</td>
                   <td style={{ padding: "9px 8px" }}>{r.fotos}</td>
                   <td style={{ padding: "9px 8px" }}>{Number(r.opslag_mb || 0).toFixed(1)} MB</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#64748b" }}>{euro(r.ai, 3)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#64748b" }}>{euro(r.opslagKosten, 3)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: r.verkeerKosten > 2 ? "#b91c1c" : "#64748b" }}>{euro(r.verkeerKosten)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#64748b" }}>{euro(t.domein)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(r.ai, 3)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(r.opslagKosten, 3)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: r.verkeerKosten > 2 ? "#b91c1c" : "#6B6258" }}>{euro(r.verkeerKosten)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(t.domein)}</td>
                   <td style={{ padding: "9px 8px", textAlign: "right", fontWeight: 700 }}>{euro(r.totaal)}</td>
                   <td style={{ padding: "9px 0 9px 8px", textAlign: "right", fontWeight: 700, color: r.marge >= 0 ? "#0f6e56" : "#b91c1c" }}>{euro(r.marge)}</td>
                 </tr>
               ))}
               {rijen.length === 0 && (
-                <tr><td colSpan={10} style={{ padding: 20, textAlign: "center", color: "#94a3b8" }}>Nog geen klanten in de app.</td></tr>
+                <tr><td colSpan={10} style={{ padding: 20, textAlign: "center", color: "#9A9084" }}>Nog geen klanten in de app.</td></tr>
               )}
             </tbody>
           </table>
         </div>
-        <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 12, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: "#9A9084", marginTop: 12, lineHeight: 1.6 }}>
           <strong>Waar komen deze cijfers vandaan.</strong> Verwerking is echt gemeten verbruik uit de app (een projecttekst
           kost ongeveer {euro(Number(gem.ai_per_project || 0), 4)}; reviews kosten niets). Opslag is het werkelijke
           aantal megabytes aan foto&apos;s. Verkeer is een schatting: opslag × {t.weergaven} weergaven × {euro(t.verkeer, 3)} per GB.
