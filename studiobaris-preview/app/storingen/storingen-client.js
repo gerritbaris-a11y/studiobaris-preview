@@ -19,7 +19,7 @@ function ouderDan(iso, uren) {
 }
 
 const kaart = {
-  border: "1px solid #e2e8f0",
+  border: "1px solid #ECE4D7",
   borderRadius: 12,
   padding: 14,
   marginBottom: 10,
@@ -28,7 +28,7 @@ const kaart = {
 
 function Stip({ kleur, tekst }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#475569" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#524A40" }}>
       <span style={{ width: 9, height: 9, borderRadius: 9, background: kleur, flex: "0 0 auto" }} />
       {tekst}
     </span>
@@ -38,7 +38,7 @@ function Stip({ kleur, tekst }) {
 function knopStijl(kleur, bezig) {
   return {
     border: "1px solid " + kleur,
-    background: bezig ? "#f1f5f9" : "#fff",
+    background: bezig ? "#F4EEE3" : "#fff",
     color: kleur,
     borderRadius: 8,
     padding: "7px 12px",
@@ -101,13 +101,13 @@ export default function StoringenClient({ klanten, nieuwste }) {
       {/* Samenvatting */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
         {[
-          { label: "Klanten", n: klanten.length, kleur: "#1A2E40" },
+          { label: "Klanten", n: klanten.length, kleur: "#2B2724" },
           { label: "Verouderde plugin", n: achter.length, kleur: achter.length ? "#b45309" : "#16a34a" },
           { label: "Meer dan 24 uur stil", n: stil.length, kleur: stil.length ? "#b45309" : "#16a34a" },
           { label: "Fout bij bijwerken site", n: fout.length, kleur: fout.length ? "#dc2626" : "#16a34a" },
         ].map((v) => (
           <div key={v.label} style={{ ...kaart, marginBottom: 0, minWidth: 150, flex: "1 1 150px" }}>
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>{v.label}</div>
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>{v.label}</div>
             <div style={{ fontSize: 26, fontWeight: 700, color: v.kleur }}>{v.n}</div>
           </div>
         ))}
@@ -116,7 +116,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
       {/* Betalingen */}
       <h2 style={{ fontSize: 17, margin: "18px 0 8px" }}>Betalingen</h2>
       <div style={kaart}>
-        {!mollie && <span style={{ color: "#64748b", fontSize: 14 }}>Bezig met controleren...</span>}
+        {!mollie && <span style={{ color: "#6B6258", fontSize: 14 }}>Bezig met controleren...</span>}
         {mollie && !mollie.ok && (
           <Stip kleur="#dc2626" tekst={`Mollie: ${mollie.error}`} />
         )}
@@ -126,7 +126,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
               kleur={mollie.incasso_aan && mollie.ideal_machtiging ? "#16a34a" : "#dc2626"}
               tekst={mollie.oordeel}
             />
-            <div style={{ fontSize: 13, color: "#64748b" }}>
+            <div style={{ fontSize: 13, color: "#6B6258" }}>
               Sleutel: <strong>{mollie.sleutel}</strong> · Actief: {(mollie.actief || []).join(", ") || "geen"} ·
               {" "}Kan machtigen: {(mollie.machtiging || []).join(", ") || "geen"}
             </div>
@@ -143,7 +143,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
 
       {/* Klantsites */}
       <h2 style={{ fontSize: 17, margin: "22px 0 8px" }}>Klantsites</h2>
-      {klanten.length === 0 && <p style={{ color: "#64748b" }}>Nog geen klanten.</p>}
+      {klanten.length === 0 && <p style={{ color: "#6B6258" }}>Nog geen klanten.</p>}
 
       {klanten.map((k) => {
         const verouderd = k.plugin_versie !== nieuwste;
@@ -168,14 +168,14 @@ export default function StoringenClient({ klanten, nieuwste }) {
               </span>
               <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                 <button
-                  style={knopStijl("#1d6fd1", bezig === k.id + "ververs")}
+                  style={knopStijl("#C05A38", bezig === k.id + "ververs")}
                   disabled={!!bezig}
                   onClick={() => doe(k.id, "ververs")}
                 >
                   {bezig === k.id + "ververs" ? "Bezig..." : "Site verversen"}
                 </button>
                 <button
-                  style={knopStijl(verouderd ? "#b45309" : "#94a3b8", bezig === k.id + "bijwerken")}
+                  style={knopStijl(verouderd ? "#b45309" : "#9A9084", bezig === k.id + "bijwerken")}
                   disabled={!!bezig}
                   onClick={() => doe(k.id, "bijwerken")}
                 >
@@ -194,7 +194,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
                 }
               />
               <Stip
-                kleur={k.site_ververs_fout ? "#dc2626" : k.site_ververst_op ? "#16a34a" : "#94a3b8"}
+                kleur={k.site_ververs_fout ? "#dc2626" : k.site_ververst_op ? "#16a34a" : "#9A9084"}
                 tekst={
                   k.site_ververs_fout
                     ? `Laatste duw mislukt: ${k.site_ververs_fout}`
@@ -203,7 +203,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
                       : "App heeft nog nooit doorgeduwd"
                 }
               />
-              <Stip kleur="#94a3b8" tekst={`${k.projecten} projecten · ${k.reviews} reviews`} />
+              <Stip kleur="#9A9084" tekst={`${k.projecten} projecten · ${k.reviews} reviews`} />
             </div>
 
             {m && (
@@ -225,11 +225,11 @@ export default function StoringenClient({ klanten, nieuwste }) {
         );
       })}
 
-      <p style={{ color: "#94a3b8", fontSize: 12, marginTop: 18 }}>
+      <p style={{ color: "#9A9084", fontSize: 12, marginTop: 18 }}>
         &quot;Site verversen&quot; haalt de projecten opnieuw op en leegt de cache van de klantsite.
         &quot;Plugin bijwerken&quot; laat de site zichzelf naar versie {nieuwste} tillen. Beide werken op afstand:
         we hoeven nooit in de beheeromgeving van een klant in te loggen.
-      </p>
+          </p>
     </>
   );
 }
