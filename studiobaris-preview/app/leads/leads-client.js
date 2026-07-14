@@ -12,9 +12,9 @@ const STATUS_LABELS = {
   afgewezen: "Afgewezen",
 };
 const STATUS_KLEUR = {
-  nieuw: "#64748b",
+  nieuw: "#6B6258",
   opgepakt: "#b45309",
-  benaderd: "#2563eb",
+  benaderd: "#9E3B2E",
   preview: "#7c3aed",
   klant: "#1d7a46",
   afgewezen: "#b91c1c",
@@ -23,8 +23,8 @@ const POTENTIE_KLEUR = {
   "Erg hoog": "#1d7a46",
   Hoog: "#3f9142",
   Gemiddeld: "#b45309",
-  Laag: "#94a3b8",
-  "Erg laag": "#cbd5e1",
+  Laag: "#9A9084",
+  "Erg laag": "#B0A697",
 };
 
 const FASE_PILLS = ["nieuw", "opgepakt", "benaderd", "preview"];
@@ -39,7 +39,7 @@ const REDENEN = [
 const PER_KEER = 10;
 
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
-const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
+const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
 export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer }) {
   const router = useRouter();
@@ -150,8 +150,8 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
     <button onClick={() => zet({ tab: key === "werk" ? "" : key })}
       style={{
         padding: "9px 16px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer",
-        border: "1px solid " + (tab === key ? "#1A2E40" : "#d8dde3"),
-        background: tab === key ? "#1A2E40" : "#fff", color: tab === key ? "#fff" : "#475569",
+        border: "1px solid " + (tab === key ? "#2B2724" : "#E3DACB"),
+        background: tab === key ? "#2B2724" : "#fff", color: tab === key ? "#fff" : "#524A40",
       }}>
       {label} <span style={{ opacity: 0.7 }}>({n.toLocaleString("nl-NL")})</span>
     </button>
@@ -159,8 +159,8 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
 
   const pill = (aan, kleur) => ({
     padding: "5px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-    border: "1px solid " + (aan ? kleur : "#e2e8f0"),
-    background: aan ? kleur : "#fff", color: aan ? "#fff" : "#64748b",
+    border: "1px solid " + (aan ? kleur : "#ECE4D7"),
+    background: aan ? kleur : "#fff", color: aan ? "#fff" : "#6B6258",
   });
 
   return (
@@ -187,17 +187,17 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
           <button onClick={() => zet({ reden: "" })}
             style={{ ...sel, width: "auto", cursor: "pointer", fontWeight: 700,
-              border: "1px solid " + (!filters.reden ? "#1A2E40" : "#d8dde3"),
-              background: !filters.reden ? "#1A2E40" : "#fff",
-              color: !filters.reden ? "#fff" : "#475569" }}>
+              border: "1px solid " + (!filters.reden ? "#2B2724" : "#E3DACB"),
+              background: !filters.reden ? "#2B2724" : "#fff",
+              color: !filters.reden ? "#fff" : "#524A40" }}>
             Alle redenen
           </button>
           {(f.redenen || []).map((r) => (
             <button key={r.reden} onClick={() => zet({ reden: r.reden })}
               style={{ ...sel, width: "auto", cursor: "pointer", fontWeight: 700,
-                border: "1px solid " + (filters.reden === r.reden ? "#1A2E40" : "#d8dde3"),
-                background: filters.reden === r.reden ? "#1A2E40" : "#fff",
-                color: filters.reden === r.reden ? "#fff" : "#475569" }}>
+                border: "1px solid " + (filters.reden === r.reden ? "#2B2724" : "#E3DACB"),
+                background: filters.reden === r.reden ? "#2B2724" : "#fff",
+                color: filters.reden === r.reden ? "#fff" : "#524A40" }}>
               {r.reden} ({r.aantal})
             </button>
           ))}
@@ -226,7 +226,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         </select>
       </div>
 
-      <div style={{ fontSize: 13, color: "#888", marginBottom: 10 }}>
+      <div style={{ fontSize: 13, color: "#B0A697", marginBottom: 10 }}>
         {leads.length.toLocaleString("nl-NL")} van {Number(totaal || 0).toLocaleString("nl-NL")}
         {tab === "werk" ? " openstaande leads — Zuid-Holland eerst" : " afgeronde leads"}
       </div>
@@ -236,7 +236,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           const status = l.status || "nieuw";
           const done = DONE.includes(status);
           return (
-            <div key={l.id} style={{ ...card, outline: bezigId === l.id ? "2px solid #FF8300" : "none", opacity: done ? 0.85 : 1 }}>
+            <div key={l.id} style={{ ...card, outline: bezigId === l.id ? "2px solid #C05A38" : "none", opacity: done ? 0.85 : 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                 <strong style={{ fontSize: 16, lineHeight: 1.25 }}>{l.bedrijfsnaam || "—"}</strong>
                 {l.potentie && (
@@ -245,30 +245,30 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 13, color: "#64748b" }}>
+              <div style={{ fontSize: 13, color: "#6B6258" }}>
                 {[l.vakgebied, l.plaats].filter(Boolean).join(" · ")}
                 {l.provincie && (
-                  <span style={{ color: l.provincie === "Zuid-Holland" ? "#0f6e56" : "#94a3b8", fontWeight: l.provincie === "Zuid-Holland" ? 700 : 400 }}> · {l.provincie}</span>
+                  <span style={{ color: l.provincie === "Zuid-Holland" ? "#0f6e56" : "#9A9084", fontWeight: l.provincie === "Zuid-Holland" ? 700 : 400 }}> · {l.provincie}</span>
                 )}
               </div>
               <div style={{ fontSize: 14, display: "flex", flexWrap: "wrap", gap: "2px 14px" }}>
-                {l.telefoon && <a href={`tel:${l.telefoon.replace(/\s/g, "")}`} style={{ color: "#1A2E40", textDecoration: "none", fontWeight: 600 }}>{l.telefoon}</a>}
-                {l.email && <a href={`mailto:${l.email}`} style={{ color: "#2563eb", textDecoration: "none" }}>{l.email}</a>}
-                {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>website</a> : <span style={{ color: "#b45309" }}>geen website</span>}
-                {l.facebook && <a href={l.facebook} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>facebook</a>}
-                {l.instagram && <a href={l.instagram} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>instagram</a>}
-                {l.linkedin && <a href={l.linkedin} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>linkedin</a>}
-                {l.google_maps && <a href={l.google_maps} target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>maps</a>}
+                {l.telefoon && <a href={`tel:${l.telefoon.replace(/\s/g, "")}`} style={{ color: "#2B2724", textDecoration: "none", fontWeight: 600 }}>{l.telefoon}</a>}
+                {l.email && <a href={`mailto:${l.email}`} style={{ color: "#9E3B2E", textDecoration: "none" }}>{l.email}</a>}
+                {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>website</a> : <span style={{ color: "#b45309" }}>geen website</span>}
+                {l.facebook && <a href={l.facebook} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>facebook</a>}
+                {l.instagram && <a href={l.instagram} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>instagram</a>}
+                {l.linkedin && <a href={l.linkedin} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>linkedin</a>}
+                {l.google_maps && <a href={l.google_maps} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>maps</a>}
               </div>
 
               {l.alleen_socials && (
-                <div style={{ display: "inline-flex", alignSelf: "flex-start", background: "#f0f7ff", border: "1px solid #bfdcff", color: "#0c447c", borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                <div style={{ display: "inline-flex", alignSelf: "flex-start", background: "#FBF7F0", border: "1px solid #E3DACB", color: "#9E3B2E", borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 600 }}>
                   Wel social media, geen website
                 </div>
               )}
 
               {(l.beoordeling || l.aantal_reviews) && (
-                <div style={{ fontSize: 12.5, color: "#94a3b8" }}>
+                <div style={{ fontSize: 12.5, color: "#9A9084" }}>
                   Google: {l.beoordeling ? Number(l.beoordeling).toFixed(1) : "—"}
                   {l.aantal_reviews ? ` (${l.aantal_reviews} reviews)` : ""}
                 </div>
@@ -276,14 +276,14 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
 
               <div style={{ fontSize: 13 }}>
                 {l.owner ? (
-                  <span style={{ color: "#334155" }}>
+                  <span style={{ color: "#524A40" }}>
                     Opgepakt door <strong>{l.owner}</strong>
                     {" · "}
                     <button onClick={() => patch(l.id, { owner: "" })} style={{ background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontSize: 13, padding: 0 }}>vrijgeven</button>
                   </span>
                 ) : (
                   <button onClick={() => pakOp(l)}
-                    style={{ background: "#1A2E40", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                    style={{ background: "#2B2724", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     Pak op{mij ? ` (${mij})` : ""}
                   </button>
                 )}
@@ -297,7 +297,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 ))}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Afronden:</span>
+                <span style={{ fontSize: 12, color: "#9A9084" }}>Afronden:</span>
                 <button onClick={() => patch(l.id, { status: "klant" })} style={pill(status === "klant", STATUS_KLEUR.klant)}>Klant geworden</button>
                 <button onClick={() => patch(l.id, { status: "afgewezen" })} style={pill(status === "afgewezen", STATUS_KLEUR.afgewezen)}>Afgewezen</button>
               </div>
@@ -312,7 +312,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                     style={{ ...sel, fontSize: 12.5, padding: "7px 9px" }}
                   />
                   <button onClick={() => bewaarSite(l)} disabled={!(siteVeld[l.id] || "").trim()}
-                    style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "7px 11px", cursor: "pointer", fontSize: 12.5, fontWeight: 700, color: "#334155", whiteSpace: "nowrap" }}>
+                    style={{ border: "1px solid #E3DACB", background: "#fff", borderRadius: 8, padding: "7px 11px", cursor: "pointer", fontSize: 12.5, fontWeight: 700, color: "#524A40", whiteSpace: "nowrap" }}>
                     Opslaan
                   </button>
                 </div>
@@ -320,20 +320,20 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
 
               {!done && tab !== "archief" && (
                 <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
-                  style={{ display: "block", textAlign: "center", background: "#FF8300", color: "#fff", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2 }}>
+                  style={{ display: "block", textAlign: "center", background: "#C05A38", color: "#fff", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2 }}>
                   Preview aanvragen
                 </a>
               )}
 
               {/* Archiveren met een reden, of terug uit het archief. */}
-              <div style={{ display: "flex", gap: 6, alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: 8, marginTop: 2 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", borderTop: "1px solid #F4EEE3", paddingTop: 8, marginTop: 2 }}>
                 {tab === "archief" ? (
                   <>
-                    <span style={{ fontSize: 12, color: "#94a3b8", flex: 1 }}>
+                    <span style={{ fontSize: 12, color: "#9A9084", flex: 1 }}>
                       Gearchiveerd{l.archief_reden ? ": " + l.archief_reden : ""}
                     </span>
                     <button onClick={() => terugUitArchief(l)}
-                      style={{ border: "1px solid #1A2E40", background: "#fff", color: "#1A2E40", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 }}>
+                      style={{ border: "1px solid #2B2724", background: "#fff", color: "#2B2724", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 }}>
                       Terug in de lijst
                     </button>
                   </>
@@ -353,7 +353,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           );
         })}
         {leads.length === 0 && (
-          <div style={{ textAlign: "center", color: "#94a3b8", padding: 24 }}>
+          <div style={{ textAlign: "center", color: "#9A9084", padding: 24 }}>
             Geen leads gevonden met deze filters.
           </div>
         )}
@@ -362,7 +362,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
       {leads.length < Number(totaal || 0) && (
         <div style={{ textAlign: "center", marginTop: 18 }}>
           <button onClick={() => zet({ limiet: limiet + PER_KEER })}
-            style={{ background: "#fff", border: "1px solid #1A2E40", color: "#1A2E40", padding: "11px 22px", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+            style={{ background: "#fff", border: "1px solid #2B2724", color: "#2B2724", padding: "11px 22px", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             Toon volgende {Math.min(PER_KEER, Number(totaal) - leads.length)}
           </button>
         </div>

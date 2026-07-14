@@ -19,7 +19,7 @@ function OmzetBalk({ naam, cijfers }) {
   );
   return (
     <div style={{
-      background: "linear-gradient(135deg,#12283d,#1A2E40)", color: "#fff", borderRadius: 16,
+      background: "linear-gradient(135deg,#2B2724,#2B2724)", color: "#fff", borderRadius: 16,
       padding: "16px 20px", marginBottom: 20, boxShadow: "0 10px 30px -14px rgba(0,0,0,.5)",
     }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
@@ -64,31 +64,31 @@ export default async function LeadsPage({ searchParams }) {
   const mijn = omzet.find((o) => o.persoon === naam) || null;
 
   return (
-    <main style={{ maxWidth: 1320, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
-      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
+    <main style={{ maxWidth: 1320, margin: "4vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#2B2724" }}>
+      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697" }}>StudioBaris</p>
 
       {sessie && <OmzetBalk naam={naam} cijfers={mijn} />}
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
         <h1 style={{ fontSize: 28, margin: "6px 0" }}>Leads</h1>
-        <a href="/klanten" style={{ background: "#FF8300", color: "#fff", padding: "7px 13px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Mijn klanten</a>
+        <a href="/klanten" style={{ background: "#C05A38", color: "#fff", padding: "7px 13px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Mijn klanten</a>
         {isBeheer(sessie) && (
-          <a href="/leads/import" style={{ color: "#1d6fd1", fontSize: 14 }}>Leads importeren</a>
+          <a href="/leads/import" style={{ color: "#C05A38", fontSize: 14 }}>Leads importeren</a>
         )}
         {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#64748b" }}>
-            Ingelogd als <strong style={{ color: "#1A2E40" }}>{naam}</strong>
+          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
+            Ingelogd als <strong style={{ color: "#2B2724" }}>{naam}</strong>
             {" · "}
-            <a href="/api/auth/logout" style={{ color: "#1d6fd1" }}>Uitloggen</a>
+            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
           </span>
         )}
       </div>
-      <p style={{ color: "#777", marginBottom: 18, fontSize: 14 }}>
+      <p style={{ color: "#6B6258", marginBottom: 18, fontSize: 14 }}>
         Pak een lead op (zet 'm op je naam), zoek info op en vraag een preview aan. Alles wat je hier doet zien je collega's live.
       </p>
 
       {naam === "Gerrit" && facetten.socials > 0 && (
-        <div style={{ background: "#f0f7ff", border: "1px solid #bfdcff", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "#0c447c" }}>
+        <div style={{ background: "#FBF7F0", border: "1px solid #E3DACB", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: "#9E3B2E" }}>
           <strong>{facetten.socials}</strong> bedrijven hebben wél social media maar géén website — de hoogste kans op conversie.
           Die staan alleen bij jou in de lijst, bovenaan, met een blauw label.
         </div>
