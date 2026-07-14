@@ -19,7 +19,7 @@ export async function sendPreviewEmail({ naam, url, review }) {
     <h3>Controlepunten</h3>
     <p><strong>Let op:</strong></p>${lijst(r.let_op)}
     <p><strong>Ontbrekende gegevens:</strong></p>${lijst(r.ontbrekend)}
-    <p><strong>Door AI afgeleid:</strong></p>${lijst(r.afgeleid)}
+    <p><strong>Afgeleid uit de aangeleverde informatie:</strong></p>${lijst(r.afgeleid)}
   `;
 
   try {

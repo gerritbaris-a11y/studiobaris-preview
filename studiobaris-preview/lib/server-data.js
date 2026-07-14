@@ -312,3 +312,46 @@ export async function maakAkkoord({
     p_phone: phone,
   });
 }
+
+// --- Klantsites op afstand bijwerken/verversen ---
+
+// Domein + licentiesleutel van één klant (server-only).
+export async function getKlantSite(id) {
+  const rows = await rest(
+    `companies?id=eq.${encodeURIComponent(id)}&select=id,name,slug,license_key,allowed_domains,plugin_versie`
+  );
+  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+}
+
+// Roept een endpoint van de SB Embed-plugin aan op de site van de klant.
+// pad = "ververs" of "bijwerken".
+export async function roepKlantSite(id, pad) {
+  const klant = await getKlantSite(id);
+  if (!klant) return { ok: false, error: "Klant niet gevonden." };
+  const domein = Array.isArray(klant.allowed_domains) ? klant.allowed_domains[0] : null;
+  if (!domein) return { ok: false, error: "Geen domein bekend voor deze klant." };
+  if (!klant.license_key) return { ok: false, error: "Geen licentiesleutel bekend voor deze klant." };
+
+  const url = `https://${domein}/wp-json/sb-embed/v1/${pad}`;
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 20000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "X-SB-License": klant.license_key, "Content-Type": "application/json" },
+      signal: ac.signal,
+      cache: "no-store",
+    });
+    const tekst = await res.text();
+    let data = null;
+    try { data = JSON.parse(tekst); } catch { data = { rauw: tekst.slice(0, 200) }; }
+    if (!res.ok) {
+      return { ok: false, error: (data && data.error) || `Site gaf ${res.status} terug.`, data };
+    }
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: e.name === "AbortError" ? "De site reageerde niet binnen 20 seconden." : String(e.message || e) };
+  } finally {
+    clearTimeout(t);
+  }
+}
