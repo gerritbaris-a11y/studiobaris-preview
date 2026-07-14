@@ -27,7 +27,7 @@ export default async function IntakePage({ searchParams }) {
       intro={
         lead
           ? "De gegevens uit de leadlijst staan al ingevuld. Vul aan wat je hebt gevonden — hoe meer je invult, hoe overtuigender de website wordt. Foto's van hun werk maken het verschil."
-          : "Vul in wat je hebt. Ontbrekende velden laat je leeg; Claude vult niets in wat er niet is. Hoe specifieker en vollediger je invult, hoe beter en overtuigender de website wordt."
+          : "Vul in wat je hebt. Ontbrekende velden laat je leeg; we verzinnen niets bij wat er niet is. Hoe specifieker en vollediger je invult, hoe beter en overtuigender de website wordt."
       }
       submitLabel="Genereer previewsite"
       busyLabel="Bezig met genereren…"
