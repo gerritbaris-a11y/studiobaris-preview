@@ -123,7 +123,7 @@ export default function StoringenClient({ klanten, nieuwste }) {
         {mollie && mollie.ok && (
           <div style={{ display: "grid", gap: 6 }}>
             <Stip
-              kleur={mollie.ideal_machtiging ? "#16a34a" : "#dc2626"}
+              kleur={mollie.incasso_aan && mollie.ideal_machtiging ? "#16a34a" : "#dc2626"}
               tekst={mollie.oordeel}
             />
             <div style={{ fontSize: 13, color: "#64748b" }}>
