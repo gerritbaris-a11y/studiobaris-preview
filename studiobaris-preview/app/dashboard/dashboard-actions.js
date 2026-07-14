@@ -49,7 +49,7 @@ export function PublishToggle({ slug, gepubliceerd }) {
   }
   return (
     <button onClick={go} disabled={s === "bezig"}
-      style={{ background: gepubliceerd ? "#fff" : "#1d7a46", color: gepubliceerd ? "#b45309" : "#fff", border: gepubliceerd ? "1px solid #d8dde3" : "none", padding: "6px 12px", borderRadius: 7, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+      style={{ background: gepubliceerd ? "#fff" : "#1d7a46", color: gepubliceerd ? "#b45309" : "#fff", border: gepubliceerd ? "1px solid #E3DACB" : "none", padding: "6px 12px", borderRadius: 7, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
       {s === "bezig" ? "Bezig…" : gepubliceerd ? "Offline halen" : "Online zetten"}
     </button>
   );
@@ -93,8 +93,8 @@ export function FaseStepper({ slug, huidige, bedrijf }) {
       {FASES.map((f, i) => {
         const done = i < idx;
         const cur = i === idx;
-        const bg = cur ? "#1A2E40" : done ? "#e1f5ee" : "#f1f5f9";
-        const col = cur ? "#fff" : done ? "#0f6e56" : "#94a3b8";
+        const bg = cur ? "#2B2724" : done ? "#e1f5ee" : "#F4EEE3";
+        const col = cur ? "#fff" : done ? "#0f6e56" : "#9A9084";
         return (
           <button key={f} onClick={() => zet(f)} disabled={bezig} title={"Zet fase op " + f}
             style={{ flex: "0 0 auto", fontSize: 11.5, fontWeight: cur ? 700 : 600, padding: "6px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: bg, color: col, whiteSpace: "nowrap" }}>
@@ -132,24 +132,24 @@ export function InzendingenKnop({ slug }) {
   return (
     <div style={{ width: "100%" }}>
       <button onClick={toggle}
-        style={{ background: "#fff", border: "1px solid #d8dde3", color: "#1A2E40", padding: "6px 11px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#2B2724", padding: "6px 11px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
         {open ? "Verberg inzendingen" : "Bekijk wat de klant invulde"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px" }}>
-          {laden && <div style={{ color: "#888", fontSize: 13 }}>Laden...</div>}
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px" }}>
+          {laden && <div style={{ color: "#B0A697", fontSize: 13 }}>Laden...</div>}
           {!laden && data && data.length === 0 && (
-            <div style={{ color: "#888", fontSize: 13 }}>De klant heeft nog niets ingevuld.</div>
+            <div style={{ color: "#B0A697", fontSize: 13 }}>De klant heeft nog niets ingevuld.</div>
           )}
           {!laden && data && data.map((s, i) => (
             <div key={i} style={{ borderTop: i === 0 ? "none" : "1px solid #eef1f4", paddingTop: i === 0 ? 0 : 9, marginTop: i === 0 ? 0 : 9 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1A2E40" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#2B2724" }}>
                 {INZENDING_LABEL[s.type] || s.type}
-                <span style={{ color: "#94a3b8", fontWeight: 500 }}> - {new Date(s.created_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}</span>
+                <span style={{ color: "#9A9084", fontWeight: 500 }}> - {new Date(s.created_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}</span>
               </div>
               {Object.entries(s.antwoorden || {}).map(([k, v]) => (
                 <div key={k} style={{ fontSize: 13, marginTop: 3, lineHeight: 1.35 }}>
-                  <span style={{ color: "#888" }}>{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                  <span style={{ color: "#B0A697" }}>{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}
                 </div>
               ))}
             </div>
@@ -183,13 +183,13 @@ export function Contactpersoon({ slug, value }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
       title="Voornaam van de klant - wordt de aanhef in het appje">
-      <span style={{ color: "#888", fontSize: 12 }}>Contact</span>
+      <span style={{ color: "#B0A697", fontSize: 12 }}>Contact</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="voornaam"
-        style={{ width: 100, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 100, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
@@ -212,9 +212,9 @@ function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {
       disabled={!gewijzigd || bezig}
       style={{
         fontSize: 12.5, fontWeight: 700, padding: "6px 11px", borderRadius: 8, whiteSpace: "nowrap",
-        border: "1px solid " + (gewijzigd ? "#1A2E40" : "#e2e8f0"),
-        background: gewijzigd ? "#1A2E40" : "#fff",
-        color: gewijzigd ? "#fff" : "#cbd5e1",
+        border: "1px solid " + (gewijzigd ? "#2B2724" : "#ECE4D7"),
+        background: gewijzigd ? "#2B2724" : "#fff",
+        color: gewijzigd ? "#fff" : "#B0A697",
         cursor: gewijzigd && !bezig ? "pointer" : "default",
         fontFamily: "inherit",
       }}
@@ -287,10 +287,10 @@ export function PersoonlijkeZin({ slug, value }) {
   return (
     <div style={{ width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#1A2E40" }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#2B2724" }}>
           Persoonlijke zin
         </span>
-        <span style={{ fontSize: 11.5, color: "#94a3b8" }}>
+        <span style={{ fontSize: 11.5, color: "#9A9084" }}>
           Waar je ze mee raakt. Iets wat je op hun socials of site zag.
         </span>
       </div>
@@ -302,7 +302,7 @@ export function PersoonlijkeZin({ slug, value }) {
           placeholder="Bijv: kwam die badkamer in Voorburg tegen op je Facebook. Strak werk."
           style={{
             flex: 1, minWidth: 0, boxSizing: "border-box", padding: "8px 10px", fontSize: 13.5,
-            border: "1px solid " + (gewijzigd ? "#FF8300" : leeg ? "#fcd9a8" : "#d8dde3"),
+            border: "1px solid " + (gewijzigd ? "#C05A38" : leeg ? "#fcd9a8" : "#E3DACB"),
             background: leeg && !gewijzigd ? "#fffbf5" : "#fff",
             borderRadius: 8, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5,
           }}
@@ -347,13 +347,13 @@ export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevu
   const knop = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
     borderRadius: 8,
-    border: "1px solid " + (klaar ? "#25D366" : "#e2e8f0"),
-    background: klaar ? "#25D366" : "#e2e8f0",
-    color: klaar ? "#fff" : "#94a3b8",
+    border: "1px solid " + (klaar ? "#25D366" : "#ECE4D7"),
+    background: klaar ? "#25D366" : "#ECE4D7",
+    color: klaar ? "#fff" : "#9A9084",
     cursor: klaar ? "pointer" : "not-allowed",
     fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap",
   };
-  const knop2 = { ...knop, background: "#fff", color: klaar ? "#0f6e56" : "#94a3b8", border: "1px solid " + (klaar ? "#25D366" : "#e2e8f0") };
+  const knop2 = { ...knop, background: "#fff", color: klaar ? "#0f6e56" : "#9A9084", border: "1px solid " + (klaar ? "#25D366" : "#ECE4D7") };
 
   return (
     <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -398,7 +398,7 @@ export function KlantNaam({ slug, value }) {
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="Naam"
-        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
@@ -413,7 +413,7 @@ export function KlantStatus({ slug, value }) {
   }
   return (
     <select value={v} onChange={change}
-      style={{ padding: "5px 7px", border: "1px solid #d8dde3", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 150 }}>
+      style={{ padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 150 }}>
       {STATUS_OPTIES.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
   );
@@ -435,15 +435,15 @@ export function KlantBedrag({ slug, value }) {
 
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-      <span style={{ color: "#888", fontSize: 12 }}>€</span>
+      <span style={{ color: "#B0A697", fontSize: 12 }}>€</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="0" inputMode="decimal"
-        style={{ width: 60, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 60, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
-      <span style={{ color: "#888", fontSize: 12 }}>/mnd</span>
+      <span style={{ color: "#B0A697", fontSize: 12 }}>/mnd</span>
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
   );
@@ -476,13 +476,13 @@ export function VerkoopBedrag({ slug, value }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
       title="Eenmalig verkoopbedrag (excl. btw). De helft wordt de aanbetaling, de helft het restbedrag.">
-      <span style={{ color: "#888", fontSize: 12 }}>Verkoop €</span>
+      <span style={{ color: "#B0A697", fontSize: 12 }}>Verkoop €</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="0" inputMode="decimal"
-        style={{ width: 70, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#FF8300" : "#d8dde3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 70, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
@@ -499,7 +499,7 @@ export function AkkoordLink({ slug }) {
   }
   return (
     <button onClick={copy}
-      style={{ background: "#fff", border: "1px solid #d8dde3", color: "#1d6fd1", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+      style={{ background: "#fff", border: "1px solid #E3DACB", color: "#C05A38", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
       {copied ? "Gekopieerd!" : "Akkoord-link"}
     </button>
   );
@@ -562,14 +562,14 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
 
   const chip = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
-    borderRadius: 8, border: "1px solid #d8dde3", background: "#fff", color: "#334155",
+    borderRadius: 8, border: "1px solid #E3DACB", background: "#fff", color: "#524A40",
     cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", fontFamily: "inherit",
   };
 
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-        <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#1A2E40", color: "#1A2E40", fontWeight: 700 }}>
+        <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#2B2724", color: "#2B2724", fontWeight: 700 }}>
           {open ? "Links verbergen" : "Alle links"}
         </button>
         <a href={`/vergelijk/${slug}`} style={{ ...chip, borderColor: "#7c3aed", color: "#6d28d9", background: "#faf5ff" }}>
@@ -584,8 +584,8 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
             title={l.hint + (l.uit ? "" : "\n" + l.url)}
             style={{
               ...chip,
-              borderColor: l.uit ? "#e5e7eb" : l.key === "r" && restBetaald ? "#a7f3d0" : l.key === "d" ? (l.leeg ? "#d8dde3" : "#FF8300") : "#d8dde3",
-              color: l.uit ? "#cbd5e1" : l.key === "r" && restBetaald ? "#065f46" : l.key === "d" && !l.leeg ? "#a35400" : "#334155",
+              borderColor: l.uit ? "#ECE4D7" : l.key === "r" && restBetaald ? "#a7f3d0" : l.key === "d" ? (l.leeg ? "#E3DACB" : "#C05A38") : "#E3DACB",
+              color: l.uit ? "#B0A697" : l.key === "r" && restBetaald ? "#065f46" : l.key === "d" && !l.leeg ? "#a35400" : "#524A40",
               background: copied === l.key ? "#ecfdf5" : l.key === "r" && restBetaald ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
               cursor: l.uit ? "not-allowed" : "pointer",
             }}
@@ -595,7 +595,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         ))}
 
         {!heeftDemo && magMaken && (
-          <button onClick={maakDemo} disabled={demoBezig} style={{ ...chip, borderColor: "#FF8300", color: "#a35400" }}>
+          <button onClick={maakDemo} disabled={demoBezig} style={{ ...chip, borderColor: "#C05A38", color: "#a35400" }}>
             {demoBezig ? "Demo-app maken…" : "+ Demo-app maken"}
           </button>
         )}
@@ -603,15 +603,15 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
 
       {/* Uitgeklapt: de volledige links, zichtbaar en los te kopiëren. */}
       {open && (
-        <div style={{ marginTop: 10, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
+        <div style={{ marginTop: 10, background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
           {links.map((l) => (
             <div key={l.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#1A2E40", minWidth: 92 }}>{l.naam}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#2B2724", minWidth: 92 }}>{l.naam}</span>
               <input
                 readOnly
                 value={l.uit ? "—" : l.url}
                 onFocus={(e) => e.target.select()}
-                style={{ flex: "1 1 260px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #d8dde3", borderRadius: 7, background: "#fff", color: l.uit ? "#cbd5e1" : "#334155", fontFamily: "inherit" }}
+                style={{ flex: "1 1 260px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #E3DACB", borderRadius: 7, background: "#fff", color: l.uit ? "#B0A697" : "#524A40", fontFamily: "inherit" }}
               />
               <button onClick={() => !l.uit && copy(l.url, "x" + l.key)} disabled={l.uit} style={{ ...chip, padding: "6px 10px", cursor: l.uit ? "not-allowed" : "pointer" }}>
                 {copied === "x" + l.key ? "✓" : "Kopieer"}
@@ -621,7 +621,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
               )}
             </div>
           ))}
-          <p style={{ fontSize: 11.5, color: "#94a3b8", margin: 0 }}>
+          <p style={{ fontSize: 11.5, color: "#9A9084", margin: 0 }}>
             Tip: de knop &quot;Appje versturen&quot; zet de preview- en demo-link al kant-en-klaar in een WhatsApp-bericht.
           </p>
         </div>
@@ -682,18 +682,18 @@ export function GegevensEditor({ slug, data = {} }) {
     } catch (e) { alert(String(e)); setS("idle"); }
   }
 
-  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #d8dde3", borderRadius: 6, fontSize: 13, marginTop: 2 };
+  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, marginTop: 2 };
   const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
   const velden = [["slogan", "Slogan"], ["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
 
   return (
     <div style={{ marginTop: 8 }}>
       <button onClick={() => setOpen(!open)}
-        style={{ background: "#fff", border: "1px solid #d8dde3", color: "#1d6fd1", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
+        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#C05A38", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
         {open ? "Sluiten" : "Gegevens bewerken"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 12px", width: 230 }}>
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 230 }}>
           {velden.map(([k, label]) => (
             <label key={k} style={lab}>{label}
               <input style={inp} value={v[k]} onChange={(e) => set(k, e.target.value)} />
@@ -735,21 +735,21 @@ export function AppLinkKnop({ bedrijf }) {
 
   const chip = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
-    borderRadius: 8, border: "1px solid #d8dde3", background: "#fff", color: "#334155",
+    borderRadius: 8, border: "1px solid #E3DACB", background: "#fff", color: "#524A40",
     cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
   };
 
   if (url) {
     return (
       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", width: "100%" }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#1A2E40" }}>App-inlog</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#2B2724" }}>App-inlog</span>
         <input readOnly value={url} onFocus={(e) => e.target.select()}
-          style={{ flex: "1 1 240px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #d8dde3", borderRadius: 7, fontFamily: "inherit", color: "#334155" }} />
+          style={{ flex: "1 1 240px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #E3DACB", borderRadius: 7, fontFamily: "inherit", color: "#524A40" }} />
         <button onClick={() => { try { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} }}
           style={{ ...chip, background: copied ? "#ecfdf5" : "#fff" }}>
           {copied ? "Gekopieerd ✓" : "Kopieer"}
         </button>
-        <span style={{ fontSize: 11.5, color: "#94a3b8" }}>14 dagen geldig</span>
+        <span style={{ fontSize: 11.5, color: "#9A9084" }}>14 dagen geldig</span>
       </div>
     );
   }
