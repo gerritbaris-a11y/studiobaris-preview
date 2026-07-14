@@ -5,7 +5,7 @@ import StoringenClient from "./storingen-client";
 export const dynamic = "force-dynamic";
 
 // De versie die iedereen hoort te draaien. Bij elke nieuwe plugin één keer bijwerken.
-export const NIEUWSTE_PLUGIN = "1.1.1";
+export const NIEUWSTE_PLUGIN = "1.1.2";
 
 export default async function Storingen() {
   const sessie = leesSessie();
