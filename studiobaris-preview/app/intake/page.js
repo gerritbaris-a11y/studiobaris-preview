@@ -23,7 +23,7 @@ export default async function IntakePage({ searchParams }) {
   return (
     <ProspectForm
       mode="create"
-      titel={lead ? `Preview maken voor ${lead.bedrijfsnaam}` : "Nieuwe prospect — previewsite genereren"}
+      titel={lead ? `Preview maken voor ${lead.bedrijfsnaam}` : "Previewsite genereren"}
       intro={
         lead
           ? "De gegevens uit de leadlijst staan al ingevuld. Vul aan wat je hebt gevonden — hoe meer je invult, hoe overtuigender de website wordt. Foto's van hun werk maken het verschil."
