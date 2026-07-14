@@ -44,6 +44,7 @@ export default async function Dashboard() {
         <a href="/intake" style={{ background: "#FF8300", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>+ Nieuwe intake</a>
         <a href="/leads" style={{ background: "#1A2E40", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Leadlijst openen</a>
         <a href="/overzicht" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Overzicht</a>
+        <a href="/storingen" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Storingen</a>
         <a href="/team" style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Team &amp; omzet</a>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#888" }}>{rows.length} klanten</span>
       </div>
