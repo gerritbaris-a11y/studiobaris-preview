@@ -5,8 +5,8 @@ import { useState } from "react";
 const lbl = { fontSize: 11, color: "#666", display: "flex", flexDirection: "column", gap: 2 };
 const num = { width: 46, padding: "4px 6px", border: "1px solid #d4d4d4", borderRadius: 6, fontSize: 13 };
 const txt = { width: 110, padding: "4px 6px", border: "1px solid #d4d4d4", borderRadius: 6, fontSize: 13 };
-const btn = { background: "#1A2E40", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer" };
-const btnGhost = { background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const btn = { background: "#2B2724", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer" };
+const btnGhost = { background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "5px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
 export default function BeheerActies({ klant }) {
   const [pl, setPl] = useState(klant.daily_project_limit ?? 2);
@@ -70,7 +70,7 @@ export default function BeheerActies({ klant }) {
         {linkState === "fout" && <span style={{ color: "#c0392b", fontSize: 11, marginLeft: 8 }}>Mislukt</span>}
         {link && (
           <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
-            <a href={link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#1d6fd1", wordBreak: "break-all" }}>{link}</a>
+            <a href={link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#C05A38", wordBreak: "break-all" }}>{link}</a>
             <button onClick={kopieer} style={{ ...btnGhost, padding: "3px 8px" }}>{copied ? "✓" : "Kopieer"}</button>
           </div>
         )}

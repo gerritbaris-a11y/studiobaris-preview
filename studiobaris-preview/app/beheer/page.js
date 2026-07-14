@@ -20,7 +20,7 @@ function PluginBadge({ versie, gezien }) {
     return (
       <span style={{
         fontSize: 12, fontWeight: 600, padding: "3px 9px", borderRadius: 999,
-        background: "#f1f5f9", color: "#94a3b8", whiteSpace: "nowrap",
+        background: "#F4EEE3", color: "#9A9084", whiteSpace: "nowrap",
       }}>
         geen contact
       </span>
@@ -44,10 +44,10 @@ function PluginBadge({ versie, gezien }) {
   );
 }
 
-const wrap = { maxWidth: 1100, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
-const th = { textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888", padding: "8px 10px", borderBottom: "2px solid #eee", whiteSpace: "nowrap" };
+const wrap = { maxWidth: 1100, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
+const th = { textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697", padding: "8px 10px", borderBottom: "2px solid #eee", whiteSpace: "nowrap" };
 const td = { padding: "12px 10px", borderBottom: "1px solid #f0f0f0", fontSize: 13, verticalAlign: "top" };
-const card = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 18px", minWidth: 150 };
+const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 12, padding: "14px 18px", minWidth: 150 };
 
 export default async function BeheerPage() {
   const klanten = await getKlantOverzicht();
@@ -57,25 +57,25 @@ export default async function BeheerPage() {
 
   return (
     <main style={wrap}>
-      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris · Beheer</p>
+      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697" }}>StudioBaris · Beheer</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 4px" }}>Klantoverzicht</h1>
       <p style={{ color: "#555", marginBottom: 20 }}>Verbruik, activiteit en instellingen per klant-app.</p>
 
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 24 }}>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Klanten</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>Klanten</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{klanten.length}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerking deze maand</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>Verwerking deze maand</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{euro(totMaand)}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerking totaal</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>Verwerking totaal</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{euro(totTotaal)}</div>
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#888" }}>Verwerkte tekst totaal</div>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>Verwerkte tekst totaal</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{Number(totTokens).toLocaleString("nl-NL")}</div>
         </div>
       </div>
