@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
 import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
+import { vulVoorbeeld } from "../../lib/preview-voorbeeld";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
 
@@ -48,7 +49,9 @@ export default async function Page({ params, searchParams }) {
     content = row.content;
   }
 
-  const c = content || {};
+  // Vul lege velden met duidelijk-neppe voorbeelden, zodat de verkoop-preview
+  // nooit kaal oogt. Alleen hier (preview) — de echte klantsite krijgt dit niet.
+  const c = vulVoorbeeld(content || {});
   const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
   if (stijl === "modern") return <ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
   if (stijl === "persoonlijk") return <PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
