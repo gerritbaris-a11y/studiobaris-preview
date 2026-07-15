@@ -391,3 +391,10 @@ export async function getVandaag(wie = "") {
   const data = await rpc("sb_vandaag", { p_wie: wie || "" });
   return Array.isArray(data) ? data : [];
 }
+
+// Openstaande restbetalingen: klanten die de aanbetaling voldeden maar de
+// tweede helft nog niet. p_wie leeg = alles (beheer).
+export async function getRestbetalingen(wie = "") {
+  const data = await rpc("sb_restbetalingen", { p_wie: wie || "" });
+  return Array.isArray(data) ? data : [];
+}
