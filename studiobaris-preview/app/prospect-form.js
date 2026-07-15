@@ -108,8 +108,30 @@ export default function ProspectForm({
     put("kleurvoorkeur", f.kleurvoorkeur.value);
     put("notities", f.notities.value);
     put("oude_website", f.oude_website.value);
+    // Foto's automatisch verkleinen in de browser, zodat grote telefoonfoto's
+    // (vaak 5-15 MB) nooit tegen de upload-limiet aanlopen. Mislukt het
+    // verkleinen, dan sturen we het origineel; is het resultaat groter, ook.
+    const verklein = async (file) => {
+      try {
+        if (!file.type || !file.type.startsWith("image/") || file.type.includes("svg")) return file;
+        const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+        const max = 2200;
+        const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+        const w = Math.max(1, Math.round(bmp.width * scale));
+        const h = Math.max(1, Math.round(bmp.height * scale));
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(bmp, 0, 0, w, h);
+        const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.82));
+        if (bmp.close) bmp.close();
+        if (!blob || blob.size >= file.size) return file;
+        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+      } catch {
+        return file;
+      }
+    };
     if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
-    for (const file of f.fotos.files) fd.append("fotos", file);
+    for (const file of f.fotos.files) fd.append("fotos", await verklein(file));
 
     try {
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
