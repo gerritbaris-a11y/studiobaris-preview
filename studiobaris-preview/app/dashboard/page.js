@@ -46,6 +46,7 @@ export default async function Dashboard() {
         <a href="/overzicht" style={{ background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Overzicht</a>
         <a href="/storingen" style={{ background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Storingen</a>
         <a href="/team" style={{ background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Team &amp; omzet</a>
+        <a href="/team-feedback" style={{ background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Feedback</a>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#B0A697" }}>{rows.length} klanten</span>
       </div>
 
