@@ -1,11 +1,12 @@
 import { getOverview, getMijnLeads } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin } from "../dashboard/dashboard-actions";
+import WerkplekShell from "../werkplek-shell";
+import { KLEUR, HEAD } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
-const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
+const card = { background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 16, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
 
 function BetaalBadge({ status }) {
   const map = {
@@ -17,13 +18,40 @@ function BetaalBadge({ status }) {
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
 }
 
-// Mijn klanten: het werkoverzicht voor iedereen.
-// Verkopers zien hun eigen klanten, beheer ziet alles.
+// Checklist: wat moet er nog voordat je het appje kunt versturen?
+function Checklist({ r }) {
+  const items = [
+    ["Voornaam contactpersoon", Boolean((r.contactpersoon || "").trim())],
+    ["Telefoonnummer", Boolean((r.lead_phone || "").trim())],
+    ["Persoonlijke zin", Boolean((r.persoonlijk || "").trim())],
+    ["Verkoopbedrag", Number(r.websiteprijs) > 0],
+  ];
+  const klaar = items.every((i) => i[1]);
+  return (
+    <div style={{ background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
+      <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, color: klaar ? KLEUR.sage.tekst : KLEUR.amber.tekst, marginBottom: 8 }}>
+        {klaar ? "Klaar om te versturen" : "Nog te doen voor versturen"}
+      </div>
+      <div style={{ display: "grid", gap: 6 }}>
+        {items.map(([label, ok]) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: ok ? KLEUR.gedempt : KLEUR.inkt }}>
+            <span style={{ width: 18, height: 18, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto",
+              background: ok ? KLEUR.sage.bg : KLEUR.rust.bg, color: ok ? KLEUR.sage.tekst : KLEUR.rust.tekst, fontSize: 12, fontWeight: 800 }}>
+              {ok ? "✓" : "✗"}
+            </span>
+            {label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
-  const [alles, mijnLeads] = await Promise.all([getOverview(), getMijnLeads(naam)]);
   const beheer = isBeheer(sessie);
+  const [alles, mijnLeads] = await Promise.all([getOverview(), getMijnLeads(naam)]);
 
   const rows = beheer
     ? alles
@@ -34,45 +62,23 @@ export default async function KlantenPage() {
       });
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
-        {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
-            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 8px" }}>
-        <h1 style={{ fontSize: 26, margin: 0 }}>{beheer ? "Alle klanten" : "Mijn klanten"}</h1>
-        <a href="/leads" style={{ background: "#2B2724", color: "#fff", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Leadlijst openen</a>
-        {beheer && (
-          <a href="/dashboard" style={{ background: "#fff", color: "#2B2724", border: "1px solid #2B2724", padding: "8px 14px", borderRadius: 9, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Volledig dashboard</a>
-        )}
-        <span style={{ marginLeft: "auto", fontSize: 13, color: "#B0A697" }}>{rows.length} {rows.length === 1 ? "klant" : "klanten"}</span>
-      </div>
-
-      <p style={{ color: "#6B6258", marginBottom: 18, fontSize: 14 }}>
-        Hier haal je de sale binnen. Je ziet in welke fase de klant zit en hebt alle links bij de hand: zijn preview,
-        zijn eigen demo-app en de betaallink. Vul de voornaam in en klik op &quot;Appje versturen&quot;: WhatsApp opent
-        met de complete verkooptekst, de juiste aanhef en de juiste links erin. Zodra hij akkoord is, zet je de fase op
-        Akkoord en vul je het verkoopbedrag in — daarna neemt Gerrit de bouw en de feedback over.
-      </p>
-
-      {/* Leads die je hebt opgepakt maar waar nog geen preview van is. */}
+    <WerkplekShell
+      naam={naam || "collega"}
+      beheer={beheer}
+      actief="/klanten"
+      titel={beheer ? "Alle klanten" : "Mijn klanten"}
+      sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
+    >
       {mijnLeads.length > 0 && (
-        <div style={{ ...card, marginBottom: 16, background: "#FBF7F0" }}>
+        <div style={{ ...card, marginBottom: 16, background: KLEUR.papier }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 16, margin: 0 }}>Opgepakt, nog geen preview</h2>
-            <span style={{ fontSize: 13, color: "#9A9084" }}>{mijnLeads.length} {mijnLeads.length === 1 ? "lead" : "leads"} staan op jouw naam</span>
-            <a href="/leads?wie=mij" style={{ marginLeft: "auto", fontSize: 13, color: "#C05A38" }}>Naar de leadlijst</a>
+            <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Opgepakt, nog geen preview</h2>
+            <span style={{ fontSize: 13, color: "#9A9084" }}>{mijnLeads.length} {mijnLeads.length === 1 ? "lead staat" : "leads staan"} op jouw naam</span>
+            <a href="/leads?wie=mij" style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.klei }}>Naar de leadlijst</a>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             {mijnLeads.map((l) => (
-              <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px" }}>
+              <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px" }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{l.bedrijfsnaam}</div>
                   <div style={{ fontSize: 12.5, color: "#6B6258" }}>
@@ -81,11 +87,9 @@ export default async function KlantenPage() {
                     {l.alleen_socials && <span style={{ color: "#9E3B2E", fontWeight: 600 }}> · geen website</span>}
                   </div>
                 </div>
-                {l.telefoon && (
-                  <a href={`tel:${String(l.telefoon).replace(/\s/g, "")}`} style={{ fontSize: 13, fontWeight: 600, color: "#2B2724", textDecoration: "none" }}>{l.telefoon}</a>
-                )}
+                {l.telefoon && <a href={`tel:${String(l.telefoon).replace(/\s/g, "")}`} style={{ fontSize: 13, fontWeight: 600, color: "#2B2724", textDecoration: "none" }}>{l.telefoon}</a>}
                 <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
-                  style={{ background: "#C05A38", color: "#fff", padding: "8px 13px", borderRadius: 9, fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+                  style={{ background: KLEUR.klei, color: "#fff", padding: "8px 13px", borderRadius: 9, fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
                   Preview maken
                 </a>
               </div>
@@ -95,8 +99,8 @@ export default async function KlantenPage() {
       )}
 
       {rows.length === 0 && mijnLeads.length === 0 && (
-        <div style={{ background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 12, padding: "16px 18px", color: "#7c4a03" }}>
-          Je hebt nog geen klanten. Pak een lead op in de <a href="/leads" style={{ color: "#7c4a03", fontWeight: 700 }}>leadlijst</a> en maak een preview.
+        <div style={{ background: KLEUR.amber.bg, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "16px 18px", color: KLEUR.amber.tekst }}>
+          Je hebt nog geen klanten. Pak een lead op in de <a href="/leads" style={{ color: KLEUR.amber.tekst, fontWeight: 700 }}>leadlijst</a> en maak een preview.
         </div>
       )}
 
@@ -105,50 +109,36 @@ export default async function KlantenPage() {
           <div key={r.slug} style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 600 }}>{r.company_name || r.slug}</div>
-                <div style={{ fontSize: 13, color: "#6B6258" }}>
-                  {[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}
-                </div>
+                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
+                <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
                 {r.gepubliceerd ? "Online" : "Offline"}
               </span>
             </div>
 
             <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
-
             <BetaalBadge status={r.betaal_status} />
 
-            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig heeftRest={Number(r.restbedrag) > 0} restBetaald={r.rest_status === "betaald"} stijl={r.stijl} />
+            <Checklist r={r} />
 
+            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig heeftRest={Number(r.restbedrag) > 0} restBetaald={r.rest_status === "betaald"} stijl={r.stijl} />
             <PersoonlijkeZin slug={r.slug} value={r.persoonlijk} />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
-              <AppjeKnop
-                slug={r.slug}
-                bedrijf={r.company_name}
-                contact={r.contactpersoon}
-                afzender={r.verzamelaar || naam}
-                telefoon={r.lead_phone}
-                demoGevuld={r.demo_gevuld}
-                persoonlijk={r.persoonlijk}
-              />
+              <AppjeKnop slug={r.slug} bedrijf={r.company_name} contact={r.contactpersoon} afzender={r.verzamelaar || naam} telefoon={r.lead_phone} demoGevuld={r.demo_gevuld} persoonlijk={r.persoonlijk} />
             </div>
-
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <AppLinkKnop bedrijf={r.company_name} />
             </div>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12 }}>
               <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
-              <span style={{ fontSize: 12.5, color: "#9A9084" }}>
-                Vul in waarvoor je 'm hebt verkocht. Jouw commissie is 50% hiervan.
-              </span>
+              <span style={{ fontSize: 12.5, color: "#9A9084" }}>Vul in waarvoor je 'm hebt verkocht. Jouw commissie is 50% hiervan.</span>
             </div>
           </div>
         ))}
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
