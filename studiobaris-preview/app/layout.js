@@ -1,4 +1,5 @@
 import "./globals.css";
+import WerkplekChrome from "./werkplek-chrome";
 
 export const metadata = {
   title: "StudioBaris",
@@ -13,7 +14,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="nl">
-      <body>{children}</body>
+      <body>
+        {children}
+        <WerkplekChrome />
+      </body>
     </html>
   );
 }
