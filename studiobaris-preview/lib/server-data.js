@@ -204,6 +204,22 @@ export async function getOmzet() {
   return Array.isArray(data) ? data : [];
 }
 
+// Btw-reserve: hoeveel btw we opzij moeten zetten. Ingevoerde bedragen zijn
+// excl. btw; de klant betaalt incl. Wij innen die btw en dragen 'm later af.
+export async function getBtw() {
+  const data = await rpc("sb_btw_overzicht", {});
+  const r = (Array.isArray(data) ? data[0] : data) || {};
+  return {
+    aanbetaling_excl: Number(r.aanbetaling_excl || 0),
+    rest_excl: Number(r.rest_excl || 0),
+    ontvangen_eenmalig_excl: Number(r.ontvangen_eenmalig_excl || 0),
+    lopend_abo_maand_excl: Number(r.lopend_abo_maand_excl || 0),
+    aantal_betaald: Number(r.aantal_betaald || 0),
+    aantal_abo: Number(r.aantal_abo || 0),
+    verwacht_akkoord_excl: Number(r.verwacht_akkoord_excl || 0),
+  };
+}
+
 // Alle inzendingen (intake + feedback) van een klant, nieuwste eerst.
 export async function getInzendingen(slug) {
   const data = await rpc("sb_inzendingen", { p_slug: slug });
