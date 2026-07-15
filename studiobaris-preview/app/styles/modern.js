@@ -10,7 +10,7 @@ function waLink(n) {
 }
 
 // Stijl "Strak & Modern": licht, typografisch, rustige accordion-diensten.
-export default function ModernSite({ content, isConcept, isReview }) {
+export default function ModernSite({ content, slug = "", isConcept, isReview }) {
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -77,6 +77,8 @@ export default function ModernSite({ content, isConcept, isReview }) {
     .md details.acd summary::-webkit-details-marker{display:none}
     .md details.acd .pl{color:var(--orange);font-size:1.5rem;line-height:1}
     .md details.acd p{color:#55606e;margin-top:.7rem;max-width:66ch}
+    .md details.acd .acdl{display:inline-block;margin-top:.6rem;color:var(--orange);font-weight:700;font-size:.9rem}
+    .md a.pcard:hover{border-color:var(--orange)}
     .md .voord{display:grid;grid-template-columns:1fr;gap:1.5rem}
     .md .vd{display:flex;gap:.9rem;align-items:flex-start}
     .md .vd .ic{flex:none;width:36px;height:36px;border-radius:10px;background:var(--bg);display:grid;place-items:center;font-size:1.1rem}
@@ -146,6 +148,7 @@ export default function ModernSite({ content, isConcept, isReview }) {
             <details className="acd" key={i}>
               <summary>{d.titel}<span className="pl">+</span></summary>
               <p>{d.omschrijving}</p>
+              <a className="acdl" href={`/${slug}/dienst/${i}`}>Lees meer &rarr;</a>
             </details>
           ))}
         </div></section>
@@ -167,10 +170,10 @@ export default function ModernSite({ content, isConcept, isReview }) {
         <div className="grid" style={{ marginTop: "1.8rem" }}>
           {projecten.length > 0
             ? projecten.map((p, i) => (
-                <div className="pcard" key={i}>
+                <a className="pcard" key={i} href={`/${slug}/project/${i}`}>
                   <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
-                </div>
+                </a>
               ))
             : [0, 1, 2].map((i) => (
                 <div className="pcard" key={i}>
@@ -213,10 +216,13 @@ export default function ModernSite({ content, isConcept, isReview }) {
           <div>
             <h4>Contact</h4>
             {b.telefoon && <a href={`tel:${b.telefoon}`}>{b.telefoon}</a>}
+            {wa && <a href={wa}>WhatsApp</a>}
             {b.email && <a href={`mailto:${b.email}`}>{b.email}</a>}
+            {b.openingstijden && <p style={{ marginTop: ".4rem" }}>{b.openingstijden}</p>}
             {b.regio && <p style={{ marginTop: ".4rem" }}>Werkgebied: {b.regio}</p>}
           </div>
           <div><h4>Volg ons</h4><div className="fsoc">
+            {wa && <a className="sb" href={wa} aria-label="WhatsApp">wa</a>}
             {socials.facebook && <a className="sb" href={socials.facebook} aria-label="Facebook">f</a>}
             {socials.instagram && <a className="sb" href={socials.instagram} aria-label="Instagram">ig</a>}
             {socials.linkedin && <a className="sb" href={socials.linkedin} aria-label="LinkedIn">in</a>}

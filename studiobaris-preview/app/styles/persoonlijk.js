@@ -10,7 +10,7 @@ function waLink(n) {
 }
 
 // Stijl "Warm & Persoonlijk": vakman centraal, verhaal + werkwijze in stappen.
-export default function PersoonlijkSite({ content, isConcept, isReview }) {
+export default function PersoonlijkSite({ content, slug = "", isConcept, isReview }) {
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -38,6 +38,10 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
   const naam = String(b.naam || "Bedrijf").split(" ");
   const vars = brandVars(m);
   const fontsHref = googleFontsHref(m.koppen_font, m.tekst_font);
+  // Foto van de vakman. Nooit het logo hier tonen (dat hoort in de header).
+  // Zonder foto tonen we standaard een persoon-silhouet, zodat duidelijk is
+  // dat hier een portret van de ondernemer komt.
+  const persoonFoto = m.persoon_foto || m.foto_url || b.foto || hero.foto || null;
 
   const css = `
     @import url('${fontsHref}');
@@ -52,7 +56,8 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
     .pz .nav{display:flex;gap:1.2rem;font-size:.9rem;color:#6b5d4d}
     .pz .cta{background:var(--orange);color:#fff;padding:.55rem 1.1rem;border-radius:999px;font-weight:700;font-size:.88rem}
     .pz .hero{background:#fdf3e7;padding:3.4rem 0 3.6rem;text-align:center}
-    .pz .pf{width:120px;height:120px;border-radius:50%;margin:0 auto 1.2rem;background:#e7d2b8 center/cover no-repeat;display:grid;place-items:center;color:#9a6b3a;font-size:.85rem;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+    .pz .pf{width:120px;height:120px;border-radius:50%;margin:0 auto 1.2rem;background:#e7d2b8 center/cover no-repeat;display:grid;place-items:center;color:#9a6b3a;font-size:.85rem;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden}
+    .pz .pf svg{width:100%;height:100%;display:block}
     .pz .eyebrow{color:var(--orange);font-weight:700;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase}
     .pz .hero h1{font-size:clamp(1.9rem,5vw,2.8rem);margin:.6rem 0}
     .pz .hero p{color:#6b5d4d;font-size:1.08rem;max-width:56ch;margin:0 auto 1.4rem}
@@ -101,7 +106,14 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       </div></header>
 
       <section className="hero"><div className="wrap">
-        <div className="pf" style={m.logo_url ? { backgroundImage: `url(${m.logo_url})`, color: "transparent" } : undefined}>{m.logo_url ? "" : "foto"}</div>
+        <div className="pf" style={persoonFoto ? { backgroundImage: `url(${persoonFoto})`, color: "transparent" } : undefined}>
+          {persoonFoto ? "" : (
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="40" r="19" fill="#b98a55" />
+              <path d="M50 63c-19 0-33 12-35 33h70c-2-21-16-33-35-33z" fill="#b98a55" />
+            </svg>
+          )}
+        </div>
         <div className="eyebrow">{b.branche || b.naam}</div>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : b.naam}</h1>
         <p>{hero.subkop || c.over_ons || ""}</p>
@@ -128,7 +140,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
           <h2>Wat ik voor je doe</h2>
           <div className="grid" style={{ marginTop: "1.6rem" }}>
             {diensten.map((d, i) => (
-              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p></div>
+              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p><a href={`/${slug}/dienst/${i}`} style={{ color: "var(--orange)", fontWeight: 700, fontSize: ".9rem", display: "inline-block", marginTop: ".5rem" }}>Lees meer &rarr;</a></div>
             ))}
           </div>
         </div></section>
@@ -139,7 +151,7 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
         <div className="grid" style={{ marginTop: "1.6rem" }}>
           {projecten.length > 0
             ? projecten.map((p, i) => (
-                <a className="pcard" key={i} href={`/${b.slug ? b.slug : ""}`} style={{ pointerEvents: "none" }}>
+                <a className="pcard" key={i} href={`/${slug}/project/${i}`}>
                   <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
@@ -176,8 +188,8 @@ export default function PersoonlijkSite({ content, isConcept, isReview }) {
       <footer className="ft"><div className="wrap">
         <div className="ftg">
           <div><h4>{b.naam}</h4><p style={{ color: "rgba(255,255,255,.72)" }}>{b.adres}{b.kvk ? <><br />KvK {b.kvk}</> : null}{b.btw ? <><br />BTW {b.btw}</> : null}</p></div>
-          <div><h4>Contact</h4>{b.telefoon && <a href={`tel:${b.telefoon}`}>{b.telefoon}</a>}{b.email && <a href={`mailto:${b.email}`}>{b.email}</a>}{b.regio && <p style={{ marginTop: ".4rem", color: "rgba(255,255,255,.6)" }}>Werkgebied: {b.regio}</p>}</div>
-          <div><h4>Volg ons</h4>{socials.facebook && <a href={socials.facebook}>Facebook</a>}{socials.instagram && <a href={socials.instagram}>Instagram</a>}{socials.linkedin && <a href={socials.linkedin}>LinkedIn</a>}</div>
+          <div><h4>Contact</h4>{b.telefoon && <a href={`tel:${b.telefoon}`}>{b.telefoon}</a>}{wa && <a href={wa}>WhatsApp</a>}{b.email && <a href={`mailto:${b.email}`}>{b.email}</a>}{b.openingstijden && <p style={{ marginTop: ".4rem", color: "rgba(255,255,255,.6)" }}>{b.openingstijden}</p>}{b.regio && <p style={{ marginTop: ".4rem", color: "rgba(255,255,255,.6)" }}>Werkgebied: {b.regio}</p>}</div>
+          <div><h4>Volg ons</h4>{wa && <a href={wa}>WhatsApp</a>}{socials.facebook && <a href={socials.facebook}>Facebook</a>}{socials.instagram && <a href={socials.instagram}>Instagram</a>}{socials.linkedin && <a href={socials.linkedin}>LinkedIn</a>}</div>
         </div>
         <div className="fbot">&copy; {new Date().getFullYear()} {b.naam} &middot; Website door StudioBaris</div>
       </div></footer>
