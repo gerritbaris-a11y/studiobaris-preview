@@ -47,5 +47,6 @@ export const NAV = [
   { href: "/storingen", label: "Storingen", beheer: true },
   { href: "/vragen", label: "Vragen", beheer: true },
   { href: "/kosten", label: "Kosten", beheer: true },
+  { href: "/restbetalingen", label: "Restbetalingen", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];
