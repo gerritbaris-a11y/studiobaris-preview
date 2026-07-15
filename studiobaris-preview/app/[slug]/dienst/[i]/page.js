@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../../../lib/preview";
 import { brandVars } from "../../../../lib/brand";
+import { vulVoorbeeld } from "../../../../lib/preview-voorbeeld";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }) {
 export default async function DienstPage({ params }) {
   const row = await getPreview(params.slug);
   if (!row) notFound();
-  const c = row.content || {};
+  const c = vulVoorbeeld(row.content || {});
   const b = c.bedrijf || {};
   const m = c.merk || {};
   const d = (c.diensten || [])[parseInt(params.i, 10)];
