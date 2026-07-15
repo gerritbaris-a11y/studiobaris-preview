@@ -50,8 +50,8 @@ export default async function Page({ params, searchParams }) {
 
   const c = content || {};
   const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
-  if (stijl === "modern") return <ModernSite content={c} isConcept={isConcept} isReview={isReview} />;
-  if (stijl === "persoonlijk") return <PersoonlijkSite content={c} isConcept={isConcept} isReview={isReview} />;
+  if (stijl === "modern") return <ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
+  if (stijl === "persoonlijk") return <PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   let sloganAcc = null;
