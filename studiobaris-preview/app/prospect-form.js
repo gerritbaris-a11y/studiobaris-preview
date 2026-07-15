@@ -115,14 +115,14 @@ export default function ProspectForm({
       try {
         if (!file.type || !file.type.startsWith("image/") || file.type.includes("svg")) return file;
         const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-        const max = 2200;
+        const max = 1600;
         const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
         const w = Math.max(1, Math.round(bmp.width * scale));
         const h = Math.max(1, Math.round(bmp.height * scale));
         const c = document.createElement("canvas");
         c.width = w; c.height = h;
         c.getContext("2d").drawImage(bmp, 0, 0, w, h);
-        const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.82));
+        const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.72));
         if (bmp.close) bmp.close();
         if (!blob || blob.size >= file.size) return file;
         return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
@@ -130,11 +130,24 @@ export default function ProspectForm({
         return file;
       }
     };
-    if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
-    for (const file of f.fotos.files) fd.append("fotos", await verklein(file));
+    let uploadBytes = 0;
+    if (f.logo.files[0]) { const lf = f.logo.files[0]; uploadBytes += lf.size; fd.append("logo", lf); }
+    for (const file of f.fotos.files) { const cf = await verklein(file); uploadBytes += cf.size; fd.append("fotos", cf); }
+    if (uploadBytes > 4 * 1024 * 1024) {
+      setError("Je foto's zijn samen te groot om in \u00e9\u00e9n keer te versturen. Kies wat minder foto's (of wat kleinere) en probeer opnieuw.");
+      setStatus("fout");
+      return;
+    }
 
     try {
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
+      if (!res.ok) {
+        setError(res.status === 413
+          ? "De foto's waren samen te groot voor de upload. Kies wat minder of wat kleinere foto's en probeer opnieuw."
+          : "Er ging iets mis bij het versturen. Probeer het zo nog eens.");
+        setStatus("fout");
+        return;
+      }
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
       setResultaat(data);
