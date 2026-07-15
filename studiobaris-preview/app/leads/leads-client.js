@@ -237,13 +237,23 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           const done = DONE.includes(status);
           return (
             <div key={l.id} style={{ ...card, outline: bezigId === l.id ? "2px solid #C05A38" : "none", opacity: done ? 0.85 : 1 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                <strong style={{ fontSize: 16, lineHeight: 1.25 }}>{l.bedrijfsnaam || "—"}</strong>
-                {l.potentie && (
-                  <span style={{ flex: "0 0 auto", fontSize: 12, fontWeight: 700, color: POTENTIE_KLEUR[l.potentie] || "#666", whiteSpace: "nowrap" }}>
-                    {l.potentie}{l.score ? ` · ${l.score}` : ""}
-                  </span>
-                )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ fontSize: 16, lineHeight: 1.25, display: "block" }}>{l.bedrijfsnaam || "—"}</strong>
+                  {l.potentie && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: POTENTIE_KLEUR[l.potentie] || "#666" }}>{l.potentie}</span>
+                  )}
+                </div>
+                {l.score != null && (() => {
+                  const sc = Number(l.score);
+                  const kl = sc >= 85 ? "#C05A38" : sc >= 75 ? "#5E8C61" : "#C98A2B";
+                  return (
+                    <div style={{ flex: "0 0 auto", textAlign: "center", lineHeight: 1 }}>
+                      <div style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontSize: 24, fontWeight: 800, color: kl }}>{sc}</div>
+                      <div style={{ fontSize: 10, color: "#B0A697", textTransform: "uppercase", letterSpacing: 0.5 }}>kans</div>
+                    </div>
+                  );
+                })()}
               </div>
               <div style={{ fontSize: 13, color: "#6B6258" }}>
                 {[l.vakgebied, l.plaats].filter(Boolean).join(" · ")}
