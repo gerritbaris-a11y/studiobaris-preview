@@ -3,6 +3,7 @@ import { leesSessie, isBeheer } from "../../lib/auth";
 import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin, PublishToggle } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
+// herdeploy: verse build (env-vars opnieuw koppelen)
 
 export const dynamic = "force-dynamic";
 
