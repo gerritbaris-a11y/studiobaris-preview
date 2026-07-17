@@ -1,6 +1,6 @@
 import { getOverview, getMijnLeads } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin } from "../dashboard/dashboard-actions";
+import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin, PublishToggle } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 
@@ -112,9 +112,18 @@ export default async function KlantenPage() {
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
-                {r.gepubliceerd ? "Online" : "Offline"}
-              </span>
+              {beheer ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+                    {r.gepubliceerd ? "● Online" : "○ Offline"}
+                  </span>
+                  <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
+                </div>
+              ) : (
+                <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+                  {r.gepubliceerd ? "Online" : "Offline"}
+                </span>
+              )}
             </div>
 
             <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
