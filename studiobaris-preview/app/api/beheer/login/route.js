@@ -4,7 +4,7 @@ import { nieuweLogin } from "../../../../lib/server-data";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const KLANT_APP_BASE = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://studiobaris.vercel.app";
+const KLANT_APP_BASE = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobaris.nl";
 
 // Genereer een nieuwe, verlopende persoonlijke inlog-link voor een klant.
 export async function POST(req) {
