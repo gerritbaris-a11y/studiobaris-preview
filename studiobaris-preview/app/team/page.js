@@ -27,7 +27,7 @@ export default async function TeamPage() {
 
   const omzetVan = (naam) =>
     omzet.find((o) => o.persoon === naam) ||
-    { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0 };
+    { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0 };
 
   const totaal = omzet.reduce(
     (a, o) => ({
@@ -35,8 +35,9 @@ export default async function TeamPage() {
       commissie: a.commissie + Number(o.commissie || 0),
       verdiend: a.verdiend + Number(o.verdiend || 0),
       openstaand: a.openstaand + Number(o.openstaand || 0),
+      maand_commissie: a.maand_commissie + Number(o.maand_commissie || 0),
     }),
-    { verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0 }
+    { verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0 }
   );
 
   const beheer = team.filter((t) => t.rol === "beheer");
@@ -77,9 +78,10 @@ export default async function TeamPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
           {cel("Klanten", o.aantal)}
           {cel("Verkocht", euro(o.verkoopbedrag))}
-          {cel("Commissie (50%)", euro(o.commissie))}
+          {cel(t.vergoeding_model === "100eur" ? "Vergoeding (€100 p/klant)" : "Commissie (50%)", euro(o.commissie))}
           {cel("Uitbetaald", euro(o.verdiend), "#0f6e56")}
           {cel("Nog te verdienen", euro(o.openstaand), "#b45309")}
+          {t.vergoeding_model === "50pct_abo" && cel("Per maand (1/3 abo)", euro(o.maand_commissie), "#0f6e56")}
         </div>
       </div>
     );
@@ -108,9 +110,10 @@ export default async function TeamPage() {
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Totaal — hele team</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           {totVak("Verkocht", euro(totaal.verkoopbedrag))}
-          {totVak("Commissie (50%)", euro(totaal.commissie))}
+          {totVak("Commissie", euro(totaal.commissie))}
           {totVak("Uitbetaald", euro(totaal.verdiend), "#7ee2b8")}
           {totVak("Nog te verdienen", euro(totaal.openstaand), "#ffd18a")}
+          {totaal.maand_commissie > 0 && totVak("Commissie per maand", euro(totaal.maand_commissie), "#7ee2b8")}
         </div>
       </div>
 
