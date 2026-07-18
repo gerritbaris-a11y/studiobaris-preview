@@ -5,7 +5,7 @@ import { mollie, mollieConfigured, inclBtw } from "../../../../lib/mollie";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
 
 // Start de eerste betaling/machtiging. Geeft een Mollie-checkout-URL terug.
 export async function POST(req) {
