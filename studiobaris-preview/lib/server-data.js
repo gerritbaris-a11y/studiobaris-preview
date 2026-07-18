@@ -152,9 +152,10 @@ export async function getTeam() {
 
 // Namen + rol + of er al een wachtwoord is ingesteld (voor de inlogpagina).
 export async function getTeamLogin() {
-  const data = await rest("app_users?select=id,naam,rol,password_hash&order=rol.asc,naam.asc");
+  const data = await rest("app_users?select=id,naam,rol,password_hash,vergoeding_model&order=rol.asc,naam.asc");
   return (Array.isArray(data) ? data : []).map((u) => ({
     id: u.id, naam: u.naam, rol: u.rol, gezet: !!u.password_hash,
+    vergoeding_model: u.vergoeding_model || "50pct",
   }));
 }
 
