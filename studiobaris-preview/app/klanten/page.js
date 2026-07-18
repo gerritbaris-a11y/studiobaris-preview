@@ -1,7 +1,8 @@
-import { getOverview, getMijnLeads } from "../../lib/server-data";
+import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin, PublishToggle } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
+import DocumentenKaart from "../documenten-kaart";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 // herdeploy: verse build (env-vars opnieuw koppelen)
 
@@ -52,7 +53,10 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads] = await Promise.all([getOverview(), getMijnLeads(naam)]);
+  const [alles, mijnLeads, teamleden] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin()]);
+  // Welke handleiding hoort bij deze verkoper? Volgt uit zijn vergoedingsmodel.
+  const ikzelf = (teamleden || []).find((t) => t.naam === naam);
+  const mijnModel = ikzelf ? ikzelf.vergoeding_model : "50pct";
 
   const rows = beheer
     ? alles
@@ -70,6 +74,8 @@ export default async function KlantenPage() {
       titel={beheer ? "Alle klanten" : "Mijn klanten"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
+      <DocumentenKaart beheer={beheer} model={mijnModel} />
+
       {mijnLeads.length > 0 && (
         <div style={{ ...card, marginBottom: 16, background: KLEUR.papier }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
