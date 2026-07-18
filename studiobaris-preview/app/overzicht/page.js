@@ -1,10 +1,11 @@
 import { getRapport, getTeam } from "../../lib/server-data";
-import { leesSessie } from "../../lib/auth";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell from "../werkplek-shell";
+import { KLEUR } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 1180, margin: "4vh auto", padding: "0 20px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
-const kaart = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "16px 18px" };
+const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "16px 18px" };
 
 const PERIODES = [
   { d: 7, label: "7 dagen" },
@@ -78,6 +79,7 @@ function Trechter({ t }) {
 
 export default async function OverzichtPage({ searchParams }) {
   const sessie = leesSessie();
+  const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
   const dagen = sp.dagen !== undefined ? Number(sp.dagen) : 30;
   const persoon = sp.persoon || "";
@@ -100,43 +102,23 @@ export default async function OverzichtPage({ searchParams }) {
   };
 
   const knop = (aan) => ({
-    padding: "7px 13px", borderRadius: 9, fontSize: 13.5, fontWeight: 700, textDecoration: "none",
-    border: "1px solid " + (aan ? "#2B2724" : "#E3DACB"),
-    background: aan ? "#2B2724" : "#fff",
-    color: aan ? "#fff" : "#524A40",
+    padding: "8px 14px", borderRadius: 999, fontSize: 13.5, fontWeight: 700, textDecoration: "none",
+    border: "1px solid " + (aan ? KLEUR.klei : KLEUR.lijn2),
+    background: aan ? KLEUR.klei : "#fff",
+    color: aan ? "#fff" : KLEUR.gedempt,
   });
 
   const totaalVerkocht = personen.reduce((s, p) => s + Number(p.verkocht || 0), 0);
   const totaalOpen = personen.reduce((s, p) => s + Number(p.open_leads || 0), 0);
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
-        {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
-            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 6px" }}>
-        <h1 style={{ fontSize: 26, margin: 0 }}>Overzicht</h1>
-        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>Dashboard</a>
-        <a href="/leads" style={{ color: "#C05A38", fontSize: 14 }}>Leads</a>
-        <a href="/klanten" style={{ color: "#C05A38", fontSize: 14 }}>Klanten</a>
-        <a href="/team" style={{ color: "#C05A38", fontSize: 14 }}>Team &amp; omzet</a>
-        <a href="/vragen" style={{ color: "#C05A38", fontSize: 14 }}>Vragen</a>
-        <a href="/kosten" style={{ color: "#C05A38", fontSize: 14 }}>Kosten</a>
-        <a href="/storingen" style={{ color: "#C05A38", fontSize: 14 }}>Storingen</a>
-        <a href="/beheer" style={{ color: "#C05A38", fontSize: 14 }}>Beheer</a>
-      </div>
-      <p style={{ color: "#6B6258", fontSize: 14, marginBottom: 16 }}>
-        Alles wat het team doet, op één plek. Kies een periode en eventueel een persoon.
-      </p>
-
+    <WerkplekShell
+      naam={sessie?.naam || "collega"}
+      beheer={beheer}
+      actief="/overzicht"
+      titel="Overzicht"
+      sub="Alles wat het team doet, op één plek. Kies een periode en eventueel een persoon."
+    >
       {/* Filters */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
         {PERIODES.map((p) => (
@@ -300,6 +282,6 @@ export default async function OverzichtPage({ searchParams }) {
           )}
         </div>
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
