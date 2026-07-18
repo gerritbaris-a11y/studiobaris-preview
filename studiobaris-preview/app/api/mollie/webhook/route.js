@@ -5,7 +5,7 @@ import { mollie, eenMaandVooruit, inclBtw } from "../../../../lib/mollie";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
 
 // Mollie roept dit aan na een betaling. Body bevat 'id' (payment-id).
 export async function POST(req) {
