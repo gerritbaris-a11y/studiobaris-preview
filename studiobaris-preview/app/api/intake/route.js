@@ -229,7 +229,7 @@ export async function POST(req) {
       naar: "Preview",
     });
 
-    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://studiobaris-preview.vercel.app";
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
     const url = `${SITE_URL}/${slug}`;
     await sendPreviewEmail({ naam, url, review }).catch(() => {});
     return NextResponse.json({ ok: true, slug, url, review, demo });
