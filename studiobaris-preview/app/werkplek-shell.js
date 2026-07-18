@@ -11,24 +11,38 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href={FONT_LINK} />
 
-      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.85)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
+      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.9)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 30, height: 30, borderRadius: 8, background: KLEUR.klei, color: "#fff", display: "grid", placeItems: "center", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>S</div>
           <div style={{ lineHeight: 1.1 }}>
             <div style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 15 }}>StudioBaris</div>
             <div style={{ fontSize: 11, color: KLEUR.label, textTransform: "uppercase", letterSpacing: 1 }}>werkplek</div>
           </div>
-          <span style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.gedempt }}>
-            Ingelogd als <strong style={{ color: KLEUR.inkt }}>{naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: KLEUR.klei }}>Uitloggen</a>
-          </span>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 13, color: KLEUR.gedempt, whiteSpace: "nowrap" }}>
+              Ingelogd als <strong style={{ color: KLEUR.inkt }}>{naam}</strong>
+            </span>
+            <Knop href="/api/auth/logout" kind="secondair" klein>Uitloggen</Knop>
+          </div>
         </div>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px", display: "flex", gap: 18, overflowX: "auto" }}>
+        {/* Navigatie: het actieve scherm is een gevulde pil, dus je ziet in één oogopslag waar je bent. */}
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px 8px", display: "flex", gap: 6, overflowX: "auto" }}>
           {NAV.filter((n) => beheer || !n.beheer).map((n) => {
             const aan = n.href === actief;
             return (
-              <a key={n.href} href={n.href} style={{ padding: "10px 0", fontSize: 14, fontWeight: aan ? 700 : 500, color: aan ? KLEUR.klei : "#7A7168", borderBottom: aan ? `2px solid ${KLEUR.klei}` : "2px solid transparent", whiteSpace: "nowrap" }}>{n.label}</a>
+              <a
+                key={n.href}
+                href={n.href}
+                style={{
+                  padding: "9px 14px", borderRadius: 999, fontSize: 14,
+                  fontWeight: aan ? 700 : 600,
+                  color: aan ? "#fff" : "#7A7168",
+                  background: aan ? KLEUR.klei : "transparent",
+                  textDecoration: "none", whiteSpace: "nowrap",
+                }}
+              >
+                {n.label}
+              </a>
             );
           })}
         </div>
@@ -38,16 +52,37 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
         {(titel || rechts) && (
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
             <div>
-              {titel && <h1 style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 29 }}>{titel}</h1>}
-              {sub && <p style={{ color: KLEUR.gedempt, fontSize: 15, marginTop: 4 }}>{sub}</p>}
+              {titel && <h1 style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 29, margin: 0 }}>{titel}</h1>}
+              {sub && <p style={{ color: KLEUR.gedempt, fontSize: 15, marginTop: 4, marginBottom: 0 }}>{sub}</p>}
             </div>
-            {rechts}
+            {rechts && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{rechts}</div>}
           </div>
         )}
         {children}
       </main>
     </div>
   );
+}
+
+// Eén knop voor de hele werkplek, zodat knoppen overal hetzelfde ogen en goed opvallen.
+// kind: "primair" (oranje, de hoofdactie) | "secondair" (wit met rand) | "stil" (alleen tekst)
+export function Knop({ href, onClick, kind = "secondair", klein, children, style, ...rest }) {
+  const soorten = {
+    primair: { background: KLEUR.klei, color: "#fff", border: `1px solid ${KLEUR.klei}` },
+    secondair: { background: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.lijn2}` },
+    stil: { background: "transparent", color: KLEUR.gedempt, border: "1px solid transparent" },
+  };
+  const basis = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+    fontFamily: "inherit", fontWeight: 700, textDecoration: "none", cursor: "pointer",
+    whiteSpace: "nowrap", borderRadius: 10,
+    fontSize: klein ? 13 : 14,
+    padding: klein ? "7px 12px" : "10px 16px",
+    ...(soorten[kind] || soorten.secondair),
+    ...style,
+  };
+  if (href) return <a href={href} style={basis} {...rest}>{children}</a>;
+  return <button type="button" onClick={onClick} style={basis} {...rest}>{children}</button>;
 }
 
 // Kleine, herbruikbare bouwstenen in de nieuwe stijl.
