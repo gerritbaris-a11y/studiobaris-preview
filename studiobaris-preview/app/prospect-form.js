@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ACCEPT_ATTRIBUUT, controleerBestanden, controleerTotaal } from "../lib/bestanden";
+import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestanden";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
@@ -66,13 +66,46 @@ export default function ProspectForm({
   // het versturen, in plaats van na een mislukte generatie.
   const [logoFout, setLogoFout] = useState("");
   const [fotoFout, setFotoFout] = useState("");
-  const [totaalFout, setTotaalFout] = useState("");
+  // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
+  const [uploadStand, setUploadStand] = useState("");
 
-  // Na elke wijziging het totaal opnieuw wegen. Logo en foto's gaan in één
-  // verzoek mee, dus ze tellen bij elkaar op.
-  function weegAlles(form) {
-    if (!form) return;
-    setTotaalFout(controleerTotaal([form.logo && form.logo.files, form.fotos && form.fotos.files]) || "");
+  /**
+   * Zet de gekozen bestanden rechtstreeks in onze opslag en geef de links terug.
+   * Ze gaan dus NIET door het formulier heen: het platform weigert verzoeken
+   * boven ~4,5 MB, en een paar telefoonfoto's halen dat plafond met gemak.
+   */
+  async function uploadBestanden(logoBestand, fotoBestanden) {
+    const alles = [];
+    if (logoBestand) alles.push({ bestand: logoBestand, rol: "logo" });
+    for (const f of fotoBestanden) alles.push({ bestand: f, rol: "foto" });
+    if (!alles.length) return { logoUrl: "", fotoUrls: [] };
+
+    const res = await fetch("/api/upload-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bestanden: alles.map((a) => ({ naam: a.bestand.name, grootte: a.bestand.size, rol: a.rol })),
+      }),
+    });
+    const plekken = await res.json();
+    if (!plekken.ok) throw new Error(plekken.error || "Kon de foto's niet klaarzetten.");
+
+    let logoUrl = "";
+    const fotoUrls = [];
+    for (let i = 0; i < alles.length; i++) {
+      setUploadStand(`Bestand ${i + 1} van ${alles.length} versturen...`);
+      const plek = plekken.bestanden[i];
+      const op = await fetch(plek.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": alles[i].bestand.type || "application/octet-stream", "x-upsert": "true" },
+        body: alles[i].bestand,
+      });
+      if (!op.ok) throw new Error(`"${alles[i].bestand.name}" kon niet worden verstuurd. Controleer je verbinding en probeer het opnieuw.`);
+      if (alles[i].rol === "logo") logoUrl = plek.publiekeUrl;
+      else fotoUrls.push(plek.publiekeUrl);
+    }
+    setUploadStand("");
+    return { logoUrl, fotoUrls };
   }
 
   const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
@@ -128,27 +161,32 @@ export default function ProspectForm({
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
     const foutLogo = controleerBestanden(f.logo.files, "logo");
     const foutFotos = controleerBestanden(f.fotos.files, "foto");
-    const foutTotaal = controleerTotaal([f.logo.files, f.fotos.files]);
-    if (foutLogo || foutFotos || foutTotaal) {
+    if (foutLogo || foutFotos) {
       setLogoFout(foutLogo || "");
       setFotoFout(foutFotos || "");
-      setTotaalFout(foutTotaal || "");
-      // Boven de platformgrens komt het verzoek niet eens bij onze server aan,
-      // dus dit is de laatste plek waar we nog iets kunnen zeggen.
-      setError(foutLogo || foutFotos || foutTotaal);
+      setError(foutLogo || foutFotos);
       setStatus("fout");
       return;
     }
-    if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
-    for (const file of f.fotos.files) fd.append("fotos", file);
 
     try {
+      // Eerst de beelden rechtstreeks naar de opslag, daarna pas het formulier.
+      // Zo blijft het verzoek klein en kan het niet stuklopen op de grens die
+      // het platform aan de omvang van een verzoek stelt.
+      const { logoUrl, fotoUrls } = await uploadBestanden(f.logo.files[0] || null, Array.from(f.fotos.files));
+      if (logoUrl) fd.append("logo_url", logoUrl);
+      if (fotoUrls.length) fd.append("foto_urls", JSON.stringify(fotoUrls));
+
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
       setResultaat(data);
       setStatus("klaar");
-    } catch (err) { setError(String(err)); setStatus("fout"); }
+    } catch (err) {
+      setUploadStand("");
+      setError((err && err.message) ? err.message : String(err));
+      setStatus("fout");
+    }
   }
 
   if (status === "klaar") {
@@ -333,13 +371,11 @@ export default function ProspectForm({
         <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter we het bedrijf begrijpen."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
-            onChange={(e) => { setLogoFout(controleerBestanden(e.target.files, "logo") || ""); weegAlles(e.target.form); }} />
+            onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
-        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, samen met het logo maximaal 4 MB."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
-            onChange={(e) => { setFotoFout(controleerBestanden(e.target.files, "foto") || ""); weegAlles(e.target.form); }} />
+        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender. JPG of PNG, tot 12 stuks." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, tot 12 stuks."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
+            onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
           {fotoFout && <span style={foutTekst}>{fotoFout}</span>}</label>
-
-        {totaalFout && <p style={{ ...foutTekst, marginTop: 12 }}>{totaalFout}</p>}
 
         <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
@@ -352,7 +388,7 @@ export default function ProspectForm({
         </p>
 
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
-          {status === "bezig" ? (busyLabel || "Bezig...") : (submitLabel || "Versturen")}
+          {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}
         </button>
         {error && <p style={{ color: "#c0392b", marginTop: 14 }}>{error}</p>}
       </form>
