@@ -54,7 +54,7 @@ export async function POST(req) {
 
       if (grootte > MAX_BESTAND_BYTES) {
         return NextResponse.json(
-          { ok: false, error: `"${b.naam || "bestand"}" is te groot. Maximaal 15 MB per foto.` },
+          { ok: false, error: `"${b.naam || "bestand"}" is te groot. Maximaal 100 MB per foto.` },
           { status: 400 }
         );
       }
