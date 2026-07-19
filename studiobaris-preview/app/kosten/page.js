@@ -1,5 +1,6 @@
 import { getKosten } from "../../lib/server-data";
-import { leesSessie } from "../../lib/auth";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell from "../werkplek-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ function Cijfer({ label, waarde, kleur, sub }) {
 
 export default async function KostenPage({ searchParams }) {
   const sessie = leesSessie();
+  const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
   const t = {
     opslag: sp.opslag !== undefined ? Number(sp.opslag) : STANDAARD.opslag,
@@ -64,32 +66,13 @@ export default async function KostenPage({ searchParams }) {
   const gemFoto = Number(gem.foto_gem_mb || 0);
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
-        {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
-            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 6px" }}>
-        <h1 style={{ fontSize: 26, margin: 0 }}>Kosten per klant</h1>
-        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>Dashboard</a>
-        <a href="/overzicht" style={{ color: "#C05A38", fontSize: 14 }}>Overzicht</a>
-        <a href="/vragen" style={{ color: "#C05A38", fontSize: 14 }}>Vragen</a>
-        <a href="/storingen" style={{ color: "#C05A38", fontSize: 14 }}>Storingen</a>
-        <a href="/beheer" style={{ color: "#C05A38", fontSize: 14 }}>Beheer</a>
-      </div>
-      <p style={{ color: "#6B6258", fontSize: 14, marginBottom: 16 }}>
-        Wat één klant ons per maand écht kost. Alleen kosten die met die klant meebewegen: zijn verwerkingsverbruik,
-        zijn foto-opslag, het verkeer naar zijn site en zijn domeinnaam. Vaste platformkosten staan apart —
-        die verdelen we niet over de klanten, want ze bestaan ook zonder hen.
-      </p>
-
+    <WerkplekShell
+      naam={sessie?.naam || "collega"}
+      beheer={beheer}
+      actief="/kosten"
+      titel="Kosten per klant"
+      sub="Wat één klant ons per maand écht kost. Alleen kosten die met die klant meebewegen. Vaste platformkosten staan apart — die verdelen we niet over de klanten."
+    >
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
         <Cijfer label="Klanten" waarde={rijen.length} sub="in de app" />
         <Cijfer label="Kost per klant" waarde={euro(gemPerKlant)} kleur="#b45309" sub="gemiddeld p/m" />
@@ -169,6 +152,6 @@ export default async function KostenPage({ searchParams }) {
           Klopt het bedrag niet, pas het aan via <code>/kosten?vast=…</code>.
         </p>
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
