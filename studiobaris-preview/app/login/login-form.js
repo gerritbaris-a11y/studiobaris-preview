@@ -37,7 +37,7 @@ export default function LoginForm({ team = [] }) {
       const params = new URLSearchParams(window.location.search);
       let next = params.get("next");
       if (!next || next === "/login") {
-        next = d.rol === "beheer" ? "/dashboard" : "/leads";
+        next = d.rol === "beheer" ? "/klanten" : "/leads";
       }
       window.location.href = next;
     } catch (err) {
