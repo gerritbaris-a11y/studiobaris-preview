@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestanden";
+import { verkleinFoto } from "../lib/verklein-foto";
+import LocatieVeld from "./locatie-veld";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
@@ -79,6 +81,15 @@ export default function ProspectForm({
     if (logoBestand) alles.push({ bestand: logoBestand, rol: "logo" });
     for (const f of fotoBestanden) alles.push({ bestand: f, rol: "foto" });
     if (!alles.length) return { logoUrl: "", fotoUrls: [] };
+
+    // Eerst verkleinen. Een foto rechtstreeks van een camera is zo 40 MB;
+    // verkleind is dat meestal een halve MB, zonder zichtbaar verschil op een
+    // website. Dat scheelt wachttijd bij het uploaden én maakt de site van de
+    // klant snel voor zijn eigen bezoekers.
+    for (let i = 0; i < alles.length; i++) {
+      setUploadStand(`Foto ${i + 1} van ${alles.length} klaarmaken...`);
+      alles[i].bestand = await verkleinFoto(alles[i].bestand, alles[i].rol);
+    }
 
     const res = await fetch("/api/upload-url", {
       method: "POST",
@@ -308,7 +319,9 @@ export default function ProspectForm({
         <span style={hint}>{revise ? "Vul in als het werkgebied op de site aangepast moet worden. Voeg elke plaats apart toe met \"+\"." : "Voeg elke plaats apart toe met \"+\". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid."}</span>
         {regios.map((r, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
-            <input style={{ ...veld, marginTop: 0 }} value={r} onChange={(e) => setRegio(i, e.target.value)} placeholder={"Regio " + (i + 1)} />
+            <div style={{ flex: 1 }}>
+              <LocatieVeld waarde={r} onChange={(val) => setRegio(i, val)} soort="plaats" stijl={{ ...veld, marginTop: 0, width: "100%" }} accent={A} placeholder={"Regio " + (i + 1)} />
+            </div>
             {regios.length > 1 && (
               <button type="button" onClick={() => setRegios(regios.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
             )}
@@ -322,7 +335,10 @@ export default function ProspectForm({
         </div>
         <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
         <div style={{ display: "flex", gap: 14 }}>
-          <label style={{ ...label, flex: 1 }}>Adres<input style={veld} name="adres" defaultValue={v.adres || ""} /></label>
+          <label style={{ ...label, flex: 1 }}>Adres
+            <span style={hint}>Kies een suggestie, dan weet je zeker dat straat, postcode en plaats exact goed staan - ze komen zo op de site en in Google.</span>
+            <LocatieVeld naam="adres" waarde={v.adres || ""} soort="adres" stijl={veld} accent={A} placeholder="Straat, huisnummer, plaats" />
+          </label>
           <label style={{ ...label, flex: 1 }}>KVK<input style={veld} name="kvk" /></label>
         </div>
         <span style={hint}>{revise ? "Alleen invullen als adres of KvK aangepast moet worden." : "Adres en KvK komen in de footer; een adres helpt ook de lokale vindbaarheid."}</span>
@@ -383,7 +399,7 @@ export default function ProspectForm({
           gezet en verwerkt door onze tekst- en beeldleverancier; ze worden niet gebruikt om modellen te trainen en niet
           aan anderen doorverkocht. Wordt het geen klant, dan halen we de previewsite en de aangeleverde bestanden
           binnen zes maanden weg. Wil je eerder dat we alles verwijderen, of wil je weten wat we van je hebben?
-          Mail <a href="mailto:info@studiobaris.nl" style={{ color: A }}>info@studiobaris.nl</a> en we regelen het.
+          Mail <a href="mailto:gerritbaris@gmail.com" style={{ color: A }}>gerritbaris@gmail.com</a> en we regelen het.
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
         </p>
 
