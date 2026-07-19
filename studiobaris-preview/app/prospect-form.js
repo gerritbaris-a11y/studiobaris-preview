@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestanden";
+import { ACCEPT_ATTRIBUUT, controleerBestanden, controleerTotaal } from "../lib/bestanden";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
@@ -66,6 +66,14 @@ export default function ProspectForm({
   // het versturen, in plaats van na een mislukte generatie.
   const [logoFout, setLogoFout] = useState("");
   const [fotoFout, setFotoFout] = useState("");
+  const [totaalFout, setTotaalFout] = useState("");
+
+  // Na elke wijziging het totaal opnieuw wegen. Logo en foto's gaan in één
+  // verzoek mee, dus ze tellen bij elkaar op.
+  function weegAlles(form) {
+    if (!form) return;
+    setTotaalFout(controleerTotaal([form.logo && form.logo.files, form.fotos && form.fotos.files]) || "");
+  }
 
   const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
   const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
@@ -120,10 +128,14 @@ export default function ProspectForm({
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
     const foutLogo = controleerBestanden(f.logo.files, "logo");
     const foutFotos = controleerBestanden(f.fotos.files, "foto");
-    if (foutLogo || foutFotos) {
+    const foutTotaal = controleerTotaal([f.logo.files, f.fotos.files]);
+    if (foutLogo || foutFotos || foutTotaal) {
       setLogoFout(foutLogo || "");
       setFotoFout(foutFotos || "");
-      setError(foutLogo || foutFotos);
+      setTotaalFout(foutTotaal || "");
+      // Boven de platformgrens komt het verzoek niet eens bij onze server aan,
+      // dus dit is de laatste plek waar we nog iets kunnen zeggen.
+      setError(foutLogo || foutFotos || foutTotaal);
       setStatus("fout");
       return;
     }
@@ -320,12 +332,14 @@ export default function ProspectForm({
 
         <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter we het bedrijf begrijpen."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
-        <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
-            onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
+        <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
+            onChange={(e) => { setLogoFout(controleerBestanden(e.target.files, "logo") || ""); weegAlles(e.target.form); }} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
-        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
-            onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
+        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, samen met het logo maximaal 4 MB."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
+            onChange={(e) => { setFotoFout(controleerBestanden(e.target.files, "foto") || ""); weegAlles(e.target.form); }} />
           {fotoFout && <span style={foutTekst}>{fotoFout}</span>}</label>
+
+        {totaalFout && <p style={{ ...foutTekst, marginTop: 12 }}>{totaalFout}</p>}
 
         <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
