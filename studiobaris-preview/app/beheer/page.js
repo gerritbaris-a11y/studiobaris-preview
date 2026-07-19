@@ -1,4 +1,6 @@
 import { getKlantOverzicht } from "../../lib/server-data";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell from "../werkplek-shell";
 import BeheerActies from "./beheer-acties";
 
 export const dynamic = "force-dynamic";
@@ -55,12 +57,17 @@ export default async function BeheerPage() {
   const totTotaal = klanten.reduce((s, k) => s + Number(k.ai_kosten_totaal || 0), 0);
   const totTokens = klanten.reduce((s, k) => s + Number(k.ai_tokens || 0), 0);
 
-  return (
-    <main style={wrap}>
-      <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697" }}>StudioBaris · Beheer</p>
-      <h1 style={{ fontSize: 28, margin: "6px 0 4px" }}>Klantoverzicht</h1>
-      <p style={{ color: "#555", marginBottom: 20 }}>Verbruik, activiteit en instellingen per klant-app.</p>
+  const sessie = leesSessie();
+  const beheer = isBeheer(sessie);
 
+  return (
+    <WerkplekShell
+      naam={sessie?.naam || "collega"}
+      beheer={beheer}
+      actief="/beheer"
+      titel="Klantoverzicht"
+      sub="Verbruik, activiteit en instellingen per klant-app."
+    >
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 24 }}>
         <div style={card}>
           <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697" }}>Klanten</div>
@@ -123,6 +130,6 @@ export default async function BeheerPage() {
           </tbody>
         </table>
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
