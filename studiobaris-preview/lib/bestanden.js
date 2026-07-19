@@ -18,7 +18,10 @@ export const TOEGESTANE_TYPES = ["image/jpeg", "image/png", "image/webp", "image
 export const TOEGESTANE_EXTENSIES = ["jpg", "jpeg", "png", "webp", "gif"];
 export const ACCEPT_ATTRIBUUT = ".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif";
 
-export const MAX_BESTAND_BYTES = 15 * 1024 * 1024;
+// Ruim: je mag een foto rechtstreeks van je camera kiezen. De browser
+// verkleint 'm toch voordat hij de deur uit gaat (zie verklein-foto.js), dus
+// de omvang van het origineel doet er nauwelijks toe.
+export const MAX_BESTAND_BYTES = 100 * 1024 * 1024;
 export const MAX_AANTAL_FOTOS = 12;
 
 export function extensieVan(naam) {
@@ -58,7 +61,7 @@ export function controleerBestand(bestand, rol) {
   }
 
   if (bestand.size > MAX_BESTAND_BYTES) {
-    return `"${naam}" is ${leesbaar(bestand.size)} en daarmee te groot. Maximaal 15 MB per foto.`;
+    return `"${naam}" is ${leesbaar(bestand.size)} en daarmee te groot. Maximaal 100 MB per foto.`;
   }
 
   return null;
