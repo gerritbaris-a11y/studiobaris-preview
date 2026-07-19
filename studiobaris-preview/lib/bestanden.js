@@ -1,31 +1,25 @@
-// Welke afbeeldingen we aankunnen, en waarom.
+// Welke afbeeldingen we aankunnen, en hoe ze bij ons terechtkomen.
 //
-// Het previewformulier stuurt logo en foto's door naar de AI die de site
-// opbouwt. Die kan maar vier formaten lezen: JPG, PNG, WEBP en GIF. Alles
-// daarbuiten liep vroeger stuk met een vage "Er ging iets mis" - terwijl de
-// twee meestvoorkomende gevallen juist heel begrijpelijk zijn:
-//
+// TYPE. De site wordt opgebouwd door een tekst- en beeldmodel dat maar vier
+// formaten leest: JPG, PNG, WEBP en GIF. Twee gevallen komen in de praktijk
+// steeds terug en verdienen een eigen uitleg:
 //   - SVG: veel bedrijven hebben hun logo alleen als SVG van hun ontwerper.
 //   - HEIC: de standaard van een iPhone. Wie foto's rechtstreeks van zijn
 //     telefoon pakt, levert dus bijna altijd HEIC aan.
 //
-// Daarom noemen we die twee bij naam, met een oplossing erbij.
+// GROOTTE. Foto's gaan NIET door het formulier heen. Het platform kapt elk
+// verzoek boven ~4,5 MB af met een kale "Request Entity Too Large", en dat
+// geldt voor het hele formulier bij elkaar. Drie telefoonfoto's zitten daar
+// zo overheen. Daarom uploadt de browser elk bestand rechtstreeks naar onze
+// opslag en stuurt het formulier alleen de links mee. Die weg kent die grens
+// niet, dus mag een bestand hier flink groter zijn.
 
 export const TOEGESTANE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 export const TOEGESTANE_EXTENSIES = ["jpg", "jpeg", "png", "webp", "gif"];
 export const ACCEPT_ATTRIBUUT = ".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif";
 
-// LET OP: de echte grens komt niet van ons maar van het platform. Vercel weigert
-// elk verzoek boven ongeveer 4,5 MB met een kale "Request Entity Too Large" -
-// en dat geldt voor het hele formulier bij elkaar: logo plus alle foto's plus
-// de ingevulde tekst. Boven die grens draait onze code niet eens, dus dan kan
-// de server ook geen nette melding meer teruggeven.
-//
-// Daarom bewaken we het TOTAAL, met marge voor de tekstvelden en de overhead
-// van het formulier zelf. En daarom moet de controle in de browser gebeuren:
-// dat is de enige plek die nog iets zinnigs kan zeggen.
-export const MAX_TOTAAL_BYTES = 4 * 1024 * 1024;
-export const MAX_BYTES = MAX_TOTAAL_BYTES;
+export const MAX_BESTAND_BYTES = 15 * 1024 * 1024;
+export const MAX_AANTAL_FOTOS = 12;
 
 export function extensieVan(naam) {
   const delen = String(naam || "").split(".");
@@ -63,8 +57,8 @@ export function controleerBestand(bestand, rol) {
     return `"${naam}" is een bestandstype dat we niet kunnen gebruiken. Het moet een JPG, PNG, WEBP of GIF zijn.`;
   }
 
-  if (bestand.size > MAX_BYTES) {
-    return `"${naam}" is ${leesbaar(bestand.size)}. Dat past niet: alles bij elkaar mag maximaal 4 MB zijn. Verklein de foto of kies een andere.`;
+  if (bestand.size > MAX_BESTAND_BYTES) {
+    return `"${naam}" is ${leesbaar(bestand.size)} en daarmee te groot. Maximaal 15 MB per foto.`;
   }
 
   return null;
@@ -72,29 +66,13 @@ export function controleerBestand(bestand, rol) {
 
 /** Controleer een lijst. Geeft de eerste fout terug, of null. */
 export function controleerBestanden(bestanden, rol) {
-  for (const b of Array.from(bestanden || [])) {
+  const lijst = Array.from(bestanden || []);
+  if (rol === "foto" && lijst.length > MAX_AANTAL_FOTOS) {
+    return `Je hebt ${lijst.length} foto's gekozen. Maximaal ${MAX_AANTAL_FOTOS} per keer - meer heeft de site niet nodig.`;
+  }
+  for (const b of lijst) {
     const fout = controleerBestand(b, rol);
     if (fout) return fout;
   }
   return null;
-}
-
-/**
- * Bewaak het totaal van alles wat meegestuurd wordt. Dit is de controle die er
- * echt toe doet: drie foto's van 2 MB zijn los prima, maar samen te veel.
- */
-export function controleerTotaal(lijsten) {
-  let totaal = 0;
-  let aantal = 0;
-  for (const lijst of lijsten) {
-    for (const b of Array.from(lijst || [])) {
-      if (b && b.size) { totaal += b.size; aantal++; }
-    }
-  }
-  if (totaal <= MAX_TOTAAL_BYTES) return null;
-
-  const mb = (totaal / (1024 * 1024)).toFixed(1).replace(".", ",");
-  return aantal > 1
-    ? `Je verstuurt ${aantal} bestanden van samen ${mb} MB. Samen mag het maximaal 4 MB zijn. Stuur er een paar minder mee, of verklein ze eerst - de site wordt er niet minder van.`
-    : `Het bestand is ${mb} MB. Dat mag maximaal 4 MB zijn. Verklein 'm eerst.`;
 }
