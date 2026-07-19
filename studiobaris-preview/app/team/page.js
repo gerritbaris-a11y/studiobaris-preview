@@ -1,5 +1,6 @@
 import { getTeamLogin, getOmzet, getBtw } from "../../lib/server-data";
-import { leesSessie } from "../../lib/auth";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell from "../werkplek-shell";
 import { BTW_TARIEF } from "../../lib/mollie";
 import { ResetKnop } from "./team-actions";
 
@@ -14,6 +15,7 @@ const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily
 
 export default async function TeamPage() {
   const sessie = leesSessie();
+  const magAlles = isBeheer(sessie);
   const [team, omzet, btw] = await Promise.all([getTeamLogin(), getOmzet(), getBtw()]);
 
   // Btw die we opzij zetten. Ingevoerde bedragen zijn excl. btw; de klant betaalt
@@ -88,24 +90,13 @@ export default async function TeamPage() {
   };
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
-        {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
-            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "6px 0 16px" }}>
-        <h1 style={{ fontSize: 26, margin: 0 }}>Team &amp; omzet</h1>
-        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>→ naar Klanten</a>
-        <a href="/leads" style={{ color: "#C05A38", fontSize: 14 }}>→ naar Leads</a>
-      </div>
-
+    <WerkplekShell
+      naam={sessie?.naam || "collega"}
+      beheer={magAlles}
+      actief="/team"
+      titel="Team & omzet"
+      sub="Wie verkocht wat, en wat staat er nog open."
+    >
       <div style={{ background: "linear-gradient(135deg,#2B2724,#2B2724)", color: "#fff", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Totaal — hele team</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
@@ -171,6 +162,6 @@ export default async function TeamPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {beheer.map(persoonCard)}
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
