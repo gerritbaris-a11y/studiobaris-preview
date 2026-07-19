@@ -302,7 +302,10 @@ export async function klantInstellen(id, { projectLimit = null, reviewLimit = nu
   });
 }
 
-export async function nieuweLogin(id, dagen = 14) {
+// De persoonlijke inloglink van een klant. Bewust langlevend: een vakman moet
+// één keer installeren en daarna altijd binnenkomen. Raakt een link kwijt of
+// in verkeerde handen, dan maak je gewoon een nieuwe aan — de oude vervalt dan.
+export async function nieuweLogin(id, dagen = 3650) {
   return await rpc("sb_klant_nieuwe_login", { p_id: id, p_dagen: dagen });
 }
 
