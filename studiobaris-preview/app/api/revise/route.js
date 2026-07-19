@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { controleerBestand, controleerBestanden } from "../../../lib/bestanden";
 import { SYSTEM_PROMPT_REVISE, extractJson, validateContent } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
 
@@ -117,14 +118,25 @@ export async function POST(req) {
       // Afbeeldingen uploaden (uniek pad zodat ze bestaande niet overschrijven).
       const stamp = Date.now();
       const logo = form.get("logo");
+
+      // Serverkant óók controleren: het formulier kan omzeild worden, en een
+      // verkeerd bestand liep verderop stuk met een onbegrijpelijke melding.
+      const bestandsFout =
+        controleerBestand(logo, "logo") ||
+        controleerBestanden(form.getAll("fotos"), "foto");
+      if (bestandsFout) {
+        return NextResponse.json({ ok: false, error: bestandsFout }, { status: 400 });
+      }
+
       if (logo && typeof logo === "object" && logo.size > 0) {
         const ext = (logo.name.split(".").pop() || "png").toLowerCase();
         logoUrl = await uploadImage(logo, `${slug}/logo-${stamp}.${ext}`);
         const buf = Buffer.from(await logo.arrayBuffer());
-        const mt = /^image\/(jpeg|png|gif|webp)$/.test(logo.type || "")
-          ? logo.type
-          : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : ext === "gif" ? "image/gif" : "image/png";
-        logoImage = { data: buf.toString("base64"), media_type: mt };
+        // Het type eerlijk bepalen: herkennen we het niet, dan laten we het
+        // logo weg bij de beeldanalyse in plaats van het als PNG te doen alsof.
+        const perExt = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif" };
+        const mt = /^image\/(jpeg|png|gif|webp)$/.test(logo.type || "") ? logo.type : perExt[ext];
+        logoImage = mt ? { data: buf.toString("base64"), media_type: mt } : null;
       }
       const fotos = form.getAll("fotos").filter((f) => f && typeof f === "object" && f.size > 0);
       for (let i = 0; i < fotos.length; i++) {
