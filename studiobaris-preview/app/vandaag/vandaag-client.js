@@ -57,6 +57,25 @@ function Knop({ kind = "primair", children, onClick }) {
   );
 }
 
+// Zelfde redenen als in de leadlijst, zodat het archief consistent blijft.
+const REDENEN = ["Goede website", "Niet actief", "Geen ZZP / eenmanszaak", "Overig"];
+
+// Past een voorgestelde lead niet? Meteen wegzetten met een reden.
+function ArchiveerKeuze({ t, i, archiveer }) {
+  if (!t.lead_id) return null;
+  return (
+    <select
+      defaultValue=""
+      onChange={(e) => { const r = e.target.value; e.target.value = ""; archiveer(t, i, r); }}
+      title="Past deze lead niet? Archiveer hem met een reden."
+      style={{ fontSize: 12.5, fontWeight: 600, color: "#7A7168", background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 9, padding: "8px 10px", fontFamily: BODY, cursor: "pointer" }}
+    >
+      <option value="">Past niet…</option>
+      {REDENEN.map((r) => <option key={r} value={r}>{r}</option>)}
+    </select>
+  );
+}
+
 export default function VandaagClient({ taken, naam, beheer }) {
   const [variant, setVariant] = useState("A"); // A = werkstapel, B = triage-bord
   const [gedaan, setGedaan] = useState([]);
@@ -64,6 +83,24 @@ export default function VandaagClient({ taken, naam, beheer }) {
   function sleutel(t, i) { return (t.slug || "lead") + "-" + i; }
   const open = taken.filter((t, i) => !gedaan.includes(sleutel(t, i)));
   function afhandelen(t, i) { setGedaan((g) => [...g, sleutel(t, i)]); }
+
+  // Archiveren met reden: verdwijnt hier én uit de leadstapel, blijft in het archief.
+  async function archiveer(t, i, reden) {
+    if (!reden || !t.lead_id) return;
+    if (reden === "Overig") {
+      const eigen = window.prompt("Waarom past " + (t.klant || "deze lead") + " niet?");
+      if (!eigen || !eigen.trim()) return;
+      reden = "Overig: " + eigen.trim();
+    }
+    afhandelen(t, i);
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: t.lead_id, archief_reden: reden }),
+      });
+    } catch {}
+  }
 
   const nu = open.filter((t) => t.lane === "nu");
   const loopt = open.filter((t) => t.lane === "loopt");
@@ -117,9 +154,9 @@ export default function VandaagClient({ taken, naam, beheer }) {
         {nu.length === 0 && loopt.length === 0 && wacht.length === 0 ? (
           <LegeStaat onReset={() => setGedaan([])} />
         ) : variant === "A" ? (
-          <Werkstapel taken={open} nu={nu} afhandelen={afhandelen} sleutel={sleutel} />
+          <Werkstapel taken={open} nu={nu} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} />
         ) : (
-          <Triage nu={nu} loopt={loopt} wacht={wacht} afhandelen={afhandelen} sleutel={sleutel} taken={open} />
+          <Triage nu={nu} loopt={loopt} wacht={wacht} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} taken={open} />
         )}
       </main>
     </div>
@@ -127,7 +164,7 @@ export default function VandaagClient({ taken, naam, beheer }) {
 }
 
 // --- Variant A: werkstapel (top 3 groot, rest compact) ---
-function Werkstapel({ taken, nu, afhandelen, sleutel }) {
+function Werkstapel({ taken, nu, afhandelen, archiveer, sleutel }) {
   // De taken komen al op prioriteit binnen. Toon de drie belangrijkste groot,
   // ongeacht hun baan - anders voelt het scherm leeg terwijl er werk ligt.
   const top = taken.slice(0, 3);
@@ -152,6 +189,7 @@ function Werkstapel({ taken, nu, afhandelen, sleutel }) {
                 <Knop kind="primair">{t.prim}</Knop>
                 {t.sec && <Knop kind="secundair">{t.sec}</Knop>}
                 <button onClick={() => afhandelen(t, i)} style={{ background: "none", border: "none", color: "#9A9084", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: BODY, padding: "2px 0" }}>Afgehandeld ✓</button>
+                <ArchiveerKeuze t={t} i={i} archiveer={archiveer} />
               </div>
             </div>
           );
@@ -169,7 +207,7 @@ function Werkstapel({ taken, nu, afhandelen, sleutel }) {
                   <Dot kleur={t.kleur} />
                   <strong style={{ fontSize: 14 }}>{t.klant}</strong>
                   <span style={{ fontSize: 13, color: KLEUR.labelDonker }}>{t.reden}{t.tijd ? ` · ${t.tijd}` : ""}</span>
-                  <span style={{ marginLeft: "auto" }}><Knop kind="secundair">{t.prim}</Knop></span>
+                  <span style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}><ArchiveerKeuze t={t} i={i} archiveer={archiveer} /><Knop kind="secundair">{t.prim}</Knop></span>
                 </div>
               );
             })}
@@ -181,7 +219,7 @@ function Werkstapel({ taken, nu, afhandelen, sleutel }) {
 }
 
 // --- Variant B: triage-bord (drie banen) ---
-function Triage({ nu, loopt, wacht, afhandelen, sleutel, taken }) {
+function Triage({ nu, loopt, wacht, afhandelen, archiveer, sleutel, taken }) {
   const tellers = [
     ["Nu oppakken", nu, "rust"],
     ["Loopt, in de gaten", loopt, "grijs"],
@@ -217,6 +255,7 @@ function Triage({ nu, loopt, wacht, afhandelen, sleutel, taken }) {
                       <div style={{ fontSize: 12.5, color: KLEUR.labelDonker, marginTop: 1 }}>{t.vak}{t.verkoper ? ` · ${t.verkoper}` : ""}</div>
                       <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
                         <button onClick={() => afhandelen(t, i)} style={{ flex: 1, background: KLEUR.klei, color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: BODY }}>{t.prim}</button>
+                        <ArchiveerKeuze t={t} i={i} archiveer={archiveer} />
                       </div>
                     </div>
                   );
