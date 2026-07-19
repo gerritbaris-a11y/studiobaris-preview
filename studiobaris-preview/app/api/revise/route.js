@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { controleerBestand, controleerBestanden, controleerTotaal } from "../../../lib/bestanden";
+import { controleerBestand, controleerBestanden } from "../../../lib/bestanden";
 import { SYSTEM_PROMPT_REVISE, extractJson, validateContent } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
 
@@ -34,6 +34,23 @@ async function uploadImage(file, path) {
   });
   if (!res.ok) throw new Error("Upload mislukt: " + (await res.text()));
   return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+}
+
+/**
+ * Haal een al geüploade afbeelding op zodat het model ernaar kan kijken.
+ * De browser heeft 'm rechtstreeks in de opslag gezet; wij halen 'm hier op.
+ */
+async function haalAfbeelding(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const type = (res.headers.get("content-type") || "").split(";")[0].toLowerCase();
+    if (!/^image\/(jpeg|png|gif|webp)$/.test(type)) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { data: buf.toString("base64"), media_type: type };
+  } catch {
+    return null;
+  }
 }
 
 async function fetchSiteText(url) {
@@ -117,19 +134,38 @@ export async function POST(req) {
 
       // Afbeeldingen uploaden (uniek pad zodat ze bestaande niet overschrijven).
       const stamp = Date.now();
+      // Nieuwe weg: de browser zette de beelden al rechtstreeks in de opslag en
+      // stuurt alleen de links mee. Nodig, want een verzoek met foto's erin
+      // loopt boven ~4,5 MB stuk voordat deze code draait.
+      const meegestuurdLogo = v("logo_url");
+      let meegestuurdeFotos = [];
+      try {
+        const rauw = v("foto_urls");
+        if (rauw) meegestuurdeFotos = JSON.parse(rauw).filter((u) => typeof u === "string" && u);
+      } catch {
+        meegestuurdeFotos = [];
+      }
+      const vanOns = (u) => typeof u === "string" && u.startsWith(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`);
+
+      if (meegestuurdLogo && vanOns(meegestuurdLogo)) {
+        logoUrl = meegestuurdLogo;
+        logoImage = await haalAfbeelding(meegestuurdLogo);
+      }
+      for (const u of meegestuurdeFotos) {
+        if (vanOns(u)) fotoUrls.push(u);
+      }
+
       const logo = form.get("logo");
 
-      // Serverkant óók controleren: het formulier kan omzeild worden, en een
-      // verkeerd bestand liep verderop stuk met een onbegrijpelijke melding.
+      // Oude weg: kleine bestanden die tóch nog in het formulier zitten.
       const bestandsFout =
         controleerBestand(logo, "logo") ||
-        controleerBestanden(form.getAll("fotos"), "foto") ||
-        controleerTotaal([logo ? [logo] : [], form.getAll("fotos")]);
+        controleerBestanden(form.getAll("fotos"), "foto");
       if (bestandsFout) {
         return NextResponse.json({ ok: false, error: bestandsFout }, { status: 400 });
       }
 
-      if (logo && typeof logo === "object" && logo.size > 0) {
+      if (!logoUrl && logo && typeof logo === "object" && logo.size > 0) {
         const ext = (logo.name.split(".").pop() || "png").toLowerCase();
         logoUrl = await uploadImage(logo, `${slug}/logo-${stamp}.${ext}`);
         const buf = Buffer.from(await logo.arrayBuffer());
