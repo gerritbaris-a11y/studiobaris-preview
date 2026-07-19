@@ -1,5 +1,6 @@
 import { getVragen } from "../../lib/server-data";
-import { leesSessie } from "../../lib/auth";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell from "../werkplek-shell";
 import VraagKnop from "./vraag-knop";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ const URG_KLEUR = { hoog: "#b91c1c", normaal: "#6B6258", laag: "#9A9084" };
 
 export default async function VragenPage({ searchParams }) {
   const sessie = leesSessie();
+  const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
   const status = sp.status === "afgehandeld" ? "afgehandeld" : sp.status === "alles" ? "" : "open";
   const categorie = sp.categorie || "";
@@ -37,33 +39,14 @@ export default async function VragenPage({ searchParams }) {
   const huidigeStatus = sp.status === "afgehandeld" ? "afgehandeld" : sp.status === "alles" ? "alles" : "open";
 
   return (
-    <main style={wrap}>
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697", margin: 0 }}>StudioBaris</p>
-        {sessie && (
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#6B6258" }}>
-            Ingelogd als <strong style={{ color: "#2B2724" }}>{sessie.naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: "#C05A38" }}>Uitloggen</a>
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 6px" }}>
-        <h1 style={{ fontSize: 26, margin: 0 }}>Vragen van klanten</h1>
-        <a href="/dashboard" style={{ color: "#C05A38", fontSize: 14 }}>Dashboard</a>
-        <a href="/overzicht" style={{ color: "#C05A38", fontSize: 14 }}>Overzicht</a>
-        <a href="/kosten" style={{ color: "#C05A38", fontSize: 14 }}>Kosten</a>
-        <a href="/storingen" style={{ color: "#C05A38", fontSize: 14 }}>Storingen</a>
-        <span style={{ marginLeft: "auto", fontSize: 13, color: "#B0A697" }}>
-          {data.open} open · {data.totaal} totaal
-        </span>
-      </div>
-      <p style={{ color: "#6B6258", fontSize: 14, marginBottom: 16 }}>
-        Alles wat klanten via de Hulp-knop in de app sturen, komt hier binnen en wordt automatisch ingedeeld.
-        Zo zie je waar het vaakst over gaat — en dus wat we moeten verbeteren.
-      </p>
-
+    <WerkplekShell
+      naam={sessie?.naam || "collega"}
+      beheer={beheer}
+      actief="/vragen"
+      titel="Vragen van klanten"
+      sub="Alles wat klanten via de Hulp-knop in de app sturen, komt hier binnen en wordt automatisch ingedeeld. Zo zie je waar het vaakst over gaat — en dus wat we moeten verbeteren."
+      rechts={<span style={{ fontSize: 13, color: "#B0A697" }}>{data.open} open · {data.totaal} totaal</span>}
+    >
       {/* Waar gaat het over */}
       <div style={{ ...kaart, marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, margin: "0 0 10px" }}>Waar gaat het over</h2>
@@ -144,6 +127,6 @@ export default async function VragenPage({ searchParams }) {
           </div>
         ))}
       </div>
-    </main>
+    </WerkplekShell>
   );
 }
