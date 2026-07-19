@@ -89,6 +89,15 @@ export default function ProspectForm({
     for (let i = 0; i < alles.length; i++) {
       setUploadStand(`Foto ${i + 1} van ${alles.length} klaarmaken...`);
       alles[i].bestand = await verkleinFoto(alles[i].bestand, alles[i].rol);
+
+      // Verkleinen lukt bijna altijd, maar een telefoon kan bij een enorme foto
+      // het geheugen niet rond krijgen. Dan gaat het origineel de deur uit, en
+      // dat weigert de opslag boven ~50 MB. Liever hier een leesbare melding
+      // dan verderop een onbegrijpelijke fout.
+      if (alles[i].bestand.size > 45 * 1024 * 1024) {
+        const mb = (alles[i].bestand.size / 1024 / 1024).toFixed(0);
+        throw new Error(`"${alles[i].bestand.name}" is ${mb} MB en kon op dit apparaat niet verkleind worden. Maak de foto kleiner of kies een andere.`);
+      }
     }
 
     const res = await fetch("/api/upload-url", {
