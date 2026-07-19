@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { controleerBestand, controleerBestanden } from "../../../lib/bestanden";
+import { controleerBestand, controleerBestanden, controleerTotaal } from "../../../lib/bestanden";
 import { SYSTEM_PROMPT_REVISE, extractJson, validateContent } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
 
@@ -123,7 +123,8 @@ export async function POST(req) {
       // verkeerd bestand liep verderop stuk met een onbegrijpelijke melding.
       const bestandsFout =
         controleerBestand(logo, "logo") ||
-        controleerBestanden(form.getAll("fotos"), "foto");
+        controleerBestanden(form.getAll("fotos"), "foto") ||
+        controleerTotaal([logo ? [logo] : [], form.getAll("fotos")]);
       if (bestandsFout) {
         return NextResponse.json({ ok: false, error: bestandsFout }, { status: 400 });
       }
