@@ -1,12 +1,21 @@
 import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import { FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop, PersoonlijkeZin, PublishToggle } from "../dashboard/dashboard-actions";
+import {
+  FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop,
+  PersoonlijkeZin, PublishToggle,
+  // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
+  // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
+  // daarmee de hele betaalflow - onbereikbaar worden.
+  AkkoordLink, GegevensEditor, InzendingenKnop, KlantBedrag, KlantNaam,
+  PublishButton, VerwijderKnop,
+} from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
 import { KLEUR, HEAD } from "../werkplek-stijl";
-// herdeploy: verse build (env-vars opnieuw koppelen)
 
 export const dynamic = "force-dynamic";
+
+const REACTIE_LABEL = { intake: "klant-intake", feedback: "feedback" };
 
 const card = { background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 16, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
 
@@ -112,12 +121,19 @@ export default async function KlantenPage() {
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-        {rows.map((r) => (
+        {rows.map((r) => {
+          let review = {};
+          try { review = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
+          const reactieOp = r.laatste_feedback_op
+            ? new Date(r.laatste_feedback_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
+            : null;
+          return (
           <div key={r.slug} style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
+                {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
               </div>
               {beheer ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -134,7 +150,14 @@ export default async function KlantenPage() {
             </div>
 
             <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
-            <BetaalBadge status={r.betaal_status} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", alignItems: "center" }}>
+              <BetaalBadge status={r.betaal_status} />
+              {reactieOp && (
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#9E3B2E" }}>
+                  ● Klant reageerde ({REACTIE_LABEL[r.laatste_feedback_type] || r.laatste_feedback_type || "reactie"}) op {reactieOp}
+                </span>
+              )}
+            </div>
 
             <Checklist r={r} />
 
@@ -152,8 +175,33 @@ export default async function KlantenPage() {
               <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
               <span style={{ fontSize: 12.5, color: "#9A9084" }}>Vul in waarvoor je 'm hebt verkocht. Jouw commissie is 50% hiervan.</span>
             </div>
+
+            {beheer && (
+              <div style={{ borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12, display: "grid", gap: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, color: KLEUR.gedempt }}>
+                  Beheer
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                  <InzendingenKnop slug={r.slug} />
+                  <KlantBedrag slug={r.slug} value={r.maandbedrag} />
+                  <AkkoordLink slug={r.slug} />
+                  <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+                  <KlantNaam slug={r.slug} value={r.verzamelaar} />
+                  <GegevensEditor slug={r.slug} data={r} />
+                  {r.heeft_concept && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <a href={`/${r.slug}?concept=1`} target="_blank" rel="noreferrer" style={{ color: KLEUR.klei, fontSize: 13 }}>Bekijk concept</a>
+                      <PublishButton slug={r.slug} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </WerkplekShell>
   );
