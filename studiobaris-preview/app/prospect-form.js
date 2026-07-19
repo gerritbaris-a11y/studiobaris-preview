@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestanden";
 
 const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
 const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
@@ -48,6 +49,9 @@ export default function ProspectForm({
 
   const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? A : "#d8dde3"), background: actief ? Atint : "#fff", color: "#333", cursor: "pointer", fontSize: 14, fontWeight: 500 });
 
+  const foutTekst = { display: "block", color: "#c0392b", fontSize: 13, marginTop: 6, lineHeight: 1.45 };
+  const avgTekst = { fontSize: 12.5, color: "#6b7280", lineHeight: 1.6, marginTop: 18, background: "#f7f8fa", border: "1px solid #e6e9ee", borderRadius: 10, padding: "12px 14px" };
+
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [branches, setBranches] = useState([]);
@@ -58,6 +62,10 @@ export default function ProspectForm({
   const [interesse, setInteresse] = useState([]);
   const [stijl, setStijl] = useState(revise ? "" : "stoer");
   const [heeftGoogle, setHeeftGoogle] = useState(false);
+  // Fouten per uploadveld, meteen bij het kiezen. Zo weet iemand het vóór
+  // het versturen, in plaats van na een mislukte generatie.
+  const [logoFout, setLogoFout] = useState("");
+  const [fotoFout, setFotoFout] = useState("");
 
   const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
   const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
@@ -108,46 +116,22 @@ export default function ProspectForm({
     put("kleurvoorkeur", f.kleurvoorkeur.value);
     put("notities", f.notities.value);
     put("oude_website", f.oude_website.value);
-    // Foto's automatisch verkleinen in de browser, zodat grote telefoonfoto's
-    // (vaak 5-15 MB) nooit tegen de upload-limiet aanlopen. Mislukt het
-    // verkleinen, dan sturen we het origineel; is het resultaat groter, ook.
-    const verklein = async (file) => {
-      try {
-        if (!file.type || !file.type.startsWith("image/") || file.type.includes("svg")) return file;
-        const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-        const max = 1600;
-        const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
-        const w = Math.max(1, Math.round(bmp.width * scale));
-        const h = Math.max(1, Math.round(bmp.height * scale));
-        const c = document.createElement("canvas");
-        c.width = w; c.height = h;
-        c.getContext("2d").drawImage(bmp, 0, 0, w, h);
-        const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.72));
-        if (bmp.close) bmp.close();
-        if (!blob || blob.size >= file.size) return file;
-        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
-      } catch {
-        return file;
-      }
-    };
-    let uploadBytes = 0;
-    if (f.logo.files[0]) { const lf = f.logo.files[0]; uploadBytes += lf.size; fd.append("logo", lf); }
-    for (const file of f.fotos.files) { const cf = await verklein(file); uploadBytes += cf.size; fd.append("fotos", cf); }
-    if (uploadBytes > 4 * 1024 * 1024) {
-      setError("Je foto's zijn samen te groot om in \u00e9\u00e9n keer te versturen. Kies wat minder foto's (of wat kleinere) en probeer opnieuw.");
+    // Laatste controle vlak voor verzenden: het formulier kan ook zonder
+    // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
+    const foutLogo = controleerBestanden(f.logo.files, "logo");
+    const foutFotos = controleerBestanden(f.fotos.files, "foto");
+    if (foutLogo || foutFotos) {
+      setLogoFout(foutLogo || "");
+      setFotoFout(foutFotos || "");
+      setError(foutLogo || foutFotos);
       setStatus("fout");
       return;
     }
+    if (f.logo.files[0]) fd.append("logo", f.logo.files[0]);
+    for (const file of f.fotos.files) fd.append("fotos", file);
 
     try {
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
-      if (!res.ok) {
-        setError(res.status === 413
-          ? "De foto's waren samen te groot voor de upload. Kies wat minder of wat kleinere foto's en probeer opnieuw."
-          : "Er ging iets mis bij het versturen. Probeer het zo nog eens.");
-        setStatus("fout");
-        return;
-      }
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
       setResultaat(data);
@@ -336,8 +320,22 @@ export default function ProspectForm({
 
         <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter we het bedrijf begrijpen."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
 
-        <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept="image/*" /></label>
-        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept="image/*" multiple /></label>
+        <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
+            onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
+          {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
+        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
+            onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
+          {fotoFout && <span style={foutTekst}>{fotoFout}</span>}</label>
+
+        <p style={avgTekst}>
+          <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
+          te maken en om contact op te nemen over dat voorstel. Het logo en de foto's worden op onze beveiligde opslag
+          gezet en verwerkt door onze tekst- en beeldleverancier; ze worden niet gebruikt om modellen te trainen en niet
+          aan anderen doorverkocht. Wordt het geen klant, dan halen we de previewsite en de aangeleverde bestanden
+          binnen zes maanden weg. Wil je eerder dat we alles verwijderen, of wil je weten wat we van je hebben?
+          Mail <a href="mailto:info@studiobaris.nl" style={{ color: A }}>info@studiobaris.nl</a> en we regelen het.
+          Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
+        </p>
 
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? (busyLabel || "Bezig...") : (submitLabel || "Versturen")}
