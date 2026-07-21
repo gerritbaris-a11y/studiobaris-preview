@@ -17,6 +17,7 @@ export default function DocumentenKaart({ beheer, model }) {
         ["handleiding-100euro.pdf", "Verkoophandleiding — €100 per klant", "reservemodel"],
       ]
     : [[eigen[0], "Jouw verkoophandleiding", eigen[1]]];
+  docs.push(["dienstverlening.pdf", "Wat de klant van ons mag verwachten", "stuur dit mee met elke offerte"]);
   docs.push(["algemene-voorwaarden.pdf", "Algemene voorwaarden", "wat de klant tekent bij akkoord"]);
 
   return (
