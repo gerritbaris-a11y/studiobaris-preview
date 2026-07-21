@@ -13,11 +13,41 @@ function dt(s) {
   return new Date(s).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// De versie die de plugin hoort te draaien. Sites die zich melden met een
-// oudere versie krijgen automatisch een update; hier zie je of dat gelukt is.
-const NIEUWSTE_PLUGIN = "1.0.0";
+// Terugval als het update-kanaal even niet te bereiken is.
+const NIEUWSTE_PLUGIN_FALLBACK = "1.1.11";
 
-function PluginBadge({ versie, gezien }) {
+// De nieuwste versie halen we uit het echte update-kanaal, zodat deze pagina
+// niet elke release met de hand bijgewerkt hoeft te worden (dat gaf eerder
+// valse "verouderd"-meldingen).
+async function haalNieuwstePluginVersie() {
+  try {
+    const res = await fetch("https://app.studiobaris.nl/api/plugin/sb-embed", { cache: "no-store" });
+    if (!res.ok) return NIEUWSTE_PLUGIN_FALLBACK;
+    const data = await res.json();
+    const v = data && typeof data.version === "string" ? data.version.trim() : "";
+    return v || NIEUWSTE_PLUGIN_FALLBACK;
+  } catch {
+    return NIEUWSTE_PLUGIN_FALLBACK;
+  }
+}
+
+// Numeriek vergelijken (1.1.11 is nieuwer dan 1.1.9), niet als tekst.
+function vergelijkVersie(a, b) {
+  const pa = String(a || "0").split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = String(b || "0").split(".").map((n) => parseInt(n, 10) || 0);
+  const lengte = Math.max(pa.length, pb.length);
+  for (let i = 0; i < lengte; i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+function isVerouderd(huidig, nieuwste) {
+  if (!huidig) return false;
+  return vergelijkVersie(huidig, nieuwste) < 0;
+}
+
+function PluginBadge({ versie, gezien, nieuwste }) {
   if (!versie) {
     return (
       <span style={{
@@ -28,7 +58,7 @@ function PluginBadge({ versie, gezien }) {
       </span>
     );
   }
-  const actueel = String(versie) === NIEUWSTE_PLUGIN;
+  const actueel = !isVerouderd(versie, nieuwste);
   return (
     <div style={{ whiteSpace: "nowrap" }}>
       <span style={{
@@ -53,6 +83,7 @@ const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 12
 
 export default async function BeheerPage() {
   const klanten = await getKlantOverzicht();
+  const nieuwstePlugin = await haalNieuwstePluginVersie();
   const totMaand = klanten.reduce((s, k) => s + Number(k.ai_kosten_maand || 0), 0);
   const totTotaal = klanten.reduce((s, k) => s + Number(k.ai_kosten_totaal || 0), 0);
   const totTokens = klanten.reduce((s, k) => s + Number(k.ai_tokens || 0), 0);
@@ -119,7 +150,7 @@ export default async function BeheerPage() {
                   <td style={td}>{k.abonnementsvorm || <span style={{ color: "#bbb" }}>—</span>}</td>
                   <td style={td}>{k.projecten}</td>
                   <td style={td}>{k.reviews}</td>
-                  <td style={td}><PluginBadge versie={k.plugin_versie} gezien={k.plugin_gezien_op} /></td>
+                  <td style={td}><PluginBadge versie={k.plugin_versie} gezien={k.plugin_gezien_op} nieuwste={nieuwstePlugin} /></td>
                   <td style={td}>{dt(k.laatste_activiteit)}</td>
                   <td style={td}>{euro(k.ai_kosten_maand)}</td>
                   <td style={td}>{euro(k.ai_kosten_totaal)}<div style={{ color: "#999", fontSize: 11 }}>{Number(k.ai_tokens).toLocaleString("nl-NL")} tok.</div></td>
