@@ -27,6 +27,17 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
         </div>
         {/* Navigatie: het actieve scherm is een gevulde pil, dus je ziet in één oogopslag waar je bent. */}
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px 8px", display: "flex", gap: 6, overflowX: "auto" }}>
+          {/* Altijd bij de hand: een nieuwe preview beginnen, vanaf elk scherm. */}
+          <a
+            href="/intake"
+            style={{
+              padding: "9px 14px", borderRadius: 999, fontSize: 14, fontWeight: 700,
+              color: "#fff", background: KLEUR.klei, textDecoration: "none", whiteSpace: "nowrap",
+              flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6,
+            }}
+          >
+            + Nieuwe preview
+          </a>
           {NAV.filter((n) => beheer || !n.beheer).map((n) => {
             const aan = n.href === actief;
             return (
