@@ -209,6 +209,8 @@ export async function POST(req) {
     // Lead-herkomst (intern, niet op de website): bewaren bij de controlepunten.
     if (v("bron")) review.bron = v("bron");
     if (v("interesse")) review.interesse = v("interesse");
+    // Toestemming om het logo op studiobaris.nl te tonen na oplevering (backlink).
+    review.logo_toestemming = v("logo_toestemming") === "ja";
 
     // Wegschrijven naar Supabase via beveiligde RPC (workflow-schema staat niet open voor REST)
     const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_preview`, {
