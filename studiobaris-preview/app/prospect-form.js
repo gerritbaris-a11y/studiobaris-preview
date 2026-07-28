@@ -64,6 +64,7 @@ export default function ProspectForm({
   const [interesse, setInteresse] = useState([]);
   const [stijl, setStijl] = useState(revise ? "" : "stoer");
   const [heeftGoogle, setHeeftGoogle] = useState(false);
+  const [logoToestemming, setLogoToestemming] = useState(false);
   // Fouten per uploadveld, meteen bij het kiezen. Zo weet iemand het vóór
   // het versturen, in plaats van na een mislukte generatie.
   const [logoFout, setLogoFout] = useState("");
@@ -172,6 +173,7 @@ export default function ProspectForm({
     if (stijl) fd.append("stijl", stijl);
     put("socials", socials.filter((s) => s.trim()).join(", "));
     fd.append("google_business", heeftGoogle ? "ja" : "");
+    fd.append("logo_toestemming", logoToestemming ? "ja" : "");
     put("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
     put("tone_of_voice", f.tone_of_voice.value);
     put("kleurvoorkeur", f.kleurvoorkeur.value);
@@ -411,6 +413,16 @@ export default function ProspectForm({
           Mail <a href="mailto:gerritbaris@gmail.com" style={{ color: A }}>gerritbaris@gmail.com</a> en we regelen het.
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
         </p>
+
+        {!revise && (
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 18, padding: "12px 14px", border: "1px solid #E3DACB", background: "#FBF8F2", borderRadius: 10 }}>
+            <input type="checkbox" checked={logoToestemming} onChange={(e) => setLogoToestemming(e.target.checked)} style={{ marginTop: 3, width: 18, height: 18, flex: "0 0 auto" }} />
+            <span style={{ fontSize: 14, lineHeight: 1.45 }}>
+              <strong>Mogen we jullie logo tonen op studiobaris.nl?</strong><br />
+              Na oplevering laten we graag zien met wie we werken. Jullie krijgen er ook een link vanaf onze site bij &mdash; goed voor je vindbaarheid in Google. Je kunt dit altijd terugdraaien.
+            </span>
+          </label>
+        )}
 
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}
