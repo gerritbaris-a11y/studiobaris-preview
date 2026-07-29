@@ -132,7 +132,7 @@ export default async function KlantenPage() {
           const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar, review.bron]
             .filter(Boolean).join(" ").toLowerCase();
           return (
-          <div key={r.slug} style={card} data-klant={zoektekst}>
+          <div key={r.slug} style={card} data-klant={zoektekst} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
