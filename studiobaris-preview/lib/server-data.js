@@ -184,6 +184,27 @@ export async function updateLead(id, fields) {
   });
 }
 
+// Claim-met-slot: pak een lead alleen op als hij nog écht vrij is.
+// De filter owner=is.null maakt dit atomair — bellen twee verkopers tegelijk
+// op "Pak op", dan lukt het maar bij één. De ander krijgt netjes te horen
+// wie de lead al heeft, zodat niemand dubbel belt.
+export async function claimLead(id, naam) {
+  const nu = new Date().toISOString();
+  const rijen = await rest(
+    `leads?id=eq.${encodeURIComponent(id)}&owner=is.null&select=id,bedrijfsnaam,status,owner`,
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ owner: naam, status: "opgepakt", claimed_at: nu, updated_at: nu }),
+    }
+  );
+  if (Array.isArray(rijen) && rijen.length > 0) return { ok: true, lead: rijen[0] };
+  // Niks bijgewerkt: de lead was net al opgepakt. Haal op wie hem heeft.
+  const huidig = await getLead(id);
+  if (huidig && huidig.owner === naam) return { ok: true, lead: huidig };
+  return { ok: false, taken: true, owner: huidig ? huidig.owner : null, lead: huidig };
+}
+
 // Contactpersoon van de klant (voor de aanhef in het verkoop-appje).
 export async function setContactpersoon(slug, naam) {
   return await rpc("sb_set_contactpersoon", { p_slug: slug, p_naam: naam });
