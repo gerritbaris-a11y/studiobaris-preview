@@ -113,7 +113,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
       <style dangerouslySetInnerHTML={{ __html: css }} />
       {(isConcept || isReview) && (
         <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
-          {isConcept ? "Conceptversie — nog niet gepubliceerd." : "Interne preview — nog niet online voor de klant."}
+          {isConcept ? "Conceptversie — nog niet gepubliceerd." : "Dit is een eerste voorproefje van jouw website. Het geeft een goed beeld, maar teksten, foto's en details zijn nog voorbeeld — de echte site maken we samen met jou helemaal op maat en netjes af."}
         </div>
       )}
 
