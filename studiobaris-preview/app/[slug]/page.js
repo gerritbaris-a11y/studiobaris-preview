@@ -188,7 +188,7 @@ export default async function Page({ params, searchParams }) {
         <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
           {isConcept
             ? "Conceptversie — nog niet gepubliceerd. Controleer en publiceer via het dashboard."
-            : "Interne preview — deze site is nog niet online voor de klant. Zet hem online via het dashboard."}
+            : "Dit is een eerste voorproefje van jouw website. Het geeft een goed beeld, maar teksten, foto's en details zijn nog voorbeeld — de echte site maken we samen met jou helemaal op maat en netjes af."}
         </div>
       )}
 
