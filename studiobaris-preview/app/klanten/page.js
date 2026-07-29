@@ -2,6 +2,7 @@ import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
   FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop,
+  GeenInteresseKnop, TerugNaarActiefKnop,
   PersoonlijkeZin, PublishToggle,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
@@ -76,6 +77,11 @@ export default async function KlantenPage() {
         return r.verzamelaar === naam || review.bron === naam;
       });
 
+  // Klanten op "Geen interesse" (Afgewezen) apart houden: uit de actieve lijst,
+  // maar wel terug te vinden en terug te zetten in een eigen sectie onderaan.
+  const afgewezen = rows.filter((r) => (r.pipeline_status || "") === "Afgewezen");
+  const actief = rows.filter((r) => (r.pipeline_status || "") !== "Afgewezen");
+
   return (
     <WerkplekShell
       naam={naam || "collega"}
@@ -115,15 +121,15 @@ export default async function KlantenPage() {
         </div>
       )}
 
-      {rows.length === 0 && mijnLeads.length === 0 && (
+      {actief.length === 0 && mijnLeads.length === 0 && (
         <div style={{ background: KLEUR.amber.bg, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "16px 18px", color: KLEUR.amber.tekst }}>
           Je hebt nog geen klanten. Pak een lead op in de <a href="/leads" style={{ color: KLEUR.amber.tekst, fontWeight: 700 }}>leadlijst</a> en maak een preview.
         </div>
       )}
 
-      {rows.length > 1 && <KlantenZoek />}
+      {actief.length > 1 && <KlantenZoek />}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-        {rows.map((r) => {
+        {actief.map((r) => {
           let review = {};
           try { review = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
           const reactieOp = r.laatste_feedback_op
@@ -179,6 +185,9 @@ export default async function KlantenPage() {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <AppLinkKnop bedrijf={r.company_name} />
+              <div style={{ marginLeft: "auto" }}>
+                <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
+              </div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12 }}>
               <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
@@ -212,6 +221,26 @@ export default async function KlantenPage() {
           );
         })}
       </div>
+
+      {afgewezen.length > 0 && (
+        <div style={{ marginTop: 28 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+            <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800, color: "#9A9084" }}>Geen interesse</h2>
+            <span style={{ fontSize: 13, color: "#9A9084" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
+          </div>
+          <div style={{ display: "grid", gap: 8 }}>
+            {afgewezen.map((r) => (
+              <div key={r.slug} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px", opacity: 0.9 }}>
+                <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14.5 }}>{r.company_name || r.slug}</div>
+                  <div style={{ fontSize: 12.5, color: "#9A9084" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
+                </div>
+                <TerugNaarActiefKnop slug={r.slug} bedrijf={r.company_name} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </WerkplekShell>
   );
 }
