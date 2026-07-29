@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { updateLead, getLead, log } from "../../../lib/server-data";
+import { updateLead, getLead, claimLead, log } from "../../../lib/server-data";
 import { leesSessie } from "../../../lib/auth";
 
 export const runtime = "nodejs";
@@ -16,6 +16,25 @@ export async function POST(req) {
     const body = await req.json();
     const id = String(body.id || "");
     if (!id) return NextResponse.json({ ok: false, error: "id ontbreekt." }, { status: 400 });
+
+    // Claim-met-slot: oppakken gebeurt op naam van de ingelogde verkoper en
+    // lukt alleen als de lead nog vrij is. Zo belt niemand een lead die een
+    // collega al heeft opgepakt.
+    if (body.claim === true) {
+      const sessie = leesSessie();
+      const wie = sessie ? sessie.naam : null;
+      if (!wie) return NextResponse.json({ ok: false, error: "Niet ingelogd." }, { status: 401 });
+      const r = await claimLead(id, wie);
+      if (!r.ok) {
+        return NextResponse.json({
+          ok: false, taken: true, owner: r.owner || null,
+          error: r.owner ? `Al opgepakt door ${r.owner}` : "Deze lead is niet meer vrij.",
+        });
+      }
+      await log({ persoon: wie, soort: "lead_claim", leadId: id,
+                  bedrijf: r.lead ? r.lead.bedrijfsnaam : null, naar: "opgepakt" });
+      return NextResponse.json({ ok: true, owner: wie, status: (r.lead && r.lead.status) || "opgepakt" });
+    }
 
     const fields = {};
     if (typeof body.status === "string") {
