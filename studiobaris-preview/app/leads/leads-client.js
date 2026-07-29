@@ -49,6 +49,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   const [bezigId, setBezigId] = useState("");
   const [zoek, setZoek] = useState(filters.zoek || "");
   const [siteVeld, setSiteVeld] = useState({});
+  const [melding, setMelding] = useState(null); // { id, tekst } bij een botsing
   const eersteRender = useRef(true);
 
   // Nieuwe gegevens van de server overnemen zodra de filters wijzigen.
@@ -89,8 +90,35 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
     setBezigId("");
   }
 
-  function pakOp(l) {
-    patch(l.id, { owner: mij || "", status: (l.status || "nieuw") === "nieuw" ? "opgepakt" : l.status });
+  // Oppakken via de claim-met-slot: lukt alleen als de lead nog vrij is.
+  // Pakt een collega hem net eerder op, dan draaien we de optimistische
+  // wijziging terug en tonen we wie de lead nu heeft — geen dubbele bel.
+  async function pakOp(l) {
+    setMelding(null);
+    setBezigId(l.id);
+    setLeads((prev) => prev.map((x) => (x.id === l.id
+      ? { ...x, owner: mij || "", status: (x.status || "nieuw") === "nieuw" ? "opgepakt" : x.status }
+      : x)));
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id, claim: true }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!j || !j.ok) {
+        const wie = (j && j.owner) || "een collega";
+        setLeads((prev) => prev.map((x) => (x.id === l.id
+          ? { ...x, owner: (j && j.owner) || x.owner || "", status: x.status === "opgepakt" && !(j && j.owner) ? "nieuw" : x.status }
+          : x)));
+        setMelding({ id: l.id, tekst: (j && j.error) || `Deze lead is net opgepakt door ${wie}.` });
+      } else {
+        setLeads((prev) => prev.map((x) => (x.id === l.id
+          ? { ...x, owner: j.owner, status: j.status || "opgepakt" }
+          : x)));
+      }
+    } catch {}
+    setBezigId("");
   }
 
   // Archiveren met een reden: de lead verdwijnt uit de werkstapel maar blijft
@@ -235,6 +263,30 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         {leads.map((l) => {
           const status = l.status || "nieuw";
           const done = DONE.includes(status);
+
+          // Door een collega opgepakt: vergrendeld tonen, zonder belgegevens
+          // en zonder acties. Zo belt niemand per ongeluk een lead die al
+          // wordt opgevolgd. Beheer en de eigenaar zelf zien wél alles.
+          const vergrendeld = !!l.owner && l.owner !== mij && !beheer;
+          if (vergrendeld) {
+            return (
+              <div key={l.id} style={{ ...card, opacity: 0.7, background: "#FBF9F5", borderStyle: "dashed" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                  <strong style={{ fontSize: 16, lineHeight: 1.25, color: "#6B6258" }}>{l.bedrijfsnaam || "—"}</strong>
+                  {l.potentie && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#9A9084" }}>{l.potentie}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, color: "#9A9084" }}>
+                  {[l.vakgebied, l.plaats, l.provincie].filter(Boolean).join(" · ")}
+                </div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, alignSelf: "flex-start", background: "#F1ECE2", border: "1px solid #E3DACB", color: "#6B6258", borderRadius: 9, padding: "8px 12px", fontSize: 13, fontWeight: 700 }}>
+                  <span aria-hidden="true">🔒</span> Opgepakt door {l.owner} — je collega belt deze al
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div key={l.id} style={{ ...card, outline: bezigId === l.id ? "2px solid #C05A38" : "none", opacity: done ? 0.85 : 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
@@ -288,14 +340,23 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 {l.owner ? (
                   <span style={{ color: "#524A40" }}>
                     Opgepakt door <strong>{l.owner}</strong>
-                    {" · "}
-                    <button onClick={() => patch(l.id, { owner: "" })} style={{ background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontSize: 13, padding: 0 }}>vrijgeven</button>
+                    {(l.owner === mij || beheer) && (
+                      <>
+                        {" · "}
+                        <button onClick={() => patch(l.id, { owner: "" })} style={{ background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontSize: 13, padding: 0 }}>vrijgeven</button>
+                      </>
+                    )}
                   </span>
                 ) : (
-                  <button onClick={() => pakOp(l)}
+                  <button onClick={() => pakOp(l)} disabled={bezigId === l.id}
                     style={{ background: "#2B2724", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     Pak op{mij ? ` (${mij})` : ""}
                   </button>
+                )}
+                {melding && melding.id === l.id && (
+                  <div style={{ marginTop: 7, background: "#FDECEA", border: "1px solid #F5C6C0", color: "#9E3B2E", borderRadius: 8, padding: "7px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                    {melding.tekst}
+                  </div>
                 )}
               </div>
 
