@@ -76,6 +76,42 @@ const OUD_NAAR_NIEUW = {
   "Wachten op feedback 3": "Feedback 2",
 };
 
+// "Geen interesse": zet de klant op archief (pipeline_status "Afgewezen"). Hij
+// verdwijnt uit de actieve lijst, maar blijft bewaard en is terug te zetten.
+export function GeenInteresseKnop({ slug, bedrijf, huidige }) {
+  const [s, setS] = useState("idle");
+  async function go() {
+    if (!confirm(`"${bedrijf || slug}" op "Geen interesse" zetten?\n\nHij verdwijnt uit je actieve klanten, maar je kunt hem onderaan altijd terugzetten.`)) return;
+    setS("bezig");
+    const d = await bewaarKlant(slug, { pipeline_status: "Afgewezen", van: huidige || "", bedrijf: bedrijf || slug });
+    if (d && d.ok) location.reload();
+    else { setS("idle"); alert("Mislukt, probeer opnieuw."); }
+  }
+  return (
+    <button onClick={go} disabled={s === "bezig"}
+      style={{ background: "transparent", color: "#9A9084", border: "1px solid #E3DACB", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      {s === "bezig" ? "Bezig…" : "Geen interesse"}
+    </button>
+  );
+}
+
+// Een gearchiveerde klant weer terugzetten in de actieve lijst.
+export function TerugNaarActiefKnop({ slug, bedrijf }) {
+  const [s, setS] = useState("idle");
+  async function go() {
+    setS("bezig");
+    const d = await bewaarKlant(slug, { pipeline_status: "Preview", van: "Afgewezen", bedrijf: bedrijf || slug });
+    if (d && d.ok) location.reload();
+    else setS("idle");
+  }
+  return (
+    <button onClick={go} disabled={s === "bezig"}
+      style={{ background: "#fff", color: "#524A40", border: "1px solid #E3DACB", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      {s === "bezig" ? "Bezig…" : "Terugzetten"}
+    </button>
+  );
+}
+
 export function FaseStepper({ slug, huidige, bedrijf }) {
   const [bezig, setBezig] = useState(false);
   const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";
