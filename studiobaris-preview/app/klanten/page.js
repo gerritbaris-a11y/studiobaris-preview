@@ -150,18 +150,21 @@ export default async function KlantenPage() {
                   </div>
                 )}
               </div>
-              {beheer ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                {beheer ? (
+                  <>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+                      {r.gepubliceerd ? "● Online" : "○ Offline"}
+                    </span>
+                    <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
+                  </>
+                ) : (
                   <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
-                    {r.gepubliceerd ? "● Online" : "○ Offline"}
+                    {r.gepubliceerd ? "Online" : "Offline"}
                   </span>
-                  <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
-                </div>
-              ) : (
-                <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
-                  {r.gepubliceerd ? "Online" : "Offline"}
-                </span>
-              )}
+                )}
+                <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
+              </div>
             </div>
 
             <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
@@ -185,9 +188,6 @@ export default async function KlantenPage() {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <AppLinkKnop bedrijf={r.company_name} />
-              <div style={{ marginLeft: "auto" }}>
-                <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
-              </div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12 }}>
               <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
