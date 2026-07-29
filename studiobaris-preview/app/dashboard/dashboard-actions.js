@@ -81,16 +81,16 @@ const OUD_NAAR_NIEUW = {
 export function GeenInteresseKnop({ slug, bedrijf, huidige }) {
   const [s, setS] = useState("idle");
   async function go() {
-    if (!confirm(`"${bedrijf || slug}" op "Geen interesse" zetten?\n\nHij verdwijnt uit je actieve klanten, maar je kunt hem onderaan altijd terugzetten.`)) return;
+    if (!confirm(`"${bedrijf || slug}" archiveren (geen interesse)?\n\nHij verdwijnt uit je actieve klanten, maar je kunt hem onderaan altijd terugzetten.`)) return;
     setS("bezig");
     const d = await bewaarKlant(slug, { pipeline_status: "Afgewezen", van: huidige || "", bedrijf: bedrijf || slug });
     if (d && d.ok) location.reload();
     else { setS("idle"); alert("Mislukt, probeer opnieuw."); }
   }
   return (
-    <button onClick={go} disabled={s === "bezig"}
-      style={{ background: "transparent", color: "#9A9084", border: "1px solid #E3DACB", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
-      {s === "bezig" ? "Bezig…" : "Geen interesse"}
+    <button onClick={go} disabled={s === "bezig"} title="Archiveren — zet deze klant op 'geen interesse'"
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", color: "#9E3B2E", border: "1.5px solid #E4B7AE", padding: "7px 13px", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      <span aria-hidden="true">🗂</span> {s === "bezig" ? "Bezig…" : "Archiveren"}
     </button>
   );
 }
