@@ -11,6 +11,7 @@ import {
 } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
+import KlantenZoek from "./klanten-zoek";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
@@ -120,6 +121,7 @@ export default async function KlantenPage() {
         </div>
       )}
 
+      {rows.length > 1 && <KlantenZoek />}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {rows.map((r) => {
           let review = {};
@@ -127,13 +129,20 @@ export default async function KlantenPage() {
           const reactieOp = r.laatste_feedback_op
             ? new Date(r.laatste_feedback_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
             : null;
+          const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar, review.bron]
+            .filter(Boolean).join(" ").toLowerCase();
           return (
-          <div key={r.slug} style={card}>
+          <div key={r.slug} style={card} data-klant={zoektekst}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
+                {review.logo_toestemming && (
+                  <div style={{ display: "inline-block", marginTop: 6, fontSize: 12, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "2px 9px", borderRadius: 999 }}>
+                    ✓ Logo mag op onze site
+                  </div>
+                )}
               </div>
               {beheer ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
