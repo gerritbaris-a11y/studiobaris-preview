@@ -15,6 +15,21 @@ export const CONTENT_SCHEMA = `{
   "_review": {"ontbrekend": [], "afgeleid": [], "let_op": []}
 }`;
 
+// --- HUMANIZER: gedeelde schrijfregels zodat teksten menselijk klinken en niet als AI ---
+// Gebaseerd op blader/humanizer, toegesneden op vakman-teksten. Wordt onderaan
+// SYSTEM_PROMPT_WF1 en SYSTEM_PROMPT_REVISE ingevoegd via ${NATUURLIJK_NL}.
+export const NATUURLIJK_NL = `NATUURLIJK NEDERLANDS - zo klinkt de tekst als een echte vakman en niet als AI:
+- Geen opgeblazen of verkoperige woorden: schrap "bruisend", "adembenemend", "hoogwaardig", "naadloos", "een wereld van", "op maat", "ontzorgen".
+- Geen holle openings- of aankondigingszinnen ("In de wereld van...", "Als het gaat om...", "Ontdek...", "Of het nu gaat om...").
+- Forceer geen drietallen en gebruik geen "niet alleen X, maar ook Y"-constructies.
+- Schrijf actief en concreet: "wij plaatsen", niet "er wordt geplaatst". Noem wat er echt gebeurt.
+- Vermijd vulwoorden: gebruik "om te" (niet "teneinde"), laat "vanwege het feit dat" en "op dit moment" weg.
+- Geen clichematige afsluiter ("de mogelijkheden zijn eindeloos"); sluit af met iets concreets zoals bel of mail voor een offerte.
+- Herhaal rustig hetzelfde woord; wissel niet kunstmatig met synoniemen.
+- Geen lange gedachtestreepjes (— of –); gebruik komma of punt.
+- Geen emoji in de teksten zelf (het losse icoon-veld bij "voordelen" mag wel een emoji zijn).
+- Klink als de vakman zelf die het vertelt, niet als een reclamefolder.`;
+
 export const SYSTEM_PROMPT_WF1 = `Je bent contentassistent voor StudioBaris, een bureau dat snelle previewwebsites voor zzp'ers maakt.
 Je krijgt onderzoeksgegevens over een ondernemer en vertaalt die naar website-content volgens een vast JSON-schema.
 
@@ -40,7 +55,9 @@ HARDE KADERS - hier wijk je nooit van af:
 14. Branche: vertaal naar een herkenbaar, klantgericht vaklabel (bv. "Badkamer- & sanitairspecialist"), niet een generieke term als "Bouw & Klus".
 15. Regio: noem ALLE aangeleverde regio's en zet de volledige lijst in bedrijf.regio. Kort de lijst nooit in en laat geen plaatsen weg.
 16. seo.noindex blijft altijd true.
-17. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.`;
+17. Vul "_review.let_op" met punten die een mens moet controleren voor publicatie.
+
+${NATUURLIJK_NL}`;
 
 export const SYSTEM_PROMPT_REVISE = `Je werkt een bestaande previewwebsite van StudioBaris bij op basis van een ingevuld formulier.
 Je krijgt: (A) de huidige website-JSON en (B) de antwoorden uit het formulier.
@@ -55,7 +72,9 @@ HARDE KADERS:
 4. Behoud bestaande beeld-URL's (merk.logo_url, beeld_url's) tenzij het formulier nieuwe aanlevert.
 5. seo.noindex blijft altijd true.
 6. Is er een NIEUW logo-AFBEELDING bij dit bericht meegestuurd, leid dan de huisstijlkleuren (merk.primaire_kleur en merk.secundaire_kleur) opnieuw af uit dat logo: dominante donkere kleur als primaire_kleur, de opvallende kleur als secundaire_kleur voor de knoppen. Is het logo zwart-wit, gebruik dan een strak donker palet met één subtiele accentkleur voor de knoppen. Zonder nieuw logo laat je de bestaande kleuren staan.
-7. Vul "_review.let_op" met een korte lijst van wat je precies hebt gewijzigd, zodat een mens het kan controleren voor publicatie.`;
+7. Vul "_review.let_op" met een korte lijst van wat je precies hebt gewijzigd, zodat een mens het kan controleren voor publicatie.
+
+${NATUURLIJK_NL}`;
 
 export function slugify(naam) {
   const s = String(naam || "bedrijf")
