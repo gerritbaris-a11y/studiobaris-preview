@@ -33,7 +33,7 @@ jobs:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         # -n = non-interactief (voor CI), quick = snelle diff-scan.
         # Exit-code is niet-nul als er kwetsbaarheden gevonden zijn.
-        run: strix -n -t ./ --scan-mode quick
+        run: strix -n -t ./ --scan-mode standard
 
       - name: Rapport bewaren als artifact
         if: always()
