@@ -1,0 +1,44 @@
+name: strix-security-scan
+
+# Wanneer draait de scan:
+# - bij elke pull request (scant alleen de gewijzigde bestanden = snel + goedkoop)
+# - handmatig via de knop "Run workflow" in het Actions-tabblad
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Nieuwe run annuleert een oude die nog bezig is op dezelfde branch.
+concurrency:
+  group: strix-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code ophalen (volledige historie voor diff-scope)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Strix installeren
+        run: curl -sSL https://strix.ai/install | bash
+
+      - name: Beveiligingsscan draaien
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        # -n = non-interactief (voor CI), quick = snelle diff-scan.
+        # Exit-code is niet-nul als er kwetsbaarheden gevonden zijn.
+        run: strix -n -t ./ --scan-mode quick
+
+      - name: Rapport bewaren als artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strix-report
+          path: strix_runs/
+          if-no-files-found: ignore
