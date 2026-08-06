@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 // Schermt alleen de interne werkplek af. Publieke klantpagina's
-// (/[slug], /intake/[slug], /feedback/[slug], /akkoord/[slug]) en alle
-// API-routes (incl. Mollie-webhook) staan NIET in de matcher en blijven werken.
+// (/[slug], /intake/[slug], /feedback/[slug], /akkoord/[slug]) en de
+// klantgerichte API-routes (intake, akkoord, mollie/start + webhook) staan NIET
+// in de matcher en blijven werken. De interne API-routes hieronder checkten zelf
+// geen sessie; die schermen we hier af (fail-closed).
 
 const COOKIE = "sb_sessie";
 
@@ -47,9 +49,32 @@ async function verify(token) {
 // Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /leads.
 const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/vragen", "/kosten", "/storingen", "/restbetalingen"];
 
+// Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
+// en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
+// beheer-rol; de rest een geldige sessie (zodat verkopers blijven werken).
+const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen"];
+const API_INGELOGD = ["/api/klant/update", "/api/klant/gegevens", "/api/klant/verkoopbedrag", "/api/publish", "/api/publish-site"];
+
+function raakt(path, lijst) {
+  return lijst.some((p) => path === p || path.startsWith(p + "/"));
+}
+
 export async function middleware(req) {
   const path = req.nextUrl.pathname;
   const sessie = await verify(req.cookies.get(COOKIE)?.value);
+
+  // Interne API-routes: geen redirect maar een nette 401/403 in JSON.
+  const apiBeheer = raakt(path, API_BEHEER);
+  const apiIngelogd = raakt(path, API_INGELOGD);
+  if (apiBeheer || apiIngelogd) {
+    if (!sessie) {
+      return NextResponse.json({ ok: false, error: "Niet ingelogd." }, { status: 401 });
+    }
+    if (apiBeheer && sessie.rol !== "beheer") {
+      return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
 
   if (!sessie) {
     const url = req.nextUrl.clone();
@@ -84,5 +109,13 @@ export const config = {
     "/beheer/:path*",
     "/nieuw-akkoord/:path*",
     "/team/:path*",
+    "/api/klant/delete",
+    "/api/klant/update",
+    "/api/klant/gegevens",
+    "/api/klant/verkoopbedrag",
+    "/api/beheer/login",
+    "/api/beheer/instellen",
+    "/api/publish",
+    "/api/publish-site",
   ],
 };
