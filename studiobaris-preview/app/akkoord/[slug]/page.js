@@ -4,15 +4,24 @@ import AkkoordKnop from "./akkoord-knop";
 
 export const dynamic = "force-dynamic";
 
+// Toont een bedrag, of null bij 0/leeg. De null wordt gebruikt om blokken
+// te verbergen die niet van toepassing zijn (geen aanbetaling, geen rest).
 function euro(v) {
   const n = Number(v);
   if (!n) return null;
   return "€ " + n.toFixed(2).replace(".", ",");
 }
 
+// Toont een bedrag ALTIJD, ook € 0,00. Nodig in de btw-subregel: daar stond
+// eerder letterlijk "null" zodra het btw-bedrag op nul uitkwam.
+function euroAltijd(v) {
+  const n = Number(v) || 0;
+  return "€ " + n.toFixed(2).replace(".", ",");
+}
+
 // Kleine subregel: "€ 29,95 excl. + € 6,29 btw (21%)"
 function btwSub(excl) {
-  return `${euro(excl)} excl. + ${euro(btwBedrag(excl))} btw (21%)`;
+  return `${euroAltijd(excl)} excl. + ${euroAltijd(btwBedrag(excl))} btw (21%)`;
 }
 
 const wrap = { maxWidth: 620, margin: "8vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
@@ -43,6 +52,31 @@ export default async function AkkoordPage({ params, searchParams }) {
   const diensten = Array.isArray(info.diensten) ? info.diensten : [];
   const status = info.betaal_status;
   const netBetaald = searchParams && searchParams.status === "klaar";
+
+  // Betaalt de klant in termijnen, of het hele websitebedrag ineens?
+  // Eerder stond "de helft" hardgecodeerd, waardoor een klant die alles in
+  // één keer voldeed toch "(de helft)" te zien kreeg — en een lege rest
+  // werd afgedrukt als "null".
+  const inTermijnen = aanbExcl > 0 && restExcl > 0;
+  const isPreciesDeHelft = inTermijnen && Math.abs(aanbExcl - restExcl) < 0.01;
+  const aanbLabel = !inTermijnen
+    ? "Je betaalt nu"
+    : isPreciesDeHelft
+      ? "Je betaalt nu (de helft)"
+      : "Je betaalt nu (eerste termijn)";
+
+  const incassoZin =
+    "Met deze betaling geef je meteen de automatische incasso af voor het maandbedrag, dat vanaf volgende maand wordt afgeschreven.";
+
+  let uitlegZin;
+  if (inTermijnen) {
+    uitlegZin = `Je betaalt nu ${aanbInclStr} incl. btw${isPreciesDeHelft ? ": de helft van je website" : " als eerste termijn"}. Het resterende bedrag (${restInclStr} incl. btw) betaal je pas als je site live staat. ${incassoZin}`;
+  } else if (aanbInclStr) {
+    uitlegZin = `Je betaalt nu ${aanbInclStr} incl. btw in één keer. ${incassoZin}`;
+  } else {
+    uitlegZin =
+      "Je betaalt zo eenmalig de eerste maand (incl. btw); daarmee geef je meteen de machtiging af. Daarna wordt het bedrag elke maand automatisch afgeschreven.";
+  }
 
   // Al actief: machtiging gelukt.
   if (status === "actief") {
@@ -118,7 +152,7 @@ export default async function AkkoordPage({ params, searchParams }) {
 
             {aanbInclStr && (
               <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start", background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 10, padding: "12px 14px" }}>
-                <span style={{ color: "#7c4a03", fontWeight: 700 }}>Je betaalt nu (de helft)</span>
+                <span style={{ color: "#7c4a03", fontWeight: 700 }}>{aanbLabel}</span>
                 <div style={{ textAlign: "right" }}>
                   <strong style={{ fontSize: 22, color: "#7c4a03" }}>{aanbInclStr}</strong>
                   <div style={{ fontSize: 12, color: "#a35400" }}>incl. btw</div>
@@ -137,6 +171,7 @@ export default async function AkkoordPage({ params, searchParams }) {
                 </div>
               </div>
             )}
+
             <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <span style={{ color: "#666" }}>Maandelijkse vergoeding<br /><span style={{ fontSize: 12, color: "#999" }}>hosting, onderhoud en de app</span></span>
               <div style={{ textAlign: "right" }}>
@@ -147,11 +182,7 @@ export default async function AkkoordPage({ params, searchParams }) {
             </div>
           </div>
 
-          <p style={{ fontSize: 13, color: "#777", margin: "14px 0 18px" }}>
-            {aanbInclStr
-              ? `Je betaalt nu ${aanbInclStr} incl. btw: de helft van je website. De andere helft (${restInclStr} incl. btw) betaal je pas als je site live staat. Met deze betaling geef je meteen de automatische incasso af voor het maandbedrag, dat vanaf volgende maand wordt afgeschreven.`
-              : "Je betaalt zo eenmalig de eerste maand (incl. btw); daarmee geef je meteen de machtiging af. Daarna wordt het bedrag elke maand automatisch afgeschreven."}
-          </p>
+          <p style={{ fontSize: 13, color: "#777", margin: "14px 0 18px" }}>{uitlegZin}</p>
 
           <AkkoordKnop slug={params.slug} />
         </>
