@@ -1,4 +1,7 @@
 import { getAbonnementen } from "../../lib/abonnementen-data";
+import { leesSessie, isBeheer } from "../../lib/auth";
+import WerkplekShell, { Chip } from "../werkplek-shell";
+import { KLEUR, HEAD } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
 
@@ -12,104 +15,77 @@ function euro(v) {
   return "€ " + n.toFixed(2).replace(".", ",");
 }
 
+const MAANDEN = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+
 function datumNL(iso) {
-  if (!iso) return "—";
+  if (!iso) return null;
   const d = String(iso).slice(0, 10).split("-");
-  if (d.length !== 3) return "—";
-  const maanden = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
-  return `${Number(d[2])} ${maanden[Number(d[1]) - 1]}`;
+  if (d.length !== 3) return null;
+  return `${Number(d[2])} ${MAANDEN[Number(d[1]) - 1]}`;
 }
 
-// Wat de status betekent in gewone taal, met een kleur die het meteen verraadt.
-function statusInfo(rij) {
-  if (rij.betaal_status === "actief" && rij.betaal_abonnement_id) {
-    return { tekst: "Loopt", kleur: "#1E6B4F", achtergrond: "#DEF0E7" };
-  }
-  if (rij.betaal_status === "mislukt") {
-    return { tekst: "Betaling mislukt", kleur: "#B33A2B", achtergrond: "#F7E4E1" };
-  }
-  if (rij.betaal_status === "akkoord") {
-    return { tekst: "Wacht op betaling", kleur: "#8A5A0B", achtergrond: "#FBEEDA" };
-  }
-  return { tekst: "Nog geen machtiging", kleur: "#55697A", achtergrond: "#EDF1F4" };
+// Wat de status betekent in gewone taal, in de kleuren van de werkplek.
+function status(rij) {
+  if (rij.betaal_status === "actief" && rij.betaal_abonnement_id) return { tekst: "Loopt", kleur: "sage" };
+  if (rij.betaal_status === "mislukt") return { tekst: "Betaling mislukt", kleur: "rust" };
+  if (rij.betaal_status === "akkoord") return { tekst: "Wacht op betaling", kleur: "amber" };
+  return { tekst: "Nog geen machtiging", kleur: "grijs" };
 }
 
-const wrap = {
-  maxWidth: 1080,
-  margin: "0 auto",
-  padding: "32px 24px 64px",
-  fontFamily: "system-ui, sans-serif",
-  color: "#12212C",
-};
-const kaart = {
-  background: "#fff",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  overflow: "hidden",
-};
+const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14 };
 const th = {
-  textAlign: "left",
-  fontSize: 11,
-  letterSpacing: 1,
-  textTransform: "uppercase",
-  color: "#7D909D",
-  fontWeight: 700,
-  padding: "10px 14px",
-  background: "#F4F7F9",
-  borderBottom: "1px solid #e5e7eb",
-  whiteSpace: "nowrap",
+  textAlign: "left", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
+  color: KLEUR.label, fontWeight: 700, padding: "10px 14px",
+  background: KLEUR.baan, borderBottom: `1px solid ${KLEUR.baanRand}`, whiteSpace: "nowrap",
 };
-const td = { padding: "12px 14px", borderBottom: "1px solid #f0f3f5", verticalAlign: "top", fontSize: 14 };
+const td = { padding: "13px 14px", borderBottom: `1px solid ${KLEUR.lijn}`, verticalAlign: "top", fontSize: 14 };
 const tdNum = { ...td, textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" };
 
-export default async function AbonnementenPage() {
-  const rijen = await getAbonnementen();
+function Cijfer({ label, waarde, onder }) {
+  return (
+    <div style={{ ...kaart, padding: "14px 18px", minWidth: 168 }}>
+      <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700 }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 26, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+        {waarde}
+      </div>
+      {onder && <div style={{ fontSize: 12, color: KLEUR.label }}>{onder}</div>}
+    </div>
+  );
+}
 
+export default async function AbonnementenPage() {
+  const sessie = leesSessie();
+  const naam = sessie && sessie.naam ? sessie.naam : "collega";
+  const beheer = isBeheer(sessie);
+
+  const rijen = await getAbonnementen();
   const lopend = rijen.filter((r) => r.betaal_status === "actief" && r.betaal_abonnement_id);
-  const perMaandIncl = lopend.reduce((som, r) => som + (Number(r.maandbedrag_incl) || 0), 0);
-  const aandacht = rijen.filter((r) => !(r.betaal_status === "actief" && r.betaal_abonnement_id));
+  const perMaand = lopend.reduce((som, r) => som + (Number(r.maandbedrag_incl) || 0), 0);
+  const aandacht = rijen.length - lopend.length;
 
   return (
-    <main style={wrap}>
-      <p style={{ fontSize: 12, letterSpacing: 2, textTransform: "uppercase", color: "#7D909D", margin: 0 }}>
-        StudioBaris · beheer
-      </p>
-      <h1 style={{ fontSize: 30, margin: "6px 0 4px", letterSpacing: "-0.02em" }}>Abonnementen</h1>
-      <p style={{ color: "#4A5E6D", margin: "0 0 24px" }}>
-        Wat er maandelijks binnenkomt, wanneer er geïncasseerd wordt, en wie er aandacht nodig heeft.
-      </p>
-
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-        <div style={{ ...kaart, padding: "14px 18px", minWidth: 170 }}>
-          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "#7D909D", fontWeight: 700 }}>
-            Lopend
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 2 }}>{lopend.length}</div>
-        </div>
-        <div style={{ ...kaart, padding: "14px 18px", minWidth: 170 }}>
-          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "#7D909D", fontWeight: 700 }}>
-            Per maand
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
-            {euro(perMaandIncl)}
-          </div>
-          <div style={{ fontSize: 12, color: "#7D909D" }}>incl. btw</div>
-        </div>
-        <div style={{ ...kaart, padding: "14px 18px", minWidth: 170 }}>
-          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: "#7D909D", fontWeight: 700 }}>
-            Aandacht nodig
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 2 }}>{aandacht.length}</div>
-        </div>
+    <WerkplekShell
+      naam={naam}
+      beheer={beheer}
+      actief="/abonnementen"
+      titel="Abonnementen"
+      sub="Wat er maandelijks binnenkomt, wanneer er geïncasseerd wordt, en wie er aandacht nodig heeft."
+    >
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+        <Cijfer label="Lopend" waarde={lopend.length} />
+        <Cijfer label="Per maand" waarde={euro(perMaand)} onder="incl. btw" />
+        <Cijfer label="Aandacht nodig" waarde={aandacht} />
       </div>
 
       {rijen.length === 0 ? (
-        <div style={{ ...kaart, padding: "20px 22px", color: "#4A5E6D" }}>
+        <div style={{ ...kaart, padding: "20px 22px", color: KLEUR.gedempt }}>
           Er is nog geen enkele klant met een maandbedrag. Zodra je er een instelt, verschijnt hij hier.
         </div>
       ) : (
         <div style={{ ...kaart, overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 860 }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 880 }}>
             <thead>
               <tr>
                 <th style={th}>Klant</th>
@@ -123,12 +99,13 @@ export default async function AbonnementenPage() {
             </thead>
             <tbody>
               {rijen.map((r) => {
-                const s = statusInfo(r);
+                const s = status(r);
+                const volgende = datumNL(r.volgende_incasso);
                 return (
                   <tr key={r.slug}>
                     <td style={td}>
-                      <div style={{ fontWeight: 600 }}>{r.company_name || r.slug}</div>
-                      <div style={{ fontSize: 12.5, color: "#7D909D" }}>
+                      <div style={{ fontWeight: 700 }}>{r.company_name || r.slug}</div>
+                      <div style={{ fontSize: 12.5, color: KLEUR.label }}>
                         {r.contactpersoon ? r.contactpersoon + " · " : ""}
                         {r.lead_email || "geen e-mailadres"}
                       </div>
@@ -136,45 +113,31 @@ export default async function AbonnementenPage() {
                         href={`${SITE_URL}/akkoord/${r.slug}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ fontSize: 12.5, color: "#1A2E40" }}
+                        style={{ fontSize: 12.5, color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}
                       >
-                        Akkoordlink openen
+                        Akkoordlink openen →
                       </a>
                     </td>
                     <td style={tdNum}>
-                      <div style={{ fontWeight: 600 }}>{euro(r.maandbedrag_incl)}</div>
-                      <div style={{ fontSize: 12, color: "#7D909D" }}>{euro(r.maandbedrag)} excl.</div>
+                      <div style={{ fontWeight: 700 }}>{euro(r.maandbedrag_incl)}</div>
+                      <div style={{ fontSize: 12, color: KLEUR.label }}>{euro(r.maandbedrag)} excl.</div>
                     </td>
                     <td style={td}>{r.incassodag ? `de ${r.incassodag}e` : "—"}</td>
-                    <td style={td}>{datumNL(r.volgende_incasso)}</td>
+                    <td style={td}>{volgende || "—"}</td>
                     <td style={td}>
                       {r.laatste_factuur_nummer ? (
                         <>
                           <div>{r.laatste_factuur_nummer}</div>
-                          <div style={{ fontSize: 12, color: "#7D909D" }}>
-                            {r.laatste_factuur_periode || datumNL(r.laatste_factuur_op)}
+                          <div style={{ fontSize: 12, color: KLEUR.label }}>
+                            {r.laatste_factuur_periode || datumNL(r.laatste_factuur_op) || ""}
                           </div>
                         </>
                       ) : (
-                        <span style={{ color: "#7D909D" }}>nog geen</span>
+                        <span style={{ color: KLEUR.label }}>nog geen</span>
                       )}
                     </td>
-                    <td style={td}>
-                      <span
-                        style={{
-                          background: s.achtergrond,
-                          color: s.kleur,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          padding: "3px 8px",
-                          borderRadius: 4,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {s.tekst}
-                      </span>
-                    </td>
-                    <td style={{ ...td, color: "#4A5E6D" }}>{r.verzamelaar || "—"}</td>
+                    <td style={td}><Chip kleur={s.kleur}>{s.tekst}</Chip></td>
+                    <td style={{ ...td, color: KLEUR.gedempt }}>{r.verzamelaar || "—"}</td>
                   </tr>
                 );
               })}
@@ -182,6 +145,6 @@ export default async function AbonnementenPage() {
           </table>
         </div>
       )}
-    </main>
+    </WerkplekShell>
   );
 }
