@@ -38,7 +38,7 @@ export const FONT_LINK =
 export const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
 export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 
-// De acht schermen van de werkplek. beheer=alles, verkoper=eerste drie.
+// De schermen van de werkplek. beheer=alles, verkoper=eerste drie.
 export const NAV = [
   { href: "/vandaag", label: "Vandaag" },
   { href: "/leads", label: "Leads" },
@@ -48,5 +48,6 @@ export const NAV = [
   { href: "/vragen", label: "Vragen", beheer: true },
   { href: "/kosten", label: "Kosten", beheer: true },
   { href: "/restbetalingen", label: "Restbetalingen", beheer: true },
+  { href: "/abonnementen", label: "Abonnementen", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];
