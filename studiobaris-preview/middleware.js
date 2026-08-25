@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 // klantgerichte API-routes (intake, akkoord, mollie/start + webhook) staan NIET
 // in de matcher en blijven werken. De interne API-routes hieronder checkten zelf
 // geen sessie; die schermen we hier af (fail-closed).
+//
+// LET OP: een nieuwe interne pagina moet hier op TWEE plekken bij, anders is hij
+// zonder inloggen bereikbaar: in de matcher onderaan, en (als alleen Gerrit en
+// Levi erbij mogen) in BEHEER_ONLY.
 
 const COOKIE = "sb_sessie";
 
@@ -47,7 +51,7 @@ async function verify(token) {
 }
 
 // Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /leads.
-const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/vragen", "/kosten", "/storingen", "/restbetalingen"];
+const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen"];
 
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
@@ -105,6 +109,7 @@ export const config = {
     "/vragen/:path*",
     "/kosten/:path*",
     "/restbetalingen/:path*",
+    "/abonnementen/:path*",
     "/storingen/:path*",
     "/beheer/:path*",
     "/nieuw-akkoord/:path*",
