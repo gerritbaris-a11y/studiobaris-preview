@@ -16,6 +16,7 @@ const INTERN = [
   "/team",
   "/storingen",
   "/restbetalingen",
+  "/abonnementen",
   "/vragen",
   "/beheer",
   "/nieuw-akkoord",
