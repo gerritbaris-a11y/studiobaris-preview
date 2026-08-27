@@ -56,7 +56,7 @@ const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
 // beheer-rol; de rest een geldige sessie (zodat verkopers blijven werken).
-const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen"];
+const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/facturen/opnieuw", "/api/facturen/pdf"];
 const API_INGELOGD = ["/api/klant/update", "/api/klant/gegevens", "/api/klant/verkoopbedrag", "/api/publish", "/api/publish-site"];
 
 function raakt(path, lijst) {
@@ -120,6 +120,10 @@ export const config = {
     "/api/klant/verkoopbedrag",
     "/api/beheer/login",
     "/api/beheer/instellen",
+    "/api/abonnement/instellen",
+    "/api/abonnement/opzeggen",
+    "/api/facturen/opnieuw",
+    "/api/facturen/pdf",
     "/api/publish",
     "/api/publish-site",
   ],

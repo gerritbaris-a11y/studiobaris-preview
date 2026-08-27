@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/facturen/dagelijks",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
