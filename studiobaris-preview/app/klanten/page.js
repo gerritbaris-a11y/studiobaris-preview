@@ -1,14 +1,14 @@
 import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import {
+import PublishButton, {
   FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop,
   GeenInteresseKnop, TerugNaarActiefKnop,
   PersoonlijkeZin, PublishToggle,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
-  AkkoordLink, GegevensEditor, InzendingenKnop, KlantBedrag, KlantNaam,
-  PublishButton, VerwijderKnop,
+  GegevensEditor, InzendingenKnop, KlantNaam,
+  VerwijderKnop,
 } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
@@ -201,8 +201,16 @@ export default async function KlantenPage() {
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                   <InzendingenKnop slug={r.slug} />
-                  <KlantBedrag slug={r.slug} value={r.maandbedrag} />
-                  <AkkoordLink slug={r.slug} />
+                  {/* Prijs, betaalwijze, akkoordlink en facturen staan sinds
+                      kort allemaal onder Abonnementen. Twee plekken voor
+                      hetzelfde bedrag ging een keer mis, dus het staat hier
+                      alleen nog als verwijzing. */}
+                  <a
+                    href="/abonnementen"
+                    style={{ fontSize: 13, color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}
+                  >
+                    {r.maandbedrag ? `€ ${Number(r.maandbedrag).toFixed(2).replace(".", ",")} p/m` : "Nog geen maandbedrag"} — regel het bij Abonnementen →
+                  </a>
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
