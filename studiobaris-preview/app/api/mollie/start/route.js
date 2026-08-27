@@ -8,6 +8,11 @@ export const dynamic = "force-dynamic";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
 
 // Start de eerste betaling/machtiging. Geeft een Mollie-checkout-URL terug.
+//
+// Eén link voor alles: de klant betaalt in één keer het websitedeel én de
+// eerste maand, en geeft daarmee meteen de SEPA-machtiging af. Het abonnement
+// begint pas een maand later, dus zonder die eerste maand hier zou die maand
+// nooit gefactureerd worden — precies wat er in de oude opzet misging.
 export async function POST(req) {
   try {
     if (!mollieConfigured()) {
@@ -22,25 +27,29 @@ export async function POST(req) {
     const info = await getBetaalinfo(slug);
     if (!info) return NextResponse.json({ ok: false, error: "Klant niet gevonden." }, { status: 404 });
 
-    const maand = Number(info.maandbedrag);
-    if (!maand || maand <= 0) {
+    const maand = Number(info.maandbedrag) || 0;
+    if (maand <= 0) {
       return NextResponse.json({ ok: false, error: "Er is nog geen maandbedrag ingesteld voor deze klant." }, { status: 400 });
     }
-    // Eerste betaling = de aanbetaling (indien ingesteld); anders de eerste maandtermijn.
-    const aanbetaling = Number(info.aanbetaling);
-    const eerste = aanbetaling > 0 ? aanbetaling : maand;
-    if (!eerste || eerste <= 0) {
-      return NextResponse.json({ ok: false, error: "Er is geen (aanbetalings)bedrag ingesteld voor deze klant." }, { status: 400 });
+
+    // Websitedeel dat nu betaald wordt: bij 'ineens' het hele bedrag, bij twee
+    // termijnen de eerste helft. Daar komt altijd de eerste maand bovenop.
+    const websitedeel = Number(info.aanbetaling) || 0;
+    const eerste = Math.round((websitedeel + maand) * 100) / 100;
+    if (eerste <= 0) {
+      return NextResponse.json({ ok: false, error: "Er is geen bedrag ingesteld voor deze klant." }, { status: 400 });
     }
-    const eersteOmschrijving = aanbetaling > 0
-      ? `Aanbetaling website ${info.company_name || slug}`
-      : `Eerste maandtermijn website ${info.company_name || slug}`;
+
+    const naam = info.company_name || slug;
+    const eersteOmschrijving = websitedeel > 0
+      ? `Website + eerste maand ${naam}`
+      : `Eerste maand website ${naam}`;
 
     // Klant (Mollie customer) aanmaken of hergebruiken.
     let klantId = info.betaal_klant_id;
     if (!klantId) {
       const customer = await mollie("/customers", "POST", {
-        name: info.company_name || slug,
+        name: naam,
         email: info.lead_email || undefined,
         metadata: { slug },
       });
