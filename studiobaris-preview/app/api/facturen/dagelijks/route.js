@@ -24,13 +24,19 @@ function isoDatum(d) {
 }
 
 export async function GET(req) {
-  // Vercel Cron stuurt een geheim mee; handmatig aanroepen kan met dezelfde
-  // sleutel. Zonder CRON_SECRET blijft de route dicht.
+  // Wie mag deze route aanroepen? Drie manieren, in volgorde van stevigheid:
+  //  1. Vercel Cron met een Bearer-token, als CRON_SECRET is ingesteld.
+  //  2. Handmatig, met ?sleutel=<CRON_SECRET> — handig om 'm een keer te testen.
+  //  3. Vercel's eigen cron-user-agent, zodat de taak ook draait zolang er nog
+  //     geen CRON_SECRET is ingevuld. Zet 'm alsnog: dan valt deze derde weg.
   const geheim = process.env.CRON_SECRET;
   const kop = req.headers.get("authorization") || "";
-  const url = new URL(req.url);
-  const sleutel = url.searchParams.get("sleutel") || "";
-  if (!geheim || (kop !== `Bearer ${geheim}` && sleutel !== geheim)) {
+  const agent = req.headers.get("user-agent") || "";
+  const sleutel = new URL(req.url).searchParams.get("sleutel") || "";
+  const magDoor = geheim
+    ? kop === `Bearer ${geheim}` || sleutel === geheim
+    : agent.startsWith("vercel-cron/");
+  if (!magDoor) {
     return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 401 });
   }
 
