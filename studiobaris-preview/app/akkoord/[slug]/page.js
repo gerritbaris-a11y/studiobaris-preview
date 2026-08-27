@@ -59,23 +59,29 @@ export default async function AkkoordPage({ params, searchParams }) {
   // werd afgedrukt als "null".
   const inTermijnen = aanbExcl > 0 && restExcl > 0;
   const isPreciesDeHelft = inTermijnen && Math.abs(aanbExcl - restExcl) < 0.01;
+
+  // Wat er nú wordt afgeschreven: het websitedeel én de eerste maand. Het
+  // abonnement start pas een maand later, dus zonder die eerste maand hier zou
+  // die maand nooit in rekening worden gebracht. Dit bedrag moet exact gelijk
+  // zijn aan wat /api/mollie/start bij Mollie neerlegt.
+  const nuExcl = Math.round((aanbExcl + maandExcl) * 100) / 100;
+  const nuInclStr = euro(inclBtw(nuExcl));
   const aanbLabel = !inTermijnen
     ? "Je betaalt nu"
     : isPreciesDeHelft
-      ? "Je betaalt nu (de helft)"
-      : "Je betaalt nu (eerste termijn)";
+      ? "Je betaalt nu (eerste helft + eerste maand)"
+      : "Je betaalt nu (eerste termijn + eerste maand)";
 
   const incassoZin =
-    "Met deze betaling geef je meteen de automatische incasso af voor het maandbedrag, dat vanaf volgende maand wordt afgeschreven.";
+    "Met deze betaling geef je meteen de automatische incasso af. De eerste maand zit er al in; vanaf de maand daarna wordt het maandbedrag automatisch afgeschreven.";
 
   let uitlegZin;
   if (inTermijnen) {
-    uitlegZin = `Je betaalt nu ${aanbInclStr} incl. btw${isPreciesDeHelft ? ": de helft van je website" : " als eerste termijn"}. Het resterende bedrag (${restInclStr} incl. btw) betaal je pas als je site live staat. ${incassoZin}`;
+    uitlegZin = `Je betaalt nu ${nuInclStr} incl. btw: ${aanbInclStr} voor ${isPreciesDeHelft ? "de eerste helft van je website" : "de eerste termijn van je website"} plus ${maandInclStr} voor de eerste maand. Het resterende bedrag (${restInclStr} incl. btw) betaal je pas als je site live staat. ${incassoZin}`;
   } else if (aanbInclStr) {
-    uitlegZin = `Je betaalt nu ${aanbInclStr} incl. btw in één keer. ${incassoZin}`;
+    uitlegZin = `Je betaalt nu ${nuInclStr} incl. btw: ${aanbInclStr} voor je website plus ${maandInclStr} voor de eerste maand. ${incassoZin}`;
   } else {
-    uitlegZin =
-      "Je betaalt zo eenmalig de eerste maand (incl. btw); daarmee geef je meteen de machtiging af. Daarna wordt het bedrag elke maand automatisch afgeschreven.";
+    uitlegZin = `Je betaalt nu ${nuInclStr} incl. btw voor de eerste maand; daarmee geef je meteen de machtiging af. Daarna wordt dat bedrag elke maand automatisch afgeschreven.`;
   }
 
   // Al actief: machtiging gelukt.
@@ -150,13 +156,20 @@ export default async function AkkoordPage({ params, searchParams }) {
               </div>
             )}
 
-            {aanbInclStr && (
+            {nuExcl > 0 && (
               <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start", background: "#fff7ed", border: "1px solid #fcd9a8", borderRadius: 10, padding: "12px 14px" }}>
-                <span style={{ color: "#7c4a03", fontWeight: 700 }}>{aanbLabel}</span>
+                <span style={{ color: "#7c4a03", fontWeight: 700 }}>
+                  {aanbLabel}
+                  {aanbInclStr && (
+                    <span style={{ display: "block", fontSize: 12, fontWeight: 400, color: "#a35400", marginTop: 2 }}>
+                      {aanbInclStr} website + {maandInclStr} eerste maand
+                    </span>
+                  )}
+                </span>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ fontSize: 22, color: "#7c4a03" }}>{aanbInclStr}</strong>
+                  <strong style={{ fontSize: 22, color: "#7c4a03" }}>{nuInclStr}</strong>
                   <div style={{ fontSize: 12, color: "#a35400" }}>incl. btw</div>
-                  <div style={{ ...subStyle, color: "#a35400" }}>{btwSub(aanbExcl)}</div>
+                  <div style={{ ...subStyle, color: "#a35400" }}>{btwSub(nuExcl)}</div>
                 </div>
               </div>
             )}
