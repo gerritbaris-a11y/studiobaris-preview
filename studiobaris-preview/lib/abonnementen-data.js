@@ -118,3 +118,15 @@ export async function getFacturenTeMaken(incassodatum) {
 export async function setFactuurStatus(nummer, status) {
   return await stil(() => rpc("sb_factuur_status", { p_nummer: nummer, p_status: status }), null);
 }
+
+// Alle facturen van alle klanten samen, voor de facturen-overzichtpagina.
+export async function getFacturenOverzicht() {
+  const data = await stil(() => rpc("sb_facturen_overzicht", {}), []);
+  return Array.isArray(data) ? data : [];
+}
+
+// Klantenlijst om een nieuwe (handmatige) factuur voor te maken.
+export async function getKlantenVoorFactuur() {
+  const data = await stil(() => rpc("sb_klanten_voor_factuur", {}), []);
+  return Array.isArray(data) ? data : [];
+}
