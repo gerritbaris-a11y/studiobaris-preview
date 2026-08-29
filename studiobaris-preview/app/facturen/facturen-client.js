@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { Knop, Chip } from "../werkplek-shell";
@@ -61,10 +61,31 @@ export default function FacturenClient({ facturen, klanten }) {
   const [statusFilter, setStatusFilter] = useState("alle");
   const [modalOpen, setModalOpen] = useState(false);
   const [versturenBezig, setVersturenBezig] = useState(null);
+  const [klantFilter, setKlantFilter] = useState(null); // { slug, klant } — komt uit ?klant= op de URL
+
+  // Vanuit "Mijn klanten" kom je hier met ?klant=<slug> binnen, zodat je bij
+  // duizenden facturen niet hoeft te scrollen om die van één klant te vinden.
+  // De nummering zelf blijft gewoon doorlopen over alle klanten heen — dit is
+  // puur een weergavefilter, geen aparte telling.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("klant");
+    if (!slug) return;
+    const gevonden = klanten.find((k) => k.slug === slug);
+    setKlantFilter({ slug, klant: gevonden ? gevonden.klant : slug });
+  }, [klanten]);
+
+  function wisKlantFilter() {
+    setKlantFilter(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("klant");
+    window.history.replaceState({}, "", url.toString());
+  }
 
   const gefilterd = useMemo(() => {
     const q = zoek.trim().toLowerCase();
     return facturen.filter((f) => {
+      if (klantFilter && f.slug !== klantFilter.slug) return false;
       if (statusFilter !== "alle" && f.status !== statusFilter) return false;
       if (!q) return true;
       return (
@@ -73,7 +94,7 @@ export default function FacturenClient({ facturen, klanten }) {
         String(f.contactpersoon || "").toLowerCase().includes(q)
       );
     });
-  }, [facturen, zoek, statusFilter]);
+  }, [facturen, zoek, statusFilter, klantFilter]);
 
   async function versturen(nummer) {
     setVersturenBezig(nummer);
@@ -94,6 +115,17 @@ export default function FacturenClient({ facturen, klanten }) {
 
   return (
     <div>
+      {klantFilter && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <Chip kleur="klei">Gefilterd op: {klantFilter.klant}</Chip>
+          <button
+            onClick={wisKlantFilter}
+            style={{ background: "none", border: "none", color: KLEUR.label, fontSize: 12.5, cursor: "pointer", textDecoration: "underline", fontFamily: "inherit", padding: 0 }}
+          >
+            Alle facturen tonen
+          </button>
+        </div>
+      )}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
         <input
           style={{ ...veldStijl, flex: "1 1 220px" }}

@@ -211,6 +211,12 @@ export default async function KlantenPage() {
                   >
                     {r.maandbedrag ? `€ ${Number(r.maandbedrag).toFixed(2).replace(".", ",")} p/m` : "Nog geen maandbedrag"} — regel het bij Abonnementen →
                   </a>
+                  <a
+                    href={`/facturen?klant=${encodeURIComponent(r.slug)}`}
+                    style={{ fontSize: 13, color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}
+                  >
+                    Facturen bekijken →
+                  </a>
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
