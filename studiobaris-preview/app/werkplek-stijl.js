@@ -49,6 +49,8 @@ export const NAV = [
   { href: "/kosten", label: "Kosten", beheer: true },
   { href: "/restbetalingen", label: "Restbetalingen", beheer: true },
   { href: "/facturen", label: "Facturen", beheer: true },
+  { href: "/offertes", label: "Offertes", beheer: true },
+  { href: "/btw-aangifte", label: "Omzet & btw", beheer: true },
   { href: "/abonnementen", label: "Abonnementen", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];

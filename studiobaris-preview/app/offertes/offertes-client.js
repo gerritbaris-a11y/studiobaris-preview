@@ -1,34 +1,37 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { Knop, Chip } from "../werkplek-shell";
 
-// Het echte sjabloon in Drive — hier vul je zelf de klantgegevens, regels en
-// het (hieronder getoonde) volgende nummer in, en exporteer je 'm zelf als
-// PDF. Dit dashboard genereert voor deze facturen dus bewust geen PDF meer.
+// Zelfde sjabloonbestand als bij facturen — het tabblad "Offerte" daarin.
 const SJABLOON_URL = "https://drive.google.com/file/d/1vDjsQMx_-OY3svc2hJIQx9vJFXy7S2xB/view";
-
-const SOORT_LABEL = {
-  eenmalig: "Eenmalig",
-  aanbetaling: "Aanbetaling",
-  slottermijn: "Slottermijn",
-  maandelijks: "Maandelijks",
-};
 
 const STATUS_CHIP = {
   concept: "grijs",
   verstuurd: "amber",
-  betaald: "sage",
-  mislukt: "rust",
+  akkoord: "sage",
+  afgewezen: "rust",
+  verlopen: "rust",
 };
 
 const STATUS_LABEL = {
   concept: "Concept",
   verstuurd: "Verstuurd",
-  betaald: "Betaald",
-  mislukt: "Mislukt",
+  akkoord: "Akkoord",
+  afgewezen: "Afgewezen",
+  verlopen: "Verlopen",
+};
+
+// Vanuit welke status je waarheen mag: concept → verstuurd → akkoord/afgewezen.
+// Verlopen kan vanuit verstuurd, als de klant niet op tijd reageert.
+const VOLGENDE_STATUS = {
+  concept: ["verstuurd"],
+  verstuurd: ["akkoord", "afgewezen", "verlopen"],
+  akkoord: [],
+  afgewezen: [],
+  verlopen: [],
 };
 
 function euro(v) {
@@ -46,9 +49,6 @@ function datumNL(d) {
   if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
-function vandaag() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14 };
 const th = {
@@ -63,86 +63,54 @@ const veldStijl = {
 };
 const labelStijl = { fontSize: 12.5, fontWeight: 700, color: KLEUR.gedempt, display: "block", marginBottom: 5 };
 
-export default function FacturenClient({ facturen, klanten, volgendNummer }) {
+export default function OffertesClient({ offertes, klanten, volgendNummer }) {
   const router = useRouter();
   const [zoek, setZoek] = useState("");
   const [statusFilter, setStatusFilter] = useState("alle");
   const [modalOpen, setModalOpen] = useState(false);
-  const [versturenBezig, setVersturenBezig] = useState(null);
-  const [klantFilter, setKlantFilter] = useState(null); // { slug, klant } — komt uit ?klant= op de URL
-
-  // Vanuit "Mijn klanten" kom je hier met ?klant=<slug> binnen, zodat je bij
-  // duizenden facturen niet hoeft te scrollen om die van één klant te vinden.
-  // De nummering zelf blijft gewoon doorlopen over alle klanten heen — dit is
-  // puur een weergavefilter, geen aparte telling.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const slug = params.get("klant");
-    if (!slug) return;
-    const gevonden = klanten.find((k) => k.slug === slug);
-    setKlantFilter({ slug, klant: gevonden ? gevonden.klant : slug });
-  }, [klanten]);
-
-  function wisKlantFilter() {
-    setKlantFilter(null);
-    const url = new URL(window.location.href);
-    url.searchParams.delete("klant");
-    window.history.replaceState({}, "", url.toString());
-  }
+  const [bezigMet, setBezigMet] = useState(null);
 
   const gefilterd = useMemo(() => {
     const q = zoek.trim().toLowerCase();
-    return facturen.filter((f) => {
-      if (klantFilter && f.slug !== klantFilter.slug) return false;
-      if (statusFilter !== "alle" && f.status !== statusFilter) return false;
+    return offertes.filter((o) => {
+      if (statusFilter !== "alle" && o.status !== statusFilter) return false;
       if (!q) return true;
       return (
-        String(f.nummer || "").toLowerCase().includes(q) ||
-        String(f.klant || "").toLowerCase().includes(q) ||
-        String(f.contactpersoon || "").toLowerCase().includes(q)
+        String(o.nummer || "").toLowerCase().includes(q) ||
+        String(o.klant || "").toLowerCase().includes(q) ||
+        String(o.contactpersoon || "").toLowerCase().includes(q)
       );
     });
-  }, [facturen, zoek, statusFilter, klantFilter]);
+  }, [offertes, zoek, statusFilter]);
 
-  async function versturen(nummer) {
-    setVersturenBezig(nummer);
+  async function statusWijzigen(nummer, status) {
+    setBezigMet(nummer);
     try {
-      const res = await fetch("/api/facturen/opnieuw", {
+      const res = await fetch("/api/offertes/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nummer }),
+        body: JSON.stringify({ nummer, status }),
       });
       const d = await res.json();
-      if (!d.ok) throw new Error(d.error || "Versturen mislukte.");
+      if (!d.ok) throw new Error(d.error || "Bijwerken mislukte.");
       router.refresh();
     } catch (e) {
       alert(String(e.message || e));
     }
-    setVersturenBezig(null);
+    setBezigMet(null);
   }
 
   return (
     <div>
-      {klantFilter && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <Chip kleur="klei">Gefilterd op: {klantFilter.klant}</Chip>
-          <button
-            onClick={wisKlantFilter}
-            style={{ background: "none", border: "none", color: KLEUR.label, fontSize: 12.5, cursor: "pointer", textDecoration: "underline", fontFamily: "inherit", padding: 0 }}
-          >
-            Alle facturen tonen
-          </button>
-        </div>
-      )}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
         <input
           style={{ ...veldStijl, flex: "1 1 220px" }}
-          placeholder="Zoek op klant of factuurnummer…"
+          placeholder="Zoek op klant of offertenummer…"
           value={zoek}
           onChange={(e) => setZoek(e.target.value)}
         />
-        <div style={{ display: "flex", gap: 6 }}>
-          {["alle", "concept", "verstuurd", "betaald", "mislukt"].map((s) => (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {["alle", "concept", "verstuurd", "akkoord", "afgewezen", "verlopen"].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -158,7 +126,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
           ))}
         </div>
         <div style={{ marginLeft: "auto" }}>
-          <Knop kind="primair" onClick={() => setModalOpen(true)}>+ Nieuwe factuur</Knop>
+          <Knop kind="primair" onClick={() => setModalOpen(true)}>+ Nieuwe offerte</Knop>
         </div>
       </div>
 
@@ -168,8 +136,8 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
             <tr>
               <th style={th}>Nr</th>
               <th style={th}>Klant</th>
-              <th style={th}>Omschrijving</th>
               <th style={th}>Datum</th>
+              <th style={th}>Geldig tot</th>
               <th style={th}>Bedrag</th>
               <th style={th}>Status</th>
               <th style={th}></th>
@@ -179,64 +147,53 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
             {gefilterd.length === 0 && (
               <tr>
                 <td style={{ ...td, borderBottom: "none", color: KLEUR.label }} colSpan={7}>
-                  {facturen.length === 0
-                    ? "Nog geen facturen — maak de eerste met “+ Nieuwe factuur”."
-                    : "Geen facturen die aan dit filter voldoen."}
+                  {offertes.length === 0
+                    ? "Nog geen offertes — maak de eerste met “+ Nieuwe offerte”."
+                    : "Geen offertes die aan dit filter voldoen."}
                 </td>
               </tr>
             )}
-            {gefilterd.map((f) => (
-              <tr key={f.nummer}>
-                <td style={{ ...td, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{f.nummer}</td>
+            {gefilterd.map((o) => (
+              <tr key={o.nummer}>
+                <td style={{ ...td, fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{o.nummer}</td>
                 <td style={td}>
-                  <div style={{ fontWeight: 700 }}>{f.klant}</div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    {f.contactpersoon && (
-                      <span style={{ color: KLEUR.label, fontSize: 12.5 }}>{f.contactpersoon}</span>
+                  <div style={{ fontWeight: 700 }}>{o.klant}</div>
+                  {o.contactpersoon && (
+                    <span style={{ color: KLEUR.label, fontSize: 12.5 }}>{o.contactpersoon}</span>
+                  )}
+                </td>
+                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(o.offertedatum)}</td>
+                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(o.geldig_tot)}</td>
+                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{euro(o.bedrag_incl)}</td>
+                <td style={td}>
+                  <Chip kleur={STATUS_CHIP[o.status] || "grijs"}>{STATUS_LABEL[o.status] || o.status}</Chip>
+                </td>
+                <td style={td}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    {o.pdf_url && (
+                      <a
+                        href={`/api/offertes/bestand?nummer=${encodeURIComponent(o.nummer)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ fontSize: 12.5, fontWeight: 700, color: KLEUR.klei, textDecoration: "none", whiteSpace: "nowrap" }}
+                      >
+                        PDF ↓
+                      </a>
                     )}
-                    {f.klant_gratis && <Chip kleur="sage">Gratis / promotie</Chip>}
-                  </div>
-                </td>
-                <td style={td}>
-                  {SOORT_LABEL[f.soort] || f.soort}
-                  {f.periode && <div style={{ color: KLEUR.label, fontSize: 12.5 }}>{f.periode}</div>}
-                </td>
-                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(f.factuurdatum)}</td>
-                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{euro(f.bedrag_incl)}</td>
-                <td style={td}>
-                  <Chip kleur={STATUS_CHIP[f.status] || "grijs"}>{STATUS_LABEL[f.status] || f.status}</Chip>
-                </td>
-                <td style={td}>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <a
-                      href={
-                        f.pdf_url
-                          ? `/api/facturen/bestand?nummer=${encodeURIComponent(f.nummer)}`
-                          : `/api/facturen/pdf?nummer=${encodeURIComponent(f.nummer)}`
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: 12.5, fontWeight: 700, color: KLEUR.klei, textDecoration: "none", whiteSpace: "nowrap" }}
-                    >
-                      PDF ↓
-                    </a>
-                    {!f.pdf_url && (
+                    {(VOLGENDE_STATUS[o.status] || []).map((s) => (
                       <button
-                        onClick={() => versturen(f.nummer)}
-                        disabled={versturenBezig === f.nummer}
+                        key={s}
+                        onClick={() => statusWijzigen(o.nummer, s)}
+                        disabled={bezigMet === o.nummer}
                         style={{
                           background: "none", border: "none", padding: 0, cursor: "pointer",
                           fontSize: 12.5, fontWeight: 700, color: KLEUR.label, whiteSpace: "nowrap",
                           fontFamily: "inherit",
                         }}
                       >
-                        {versturenBezig === f.nummer
-                          ? "Bezig…"
-                          : f.status === "concept"
-                          ? "Versturen"
-                          : "Opnieuw versturen"}
+                        {bezigMet === o.nummer ? "Bezig…" : `Markeer ${STATUS_LABEL[s].toLowerCase()}`}
                       </button>
-                    )}
+                    ))}
                   </div>
                 </td>
               </tr>
@@ -246,7 +203,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
       </div>
 
       {modalOpen && (
-        <LogFactuurModal
+        <LogOfferteModal
           klanten={klanten}
           volgendNummer={volgendNummer}
           onSluiten={() => setModalOpen(false)}
@@ -260,16 +217,14 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
   );
 }
 
-// Voor eenmalige/aanbetaling/slottermijn-facturen die je zelf aanmaakt: geen
-// regel-voor-regel formulier meer — jij vult het echte sjabloon in Drive in
+// Zelfde aanpak als bij facturen: jij vult het offerte-sjabloon zelf in
 // (met het hier getoonde volgende nummer) en exporteert 'm zelf als PDF.
-// Hier log je 'm daarna: klant, bedrag, datum, status + de PDF erbij.
-function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
+// Hier log je 'm daarna.
+function LogOfferteModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
   const [slug, setSlug] = useState(klanten[0] ? klanten[0].slug : "");
-  const [soort, setSoort] = useState("eenmalig");
   const [omschrijving, setOmschrijving] = useState("");
   const [bedragExcl, setBedragExcl] = useState("");
-  const [factuurdatum, setFactuurdatum] = useState(vandaag());
+  const [geldigDagen, setGeldigDagen] = useState("30");
   const [status, setStatus] = useState("verstuurd");
   const [bestand, setBestand] = useState(null);
   const [bezig, setBezig] = useState(false);
@@ -289,14 +244,13 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
     try {
       const form = new FormData();
       form.set("slug", slug);
-      form.set("soort", soort);
       form.set("omschrijving", omschrijving.trim());
       form.set("bedragExcl", String(getal(bedragExcl)));
-      form.set("factuurdatum", factuurdatum);
+      form.set("geldigDagen", String(getal(geldigDagen) || 30));
       form.set("status", status);
       form.set("bestand", bestand);
 
-      const res = await fetch("/api/facturen/loggen", { method: "POST", body: form });
+      const res = await fetch("/api/offertes/loggen", { method: "POST", body: form });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Opslaan mislukte.");
       onOpgeslagen();
@@ -320,7 +274,7 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ background: KLEUR.klei, color: "#fff", padding: "16px 20px", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>
-          Nieuwe factuur
+          Nieuwe offerte
         </div>
         <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -332,8 +286,7 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
               Open sjabloon in Drive →
             </a>
             <div style={{ color: KLEUR.label, fontSize: 12.5 }}>
-              Vul het sjabloon zelf helemaal in en exporteer 'm als PDF (Bestand → Downloaden → PDF).
-              Log 'm daarna hieronder.
+              Vul het tabblad "Offerte" zelf helemaal in en exporteer 'm als PDF. Log 'm daarna hieronder.
             </div>
           </div>
 
@@ -346,27 +299,11 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
             </select>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <span style={labelStijl}>Type</span>
-              <select style={veldStijl} value={soort} onChange={(e) => setSoort(e.target.value)}>
-                <option value="eenmalig">Eenmalig</option>
-                <option value="aanbetaling">Aanbetaling</option>
-                <option value="slottermijn">Slottermijn</option>
-                <option value="maandelijks">Maandelijks</option>
-              </select>
-            </div>
-            <div>
-              <span style={labelStijl}>Factuurdatum</span>
-              <input type="date" style={veldStijl} value={factuurdatum} onChange={(e) => setFactuurdatum(e.target.value)} />
-            </div>
-          </div>
-
           <div>
             <span style={labelStijl}>Omschrijving</span>
             <input
               style={veldStijl}
-              placeholder="Bijv. Bouw — website + app instellen"
+              placeholder="Bijv. Eenmalige bouw — website + app instellen"
               value={omschrijving}
               onChange={(e) => setOmschrijving(e.target.value)}
             />
@@ -378,13 +315,17 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
               <input style={veldStijl} inputMode="decimal" value={bedragExcl} onChange={(e) => setBedragExcl(e.target.value)} />
             </div>
             <div>
-              <span style={labelStijl}>Status</span>
-              <select style={veldStijl} value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="verstuurd">Verstuurd</option>
-                <option value="betaald">Betaald</option>
-                <option value="concept">Concept</option>
-              </select>
+              <span style={labelStijl}>Geldig (dagen)</span>
+              <input style={veldStijl} inputMode="numeric" value={geldigDagen} onChange={(e) => setGeldigDagen(e.target.value)} />
             </div>
+          </div>
+
+          <div>
+            <span style={labelStijl}>Status</span>
+            <select style={veldStijl} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="verstuurd">Verstuurd</option>
+              <option value="concept">Concept</option>
+            </select>
           </div>
 
           <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5 }}>

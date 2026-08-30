@@ -130,3 +130,69 @@ export async function getKlantenVoorFactuur() {
   const data = await stil(() => rpc("sb_klanten_voor_factuur", {}), []);
   return Array.isArray(data) ? data : [];
 }
+
+// ── Offertes ────────────────────────────────────────────────────────────────
+// Volledig los van de facturatie: eigen tabel, eigen nummering. Regels zijn
+// hier [{omschrijving, aantal, bedrag_per_stuk}] — een offerte kent (anders
+// dan een factuur) een echt aantal, bijv. "10 uur × € 65".
+export async function maakOfferte({ slug, regels, geldigDagen = 30, intro = null, status = "concept", pdfPad = null }) {
+  return await rpc("sb_offerte_maak", {
+    p_slug: slug,
+    p_regels: regels,
+    p_geldig_dagen: geldigDagen,
+    p_intro: intro,
+    p_status: status,
+    p_pdf_pad: pdfPad,
+  });
+}
+
+export async function getVolgendOffertenummer() {
+  return await stil(() => rpc("sb_volgend_offertenummer_preview", {}), null);
+}
+
+// ── Handmatig loggen ──────────────────────────────────────────────────────
+// Voor facturen die je zelf in het echte sjabloon (Drive) invult en als PDF
+// exporteert: geen regels-formulier meer, gewoon één bedrag + de PDF erbij.
+// Loopt via dezelfde sb_factuur_backfill-functie als historische facturen —
+// het enige verschil is de datum (meestal vandaag) en dat er nu een eigen
+// PDF bij zit in plaats van een gegenereerde.
+export async function logFactuur({
+  slug, soort, omschrijving, bedragExcl, factuurdatum, status = "verstuurd", pdfPad = null,
+}) {
+  return await rpc("sb_factuur_backfill", {
+    p_slug: slug,
+    p_soort: soort,
+    p_regels: [{ omschrijving, bedrag_excl: bedragExcl }],
+    p_factuurdatum: factuurdatum,
+    p_status: status,
+    p_pdf_pad: pdfPad,
+  });
+}
+
+export async function getVolgendFactuurnummer() {
+  return await stil(() => rpc("sb_volgend_factuurnummer_preview", {}), null);
+}
+
+export async function getOfferte(nummer) {
+  return await stil(() => rpc("sb_offerte", { p_nummer: nummer }), null);
+}
+
+export async function getOffertesOverzicht() {
+  const data = await stil(() => rpc("sb_offertes_overzicht", {}), []);
+  return Array.isArray(data) ? data : [];
+}
+
+export async function setOfferteStatus(nummer, status) {
+  return await rpc("sb_offerte_status", { p_nummer: nummer, p_status: status });
+}
+
+// ── Omzet & btw ──────────────────────────────────────────────────────────────
+// Per kwartaal, gebaseerd op factuurdatum — zelfde logica als het
+// 'Overzicht & btw-aangifte'-tabblad in StudioBaris_Administratie.xlsx.
+export async function getOmzetOverzicht(jaar) {
+  return await stil(() => rpc("sb_omzet_overzicht", { p_jaar: jaar || null }), {
+    jaar: jaar || new Date().getFullYear(),
+    kwartalen: [1, 2, 3, 4].map((k) => ({ kwartaal: k, omzet_excl: 0, btw: 0, omzet_incl: 0 })),
+    jaartotaal_excl: 0, jaartotaal_btw: 0, jaartotaal_incl: 0, nog_te_ontvangen: 0,
+  });
+}

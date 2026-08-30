@@ -1,4 +1,4 @@
-import { getFacturenOverzicht, getKlantenVoorFactuur } from "../../lib/abonnementen-data";
+import { getFacturenOverzicht, getKlantenVoorFactuur, getVolgendFactuurnummer } from "../../lib/abonnementen-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import FacturenClient from "./facturen-client";
@@ -15,9 +15,10 @@ export default async function FacturenPage() {
   const naam = sessie && sessie.naam ? sessie.naam : "collega";
   const beheer = isBeheer(sessie);
 
-  const [facturen, klanten] = await Promise.all([
+  const [facturen, klanten, volgendNummer] = await Promise.all([
     getFacturenOverzicht(),
     getKlantenVoorFactuur(),
+    getVolgendFactuurnummer(),
   ]);
 
   return (
@@ -28,7 +29,7 @@ export default async function FacturenPage() {
       titel="Facturen"
       sub="Alle uitgaande facturen — automatisch gemaakt of handmatig toegevoegd."
     >
-      <FacturenClient facturen={facturen} klanten={klanten} />
+      <FacturenClient facturen={facturen} klanten={klanten} volgendNummer={volgendNummer} />
     </WerkplekShell>
   );
 }
