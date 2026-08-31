@@ -28,11 +28,14 @@ export async function POST(req) {
       ? body.diensten.map((d) => String(d).trim()).filter(Boolean)
       : [];
 
+    const pakketType = ["vol", "plugin"].includes(body.pakketType) ? body.pakketType : null;
+
     const slug = await maakAkkoord({
       companyName,
       email: body.email ? String(body.email).trim() : null,
       phone: body.phone ? String(body.phone).trim() : null,
       pakket: body.pakket ? String(body.pakket).trim() : null,
+      pakketType,
       maandbedrag,
       aanbetaling,
       diensten,

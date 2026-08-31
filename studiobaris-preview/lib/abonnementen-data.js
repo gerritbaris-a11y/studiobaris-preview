@@ -196,3 +196,35 @@ export async function getOmzetOverzicht(jaar) {
     jaartotaal_excl: 0, jaartotaal_btw: 0, jaartotaal_incl: 0, nog_te_ontvangen: 0,
   });
 }
+
+// ── Marges (Financieel) ─────────────────────────────────────────────────────
+// Instelbare tarieven: worden bewaard in de database, niet in de code, zodat
+// een prijswijziging meteen overal doorrekent zonder nieuwe deploy.
+const STANDAARD_INSTELLINGEN = {
+  website_eenmalig: 599, maandbedrag_vol: 29.95, maandbedrag_plugin: 12.95,
+  kostprijs_hosting: 3.0, kostprijs_domein: 0.92, kostprijs_plugin_vast: 0,
+  updated_at: null, updated_door: null,
+};
+
+export async function getFinancieleInstellingen() {
+  return await stil(() => rpc("sb_financiele_instellingen", {}), STANDAARD_INSTELLINGEN);
+}
+
+export async function setFinancieleInstellingen(velden, door) {
+  return await rpc("sb_financiele_instellingen_bijwerken", {
+    p_website_eenmalig: velden.websiteEenmalig,
+    p_maandbedrag_vol: velden.maandbedragVol,
+    p_maandbedrag_plugin: velden.maandbedragPlugin,
+    p_kostprijs_hosting: velden.kostprijsHosting,
+    p_kostprijs_domein: velden.kostprijsDomein,
+    p_kostprijs_plugin_vast: velden.kostprijsPluginVast,
+    p_door: door || null,
+  });
+}
+
+// Live margeoverzicht: per daadwerkelijk betalende klant + geaggregeerd per pakketsoort.
+export async function getMarges() {
+  return await stil(() => rpc("sb_marges", {}), {
+    instellingen: STANDAARD_INSTELLINGEN, klanten: [], per_pakket: [],
+  });
+}

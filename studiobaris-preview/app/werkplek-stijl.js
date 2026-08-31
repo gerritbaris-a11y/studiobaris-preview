@@ -44,13 +44,26 @@ export const NAV = [
   { href: "/leads", label: "Leads" },
   { href: "/klanten", label: "Mijn klanten" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
+  { href: "/bord", label: "Bord", beheer: true },
   { href: "/storingen", label: "Storingen", beheer: true },
   { href: "/vragen", label: "Vragen", beheer: true },
-  { href: "/kosten", label: "Kosten", beheer: true },
   { href: "/restbetalingen", label: "Restbetalingen", beheer: true },
-  { href: "/facturen", label: "Facturen", beheer: true },
-  { href: "/offertes", label: "Offertes", beheer: true },
-  { href: "/btw-aangifte", label: "Omzet & btw", beheer: true },
   { href: "/abonnementen", label: "Abonnementen", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
+];
+
+// Financiële schermen, gegroepeerd onder één "Financieel"-knop in de navigatie
+// (i.p.v. losse tabbladen) — scheelt drukte naarmate hier meer bij komt.
+export const NAV_GROEPEN = [
+  {
+    label: "Financieel",
+    beheer: true,
+    items: [
+      { href: "/facturen", label: "Facturen" },
+      { href: "/offertes", label: "Offertes" },
+      { href: "/btw-aangifte", label: "Omzet & btw" },
+      { href: "/marges", label: "Marges" },
+      { href: "/kosten", label: "Kosten & resultaat" },
+    ],
+  },
 ];

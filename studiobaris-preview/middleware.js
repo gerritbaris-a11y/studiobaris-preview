@@ -51,12 +51,12 @@ async function verify(token) {
 }
 
 // Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /leads.
-const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen", "/facturen", "/offertes", "/btw-aangifte"];
+const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/bord", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen", "/facturen", "/offertes", "/btw-aangifte", "/marges"];
 
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
 // beheer-rol; de rest een geldige sessie (zodat verkopers blijven werken).
-const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand"];
+const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand", "/api/financieel/instellingen", "/api/taken/aanmaken", "/api/taken/bijwerken", "/api/taken/verplaatsen", "/api/taken/verwijderen"];
 const API_INGELOGD = ["/api/klant/update", "/api/klant/gegevens", "/api/klant/verkoopbedrag", "/api/publish", "/api/publish-site"];
 
 function raakt(path, lijst) {
@@ -106,6 +106,7 @@ export const config = {
     "/klanten/:path*",
     "/vergelijk/:path*",
     "/overzicht/:path*",
+    "/bord/:path*",
     "/vragen/:path*",
     "/kosten/:path*",
     "/restbetalingen/:path*",
@@ -113,6 +114,7 @@ export const config = {
     "/facturen/:path*",
     "/offertes/:path*",
     "/btw-aangifte/:path*",
+    "/marges/:path*",
     "/storingen/:path*",
     "/beheer/:path*",
     "/nieuw-akkoord/:path*",
@@ -133,6 +135,11 @@ export const config = {
     "/api/offertes/status",
     "/api/offertes/loggen",
     "/api/offertes/bestand",
+    "/api/financieel/instellingen",
+    "/api/taken/aanmaken",
+    "/api/taken/bijwerken",
+    "/api/taken/verplaatsen",
+    "/api/taken/verwijderen",
     "/api/publish",
     "/api/publish-site",
   ],

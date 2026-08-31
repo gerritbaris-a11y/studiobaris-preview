@@ -337,6 +337,7 @@ export async function maakAkkoord({
   email = null,
   phone = null,
   pakket = null,
+  pakketType = null,
   maandbedrag = null,
   aanbetaling = null,
   diensten = [],
@@ -351,6 +352,7 @@ export async function maakAkkoord({
     p_verzamelaar: verzamelaar,
     p_email: email,
     p_phone: phone,
+    p_pakket_type: pakketType,
   });
 }
 

@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from "react";
 
-// Pakketten (maandbedrag). Pas hier de bedragen aan als de prijzen wijzigen.
+// Pakketten (maandbedrag). Dit zijn de daadwerkelijk aangeboden pakketten —
+// de exacte bedragen staan (bewerkbaar) bij Financieel > Marges; hier alleen
+// de twee soorten die we verkopen. "type" is de machine-leesbare pakketsoort
+// die het margeoverzicht gebruikt om te groeperen.
 const PAKKETTEN = [
-  { label: "Met hosting", omschrijving: "app + hosting + domeinnaam", bedrag: 29.95 },
-  { label: "Alleen app", omschrijving: "alleen de app", bedrag: 44.95 },
+  { type: "vol", label: "Volledig pakket", omschrijving: "app + hosting + domeinnaam", bedrag: 29.95 },
+  { type: "plugin", label: "Alleen de plugin", omschrijving: "klant heeft al eigen hosting/domein", bedrag: 12.95 },
 ];
 
 // Diensten die de klant kan afnemen. Pas deze lijst gerust aan.
@@ -81,6 +84,7 @@ export default function NieuwAkkoordPage() {
           email: email.trim() || null,
           phone: phone.trim() || null,
           pakket: pakket.label,
+          pakketType: pakket.type,
           maandbedrag: pakket.bedrag,
           aanbetaling: bedrag,
           diensten: gekozenDiensten,
