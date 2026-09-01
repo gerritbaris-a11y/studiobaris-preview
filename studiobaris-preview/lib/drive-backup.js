@@ -5,56 +5,43 @@
 // raken. Vandaar: altijd try/catch, nooit een fout laten doorgooien, nooit
 // iets anders blokkeren.
 //
-// Benodigde omgevingsvariabelen (Vercel → Settings → Environment Variables):
-//   GOOGLE_DRIVE_CLIENT_EMAIL      e-mailadres van de service account
-//   GOOGLE_DRIVE_PRIVATE_KEY       bijbehorende private key (met echte \n's)
-//   GOOGLE_DRIVE_BACKUP_FOLDER_ID  map-ID van de Drive-map "Backup"
+// Dit loopt via een OAuth-koppeling met het eigen Google-account (niet via
+// een "kaal" service-account) — service-accounts hebben op een gewoon
+// Gmail-account geen eigen opslagruimte en kunnen daardoor nooit bestanden
+// aanmaken, ook niet in een gedeelde map (bevestigd door Google zelf:
+// "Service Accounts do not have storage quota"). Door in plaats daarvan
+// een refresh-token van het eigen account te gebruiken, wordt elk bestand
+// aangemaakt namens dat account zelf — dat account heeft wél ruimte.
 //
-// De map zelf moet in Google Drive gedeeld zijn met dat service-account
-// e-mailadres (rol: Editor/Content manager) — zonder die deling kan de
-// service account de map niet zien, ongeacht de sleutel.
-
-import crypto from "crypto";
+// Benodigde omgevingsvariabelen (Vercel → Settings → Environment Variables):
+//   GOOGLE_DRIVE_OAUTH_CLIENT_ID       Client-ID van de OAuth-credential
+//   GOOGLE_DRIVE_OAUTH_CLIENT_SECRET   bijbehorend Client secret
+//   GOOGLE_DRIVE_REFRESH_TOKEN         eenmalig verkregen refresh token (via
+//                                      OAuth Playground) voor het eigen account
+//   GOOGLE_DRIVE_BACKUP_FOLDER_ID      map-ID van de Drive-map "Backup"
+//
+// De map staat gewoon in het eigen Drive-account — geen aparte deling nodig,
+// want er wordt niet meer via een los service-account ingelogd.
 
 let cachedToken = null; // { token, verlooptOm }
 
-function base64url(input) {
-  return Buffer.from(input)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
 async function haalToegangstoken() {
-  const clientEmail = process.env.GOOGLE_DRIVE_CLIENT_EMAIL;
-  const privateKeyRaw = process.env.GOOGLE_DRIVE_PRIVATE_KEY;
-  if (!clientEmail || !privateKeyRaw) return null;
+  const clientId = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  if (!clientId || !clientSecret || !refreshToken) return null;
 
   const nu = Math.floor(Date.now() / 1000);
   if (cachedToken && cachedToken.verlooptOm > nu + 30) return cachedToken.token;
-
-  const privateKey = privateKeyRaw.includes("\\n")
-    ? privateKeyRaw.replace(/\\n/g, "\n")
-    : privateKeyRaw;
-
-  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = base64url(JSON.stringify({
-    iss: clientEmail,
-    scope: "https://www.googleapis.com/auth/drive",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: nu,
-    exp: nu + 3600,
-  }));
-  const ondertekend = crypto.sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), privateKey);
-  const jwt = `${header}.${payload}.${base64url(ondertekend)}`;
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: clientId,
+      client_secret: clientSecret,
     }),
   });
   if (!res.ok) return null;
@@ -72,7 +59,7 @@ export async function backupNaarDrive(f, pdfBytes) {
     if (!folderId) return { ok: false, reason: "geen GOOGLE_DRIVE_BACKUP_FOLDER_ID ingesteld" };
 
     const token = await haalToegangstoken();
-    if (!token) return { ok: false, reason: "geen Drive-toegangstoken (sleutel ontbreekt of ongeldig)" };
+    if (!token) return { ok: false, reason: "geen Drive-toegangstoken (OAuth-gegevens ontbreken of ongeldig)" };
 
     const metadata = { name: `Factuur ${f.nummer}.pdf`, parents: [folderId] };
     const boundary = `studiobaris-${Date.now()}`;
