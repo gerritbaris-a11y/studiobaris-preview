@@ -8,6 +8,7 @@ import { maakTaak, getTaken } from "../../../../lib/taken-data";
 import {
   factuurPdf, mailFactuur, regelsEersteBetaling, soortEersteBetaling, OMSCHRIJVING,
 } from "../../../../lib/facturen";
+import { backupNaarDrive } from "../../../../lib/drive-backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ async function factureer(opties) {
     const pdf = await factuurPdf(factuur);
     const mail = await mailFactuur(factuur, pdf);
     if (mail.sent) await setFactuurStatus(factuur.nummer, "verstuurd");
+    backupNaarDrive(factuur, pdf).catch(() => {});
     return factuur;
   } catch {
     return null;

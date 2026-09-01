@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFactuur, setFactuurStatus } from "../../../../lib/abonnementen-data";
 import { factuurPdf, mailFactuur } from "../../../../lib/facturen";
+import { backupNaarDrive } from "../../../../lib/drive-backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: mail.reason || "Mailen mislukte." }, { status: 502 });
     }
     await setFactuurStatus(nummer, "verstuurd");
+    backupNaarDrive(factuur, pdf).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });

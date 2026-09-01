@@ -3,6 +3,7 @@ import {
   getFacturenTeMaken, maakFactuur, setFactuurStatus,
 } from "../../../../lib/abonnementen-data";
 import { factuurPdf, mailFactuur, OMSCHRIJVING } from "../../../../lib/facturen";
+import { backupNaarDrive } from "../../../../lib/drive-backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +69,7 @@ export async function GET(req) {
       const pdf = await factuurPdf(factuur);
       const mail = await mailFactuur(factuur, pdf);
       if (mail.sent) await setFactuurStatus(factuur.nummer, "verstuurd");
+      backupNaarDrive(factuur, pdf).catch(() => {});
       gedaan.push({ slug: k.slug, nummer: factuur.nummer, ok: mail.sent, reden: mail.reason || "verstuurd" });
     } catch (e) {
       gedaan.push({ slug: k.slug, ok: false, reden: String(e.message || e) });
