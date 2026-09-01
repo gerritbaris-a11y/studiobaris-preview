@@ -56,10 +56,14 @@ export async function POST(req) {
         const info = await getBetaalinfo(slug);
         const rest = Number(info && info.restbedrag) || 0;
         if (rest > 0) {
-          await factureer({
+          // Deze factuur ontstaat pas nádat Mollie de restbetaling al heeft
+          // bevestigd, dus meteen op 'betaald' — niet pas bij een latere,
+          // handmatige actie.
+          const factuur = await factureer({
             slug, soort: "slottermijn", paymentId: payment.id, vervaldagen: 7,
             regels: [{ omschrijving: OMSCHRIJVING.slottermijn, bedrag_excl: rest }],
           });
+          if (factuur && factuur.nummer) await setFactuurStatus(factuur.nummer, "betaald");
         }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         await setRest(slug, "mislukt", payment.id);
@@ -107,7 +111,10 @@ export async function POST(req) {
         const regels = regelsEersteBetaling(verse || {});
         if (regels.length > 0) {
           const soort = soortEersteBetaling(verse || {});
-          await factureer({
+          // Ook hier: het geld staat al binnen op het moment dat deze factuur
+          // ontstaat, dus meteen op 'betaald' zetten in plaats van op
+          // 'verstuurd' te laten staan tot iemand het met de hand rechtzet.
+          const factuur = await factureer({
             slug,
             soort,
             paymentId: payment.id,
@@ -117,6 +124,7 @@ export async function POST(req) {
             vervaldagen: 14,
             regels,
           });
+          if (factuur && factuur.nummer) await setFactuurStatus(factuur.nummer, "betaald");
         }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         await setBetaling(slug, { status: "mislukt" });
