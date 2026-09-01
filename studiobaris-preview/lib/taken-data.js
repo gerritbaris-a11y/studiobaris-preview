@@ -53,7 +53,7 @@ export async function getTaken() {
   return Array.isArray(data) ? data : [];
 }
 
-export async function maakTaak({ titel, omschrijving = null, toegewezenAan = null, prioriteit = "normaal", deadline = null, aangemaaktDoor = null, kolom = "te_doen" }) {
+export async function maakTaak({ titel, omschrijving = null, toegewezenAan = null, prioriteit = "normaal", deadline = null, aangemaaktDoor = null, kolom = "te_doen", klantSlug = null }) {
   return await rpc("sb_taak_aanmaken", {
     p_titel: titel,
     p_omschrijving: omschrijving,
@@ -62,6 +62,7 @@ export async function maakTaak({ titel, omschrijving = null, toegewezenAan = nul
     p_deadline: deadline,
     p_aangemaakt_door: aangemaaktDoor,
     p_kolom: kolom,
+    p_klant_slug: klantSlug,
   });
 }
 

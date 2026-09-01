@@ -154,8 +154,12 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste })
       onDragStart={(e) => { e.dataTransfer.setData("text/plain", taak.id); onSlepen(taak.id, taak.kolom); }}
       onClick={() => onKlik(taak)}
       style={{
-        background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, padding: "11px 12px",
-        marginBottom: 8, cursor: "grab", boxShadow: "0 1px 2px rgba(43,39,36,.05)",
+        background: "#fff",
+        border: `1px solid ${taak.prioriteit === "hoog" ? p.kleur : KLEUR.lijn2}`,
+        borderLeft: taak.prioriteit === "hoog" ? `4px solid ${p.kleur}` : `1px solid ${KLEUR.lijn2}`,
+        borderRadius: 10, padding: "11px 12px",
+        marginBottom: 8, cursor: "grab",
+        boxShadow: taak.prioriteit === "hoog" ? `0 1px 4px rgba(158,59,46,.18)` : "0 1px 2px rgba(43,39,36,.05)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
@@ -181,7 +185,7 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste })
         <div style={{ fontSize: 12.5, color: KLEUR.gedempt, marginBottom: 8, lineHeight: 1.4 }}>{taak.omschrijving}</div>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, color: p.kleur, background: p.bg }}>{p.label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, color: p.kleur, background: p.bg }}>{taak.prioriteit === "hoog" ? "⚠ " : ""}{p.label}</span>
         {deadline && (
           <span style={{ fontSize: 11.5, fontWeight: 700, color: deadline.kleur }}>{deadline.label}</span>
         )}

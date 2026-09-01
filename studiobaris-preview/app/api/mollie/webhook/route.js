@@ -4,6 +4,7 @@ import { mollie, eersteIncasso, inclBtw, incassodagVoor } from "../../../../lib/
 import {
   setIncassodag, maakFactuur, setFactuurStatus, getFacturenKlant,
 } from "../../../../lib/abonnementen-data";
+import { maakTaak, getTaken } from "../../../../lib/taken-data";
 import {
   factuurPdf, mailFactuur, regelsEersteBetaling, soortEersteBetaling, OMSCHRIJVING,
 } from "../../../../lib/facturen";
@@ -168,7 +169,31 @@ export async function POST(req) {
         const bestaand = (Array.isArray(lijst) ? lijst : []).find(
           (f) => f.soort === "maandelijks" && f.periode === periode && f.status !== "betaald"
         );
-        if (bestaand) await setFactuurStatus(bestaand.nummer, "mislukt");
+        if (bestaand) {
+          await setFactuurStatus(bestaand.nummer, "mislukt");
+
+          // Seintje op het Bord, met hoge urgentie — zodat een mislukte
+          // incasso niet onopgemerkt blijft. Nooit dubbel: Mollie probeert
+          // een mislukte incasso zelf nog een paar keer, en elke poging
+          // stuurt weer een webhook, dus alleen aanmaken als er nog geen
+          // openstaande taak voor déze factuur bestaat.
+          const naam = (bestaand.snapshot && bestaand.snapshot.klant && bestaand.snapshot.klant.naam) || slug;
+          const titel = `Mislukte incasso: ${naam} (${bestaand.nummer})`;
+          const taken = await getTaken();
+          const bestaatAl = (Array.isArray(taken) ? taken : []).some(
+            (t) => t.kolom !== "klaar" && t.titel === titel
+          );
+          if (!bestaatAl) {
+            await maakTaak({
+              titel,
+              omschrijving: `Automatische maandincasso is mislukt voor periode ${periode}. Controleer bij Mollie wat er aan de hand is (verlopen kaart, onvoldoende saldo, ingetrokken machtiging) en neem contact op met de klant.`,
+              prioriteit: "hoog",
+              kolom: "te_doen",
+              klantSlug: slug,
+              aangemaaktDoor: "Mollie-webhook",
+            });
+          }
+        }
       }
     }
 
