@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AfspraakForm from "./afspraak-form";
 import { Chip } from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
+import { VerwijderKnop } from "../dashboard/dashboard-actions";
 
 // Eén klant in het overzicht: de regel zelf, en daaronder — als je 'm opent —
 // alles wat je met zijn geld kunt doen. Facturen, de afspraak, opzeggen.
@@ -211,6 +212,9 @@ export default function KlantRegel({ rij, facturen, siteUrl }) {
                   </button>
                 )}
                 {melding && <span style={{ fontSize: 13, color: KLEUR.gedempt }}>{melding}</span>}
+                <span style={{ marginLeft: "auto" }}>
+                  <VerwijderKnop slug={rij.slug} naam={rij.company_name} />
+                </span>
               </div>
             </div>
           </td>
