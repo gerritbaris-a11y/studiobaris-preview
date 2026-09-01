@@ -94,7 +94,10 @@ export async function backupNaarDrive(f, pdfBytes) {
         body,
       }
     );
-    if (!res.ok) return { ok: false, reason: `Drive-upload mislukt (${res.status})` };
+    if (!res.ok) {
+      const tekst = await res.text().catch(() => "");
+      return { ok: false, reason: `Drive-upload mislukt (${res.status}): ${tekst.slice(0, 300)}` };
+    }
     const data = await res.json();
     return { ok: true, fileId: data.id };
   } catch (e) {
