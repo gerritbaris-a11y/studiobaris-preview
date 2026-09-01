@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFactuur } from "../../../../lib/abonnementen-data";
 import { factuurPdf } from "../../../../lib/facturen";
-import { backupNaarDrive, haalOfMaakBackupMap } from "../../../../lib/drive-backup";
+import { backupNaarDrive, haalOfMaakBackupMap, diagnoseToken } from "../../../../lib/drive-backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +19,11 @@ export async function GET(req) {
 
   if (new URL(req.url).searchParams.get("maak-map") === "1") {
     const resultaat = await haalOfMaakBackupMap();
+    return NextResponse.json(resultaat);
+  }
+
+  if (new URL(req.url).searchParams.get("diagnose") === "1") {
+    const resultaat = await diagnoseToken();
     return NextResponse.json(resultaat);
   }
 

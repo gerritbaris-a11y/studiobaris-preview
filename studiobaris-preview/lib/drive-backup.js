@@ -52,6 +52,44 @@ async function haalToegangstoken() {
   return data.access_token;
 }
 
+// Tijdelijke diagnosefunctie: probeert een toegangstoken op te halen en geeft
+// terug WAT Google precies terugstuurt bij een fout (statuscode + Google's
+// eigen foutcode/omschrijving) — nooit de secrets of tokens zelf. Alleen voor
+// het uitzoeken van een mislukte koppeling, daarna weer verwijderen.
+export async function diagnoseToken() {
+  const clientId = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  const aanwezig = {
+    clientId: !!clientId,
+    clientSecret: !!clientSecret,
+    refreshToken: !!refreshToken,
+    clientIdLengte: clientId ? clientId.length : 0,
+    clientSecretLengte: clientSecret ? clientSecret.length : 0,
+    refreshTokenLengte: refreshToken ? refreshToken.length : 0,
+    clientSecretVoorvoegsel: clientSecret ? clientSecret.slice(0, 7) : null,
+  };
+  if (!clientId || !clientSecret || !refreshToken) return { ok: false, aanwezig };
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  return {
+    ok: res.ok,
+    status: res.status,
+    aanwezig,
+    googleError: data ? { error: data.error, error_description: data.error_description } : null,
+  };
+}
+
 // Eenmalige hulpfunctie: met het smallere "drive.file"-scope kan de app alleen
 // bestanden/mappen zien die hij zelf heeft aangemaakt. Een map die je zelf met
 // de hand in Drive hebt gemaakt (en gedeeld) valt daar dus buiten. Deze functie
