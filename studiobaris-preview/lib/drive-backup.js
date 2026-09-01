@@ -52,6 +52,29 @@ async function haalToegangstoken() {
   return data.access_token;
 }
 
+// Eenmalige hulpfunctie: met het smallere "drive.file"-scope kan de app alleen
+// bestanden/mappen zien die hij zelf heeft aangemaakt. Een map die je zelf met
+// de hand in Drive hebt gemaakt (en gedeeld) valt daar dus buiten. Deze functie
+// maakt daarom zelf een nieuwe "Backup"-map aan zodra er nog geen
+// GOOGLE_DRIVE_BACKUP_FOLDER_ID is ingesteld, zodat de app daarna wel toegang
+// heeft. Alleen nodig bij het (opnieuw) inrichten, niet bij normaal gebruik.
+export async function haalOfMaakBackupMap() {
+  const bestaand = process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID;
+  if (bestaand) return { ok: true, folderId: bestaand, nieuw: false };
+
+  const token = await haalToegangstoken();
+  if (!token) return { ok: false, reason: "geen Drive-toegangstoken (OAuth-gegevens ontbreken of ongeldig)" };
+
+  const res = await fetch("https://www.googleapis.com/drive/v3/files", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "Backup", mimeType: "application/vnd.google-apps.folder" }),
+  });
+  if (!res.ok) return { ok: false, reason: `map aanmaken mislukt (${res.status})` };
+  const data = await res.json();
+  return { ok: true, folderId: data.id, nieuw: true };
+}
+
 // f: de factuur (voor de bestandsnaam), pdfBytes: de gegenereerde PDF.
 export async function backupNaarDrive(f, pdfBytes) {
   try {
