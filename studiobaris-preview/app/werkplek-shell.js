@@ -1,19 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { KLEUR, HEAD, BODY, FONT_LINK, NAV, NAV_GROEPEN } from "./werkplek-stijl";
 
 // Eén navigatiegroep (bijv. "Financieel") als knop met een uitklapmenu.
 // Vervangt meerdere losse tabbladen door één, zodat de balk overzichtelijk blijft.
 function NavGroep({ groep, actief }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
   const aan = groep.items.some((n) => n.href === actief);
+
+  // Uitklapmenu positioneren t.o.v. de knop en met position:fixed tonen, zodat
+  // het niet wordt afgesneden door de horizontaal scrollende navigatiebalk
+  // (overflow-x:auto op de ouder knipt anders ook de verticale overloop af).
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: r.left });
+    }
+    setOpen((v) => !v);
+  }
 
   return (
     <div style={{ position: "relative", flex: "0 0 auto" }}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         style={{
           padding: "9px 14px", borderRadius: 999, fontSize: 14,
@@ -27,10 +41,10 @@ function NavGroep({ groep, actief }) {
         {groep.label}
         <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? "▲" : "▼"}</span>
       </button>
-      {open && (
+      {open && pos && (
         <div
           style={{
-            position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 30,
+            position: "fixed", top: pos.top, left: pos.left, zIndex: 50,
             background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 12,
             boxShadow: "0 8px 24px rgba(43,39,36,.12)", padding: 6, minWidth: 180,
           }}

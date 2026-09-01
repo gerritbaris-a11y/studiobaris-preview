@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { KLEUR, redenKleur, HEAD, BODY, NAV } from "../werkplek-stijl";
+import { KLEUR, redenKleur, HEAD, BODY } from "../werkplek-stijl";
+import WerkplekShell from "../werkplek-shell";
 
 const FASES = ["Lead", "Preview", "Verstuurd", "Feedback", "Akkoord", "Betaald", "Live"];
 
@@ -106,60 +107,29 @@ export default function VandaagClient({ taken, naam, beheer }) {
   const loopt = open.filter((t) => t.lane === "loopt");
   const wacht = open.filter((t) => t.lane === "wacht");
 
-  const paginaAchtergrond = { minHeight: "100vh", background: KLEUR.papier, color: KLEUR.inkt, fontFamily: BODY };
-  const shell = { maxWidth: 1120, margin: "0 auto", padding: "24px 20px 90px" };
-
   return (
-    <div style={paginaAchtergrond}>
-      {/* Kop */}
-      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.85)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: KLEUR.klei, color: "#fff", display: "grid", placeItems: "center", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>S</div>
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 15 }}>StudioBaris</div>
-            <div style={{ fontSize: 11, color: KLEUR.label, textTransform: "uppercase", letterSpacing: 1 }}>werkplek</div>
-          </div>
-          <span style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.gedempt }}>
-            Ingelogd als <strong style={{ color: KLEUR.inkt }}>{naam}</strong>
-            {" · "}
-            <a href="/api/auth/logout" style={{ color: KLEUR.klei }}>Uitloggen</a>
-          </span>
+    <WerkplekShell
+      naam={naam}
+      beheer={beheer}
+      actief="/vandaag"
+      titel={`${dagdeelGroet()}, ${naam}`}
+      sub={open.length === 0 ? "Niets meer te doen. Mooi werk." : `${open.length} ${open.length === 1 ? "ding vraagt" : "dingen vragen"} je aandacht${nu.length ? `, waarvan ${nu.length} nú` : ""}.`}
+      rechts={
+        <div style={{ display: "inline-flex", background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, padding: 3 }}>
+          {[["A", "Werkstapel"], ["B", "Triage-bord"]].map(([v, lab]) => (
+            <button key={v} onClick={() => setVariant(v)} style={{ border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: BODY, background: variant === v ? KLEUR.inkt : "transparent", color: variant === v ? KLEUR.papier : KLEUR.gedempt }}>{lab}</button>
+          ))}
         </div>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px", display: "flex", gap: 18, overflowX: "auto" }}>
-          {NAV.filter((n) => beheer || !n.beheer).map((n) => {
-            const aan = n.href === "/vandaag";
-            return (
-              <a key={n.href} href={n.href} style={{ padding: "10px 0", fontSize: 14, fontWeight: aan ? 700 : 500, color: aan ? KLEUR.klei : "#7A7168", borderBottom: aan ? `2px solid ${KLEUR.klei}` : "2px solid transparent", whiteSpace: "nowrap" }}>{n.label}</a>
-            );
-          })}
-        </div>
-      </header>
-
-      <main style={shell}>
-        {/* Begroeting + toggle */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
-          <div>
-            <h1 style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 29 }}>{dagdeelGroet()}, {naam}</h1>
-            <p style={{ color: KLEUR.gedempt, fontSize: 15, marginTop: 4 }}>
-              {open.length === 0 ? "Niets meer te doen. Mooi werk." : `${open.length} ${open.length === 1 ? "ding vraagt" : "dingen vragen"} je aandacht${nu.length ? `, waarvan ${nu.length} nú` : ""}.`}
-            </p>
-          </div>
-          <div style={{ display: "inline-flex", background: "#fff", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, padding: 3 }}>
-            {[["A", "Werkstapel"], ["B", "Triage-bord"]].map(([v, lab]) => (
-              <button key={v} onClick={() => setVariant(v)} style={{ border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: BODY, background: variant === v ? KLEUR.inkt : "transparent", color: variant === v ? KLEUR.papier : KLEUR.gedempt }}>{lab}</button>
-            ))}
-          </div>
-        </div>
-
-        {nu.length === 0 && loopt.length === 0 && wacht.length === 0 ? (
-          <LegeStaat onReset={() => setGedaan([])} />
-        ) : variant === "A" ? (
-          <Werkstapel taken={open} nu={nu} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} />
-        ) : (
-          <Triage nu={nu} loopt={loopt} wacht={wacht} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} taken={open} />
-        )}
-      </main>
-    </div>
+      }
+    >
+      {nu.length === 0 && loopt.length === 0 && wacht.length === 0 ? (
+        <LegeStaat onReset={() => setGedaan([])} />
+      ) : variant === "A" ? (
+        <Werkstapel taken={open} nu={nu} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} />
+      ) : (
+        <Triage nu={nu} loopt={loopt} wacht={wacht} afhandelen={afhandelen} archiveer={archiveer} sleutel={sleutel} taken={open} />
+      )}
+    </WerkplekShell>
   );
 }
 
