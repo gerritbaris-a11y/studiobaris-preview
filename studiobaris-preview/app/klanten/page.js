@@ -87,7 +87,7 @@ export default async function KlantenPage() {
       naam={naam || "collega"}
       beheer={beheer}
       actief="/klanten"
-      titel={beheer ? "Alle klanten" : "Mijn klanten"}
+      titel={beheer ? "Alle previews" : "Mijn previews"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
       <DocumentenKaart beheer={beheer} model={mijnModel} />

@@ -220,7 +220,7 @@ export default function ProspectForm({
           <h1 style={{ fontSize: 30, margin: 0 }}>De preview staat klaar</h1>
           <p style={{ color: "#555", marginTop: 12, fontSize: 17, lineHeight: 1.6 }}>
             De website-opzet is gemaakt en er staat een demo-app klaar in het jasje van deze klant.
-            Je vindt hem terug bij <strong>Mijn klanten</strong>, met het verkoopbericht er kant-en-klaar naast.
+            Je vindt hem terug bij <strong>Mijn previews</strong>, met het verkoopbericht er kant-en-klaar naast.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
             <a href={"https://preview.studiobaris.nl/" + s2 + "?review=1"} target="_blank" rel="noreferrer"
@@ -229,7 +229,7 @@ export default function ProspectForm({
             </a>
             <a href="/klanten"
               style={{ background: "#FF8300", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
-              Naar Mijn klanten
+              Naar Mijn previews
             </a>
             <a href="/leads"
               style={{ background: "#fff", color: "#1A2E40", border: "1px solid #1A2E40", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>

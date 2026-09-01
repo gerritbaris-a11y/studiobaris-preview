@@ -15,7 +15,7 @@ export default async function VergelijkPagina({ params }) {
       <main style={{ maxWidth: 600, margin: "12vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center" }}>
         <h1 style={{ fontSize: 26 }}>Niet gevonden</h1>
         <p style={{ color: "#666" }}>Deze klant bestaat niet (meer).</p>
-        <p><a href="/klanten" style={{ color: "#1d6fd1" }}>Terug naar Mijn klanten</a></p>
+        <p><a href="/klanten" style={{ color: "#1d6fd1" }}>Terug naar Mijn previews</a></p>
       </main>
     );
   }
@@ -33,7 +33,7 @@ export default async function VergelijkPagina({ params }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", margin: "6px 0 4px" }}>
         <h1 style={{ fontSize: 26, margin: 0 }}>Kies de stijl voor {klant.company_name || p.slug}</h1>
-        <a href="/klanten" style={{ color: "#1d6fd1", fontSize: 14 }}>Terug naar Mijn klanten</a>
+        <a href="/klanten" style={{ color: "#1d6fd1", fontSize: 14 }}>Terug naar Mijn previews</a>
       </div>
       <p style={{ color: "#777", fontSize: 14, marginBottom: 18, maxWidth: 780, lineHeight: 1.6 }}>
         Dezelfde inhoud, drie jassen. Er wordt niets opnieuw gemaakt — je kiest alleen hoe het eruitziet.

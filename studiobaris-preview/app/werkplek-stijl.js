@@ -39,22 +39,31 @@ export const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
 export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 
 // De schermen van de werkplek. beheer=alles, verkoper=eerste drie.
+// "Mijn klanten" heet bewust "Mijn previews": dit is de verkooppijplijn van
+// vóór het tekenen (leads, previews, intake, feedback) — geen echte klanten.
+// Die staan onder de "Klanten"-groep hieronder.
 export const NAV = [
   { href: "/vandaag", label: "Vandaag" },
   { href: "/leads", label: "Leads" },
-  { href: "/klanten", label: "Mijn klanten" },
+  { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
-  { href: "/storingen", label: "Storingen", beheer: true },
-  { href: "/vragen", label: "Vragen", beheer: true },
-  { href: "/restbetalingen", label: "Restbetalingen", beheer: true },
-  { href: "/abonnementen", label: "Abonnementen", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];
 
-// Financiële schermen, gegroepeerd onder één "Financieel"-knop in de navigatie
-// (i.p.v. losse tabbladen) — scheelt drukte naarmate hier meer bij komt.
+// Schermen gegroepeerd onder één knop in de navigatie (i.p.v. losse tabbladen)
+// — scheelt drukte naarmate hier meer bij komt.
 export const NAV_GROEPEN = [
+  {
+    label: "Klanten",
+    beheer: true,
+    items: [
+      { href: "/abonnementen", label: "Abonnementen" },
+      { href: "/restbetalingen", label: "Restbetalingen" },
+      { href: "/storingen", label: "Storingen" },
+      { href: "/vragen", label: "Vragen" },
+    ],
+  },
   {
     label: "Financieel",
     beheer: true,
