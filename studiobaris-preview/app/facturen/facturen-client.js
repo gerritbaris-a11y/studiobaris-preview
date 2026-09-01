@@ -69,6 +69,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
   const [statusFilter, setStatusFilter] = useState("alle");
   const [modalOpen, setModalOpen] = useState(false);
   const [versturenBezig, setVersturenBezig] = useState(null);
+  const [statusBezig, setStatusBezig] = useState(null);
   const [klantFilter, setKlantFilter] = useState(null); // { slug, klant } — komt uit ?klant= op de URL
 
   // Vanuit "Mijn klanten" kom je hier met ?klant=<slug> binnen, zodat je bij
@@ -119,6 +120,25 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
       alert(String(e.message || e));
     }
     setVersturenBezig(null);
+  }
+
+  // Handmatige statuswijziging: het vangnet voor betalingen buiten Mollie om
+  // (overschrijving, contant) of om een foutje recht te zetten.
+  async function statusWijzigen(nummer, status) {
+    setStatusBezig(nummer);
+    try {
+      const res = await fetch("/api/facturen/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nummer, status }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Status wijzigen mislukte.");
+      router.refresh();
+    } catch (e) {
+      alert(String(e.message || e));
+    }
+    setStatusBezig(null);
   }
 
   return (
@@ -204,7 +224,25 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(f.factuurdatum)}</td>
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{euro(f.bedrag_incl)}</td>
                 <td style={td}>
-                  <Chip kleur={STATUS_CHIP[f.status] || "grijs"}>{STATUS_LABEL[f.status] || f.status}</Chip>
+                  <select
+                    value={f.status}
+                    disabled={statusBezig === f.nummer}
+                    onChange={(e) => statusWijzigen(f.nummer, e.target.value)}
+                    title="Status handmatig wijzigen"
+                    style={{
+                      appearance: "none", border: "none", cursor: statusBezig === f.nummer ? "wait" : "pointer",
+                      fontFamily: "inherit", fontSize: 12, fontWeight: 700, padding: "3px 22px 3px 10px",
+                      borderRadius: 999,
+                      background: `${(KLEUR[STATUS_CHIP[f.status] || "grijs"] || KLEUR.grijs).bg} url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7168' d='M2.5 4.5 6 8l3.5-3.5z'/%3E%3C/svg%3E") no-repeat right 8px center`,
+                      backgroundSize: "9px",
+                      color: (KLEUR[STATUS_CHIP[f.status] || "grijs"] || KLEUR.grijs).tekst,
+                      opacity: statusBezig === f.nummer ? 0.6 : 1,
+                    }}
+                  >
+                    {Object.keys(STATUS_LABEL).map((s) => (
+                      <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+                    ))}
+                  </select>
                 </td>
                 <td style={td}>
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>

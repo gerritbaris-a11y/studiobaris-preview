@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getBetaalinfo, setBetaling, setRest } from "../../../../lib/server-data";
 import { mollie, eersteIncasso, inclBtw, incassodagVoor } from "../../../../lib/mollie";
-import { setIncassodag, maakFactuur, setFactuurStatus } from "../../../../lib/abonnementen-data";
+import {
+  setIncassodag, maakFactuur, setFactuurStatus, getFacturenKlant,
+} from "../../../../lib/abonnementen-data";
 import {
   factuurPdf, mailFactuur, regelsEersteBetaling, soortEersteBetaling, OMSCHRIJVING,
 } from "../../../../lib/facturen";
@@ -118,6 +120,47 @@ export async function POST(req) {
         }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         await setBetaling(slug, { status: "mislukt" });
+      }
+    }
+
+    // Terugkerende (automatische) maandincasso's. Dit raakt alleen de factuur-
+    // administratie — het abonnement zelf (bedrag, interval, mandaat) wordt
+    // uitsluitend hierboven bij "first" aangemaakt en hier nooit gewijzigd.
+    if (payment.sequenceType === "recurring") {
+      const periode = String(
+        (payment.status === "paid" ? payment.paidAt : payment.createdAt) || new Date().toISOString()
+      ).slice(0, 7);
+
+      if (payment.status === "paid") {
+        // De veertien-dagen-vooraf-factuur bestaat vrijwel altijd al (via de
+        // dagelijkse cron); sb_factuur_maak geeft 'm dan gewoon terug zonder
+        // een dubbele aan te maken. Bestaat hij toch nog niet, dan ontstaat
+        // hij hier alsnog — met de incassodatum van vandaag, niet in de
+        // toekomst, want er is al daadwerkelijk geïncasseerd.
+        const info = await getBetaalinfo(slug);
+        const maand = Number(info && info.maandbedrag) || 0;
+        if (maand > 0) {
+          const factuur = await maakFactuur({
+            slug,
+            soort: "maandelijks",
+            periode,
+            paymentId: payment.id,
+            incassodatum: String(payment.paidAt || new Date().toISOString()).slice(0, 10),
+            vervaldagen: 14,
+            regels: [{ omschrijving: OMSCHRIJVING.maandelijks, bedrag_excl: maand, periode }],
+          });
+          if (factuur && factuur.nummer) await setFactuurStatus(factuur.nummer, "betaald");
+        }
+      } else if (["failed", "canceled", "expired"].includes(payment.status)) {
+        // Nooit hier een nieuwe factuur aanmaken voor een mislukte poging —
+        // alleen de al verstuurde factuur van deze periode markeren, als hij
+        // bestaat. Mollie probeert een mislukte incasso zelf nog een paar
+        // keer opnieuw; het abonnement laten we daarom met rust.
+        const lijst = await getFacturenKlant(slug);
+        const bestaand = (Array.isArray(lijst) ? lijst : []).find(
+          (f) => f.soort === "maandelijks" && f.periode === periode && f.status !== "betaald"
+        );
+        if (bestaand) await setFactuurStatus(bestaand.nummer, "mislukt");
       }
     }
 
