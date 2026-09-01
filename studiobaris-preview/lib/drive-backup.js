@@ -41,7 +41,7 @@ async function haalToegangstoken() {
   const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const payload = base64url(JSON.stringify({
     iss: clientEmail,
-    scope: "https://www.googleapis.com/auth/drive.file",
+    scope: "https://www.googleapis.com/auth/drive",
     aud: "https://oauth2.googleapis.com/token",
     iat: nu,
     exp: nu + 3600,
