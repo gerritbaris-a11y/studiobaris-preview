@@ -73,19 +73,15 @@ export default function KlantRij({ r, variant }) {
         <tr style={{ background: KLEUR.baan }}>
           <td colSpan={kolommen} style={{ padding: "14px 18px" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "grid", gap: 12 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "10px 20px", fontSize: 13.5 }}>
-                <div><span style={veldLabel}>Adres</span>{r.b_adres || "—"}</div>
-                <div><span style={veldLabel}>KvK</span>{r.b_kvk || "—"}</div>
-                <div><span style={veldLabel}>BTW-nummer</span>{r.b_btw || "—"}</div>
-                <div><span style={veldLabel}>WhatsApp</span>{r.b_whatsapp || "—"}</div>
-                {variant !== "oud" && (
-                  <div><span style={veldLabel}>Websiteprijs</span>{r.websiteprijs ? euro(r.websiteprijs) : "—"}</div>
-                )}
-              </div>
+              {variant !== "oud" && (
+                <div style={{ fontSize: 13.5 }}>
+                  <span style={veldLabel}>Websiteprijs</span>{r.websiteprijs ? euro(r.websiteprijs) : "—"}
+                </div>
+              )}
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />
-                <GegevensEditor slug={r.slug} data={r} />
+                <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>

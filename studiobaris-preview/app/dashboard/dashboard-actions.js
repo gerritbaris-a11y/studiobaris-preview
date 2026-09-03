@@ -972,8 +972,8 @@ export function VerwijderKnop({ slug, naam }) {
   );
 }
 
-export function GegevensEditor({ slug, data = {} }) {
-  const [open, setOpen] = useState(false);
+export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
   const [s, setS] = useState("idle");
   const [v, setV] = useState({
     slogan: data.b_slogan || "",
