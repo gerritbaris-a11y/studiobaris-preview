@@ -44,7 +44,7 @@ export default function KlantRij({ r, variant }) {
           <span style={{ color: KLEUR.label, fontWeight: 400, fontSize: 12 }}>{open ? "▲" : "▾"}</span>
         </td>
         <td style={td}>{r.contactpersoon || "—"}</td>
-        <td style={td}>{telefoon}</td>
+        <td style={{ ...td, whiteSpace: "nowrap" }}>{telefoon}</td>
         <td style={td}>{email}</td>
         {variant !== "oud" && <td style={td}><PakketLabel type={r.pakket_type} /></td>}
         {variant === "klant" && (
