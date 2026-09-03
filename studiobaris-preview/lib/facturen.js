@@ -52,9 +52,11 @@ export async function factuurPdf(f) {
 
   const INKT = rgb(0.169, 0.153, 0.141);   // #2B2724 — logo, tabelbalk, koppen
   const GRIJS = rgb(0.42, 0.38, 0.33);
-  const LIJN = rgb(0.85, 0.83, 0.79);
-  const VLAK = rgb(0.965, 0.953, 0.933);   // lichte achtergrond voor labelbalken
+  const LIJN = rgb(0.88, 0.86, 0.82);
+  const VLAK = rgb(0.972, 0.961, 0.943);   // lichte achtergrond voor het klantkaartje
+  const ZEBRA = rgb(0.986, 0.981, 0.972);  // zeer lichte streeptint in de regeltabel
   const WIT = rgb(1, 1, 1);
+  const GOUD = rgb(0.729, 0.549, 0.263);   // warme accentkleur — uniform over alle factuurtypen
 
   const L = 50;
   const R = 545;
@@ -74,8 +76,6 @@ export async function factuurPdf(f) {
   const lijn = (yy, x0 = L, x1 = R, kleur = LIJN, dikte = 0.75) =>
     pagina.drawLine({ start: { x: x0, y: yy }, end: { x: x1, y: yy }, thickness: dikte, color: kleur });
   const vlak = (x, yy, w, h, kleur) => pagina.drawRectangle({ x, y: yy, width: w, height: h, color: kleur });
-  const kader = (x, yy, w, h, kleur = LIJN) =>
-    pagina.drawRectangle({ x, y: yy, width: w, height: h, borderColor: kleur, borderWidth: 0.75 });
   // Rechts uitgelijnd label + bedrag, waarbij het bedrag zijn eigen breedte
   // meekrijgt — zo kan een langer bedrag nooit tegen het label aan botsen,
   // wat er eerder scheef uitzag.
@@ -87,25 +87,33 @@ export async function factuurPdf(f) {
     });
   };
 
-  let y = 792;
+  // ── Gouden topbalk — dezelfde uitstraling op elk factuurtype ──────────────
+  vlak(0, 838.89, 595.28, 3, GOUD);
 
-  // ── Kop: logo-blokje + naam links, StudioBaris-gegevens rechts ────────────
-  // Geen KvK/BTW/e-mail hier — die staan al compact in de voettekst, dat
-  // oogde dubbelop en rommelig.
-  vlak(L, y - 26, 30, 30, INKT);
-  tekst("B", L + 9, y - 17, { size: 15, vet: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 40, y - 8, { size: 17, vet: true, kleur: INKT });
+  let y = 780;
+
+  // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
+  vlak(L, y - 28, 32, 32, INKT);
+  vlak(L, y - 28, 32, 4, GOUD); // gouden voetje aan het beeldmerk
+  tekst("B", L + 10, y - 18, { size: 16, vet: true, kleur: WIT });
+  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, vet: true, kleur: INKT });
+  pagina.drawLine({
+    start: { x: L + 42, y: y - 14 },
+    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { vet: true, size: 17 }), y: y - 14 },
+    thickness: 1.3, color: GOUD,
+  });
 
   rechts(BEDRIJF.naam, R, y, { size: 9.5, vet: true });
   rechts(BEDRIJF.adres, R, y - 12);
   rechts(BEDRIJF.postcode, R, y - 24);
   rechts(BEDRIJF.telefoon, R, y - 36, { size: 8.5, kleur: GRIJS });
 
-  y -= 60;
+  y -= 62;
 
   // ── FACTUUR-titel + ondertitel links, kerngegevens rechts ─────────────────
-  tekst("FACTUUR", L, y, { size: 24, vet: true });
-  tekst(BEDRIJF.ondertitel, L, y - 16, { size: 9, italic: true, kleur: GRIJS });
+  vlak(L, y - 22, 4, 24, GOUD);
+  tekst("FACTUUR", L + 12, y, { size: 24, vet: true });
+  tekst(BEDRIJF.ondertitel, L + 12, y - 16, { size: 9, italic: true, kleur: GRIJS });
 
   const gegevens = [
     ["Factuurnummer:", f.nummer],
@@ -124,26 +132,25 @@ export async function factuurPdf(f) {
 
   // Ruimte na de gegevenslijst schaalt mee met het aantal regels (met
   // Klantnummer erbij zijn dat er 4 in plaats van 3) — anders schoof de
-  // "FACTUUR AAN"-balk over de laatste regel heen.
-  y -= 14 * gegevens.length + 12;
+  // "FACTUUR AAN"-kaart over de laatste regel heen.
+  y -= 14 * gegevens.length + 14;
 
-  // ── Factuur aan: labelbalk + omkaderd blok ─────────────────────────────────
-  vlak(L, y - 16, BREEDTE, 16, VLAK);
-  tekst("FACTUUR AAN", L + 6, y - 11, { size: 8, vet: true, kleur: GRIJS });
-  y -= 16;
-
+  // ── Factuur aan: rustig kaartblok met gouden accentrand links ─────────────
   const adresdelen = String(klant.adres || "").split(",").map((s) => s.trim()).filter(Boolean);
   const klantregels = [klant.naam, ...adresdelen, klant.email].filter(Boolean);
-  const regelhoogte = 18;
-  const blokhoogte = klantregels.length * regelhoogte;
-  kader(L, y - blokhoogte, BREEDTE, blokhoogte);
-  let ky = y;
+  const regelhoogte = 15.5;
+  const blokPad = 12;
+  const blokhoogte = klantregels.length * regelhoogte + blokPad * 2 - 4;
+
+  vlak(L, y - blokhoogte, BREEDTE, blokhoogte, VLAK);
+  vlak(L, y - blokhoogte, 3, blokhoogte, GOUD);
+  tekst("FACTUUR AAN", L + 16, y - 14, { size: 7.5, vet: true, kleur: GRIJS });
+  let ky = y - 14 - 16;
   klantregels.forEach((r, i) => {
-    tekst(r, L + 8, ky - 13, { vet: i === 0 });
+    tekst(r, L + 16, ky, { vet: i === 0, size: i === 0 ? 11 : 9.5 });
     ky -= regelhoogte;
-    if (i < klantregels.length - 1) lijn(ky, L, R);
   });
-  y -= blokhoogte + 26;
+  y -= blokhoogte + 24;
 
   // ── Regeltabel ─────────────────────────────────────────────────────────────
   // Kolomposities met echte marge ertussen (minstens 14pt), berekend op de
@@ -151,16 +158,17 @@ export async function factuurPdf(f) {
   // excl. btw" aan plakte kwam doordat hier eerder te weinig ruimte tussen
   // de kolommen zat.
   const xAantalM = 373, xPrijs = 461, xTotaalKol = R - 8;
-  const kopHoogte = 20;
+  const kopHoogte = 22;
   vlak(L, y - kopHoogte, BREEDTE, kopHoogte, INKT);
-  tekst("Omschrijving", L + 8, y - 14, { size: 8.5, vet: true, kleur: WIT });
-  midden("Aantal", xAantalM - 18, xAantalM + 18, y - 14, { size: 8.5, vet: true, kleur: WIT });
-  rechts("Prijs excl. btw", xPrijs, y - 14, { size: 8.5, vet: true, kleur: WIT });
-  rechts("Totaal excl. btw", xTotaalKol, y - 14, { size: 8.5, vet: true, kleur: WIT });
+  tekst("Omschrijving", L + 10, y - 15, { size: 8.5, vet: true, kleur: WIT });
+  midden("Aantal", xAantalM - 18, xAantalM + 18, y - 15, { size: 8.5, vet: true, kleur: WIT });
+  rechts("Prijs excl. btw", xPrijs, y - 15, { size: 8.5, vet: true, kleur: WIT });
+  rechts("Totaal excl. btw", xTotaalKol, y - 15, { size: 8.5, vet: true, kleur: WIT });
   y -= kopHoogte;
+  vlak(L, y - 1.5, BREEDTE, 1.5, GOUD);
 
   const breedteOmschrijving = xAantalM - 18 - L - 12;
-  for (const r of regels) {
+  regels.forEach((r, idx) => {
     const woorden = String(r.omschrijving || "").split(" ");
     let regel = "", stukken = [];
     for (const w of woorden) {
@@ -169,40 +177,44 @@ export async function factuurPdf(f) {
       else regel = test;
     }
     if (regel) stukken.push(regel);
-    const rijhoogte = 16 + (stukken.length - 1) * 11;
+    // Telt ook de aparte periode-regel mee (bijv. "sep 2026" onder een
+    // maandelijkse regel) — anders overlapte die met de rand/lijn eronder.
+    const regelsTotaal = stukken.length + (maandelijks ? 1 : 0);
+    const rijhoogte = 18 + (regelsTotaal - 1) * 11;
 
-    kader(L, y - rijhoogte, BREEDTE, rijhoogte);
-    tekst(stukken[0] || "", L + 8, y - 12);
-    for (let i = 1; i < stukken.length; i++) tekst(stukken[i], L + 8, y - 12 - i * 11, { kleur: GRIJS });
-    if (maandelijks) tekst(periodeKort(r.periode || f.periode), L + 8, y - 12 - stukken.length * 11, { size: 8.5, kleur: GRIJS });
-    midden("1", xAantalM - 18, xAantalM + 18, y - 12);
-    rechts(euro(r.bedrag_excl), xPrijs, y - 12);
-    rechts(euro(r.bedrag_excl), xTotaalKol, y - 12);
+    if (idx % 2 === 1) vlak(L, y - rijhoogte, BREEDTE, rijhoogte, ZEBRA);
+    tekst(stukken[0] || "", L + 10, y - 13);
+    for (let i = 1; i < stukken.length; i++) tekst(stukken[i], L + 10, y - 13 - i * 11, { kleur: GRIJS });
+    if (maandelijks) tekst(periodeKort(r.periode || f.periode), L + 10, y - 13 - stukken.length * 11, { size: 8.5, kleur: GRIJS });
+    midden("1", xAantalM - 18, xAantalM + 18, y - 13);
+    rechts(euro(r.bedrag_excl), xPrijs, y - 13);
+    rechts(euro(r.bedrag_excl), xTotaalKol, y - 13);
     y -= rijhoogte;
-  }
+    lijn(y, L, R);
+  });
 
-  y -= 8;
+  y -= 10;
   const totalen = [
     ["Subtotaal excl. btw", euro(f.bedrag_excl)],
     ["Btw 21%", euro(f.btw_bedrag)],
   ];
   for (const [label, waarde] of totalen) {
     y -= 14;
-    totaalregel(label, waarde, xPrijs, xTotaalKol, y);
+    totaalregel(label, waarde, xPrijs, xTotaalKol, y, { kleur: GRIJS });
   }
-  y -= 6;
-  lijn(y, xPrijs - 90, R, INKT, 1.1);
-  y -= 18;
-  // De grijze balk staat nu alleen onder het totalenblok (niet over de hele
-  // paginabreedte), zodat hij precies aansluit op de kolom erboven.
-  vlak(xPrijs - 90, y - 6, R - (xPrijs - 90), 20, VLAK);
-  totaalregel("Totaal incl. btw", euro(f.bedrag_incl), xPrijs, xTotaalKol, y + 8, { size: 11 });
-  y -= 26;
+  y -= 10;
 
-  // ── Betaal- of incassogegevens ──────────────────────────────────────────────
-  y -= 20;
-  tekst(maandelijks ? "Incassogegevens" : "Betaalgegevens", L, y, { size: 10, vet: true });
-  y -= 4;
+  // ── Totaalbalk: een volle, donkere balk — het rustpunt van de pagina ──────
+  const balkHoogte = 26;
+  vlak(xPrijs - 90, y - balkHoogte + 6, R - (xPrijs - 90), balkHoogte, INKT);
+  totaalregel("Totaal incl. btw", euro(f.bedrag_incl), xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });
+  y -= balkHoogte + 18;
+
+  // ── Betaal- of incassogegevens ─────────────────────────────────────────────
+  y -= 14;
+  vlak(L, y - 1, 16, 1.5, GOUD);
+  tekst(maandelijks ? "Incassogegevens" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
+  y -= 8;
 
   const punten = maandelijks
     ? [
@@ -225,21 +237,21 @@ export async function factuurPdf(f) {
 
   for (const p of punten) {
     y -= 14;
-    tekst("•", L, y, { kleur: GRIJS });
+    tekst("•", L + 22, y, { kleur: GOUD });
     const woorden = p.split(" ");
     let regel = "";
     for (const w of woorden) {
       const test = regel ? regel + " " + w : w;
-      if (breedteVan(test, { size: 9 }) > BREEDTE - 14 && regel) {
-        tekst(regel, L + 12, y, { size: 9, kleur: GRIJS });
+      if (breedteVan(test, { size: 9 }) > BREEDTE - 36 && regel) {
+        tekst(regel, L + 34, y, { size: 9, kleur: GRIJS });
         y -= 11; regel = w;
       } else regel = test;
     }
-    if (regel) tekst(regel, L + 12, y, { size: 9, kleur: GRIJS });
+    if (regel) tekst(regel, L + 34, y, { size: 9, kleur: GRIJS });
   }
 
-  // ── Voettekst, gecentreerd ───────────────────────────────────────────────
-  lijn(58);
+  // ── Voettekst ────────────────────────────────────────────────────────────
+  vlak(L, 56, BREEDTE, 1, GOUD);
   midden(
     `${BEDRIJF.naam} · ${BEDRIJF.web} · ${BEDRIJF.email} · ${BEDRIJF.telefoon} · KvK ${BEDRIJF.kvk} · BTW ${BEDRIJF.btw}`,
     L, R, 44, { size: 7.5, kleur: GRIJS }
