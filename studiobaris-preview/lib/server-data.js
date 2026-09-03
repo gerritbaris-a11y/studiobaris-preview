@@ -327,6 +327,12 @@ export async function markeerKlant(slug) {
   return await rpc("sb_klant_markeren", { p_slug: slug });
 }
 
+// Een bestaande lead/preview toevoegen aan het Klantenregister als
+// "toekomstige klant" — geen klantnummer, geen andere gegevens gewijzigd.
+export async function maakKlantKandidaat(slug) {
+  return await rpc("sb_klant_kandidaat_maken", { p_slug: slug });
+}
+
 export async function updateBedrijf(slug, velden) {
   return await rpc("update_bedrijf", { p_slug: slug, p_velden: velden });
 }

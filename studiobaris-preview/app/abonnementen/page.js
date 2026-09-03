@@ -1,11 +1,9 @@
 import { getAbonnementen, getFacturenKlant, getKandidaten } from "../../lib/abonnementen-data";
-import { getOverview } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import KlantRegel from "./klant-regel";
 import NieuweKlant from "./nieuwe-klant";
-import { NieuweKlantKnop } from "../dashboard/dashboard-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -49,13 +47,6 @@ export default async function AbonnementenPage() {
 
   const rijen = await getAbonnementen();
   const kandidaten = await getKandidaten();
-  // Klantenregister: alle klanten met een klantnummer, op volgorde — los van
-  // of er al een lopend abonnement is (de tabel hieronder toont alleen wie
-  // al een maandbedrag heeft).
-  const alleKlanten = await getOverview();
-  const klantenMetNummer = alleKlanten
-    .filter((r) => r.klantnummer)
-    .sort((a, b) => Number(a.klantnummer) - Number(b.klantnummer));
 
   // De facturen per klant erbij. Het gaat om een handvol klanten; zodra dat er
   // honderden worden, halen we ze pas op bij het openklappen van een regel.
@@ -79,52 +70,8 @@ export default async function AbonnementenPage() {
       actief="/abonnementen"
       titel="Abonnementen"
       sub="Wat er is afgesproken, wat er maandelijks binnenkomt, en welke facturen eruit zijn."
-      rechts={
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <NieuweKlant kandidaten={kandidaten} />
-          <NieuweKlantKnop />
-        </div>
-      }
+      rechts={<NieuweKlant kandidaten={kandidaten} />}
     >
-      <div style={{ ...kaart, padding: "16px 18px", marginBottom: 20 }}>
-        <div style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 800, marginBottom: 2 }}>Klantenregister</div>
-        <div style={{ fontSize: 12.5, color: KLEUR.label, marginBottom: 10 }}>
-          Alle klanten met een klantnummer, op volgorde.
-        </div>
-        {klantenMetNummer.length === 0 ? (
-          <div style={{ fontSize: 13.5, color: KLEUR.gedempt }}>Nog geen klanten met een klantnummer.</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 640 }}>
-              <thead>
-                <tr>
-                  <th style={th}>Nr.</th>
-                  <th style={th}>Bedrijf</th>
-                  <th style={th}>Contactpersoon</th>
-                  <th style={th}>E-mail</th>
-                  <th style={th}>Pakket</th>
-                  <th style={{ ...th, textAlign: "right" }}>Maandbedrag</th>
-                </tr>
-              </thead>
-              <tbody>
-                {klantenMetNummer.map((r) => (
-                  <tr key={r.slug} style={{ borderTop: `1px solid ${KLEUR.baanRand}` }}>
-                    <td style={{ padding: "8px 14px", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.klantnummer}</td>
-                    <td style={{ padding: "8px 14px" }}>
-                      <a href={`/facturen?klant=${encodeURIComponent(r.slug)}`} style={{ color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}>{r.company_name || r.slug}</a>
-                    </td>
-                    <td style={{ padding: "8px 14px" }}>{r.contactpersoon || "—"}</td>
-                    <td style={{ padding: "8px 14px" }}>{r.lead_email || r.b_email || "—"}</td>
-                    <td style={{ padding: "8px 14px" }}>{r.pakket_type === "plugin" ? "Alleen plugin" : r.pakket_type === "vol" ? "Vol pakket" : "—"}</td>
-                    <td style={{ padding: "8px 14px", textAlign: "right" }}>{r.maandbedrag ? euro(r.maandbedrag) + " p/m" : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         <Cijfer label="Lopend" waarde={lopend.length} onder={lopend.length === 1 ? "abonnement" : "abonnementen"} />
         <Cijfer label="Per maand" waarde={euro(perMaand)} onder="incl. btw" />

@@ -58,6 +58,7 @@ export const NAV_GROEPEN = [
     label: "Klanten",
     beheer: true,
     items: [
+      { href: "/klantenregister", label: "Klantenregister" },
       { href: "/abonnementen", label: "Abonnementen" },
       { href: "/restbetalingen", label: "Restbetalingen" },
       { href: "/storingen", label: "Storingen" },
