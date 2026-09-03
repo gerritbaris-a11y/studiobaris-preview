@@ -24,9 +24,17 @@ function euro(v) {
   return "€ " + n.toFixed(2).replace(".", ",");
 }
 
+// Telefoonnummers komen soms met spaties/streepjes binnen (bijv. handmatig
+// overgetypt); voor een uniforme kolom laten we alleen cijfers en een
+// eventuele voorloop-"+" staan.
+function schoonTelefoon(v) {
+  if (!v) return v;
+  return String(v).replace(/[^\d+]/g, "");
+}
+
 export default function KlantRij({ r, variant }) {
   const [open, setOpen] = useState(false);
-  const telefoon = r.lead_phone || r.b_telefoon || "—";
+  const telefoon = schoonTelefoon(r.lead_phone || r.b_telefoon) || "—";
   const email = r.lead_email || r.b_email || "—";
   const kolommen = variant === "klant" ? 7 : 6;
 
