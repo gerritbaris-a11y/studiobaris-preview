@@ -222,7 +222,7 @@ export default async function KlantenPage() {
                       Klantnr. {r.klantnummer}
                     </span>
                   ) : (
-                    <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} />
+                    <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />
                   )}
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 </div>

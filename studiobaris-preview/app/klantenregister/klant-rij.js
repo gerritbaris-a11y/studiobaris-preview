@@ -60,7 +60,7 @@ export default function KlantRij({ r, variant }) {
         )}
         {variant === "toekomstig" && (
           <td style={{ ...td, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
-            <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} />
+            <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />
           </td>
         )}
         {variant === "oud" && (
@@ -93,7 +93,7 @@ export default function KlantRij({ r, variant }) {
                 {variant === "klant" && (
                   <MarkeerAlsOudKlantKnop slug={r.slug} bedrijf={r.company_name} heeftActiefAbonnement={r.betaal_status === "actief"} />
                 )}
-                {variant === "toekomstig" && <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} />}
+                {variant === "toekomstig" && <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />}
                 {variant === "oud" && <HeractiveerKlantKnop slug={r.slug} bedrijf={r.company_name} />}
                 <div style={{ marginLeft: "auto" }}>
                   <VerwijderKnop slug={r.slug} naam={r.company_name} />

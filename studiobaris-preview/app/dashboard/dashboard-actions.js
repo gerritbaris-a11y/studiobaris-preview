@@ -316,27 +316,64 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
 // Handmatige koppeling: "dit is nu al zeker een betalende klant", los van een
 // factuur of Mollie-betaling. Alleen zichtbaar/zinvol zolang er nog geen
 // klantnummer is.
-export function MarkeerAlsKlantKnop({ slug, bedrijf }) {
+// Bewust een los, klein formuliertje (niet de grote GegevensEditor): hier
+// gaat het alleen om de afgesproken tarieven vastleggen op het moment dat
+// iemand klant wordt, niet om alle bedrijfsgegevens. Betaalwijze/incassodag
+// (voor de daadwerkelijke incasso) blijven de taak van "Afspraak vastleggen"
+// op Abonnementen — dat gebeurt hier bewust niet.
+export function MarkeerAlsKlantKnop({ slug, bedrijf, data = {} }) {
+  const [open, setOpen] = useState(false);
   const [bezig, setBezig] = useState(false);
+  const [pakket, setPakket] = useState(data.pakket_type || "");
+  const [websiteprijs, setWebsiteprijs] = useState(data.websiteprijs != null ? String(data.websiteprijs) : "");
+  const [maandbedrag, setMaandbedrag] = useState(data.maandbedrag != null ? String(data.maandbedrag) : "");
+
   async function go() {
-    if (!confirm(`"${bedrijf || slug}" nu al als klant markeren?\n\nHij krijgt dan meteen een klantnummer, ook al is er nog geen factuur of betaling.`)) return;
+    if (!confirm(`"${bedrijf || slug}" nu als klant markeren?\n\nHij krijgt dan meteen een klantnummer, ook al is er nog geen factuur of betaling.`)) return;
     setBezig(true);
     try {
       const res = await fetch("/api/klanten/markeren", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
+        body: JSON.stringify({ slug, pakket_type: pakket || null, websiteprijs, maandbedrag }),
       });
       const d = await res.json();
       if (d.ok) location.reload();
       else { alert(d.error || "Mislukt, probeer opnieuw."); setBezig(false); }
     } catch (e) { alert(String(e)); setBezig(false); }
   }
+
+  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, marginTop: 2 };
+  const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
+  const knop = { background: "#fff", color: "#0f6e56", border: "1px solid #bfe0cf", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" };
+
   return (
-    <button onClick={go} disabled={bezig}
-      style={{ background: "#fff", color: "#0f6e56", border: "1px solid #bfe0cf", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
-      {bezig ? "Bezig…" : "Markeer als klant"}
-    </button>
+    <div>
+      <button onClick={() => setOpen(!open)} style={knop}>
+        {open ? "Sluiten" : "Markeer als klant"}
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 220 }}>
+          <label style={lab}>Pakket
+            <select style={inp} value={pakket} onChange={(e) => setPakket(e.target.value)}>
+              <option value="">— nog kiezen —</option>
+              <option value="vol">Vol pakket</option>
+              <option value="plugin">Alleen plugin</option>
+            </select>
+          </label>
+          <label style={lab}>Websiteprijs (eenmalig, €)
+            <input style={inp} value={websiteprijs} onChange={(e) => setWebsiteprijs(e.target.value)} placeholder="bijv. 599" />
+          </label>
+          <label style={lab}>Maandbedrag (per maand, €)
+            <input style={inp} value={maandbedrag} onChange={(e) => setMaandbedrag(e.target.value)} placeholder="bijv. 29,95" />
+          </label>
+          <button onClick={go} disabled={bezig}
+            style={{ marginTop: 10, background: "#1d7a46", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 7, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>
+            {bezig ? "Bezig…" : "Markeer als klant"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

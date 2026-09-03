@@ -322,9 +322,17 @@ export async function maakKlant(velden) {
 }
 
 // Handmatig "dit is nu al een klant" aanvinken — koppelt het eerstvolgende
-// klantnummer, los van een factuur of Mollie-betaling.
-export async function markeerKlant(slug) {
-  return await rpc("sb_klant_markeren", { p_slug: slug });
+// klantnummer, los van een factuur of Mollie-betaling. De drie extra velden
+// zijn optioneel: de afgesproken tarieven meteen vastleggen kan, maar hoeft
+// niet. Betaalwijze/incassodag blijven de taak van "Afspraak vastleggen" op
+// Abonnementen, dat gebeurt hier bewust niet.
+export async function markeerKlant(slug, velden = {}) {
+  return await rpc("sb_klant_markeren", {
+    p_slug: slug,
+    p_websiteprijs: velden.websiteprijs ?? null,
+    p_maandbedrag: velden.maandbedrag ?? null,
+    p_pakket_type: velden.pakket_type || null,
+  });
 }
 
 // Een bestaande lead/preview toevoegen aan het Klantenregister als

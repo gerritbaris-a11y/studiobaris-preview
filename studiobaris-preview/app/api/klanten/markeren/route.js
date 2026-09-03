@@ -12,7 +12,17 @@ export async function POST(req) {
     const slug = body.slug;
     if (!slug) return NextResponse.json({ ok: false, error: "slug ontbreekt." }, { status: 400 });
 
-    const res = await markeerKlant(slug);
+    const num = (v) => {
+      if (v === undefined || v === null || v === "") return null;
+      const n = Number(String(v).replace(",", "."));
+      return Number.isNaN(n) ? null : n;
+    };
+
+    const res = await markeerKlant(slug, {
+      websiteprijs: num(body.websiteprijs),
+      maandbedrag: num(body.maandbedrag),
+      pakket_type: body.pakket_type || null,
+    });
     if (!res || res.ok !== true) {
       return NextResponse.json({ ok: false, error: "Markeren mislukt (server-key?)." }, { status: 500 });
     }
