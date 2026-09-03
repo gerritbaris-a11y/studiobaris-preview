@@ -8,7 +8,7 @@ import PublishButton, {
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
   GegevensEditor, InzendingenKnop, KlantNaam,
-  VerwijderKnop,
+  VerwijderKnop, NieuweKlantKnop, MarkeerAlsKlantKnop,
 } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
@@ -81,6 +81,10 @@ export default async function KlantenPage() {
   // maar wel terug te vinden en terug te zetten in een eigen sectie onderaan.
   const afgewezen = rows.filter((r) => (r.pipeline_status || "") === "Afgewezen");
   const actief = rows.filter((r) => (r.pipeline_status || "") !== "Afgewezen");
+  // Klantenregister: alleen wie al echt klant is (klantnummer toegekend).
+  const klantenMetNummer = rows
+    .filter((r) => r.klantnummer)
+    .sort((a, b) => Number(a.klantnummer) - Number(b.klantnummer));
 
   return (
     <WerkplekShell
@@ -91,6 +95,50 @@ export default async function KlantenPage() {
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
       <DocumentenKaart beheer={beheer} model={mijnModel} />
+
+      {beheer && (
+        <div style={{ ...card, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div>
+              <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Klantenregister</h2>
+              <div style={{ fontSize: 13, color: "#9A9084" }}>Alle klanten met een klantnummer, op volgorde</div>
+            </div>
+            <NieuweKlantKnop />
+          </div>
+          {klantenMetNummer.length === 0 ? (
+            <div style={{ fontSize: 13.5, color: "#9A9084" }}>Nog geen klanten met een klantnummer.</div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#9A9084", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    <th style={{ padding: "6px 10px 6px 0" }}>Nr.</th>
+                    <th style={{ padding: "6px 10px" }}>Bedrijf</th>
+                    <th style={{ padding: "6px 10px" }}>Contactpersoon</th>
+                    <th style={{ padding: "6px 10px" }}>E-mail</th>
+                    <th style={{ padding: "6px 10px" }}>Pakket</th>
+                    <th style={{ padding: "6px 10px" }}>Maandbedrag</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {klantenMetNummer.map((r) => (
+                    <tr key={r.slug} style={{ borderTop: `1px solid ${KLEUR.baan}` }}>
+                      <td style={{ padding: "8px 10px 8px 0", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.klantnummer}</td>
+                      <td style={{ padding: "8px 10px" }}>
+                        <a href={`/facturen?klant=${encodeURIComponent(r.slug)}`} style={{ color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}>{r.company_name || r.slug}</a>
+                      </td>
+                      <td style={{ padding: "8px 10px" }}>{r.contactpersoon || "—"}</td>
+                      <td style={{ padding: "8px 10px" }}>{r.lead_email || r.b_email || "—"}</td>
+                      <td style={{ padding: "8px 10px" }}>{r.pakket_type === "plugin" ? "Alleen plugin" : r.pakket_type === "vol" ? "Vol pakket" : "—"}</td>
+                      <td style={{ padding: "8px 10px" }}>{r.maandbedrag ? `€ ${Number(r.maandbedrag).toFixed(2).replace(".", ",")} p/m` : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {mijnLeads.length > 0 && (
         <div style={{ ...card, marginBottom: 16, background: KLEUR.papier }}>
@@ -217,6 +265,13 @@ export default async function KlantenPage() {
                   >
                     Facturen bekijken →
                   </a>
+                  {r.klantnummer ? (
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "4px 10px", borderRadius: 999 }}>
+                      Klantnr. {r.klantnummer}
+                    </span>
+                  ) : (
+                    <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} />
+                  )}
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>

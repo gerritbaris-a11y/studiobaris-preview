@@ -112,6 +112,173 @@ export function TerugNaarActiefKnop({ slug, bedrijf }) {
   );
 }
 
+// Een klant handmatig los neerzetten — geen preview, geen AI-intake, geen
+// klantnummer. Voor een (toekomstige) klant waarvan de gegevens al bekend
+// zijn, maar waar nog niets vaststaat over betaling.
+const PAKKETTEN = {
+  vol: { label: "Vol pakket", websiteprijs: "599", maandbedrag: "29,95" },
+  plugin: { label: "Alleen plugin", websiteprijs: "0", maandbedrag: "12,95" },
+};
+
+export function NieuweKlantKnop() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)}
+        style={{ background: "#1d7a46", color: "#fff", border: "none", padding: "9px 15px", borderRadius: 9, fontWeight: 700, fontSize: 13.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+        + Nieuwe klant
+      </button>
+      {open && <NieuweKlantModal onSluiten={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function NieuweKlantModal({ onSluiten }) {
+  const [v, setV] = useState({
+    bedrijfsnaam: "", contactpersoon: "", email: "", telefoon: "",
+    adres: "", kvk: "", btw: "", pakket_type: "vol", websiteprijs: "599", maandbedrag: "29,95", notitie: "",
+  });
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
+  const set = (k, val) => setV((s) => ({ ...s, [k]: val }));
+
+  function kiesPakket(type) {
+    const p = PAKKETTEN[type];
+    setV((s) => ({ ...s, pakket_type: type, websiteprijs: p.websiteprijs, maandbedrag: p.maandbedrag }));
+  }
+
+  async function opslaan() {
+    setFout("");
+    if (!v.bedrijfsnaam.trim()) { setFout("Bedrijfsnaam is verplicht."); return; }
+    setBezig(true);
+    try {
+      const res = await fetch("/api/klanten/aanmaken", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(v),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Aanmaken mislukt.");
+      location.reload();
+    } catch (e) {
+      setFout(String(e.message || e));
+      setBezig(false);
+    }
+  }
+
+  const inp = { width: "100%", padding: "7px 9px", border: "1px solid #E3DACB", borderRadius: 7, fontSize: 13.5, fontFamily: "inherit" };
+  const lab = { fontSize: 12, color: "#6B6258", fontWeight: 700, display: "block", marginBottom: 3 };
+  const rij = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 };
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(43,39,36,.35)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 16px", overflowY: "auto", zIndex: 50 }}
+      onClick={onSluiten}
+    >
+      <div style={{ background: "#fff", borderRadius: 14, maxWidth: 520, width: "100%", overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ background: "#C05A38", color: "#fff", padding: "16px 20px", fontWeight: 800, fontSize: 16 }}>
+          Nieuwe klant
+        </div>
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ background: "#FBF7EF", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#6B6258" }}>
+            Deze klant komt los te staan, zonder klantnummer. Dat volgt vanzelf
+            zodra de eerste factuur verstuurd wordt of Mollie een betaling
+            bevestigt — of gebruik "Markeer als klant" om het nu al te doen.
+          </div>
+          <label style={lab}>Bedrijfsnaam *
+            <input style={inp} value={v.bedrijfsnaam} onChange={(e) => set("bedrijfsnaam", e.target.value)} autoFocus />
+          </label>
+          <div style={rij}>
+            <label style={lab}>Contactpersoon
+              <input style={inp} value={v.contactpersoon} onChange={(e) => set("contactpersoon", e.target.value)} />
+            </label>
+            <label style={lab}>E-mail
+              <input style={inp} value={v.email} onChange={(e) => set("email", e.target.value)} />
+            </label>
+          </div>
+          <div style={rij}>
+            <label style={lab}>Telefoon
+              <input style={inp} value={v.telefoon} onChange={(e) => set("telefoon", e.target.value)} />
+            </label>
+            <label style={lab}>KvK
+              <input style={inp} value={v.kvk} onChange={(e) => set("kvk", e.target.value)} />
+            </label>
+          </div>
+          <label style={lab}>Adres
+            <input style={inp} value={v.adres} onChange={(e) => set("adres", e.target.value)} />
+          </label>
+          <label style={lab}>BTW-nummer
+            <input style={inp} value={v.btw} onChange={(e) => set("btw", e.target.value)} />
+          </label>
+          <div>
+            <div style={lab}>Pakket</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" onClick={() => kiesPakket("vol")}
+                style={{ flex: 1, padding: "8px 10px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  border: v.pakket_type === "vol" ? "1.5px solid #1d7a46" : "1px solid #E3DACB",
+                  background: v.pakket_type === "vol" ? "#e7f3ea" : "#fff", color: v.pakket_type === "vol" ? "#0f6e56" : "#524A40" }}>
+                Vol pakket<br /><span style={{ fontWeight: 500, fontSize: 11.5 }}>€ 599 + € 29,95 p/m</span>
+              </button>
+              <button type="button" onClick={() => kiesPakket("plugin")}
+                style={{ flex: 1, padding: "8px 10px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  border: v.pakket_type === "plugin" ? "1.5px solid #1d7a46" : "1px solid #E3DACB",
+                  background: v.pakket_type === "plugin" ? "#e7f3ea" : "#fff", color: v.pakket_type === "plugin" ? "#0f6e56" : "#524A40" }}>
+                Alleen plugin<br /><span style={{ fontWeight: 500, fontSize: 11.5 }}>€ 12,95 p/m</span>
+              </button>
+            </div>
+          </div>
+          <div style={rij}>
+            <label style={lab}>Websiteprijs (eenmalig, €)
+              <input style={inp} value={v.websiteprijs} onChange={(e) => set("websiteprijs", e.target.value)} />
+            </label>
+            <label style={lab}>Maandbedrag (€)
+              <input style={inp} value={v.maandbedrag} onChange={(e) => set("maandbedrag", e.target.value)} />
+            </label>
+          </div>
+          <label style={lab}>Notitie (intern)
+            <input style={inp} value={v.notitie} onChange={(e) => set("notitie", e.target.value)} />
+          </label>
+          {fout && <div style={{ color: "#b91c1c", fontSize: 13, fontWeight: 600 }}>{fout}</div>}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
+            <button type="button" onClick={onSluiten} style={{ background: "#fff", border: "1px solid #E3DACB", padding: "9px 15px", borderRadius: 8, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>Annuleren</button>
+            <button type="button" onClick={opslaan} disabled={bezig}
+              style={{ background: "#1d7a46", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
+              {bezig ? "Bezig…" : "Klant aanmaken"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Handmatige koppeling: "dit is nu al zeker een betalende klant", los van een
+// factuur of Mollie-betaling. Alleen zichtbaar/zinvol zolang er nog geen
+// klantnummer is.
+export function MarkeerAlsKlantKnop({ slug, bedrijf }) {
+  const [bezig, setBezig] = useState(false);
+  async function go() {
+    if (!confirm(`"${bedrijf || slug}" nu al als klant markeren?\n\nHij krijgt dan meteen een klantnummer, ook al is er nog geen factuur of betaling.`)) return;
+    setBezig(true);
+    try {
+      const res = await fetch("/api/klanten/markeren", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await res.json();
+      if (d.ok) location.reload();
+      else { alert(d.error || "Mislukt, probeer opnieuw."); setBezig(false); }
+    } catch (e) { alert(String(e)); setBezig(false); }
+  }
+  return (
+    <button onClick={go} disabled={bezig}
+      style={{ background: "#fff", color: "#0f6e56", border: "1px solid #bfe0cf", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      {bezig ? "Bezig…" : "Markeer als klant"}
+    </button>
+  );
+}
+
 export function FaseStepper({ slug, huidige, bedrijf }) {
   const [bezig, setBezig] = useState(false);
   const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";

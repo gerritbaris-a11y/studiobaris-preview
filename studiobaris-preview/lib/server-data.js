@@ -303,6 +303,30 @@ export async function deleteKlant(slug) {
   return await rpc("delete_klant", { p_slug: slug });
 }
 
+// Lichte, losse route om een (toekomstige) klant handmatig neer te zetten,
+// zonder de zware AI-intake en zonder meteen een klantnummer.
+export async function maakKlant(velden) {
+  return await rpc("sb_klant_aanmaken", {
+    p_bedrijfsnaam: velden.bedrijfsnaam,
+    p_contactpersoon: velden.contactpersoon || null,
+    p_email: velden.email || null,
+    p_telefoon: velden.telefoon || null,
+    p_adres: velden.adres || null,
+    p_kvk: velden.kvk || null,
+    p_btw: velden.btw || null,
+    p_pakket_type: velden.pakket_type || null,
+    p_websiteprijs: velden.websiteprijs ?? null,
+    p_maandbedrag: velden.maandbedrag ?? null,
+    p_notitie: velden.notitie || null,
+  });
+}
+
+// Handmatig "dit is nu al een klant" aanvinken — koppelt het eerstvolgende
+// klantnummer, los van een factuur of Mollie-betaling.
+export async function markeerKlant(slug) {
+  return await rpc("sb_klant_markeren", { p_slug: slug });
+}
+
 export async function updateBedrijf(slug, velden) {
   return await rpc("update_bedrijf", { p_slug: slug, p_velden: velden });
 }
