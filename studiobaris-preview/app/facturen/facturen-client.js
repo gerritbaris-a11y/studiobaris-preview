@@ -62,12 +62,17 @@ const veldStijl = {
   fontSize: 14, fontFamily: "inherit", background: "#fff", color: KLEUR.inkt,
 };
 const labelStijl = { fontSize: 12.5, fontWeight: 700, color: KLEUR.gedempt, display: "block", marginBottom: 5 };
+const knopKlein = {
+  background: "#fff", border: `1px solid ${KLEUR.lijn2}`, color: KLEUR.klei,
+  padding: "7px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+};
 
-export default function FacturenClient({ facturen, klanten, volgendNummer }) {
+export default function FacturenClient({ facturen, klanten, volgendNummer, instellingen }) {
   const router = useRouter();
   const [zoek, setZoek] = useState("");
   const [statusFilter, setStatusFilter] = useState("alle");
   const [modalOpen, setModalOpen] = useState(false);
+  const [logModalOpen, setLogModalOpen] = useState(false);
   const [versturenBezig, setVersturenBezig] = useState(null);
   const [statusBezig, setStatusBezig] = useState(null);
   const [klantFilter, setKlantFilter] = useState(null); // { slug, klant } — komt uit ?klant= op de URL
@@ -177,7 +182,13 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
             </button>
           ))}
         </div>
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+          <button
+            onClick={() => setLogModalOpen(true)}
+            style={{ background: "none", border: "none", color: KLEUR.label, fontSize: 12.5, cursor: "pointer", textDecoration: "underline", fontFamily: "inherit", padding: 0, whiteSpace: "nowrap" }}
+          >
+            Bijzondere factuur handmatig loggen
+          </button>
           <Knop kind="primair" onClick={() => setModalOpen(true)}>+ Nieuwe factuur</Knop>
         </div>
       </div>
@@ -284,9 +295,9 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
       </div>
 
       {modalOpen && (
-        <LogFactuurModal
+        <NieuweFactuurModal
           klanten={klanten}
-          volgendNummer={volgendNummer}
+          instellingen={instellingen}
           onSluiten={() => setModalOpen(false)}
           onOpgeslagen={() => {
             setModalOpen(false);
@@ -294,6 +305,224 @@ export default function FacturenClient({ facturen, klanten, volgendNummer }) {
           }}
         />
       )}
+      {logModalOpen && (
+        <LogFactuurModal
+          klanten={klanten}
+          volgendNummer={volgendNummer}
+          onSluiten={() => setLogModalOpen(false)}
+          onOpgeslagen={() => {
+            setLogModalOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Regel-voor-regel: het "echte" formulier voor een nieuwe factuur. Klant
+// kiezen, type, en een vrij aantal regels (omschrijving + bedrag per regel —
+// meerwerk of een afwijkende prijs is gewoon een extra of aangepaste regel).
+// sb_factuur_maak claimt het nummer pas bij "Aanmaken", nooit eerder, en de
+// factuur komt altijd als concept binnen: de PDF bekijk je en verstuur je
+// zelf pas met "Versturen" in de tabel hierboven.
+function NieuweFactuurModal({ klanten, instellingen, onSluiten, onOpgeslagen }) {
+  const [slug, setSlug] = useState(klanten[0] ? klanten[0].slug : "");
+  const [soort, setSoort] = useState("eenmalig");
+  const [periode, setPeriode] = useState(new Date().toISOString().slice(0, 7));
+  const [vervaldagen, setVervaldagen] = useState(14);
+  const [regels, setRegels] = useState([{ omschrijving: "", bedrag_excl: "" }]);
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
+
+  function regelWijzig(i, veld, waarde) {
+    setRegels((rs) => rs.map((r, idx) => (idx === i ? { ...r, [veld]: waarde } : r)));
+  }
+  function regelToevoegen() {
+    setRegels((rs) => [...rs, { omschrijving: "", bedrag_excl: "" }]);
+  }
+  function regelVerwijderen(i) {
+    setRegels((rs) => (rs.length > 1 ? rs.filter((_, idx) => idx !== i) : rs));
+  }
+
+  const periodeLabel = (() => {
+    const [j, m] = periode.split("-").map(Number);
+    if (!j || !m) return periode;
+    return new Date(j, m - 1, 1).toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+  })();
+
+  // Snel de standaardtarieven invullen (uit Financieel → Instellingen) —
+  // blijft daarna gewoon een vrij te bewerken/verwijderen regel, geen
+  // vastgezet sjabloon.
+  function vulPakket(type) {
+    if (type === "vol") {
+      setRegels([
+        { omschrijving: "Website op maat (eenmalig)", bedrag_excl: String(instellingen.website_eenmalig ?? "") },
+        {
+          omschrijving: soort === "maandelijks" ? `Abonnement vol pakket — ${periodeLabel}` : "Abonnement vol pakket (eerste maand)",
+          bedrag_excl: String(instellingen.maandbedrag_vol ?? ""),
+        },
+      ]);
+    } else {
+      setRegels([
+        {
+          omschrijving: soort === "maandelijks" ? `Abonnement plugin — ${periodeLabel}` : "Abonnement plugin (eerste maand)",
+          bedrag_excl: String(instellingen.maandbedrag_plugin ?? ""),
+        },
+      ]);
+    }
+  }
+
+  const subtotaal = regels.reduce((s, r) => s + getal(r.bedrag_excl), 0);
+  const btw = Math.round(subtotaal * 0.21 * 100) / 100;
+  const totaal = Math.round((subtotaal + btw) * 100) / 100;
+
+  async function opslaan() {
+    setFout("");
+    if (!slug) return setFout("Kies een klant.");
+    if (soort === "maandelijks" && !periode) return setFout("Kies een periode.");
+    const schoon = regels.map((r) => ({ omschrijving: r.omschrijving.trim(), bedrag_excl: getal(r.bedrag_excl) }));
+    if (schoon.some((r) => !r.omschrijving || r.bedrag_excl <= 0)) {
+      return setFout("Elke regel heeft een omschrijving en een bedrag groter dan 0 nodig.");
+    }
+
+    setBezig(true);
+    try {
+      const res = await fetch("/api/facturen/nieuw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          soort,
+          regels: schoon,
+          periode: soort === "maandelijks" ? periode : null,
+          vervaldagen: Number(vervaldagen) || 14,
+        }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Aanmaken mislukte.");
+      onOpgeslagen();
+    } catch (e) {
+      setFout(String(e.message || e));
+    }
+    setBezig(false);
+  }
+
+  const regelVeld = { ...veldStijl, marginBottom: 0 };
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "rgba(43,39,36,.35)",
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: "40px 16px", overflowY: "auto", zIndex: 50,
+      }}
+      onClick={onSluiten}
+    >
+      <div style={{ ...kaart, maxWidth: 620, width: "100%", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ background: KLEUR.klei, color: "#fff", padding: "16px 20px", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>
+          Nieuwe factuur
+        </div>
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <span style={labelStijl}>Klant</span>
+            <select style={veldStijl} value={slug} onChange={(e) => setSlug(e.target.value)}>
+              {klanten.map((k) => (
+                <option key={k.slug} value={k.slug}>{k.klant}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: soort === "maandelijks" ? "1fr 1fr 100px" : "1fr 100px", gap: 10 }}>
+            <div>
+              <span style={labelStijl}>Type</span>
+              <select style={veldStijl} value={soort} onChange={(e) => setSoort(e.target.value)}>
+                <option value="eenmalig">Eenmalig</option>
+                <option value="aanbetaling">Aanbetaling</option>
+                <option value="slottermijn">Slottermijn</option>
+                <option value="maandelijks">Maandelijks</option>
+              </select>
+            </div>
+            {soort === "maandelijks" && (
+              <div>
+                <span style={labelStijl}>Periode</span>
+                <input type="month" style={veldStijl} value={periode} onChange={(e) => setPeriode(e.target.value)} />
+              </div>
+            )}
+            <div>
+              <span style={labelStijl}>Vervaltermijn</span>
+              <input style={veldStijl} inputMode="numeric" value={vervaldagen} onChange={(e) => setVervaldagen(e.target.value)} />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" onClick={() => vulPakket("vol")} style={knopKlein}>
+              Vol pakket invullen (€{instellingen.website_eenmalig ?? "—"} + €{instellingen.maandbedrag_vol ?? "—"})
+            </button>
+            <button type="button" onClick={() => vulPakket("plugin")} style={knopKlein}>
+              Alleen plugin invullen (€{instellingen.maandbedrag_plugin ?? "—"})
+            </button>
+          </div>
+
+          <div>
+            <span style={labelStijl}>Regels</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {regels.map((r, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    style={{ ...regelVeld, flex: "1 1 auto" }}
+                    placeholder="Omschrijving"
+                    value={r.omschrijving}
+                    onChange={(e) => regelWijzig(i, "omschrijving", e.target.value)}
+                  />
+                  <input
+                    style={{ ...regelVeld, width: 110 }}
+                    inputMode="decimal"
+                    placeholder="Bedrag excl."
+                    value={r.bedrag_excl}
+                    onChange={(e) => regelWijzig(i, "bedrag_excl", e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => regelVerwijderen(i)}
+                    disabled={regels.length === 1}
+                    title="Regel verwijderen"
+                    style={{
+                      background: "none", border: "none", cursor: regels.length === 1 ? "default" : "pointer",
+                      color: regels.length === 1 ? KLEUR.lijn2 : KLEUR.label, fontSize: 18, padding: "0 4px", lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={regelToevoegen}
+              style={{ marginTop: 8, background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+            >
+              + Regel toevoegen
+            </button>
+          </div>
+
+          <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5 }}>
+            <Totaalregel label="Subtotaal excl. btw" waarde={euro(subtotaal)} />
+            <Totaalregel label="Btw 21%" waarde={euro(btw)} />
+            <Totaalregel label="Totaal incl. btw" waarde={euro(totaal)} dik />
+          </div>
+
+          <div style={{ color: KLEUR.label, fontSize: 12.5 }}>
+            Komt binnen als concept — je bekijkt de PDF en verstuurt 'm zelf pas met "Versturen" in de tabel.
+          </div>
+
+          {fout && <div style={{ fontSize: 13, color: KLEUR.kleiDonker, fontWeight: 600 }}>{fout}</div>}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "14px 20px", borderTop: `1px solid ${KLEUR.lijn}` }}>
+          <Knop kind="secondair" onClick={onSluiten}>Annuleren</Knop>
+          <Knop kind="primair" onClick={opslaan}>{bezig ? "Bezig…" : "Aanmaken"}</Knop>
+        </div>
+      </div>
     </div>
   );
 }
