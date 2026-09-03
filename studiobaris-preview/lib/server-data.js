@@ -333,6 +333,17 @@ export async function maakKlantKandidaat(slug) {
   return await rpc("sb_klant_kandidaat_maken", { p_slug: slug });
 }
 
+// Een klant die geen klant meer is: klantnummer en factuurhistorie blijven
+// intact, hij verdwijnt alleen uit de actieve Klanten-lijst op het register.
+export async function maakOudKlant(slug) {
+  return await rpc("sb_klant_oud_maken", { p_slug: slug });
+}
+
+// Terugzetten als actieve klant na "Markeer als oud-klant".
+export async function heractiveerKlant(slug) {
+  return await rpc("sb_klant_heractiveren", { p_slug: slug });
+}
+
 export async function updateBedrijf(slug, velden) {
   return await rpc("update_bedrijf", { p_slug: slug, p_velden: velden });
 }

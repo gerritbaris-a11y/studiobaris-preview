@@ -340,6 +340,60 @@ export function MarkeerAlsKlantKnop({ slug, bedrijf }) {
   );
 }
 
+// "Oud-klant" markeren: hij verdwijnt uit de actieve Klanten-lijst op het
+// register, maar klantnummer en factuurhistorie blijven volledig intact —
+// regelt geen lopend abonnement, dat doe je apart via "Abonnement opzeggen".
+export function MarkeerAlsOudKlantKnop({ slug, bedrijf, heeftActiefAbonnement }) {
+  const [bezig, setBezig] = useState(false);
+  async function go() {
+    const waarschuwing = heeftActiefAbonnement
+      ? "\n\nLet op: er loopt nog een actief abonnement/incasso. Dit zet 'm niet stop — regel dat apart via 'Abonnement opzeggen' op Abonnementen."
+      : "";
+    if (!confirm(`"${bedrijf || slug}" als oud-klant markeren?\n\nKlantnummer en facturen blijven bewaard, maar hij verdwijnt uit de actieve Klanten-lijst.${waarschuwing}`)) return;
+    setBezig(true);
+    try {
+      const res = await fetch("/api/klanten/oud-klant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await res.json();
+      if (d.ok) location.reload();
+      else { alert(d.error || "Mislukt, probeer opnieuw."); setBezig(false); }
+    } catch (e) { alert(String(e)); setBezig(false); }
+  }
+  return (
+    <button onClick={go} disabled={bezig}
+      style={{ background: "#fff", color: "#9A7B4F", border: "1px solid #E3D3B8", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      {bezig ? "Bezig…" : "Markeer als oud-klant"}
+    </button>
+  );
+}
+
+// Oud-klant weer terugzetten als actieve klant.
+export function HeractiveerKlantKnop({ slug, bedrijf }) {
+  const [bezig, setBezig] = useState(false);
+  async function go() {
+    setBezig(true);
+    try {
+      const res = await fetch("/api/klanten/heractiveren", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const d = await res.json();
+      if (d.ok) location.reload();
+      else { alert(d.error || "Mislukt, probeer opnieuw."); setBezig(false); }
+    } catch (e) { alert(String(e)); setBezig(false); }
+  }
+  return (
+    <button onClick={go} disabled={bezig}
+      style={{ background: "#fff", color: "#0f6e56", border: "1px solid #bfe0cf", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      {bezig ? "Bezig…" : "Weer actief maken"}
+    </button>
+  );
+}
+
 export function FaseStepper({ slug, huidige, bedrijf }) {
   const [bezig, setBezig] = useState(false);
   const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";
