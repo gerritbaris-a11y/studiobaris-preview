@@ -8,7 +8,6 @@ import { Knop, Chip } from "../werkplek-shell";
 // Het echte sjabloon in Drive — hier vul je zelf de klantgegevens, regels en
 // het (hieronder getoonde) volgende nummer in, en exporteer je 'm zelf als
 // PDF. Dit dashboard genereert voor deze facturen dus bewust geen PDF meer.
-const SJABLOON_URL = "https://drive.google.com/file/d/1vDjsQMx_-OY3svc2hJIQx9vJFXy7S2xB/view";
 
 const SOORT_LABEL = {
   eenmalig: "Eenmalig",
@@ -308,7 +307,6 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
       {logModalOpen && (
         <LogFactuurModal
           klanten={klanten}
-          volgendNummer={volgendNummer}
           onSluiten={() => setLogModalOpen(false)}
           onOpgeslagen={() => {
             setLogModalOpen(false);
@@ -408,8 +406,6 @@ function NieuweFactuurModal({ klanten, instellingen, onSluiten, onOpgeslagen }) 
     setBezig(false);
   }
 
-  const regelVeld = { ...veldStijl, marginBottom: 0 };
-
   return (
     <div
       style={{
@@ -464,47 +460,7 @@ function NieuweFactuurModal({ klanten, instellingen, onSluiten, onOpgeslagen }) 
             </button>
           </div>
 
-          <div>
-            <span style={labelStijl}>Regels</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {regels.map((r, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input
-                    style={{ ...regelVeld, flex: "1 1 auto" }}
-                    placeholder="Omschrijving"
-                    value={r.omschrijving}
-                    onChange={(e) => regelWijzig(i, "omschrijving", e.target.value)}
-                  />
-                  <input
-                    style={{ ...regelVeld, width: 110 }}
-                    inputMode="decimal"
-                    placeholder="Bedrag excl."
-                    value={r.bedrag_excl}
-                    onChange={(e) => regelWijzig(i, "bedrag_excl", e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => regelVerwijderen(i)}
-                    disabled={regels.length === 1}
-                    title="Regel verwijderen"
-                    style={{
-                      background: "none", border: "none", cursor: regels.length === 1 ? "default" : "pointer",
-                      color: regels.length === 1 ? KLEUR.lijn2 : KLEUR.label, fontSize: 18, padding: "0 4px", lineHeight: 1,
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={regelToevoegen}
-              style={{ marginTop: 8, background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
-            >
-              + Regel toevoegen
-            </button>
-          </div>
+          <RegelsEditor regels={regels} onWijzig={regelWijzig} onToevoegen={regelToevoegen} onVerwijderen={regelVerwijderen} />
 
           <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5 }}>
             <Totaalregel label="Subtotaal excl. btw" waarde={euro(subtotaal)} />
@@ -527,41 +483,101 @@ function NieuweFactuurModal({ klanten, instellingen, onSluiten, onOpgeslagen }) 
   );
 }
 
-// Voor eenmalige/aanbetaling/slottermijn-facturen die je zelf aanmaakt: geen
-// regel-voor-regel formulier meer — jij vult het echte sjabloon in Drive in
-// (met het hier getoonde volgende nummer) en exporteert 'm zelf als PDF.
-// Hier log je 'm daarna: klant, bedrag, datum, status + de PDF erbij.
-function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
+function RegelsEditor({ regels, onWijzig, onToevoegen, onVerwijderen }) {
+  const regelVeld = { ...veldStijl, marginBottom: 0 };
+  return (
+    <div>
+      <span style={labelStijl}>Regels</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {regels.map((r, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              style={{ ...regelVeld, flex: "1 1 auto" }}
+              placeholder="Omschrijving"
+              value={r.omschrijving}
+              onChange={(e) => onWijzig(i, "omschrijving", e.target.value)}
+            />
+            <input
+              style={{ ...regelVeld, width: 110 }}
+              inputMode="decimal"
+              placeholder="Bedrag excl."
+              value={r.bedrag_excl}
+              onChange={(e) => onWijzig(i, "bedrag_excl", e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => onVerwijderen(i)}
+              disabled={regels.length === 1}
+              title="Regel verwijderen"
+              style={{
+                background: "none", border: "none", cursor: regels.length === 1 ? "default" : "pointer",
+                color: regels.length === 1 ? KLEUR.lijn2 : KLEUR.label, fontSize: 18, padding: "0 4px", lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={onToevoegen}
+        style={{ marginTop: 8, background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 13, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
+      >
+        + Regel toevoegen
+      </button>
+    </div>
+  );
+}
+
+// Voor het bijzondere geval: een factuur met een afwijkende datum of status
+// vastleggen (een oude factuur alsnog registreren, een correctie) — verder
+// precies hetzelfde als een gewone factuur: dezelfde vrije regels, en
+// standaard dezelfde automatisch gegenereerde PDF-opmaak. Een eigen PDF
+// uploaden kan nog steeds, voor het enkele geval dat de standaardopmaak
+// echt niet past.
+function LogFactuurModal({ klanten, onSluiten, onOpgeslagen }) {
   const [slug, setSlug] = useState(klanten[0] ? klanten[0].slug : "");
   const [soort, setSoort] = useState("eenmalig");
-  const [omschrijving, setOmschrijving] = useState("");
-  const [bedragExcl, setBedragExcl] = useState("");
+  const [regels, setRegels] = useState([{ omschrijving: "", bedrag_excl: "" }]);
   const [factuurdatum, setFactuurdatum] = useState(vandaag());
   const [status, setStatus] = useState("verstuurd");
   const [bestand, setBestand] = useState(null);
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
 
-  const btw = Math.round(getal(bedragExcl) * 0.21 * 100) / 100;
-  const totaal = Math.round((getal(bedragExcl) + btw) * 100) / 100;
+  function regelWijzig(i, veld, waarde) {
+    setRegels((rs) => rs.map((r, idx) => (idx === i ? { ...r, [veld]: waarde } : r)));
+  }
+  function regelToevoegen() {
+    setRegels((rs) => [...rs, { omschrijving: "", bedrag_excl: "" }]);
+  }
+  function regelVerwijderen(i) {
+    setRegels((rs) => (rs.length > 1 ? rs.filter((_, idx) => idx !== i) : rs));
+  }
+
+  const subtotaal = regels.reduce((s, r) => s + getal(r.bedrag_excl), 0);
+  const btw = Math.round(subtotaal * 0.21 * 100) / 100;
+  const totaal = Math.round((subtotaal + btw) * 100) / 100;
 
   async function opslaan() {
     setFout("");
     if (!slug) return setFout("Kies een klant.");
-    if (!omschrijving.trim()) return setFout("Vul een omschrijving in.");
-    if (getal(bedragExcl) <= 0) return setFout("Vul een bedrag groter dan 0 in.");
-    if (!bestand) return setFout("Voeg de geëxporteerde PDF toe.");
+    if (!factuurdatum) return setFout("Kies een factuurdatum.");
+    const schoon = regels.map((r) => ({ omschrijving: r.omschrijving.trim(), bedrag_excl: getal(r.bedrag_excl) }));
+    if (schoon.some((r) => !r.omschrijving || r.bedrag_excl <= 0)) {
+      return setFout("Elke regel heeft een omschrijving en een bedrag groter dan 0 nodig.");
+    }
 
     setBezig(true);
     try {
       const form = new FormData();
       form.set("slug", slug);
       form.set("soort", soort);
-      form.set("omschrijving", omschrijving.trim());
-      form.set("bedragExcl", String(getal(bedragExcl)));
+      form.set("regels", JSON.stringify(schoon));
       form.set("factuurdatum", factuurdatum);
       form.set("status", status);
-      form.set("bestand", bestand);
+      if (bestand) form.set("bestand", bestand);
 
       const res = await fetch("/api/facturen/loggen", { method: "POST", body: form });
       const d = await res.json();
@@ -587,21 +603,12 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ background: KLEUR.klei, color: "#fff", padding: "16px 20px", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>
-          Nieuwe factuur
+          Bijzondere factuur loggen
         </div>
         <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div>
-              Volgend nummer: <strong style={{ fontVariantNumeric: "tabular-nums" }}>{volgendNummer || "—"}</strong>
-              <span style={{ color: KLEUR.label }}> — vul dit over in het sjabloon.</span>
-            </div>
-            <a href={SJABLOON_URL} target="_blank" rel="noreferrer" style={{ color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}>
-              Open sjabloon in Drive →
-            </a>
-            <div style={{ color: KLEUR.label, fontSize: 12.5 }}>
-              Vul het sjabloon zelf helemaal in en exporteer 'm als PDF (Bestand → Downloaden → PDF).
-              Log 'm daarna hieronder.
-            </div>
+          <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 12.5, color: KLEUR.label }}>
+            Voor het bijzondere geval: een afwijkende datum of status vastleggen (een oude factuur alsnog
+            registreren, een correctie). Zonder eigen PDF ziet de factuur er straks precies zo uit als elke andere.
           </div>
 
           <div>
@@ -629,44 +636,35 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
             </div>
           </div>
 
-          <div>
-            <span style={labelStijl}>Omschrijving</span>
-            <input
-              style={veldStijl}
-              placeholder="Bijv. Bouw — website + app instellen"
-              value={omschrijving}
-              onChange={(e) => setOmschrijving(e.target.value)}
-            />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div>
-              <span style={labelStijl}>Bedrag excl. btw</span>
-              <input style={veldStijl} inputMode="decimal" value={bedragExcl} onChange={(e) => setBedragExcl(e.target.value)} />
-            </div>
-            <div>
-              <span style={labelStijl}>Status</span>
-              <select style={veldStijl} value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="verstuurd">Verstuurd</option>
-                <option value="betaald">Betaald</option>
-                <option value="concept">Concept</option>
-              </select>
-            </div>
-          </div>
+          <RegelsEditor regels={regels} onWijzig={regelWijzig} onToevoegen={regelToevoegen} onVerwijderen={regelVerwijderen} />
 
           <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", fontSize: 13.5 }}>
+            <Totaalregel label="Subtotaal excl. btw" waarde={euro(subtotaal)} />
             <Totaalregel label="Btw 21%" waarde={euro(btw)} />
             <Totaalregel label="Totaal incl. btw" waarde={euro(totaal)} dik />
           </div>
 
           <div>
-            <span style={labelStijl}>Geëxporteerde PDF</span>
+            <span style={labelStijl}>Status</span>
+            <select style={veldStijl} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="concept">Concept</option>
+              <option value="verstuurd">Verstuurd</option>
+              <option value="betaald">Betaald</option>
+              <option value="mislukt">Mislukt</option>
+            </select>
+          </div>
+
+          <div>
+            <span style={labelStijl}>Eigen PDF (optioneel)</span>
             <input
               type="file"
               accept="application/pdf"
               style={veldStijl}
               onChange={(e) => setBestand(e.target.files && e.target.files[0])}
             />
+            <div style={{ color: KLEUR.label, fontSize: 12.5, marginTop: 4 }}>
+              Leeg laten voor de standaardopmaak — precies zoals bij een gewone factuur.
+            </div>
           </div>
 
           {fout && <div style={{ fontSize: 13, color: KLEUR.kleiDonker, fontWeight: 600 }}>{fout}</div>}
@@ -679,7 +677,6 @@ function LogFactuurModal({ klanten, volgendNummer, onSluiten, onOpgeslagen }) {
     </div>
   );
 }
-
 function Totaalregel({ label, waarde, dik }) {
   return (
     <div

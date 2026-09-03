@@ -151,18 +151,21 @@ export async function getVolgendOffertenummer() {
 }
 
 // ── Handmatig loggen ──────────────────────────────────────────────────────
-// Voor facturen die je zelf in het echte sjabloon (Drive) invult en als PDF
-// exporteert: geen regels-formulier meer, gewoon één bedrag + de PDF erbij.
-// Loopt via dezelfde sb_factuur_backfill-functie als historische facturen —
-// het enige verschil is de datum (meestal vandaag) en dat er nu een eigen
-// PDF bij zit in plaats van een gegenereerde.
+// Voor het bijzondere geval: een factuur met een afwijkende datum of status
+// vastleggen (een oude factuur alsnog registreren, een correctie) — verder
+// dezelfde vrije regels als een gewone factuur. Loopt via dezelfde
+// sb_factuur_backfill-functie als sb_factuur_maak intern gebruikt; het
+// verschil is dat datum/status hier expliciet meegegeven worden in plaats
+// van "vandaag, concept", en dat er optioneel een eigen PDF bij kan in
+// plaats van de automatisch gegenereerde (pdfPad blijft dan null, en de
+// factuur krijgt gewoon dezelfde opmaak als elke andere).
 export async function logFactuur({
-  slug, soort, omschrijving, bedragExcl, factuurdatum, status = "verstuurd", pdfPad = null,
+  slug, soort, regels, factuurdatum, status = "verstuurd", pdfPad = null,
 }) {
   return await rpc("sb_factuur_backfill", {
     p_slug: slug,
     p_soort: soort,
-    p_regels: [{ omschrijving, bedrag_excl: bedragExcl }],
+    p_regels: regels,
     p_factuurdatum: factuurdatum,
     p_status: status,
     p_pdf_pad: pdfPad,
