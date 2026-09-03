@@ -126,7 +126,7 @@ export function NieuweKlantKnop() {
     <>
       <button onClick={() => setOpen(true)}
         style={{ background: "#1d7a46", color: "#fff", border: "none", padding: "9px 15px", borderRadius: 9, fontWeight: 700, fontSize: 13.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
-        + Nieuwe klant
+        + Klant handmatig aanmaken
       </button>
       {open && <NieuweKlantModal onSluiten={() => setOpen(false)} />}
     </>
@@ -181,9 +181,12 @@ function NieuweKlantModal({ onSluiten }) {
         </div>
         <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ background: "#FBF7EF", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#6B6258" }}>
-            Deze klant komt los te staan, zonder klantnummer. Dat volgt vanzelf
-            zodra de eerste factuur verstuurd wordt of Mollie een betaling
-            bevestigt — of gebruik "Markeer als klant" om het nu al te doen.
+            Voor iemand die nog nergens in de previews-pijplijn staat. Deze
+            klant komt los te staan, zonder klantnummer en zonder abonnement.
+            Dat volgt vanzelf zodra de eerste factuur verstuurd wordt of
+            Mollie een betaling bevestigt — of gebruik "Markeer als klant"
+            om het nu al te doen. (Staat de klant al als preview/lead in het
+            systeem? Gebruik dan "+ Klant toevoegen" hierboven.)
           </div>
           <label style={lab}>Bedrijfsnaam *
             <input style={inp} value={v.bedrijfsnaam} onChange={(e) => set("bedrijfsnaam", e.target.value)} autoFocus />
