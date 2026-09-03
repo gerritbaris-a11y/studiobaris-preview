@@ -12,10 +12,14 @@ export async function POST(req) {
     if (!id) return NextResponse.json({ ok: false, error: "Geen taak opgegeven." }, { status: 400 });
     if (!titel) return NextResponse.json({ ok: false, error: "Vul een titel in." }, { status: 400 });
 
+    const toegewezenAanIds = Array.isArray(body.toegewezenAanIds)
+      ? body.toegewezenAanIds.filter(Boolean)
+      : [];
+
     const taak = await bewerkTaak(id, {
       titel,
       omschrijving: body.omschrijving ? String(body.omschrijving).trim() : null,
-      toegewezenAan: body.toegewezenAan || null,
+      toegewezenAanIds,
       prioriteit: body.prioriteit || "normaal",
       deadline: body.deadline || null,
     });

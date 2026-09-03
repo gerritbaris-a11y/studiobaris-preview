@@ -53,11 +53,11 @@ export async function getTaken() {
   return Array.isArray(data) ? data : [];
 }
 
-export async function maakTaak({ titel, omschrijving = null, toegewezenAan = null, prioriteit = "normaal", deadline = null, aangemaaktDoor = null, kolom = "te_doen", klantSlug = null }) {
+export async function maakTaak({ titel, omschrijving = null, toegewezenAanIds = [], prioriteit = "normaal", deadline = null, aangemaaktDoor = null, kolom = "te_doen", klantSlug = null }) {
   return await rpc("sb_taak_aanmaken", {
     p_titel: titel,
     p_omschrijving: omschrijving,
-    p_toegewezen_aan: toegewezenAan,
+    p_toegewezen_aan_ids: toegewezenAanIds && toegewezenAanIds.length ? toegewezenAanIds : null,
     p_prioriteit: prioriteit,
     p_deadline: deadline,
     p_aangemaakt_door: aangemaaktDoor,
@@ -66,12 +66,12 @@ export async function maakTaak({ titel, omschrijving = null, toegewezenAan = nul
   });
 }
 
-export async function bewerkTaak(id, { titel, omschrijving = null, toegewezenAan = null, prioriteit = "normaal", deadline = null }) {
+export async function bewerkTaak(id, { titel, omschrijving = null, toegewezenAanIds = [], prioriteit = "normaal", deadline = null }) {
   return await rpc("sb_taak_bijwerken", {
     p_id: id,
     p_titel: titel,
     p_omschrijving: omschrijving,
-    p_toegewezen_aan: toegewezenAan,
+    p_toegewezen_aan_ids: toegewezenAanIds && toegewezenAanIds.length ? toegewezenAanIds : null,
     p_prioriteit: prioriteit,
     p_deadline: deadline,
   });

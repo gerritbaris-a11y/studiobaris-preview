@@ -16,10 +16,14 @@ export async function POST(req) {
 
     const kolom = KOLOMMEN.includes(body.kolom) ? body.kolom : "te_doen";
 
+    const toegewezenAanIds = Array.isArray(body.toegewezenAanIds)
+      ? body.toegewezenAanIds.filter(Boolean)
+      : [];
+
     const taak = await maakTaak({
       titel,
       omschrijving: body.omschrijving ? String(body.omschrijving).trim() : null,
-      toegewezenAan: body.toegewezenAan || null,
+      toegewezenAanIds,
       prioriteit: body.prioriteit || "normaal",
       deadline: body.deadline || null,
       aangemaaktDoor: sessie?.naam || null,
