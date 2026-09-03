@@ -39,7 +39,7 @@ function formatDeadline(d) {
 function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
   const [titel, setTitel] = useState(taak?.titel || "");
   const [omschrijving, setOmschrijving] = useState(taak?.omschrijving || "");
-  const [toegewezenAan, setToegewezenAan] = useState(taak?.toegewezen_aan || "");
+  const [toegewezenAanIds, setToegewezenAanIds] = useState(taak?.toegewezenen ? taak.toegewezenen.map((t) => t.id) : []);
   const [prioriteit, setPrioriteit] = useState(taak?.prioriteit || "normaal");
   const [deadline, setDeadline] = useState(taak?.deadline || "");
   const [bezig, setBezig] = useState(false);
@@ -54,7 +54,7 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
         ...(taak ? { id: taak.id } : { kolom: kolom || "te_doen" }),
         titel: titel.trim(),
         omschrijving: omschrijving.trim() || null,
-        toegewezenAan: toegewezenAan || null,
+        toegewezenAanIds,
         prioriteit,
         deadline: deadline || null,
       };
@@ -106,10 +106,23 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
             <label style={veldLabel}>Toegewezen aan</label>
-            <select style={veldInput} value={toegewezenAan} onChange={(e) => setToegewezenAan(e.target.value)}>
-              <option value="">— Niemand —</option>
-              {team.map((t) => <option key={t.id} value={t.id}>{t.naam}</option>)}
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 96, overflowY: "auto", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 8, padding: "6px 8px", boxSizing: "border-box" }}>
+              {team.map((t) => (
+                <label key={t.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={toegewezenAanIds.includes(t.id)}
+                    onChange={(e) => {
+                      setToegewezenAanIds((prev) =>
+                        e.target.checked ? [...prev, t.id] : prev.filter((id) => id !== t.id)
+                      );
+                    }}
+                  />
+                  {t.naam}
+                </label>
+              ))}
+              {team.length === 0 && <span style={{ fontSize: 12.5, color: KLEUR.label }}>Geen teamleden gevonden.</span>}
+            </div>
           </div>
           <div>
             <label style={veldLabel}>Prioriteit</label>
@@ -189,9 +202,17 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste })
         {deadline && (
           <span style={{ fontSize: 11.5, fontWeight: 700, color: deadline.kleur }}>{deadline.label}</span>
         )}
-        {taak.toegewezen_aan_naam && (
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: "#fff", background: KLEUR.klei, borderRadius: 999, width: 22, height: 22, display: "grid", placeItems: "center" }}>
-            {taak.toegewezen_aan_naam.charAt(0).toUpperCase()}
+        {taak.toegewezenen && taak.toegewezenen.length > 0 && (
+          <span style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
+            {taak.toegewezenen.map((p) => (
+              <span
+                key={p.id}
+                title={p.naam}
+                style={{ fontSize: 11, fontWeight: 700, color: "#fff", background: KLEUR.klei, borderRadius: 999, width: 22, height: 22, display: "grid", placeItems: "center" }}
+              >
+                {p.naam.charAt(0).toUpperCase()}
+              </span>
+            ))}
           </span>
         )}
       </div>
