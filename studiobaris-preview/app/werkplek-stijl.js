@@ -48,6 +48,7 @@ export const NAV = [
   { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
+  { href: "/boekhouding", label: "Boekhouding", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];
 
