@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { controleerBestand, controleerBestanden } from "../../../lib/bestanden";
+import { controleerBestand, controleerBestanden } from "../../../lib/bestand-validatie";
 import {
   SYSTEM_PROMPT_WF1,
   slugify,

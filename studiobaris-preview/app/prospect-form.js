@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestanden";
+import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie";
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
 

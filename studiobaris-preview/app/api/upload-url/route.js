@@ -4,7 +4,7 @@ import {
   MAX_BESTAND_BYTES,
   MAX_AANTAL_FOTOS,
   extensieVan,
-} from "../../../lib/bestanden";
+} from "../../../lib/bestand-validatie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
