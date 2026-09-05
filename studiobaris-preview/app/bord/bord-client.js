@@ -36,12 +36,21 @@ function formatDeadline(d) {
   return { tekst, kleur: KLEUR.label, label: tekst };
 }
 
+function formatGrootte(bytes) {
+  if (bytes === null || bytes === undefined) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
   const [titel, setTitel] = useState(taak?.titel || "");
   const [omschrijving, setOmschrijving] = useState(taak?.omschrijving || "");
   const [toegewezenAanIds, setToegewezenAanIds] = useState(taak?.toegewezenen ? taak.toegewezenen.map((t) => t.id) : []);
   const [prioriteit, setPrioriteit] = useState(taak?.prioriteit || "normaal");
   const [deadline, setDeadline] = useState(taak?.deadline || "");
+  const [bijlagen, setBijlagen] = useState(taak?.bijlagen || []);
+  const [bijlageBezig, setBijlageBezig] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
 
@@ -82,6 +91,64 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
       setFout(String(e.message || e));
     } finally {
       setBezig(false);
+    }
+  }
+
+  async function bijlageUploaden(bestand) {
+    if (!taak || !bestand) return;
+    if (bestand.size > 26214400) {
+      setFout(`"${bestand.name}" is te groot (max 25 MB).`);
+      return;
+    }
+    setBijlageBezig(true); setFout("");
+    try {
+      const res1 = await fetch("/api/taken/bijlage-upload-url", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taakId: taak.id, bestandsnaam: bestand.name }),
+      });
+      const data1 = await res1.json();
+      if (!res1.ok || !data1.ok) throw new Error(data1.error || "Uploaden voorbereiden mislukt.");
+
+      const putRes = await fetch(data1.url, {
+        method: "PUT",
+        body: bestand,
+        headers: { "Content-Type": bestand.type || "application/octet-stream" },
+      });
+      if (!putRes.ok) throw new Error("Uploaden naar opslag mislukt.");
+
+      const res2 = await fetch("/api/taken/bijlage-bevestigen", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taakId: taak.id, pad: data1.pad, bestandsnaam: bestand.name,
+          grootte: bestand.size, contentType: bestand.type || null,
+        }),
+      });
+      const data2 = await res2.json();
+      if (!res2.ok || !data2.ok) throw new Error(data2.error || "Opslaan van bijlage mislukt.");
+
+      setBijlagen((prev) => [...prev, data2.bijlage]);
+    } catch (e) {
+      setFout(String(e.message || e));
+    } finally {
+      setBijlageBezig(false);
+    }
+  }
+
+  async function bijlageVerwijderen(id) {
+    if (!confirm("Deze bijlage verwijderen?")) return;
+    setBijlageBezig(true); setFout("");
+    try {
+      const res = await fetch("/api/taken/bijlage-verwijderen", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Verwijderen mislukt.");
+      setBijlagen((prev) => prev.filter((b) => b.id !== id));
+    } catch (e) {
+      setFout(String(e.message || e));
+    } finally {
+      setBijlageBezig(false);
     }
   }
 
@@ -136,6 +203,43 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
 
         <label style={veldLabel}>Deadline</label>
         <input type="date" style={{ ...veldInput, marginBottom: 16 }} value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+
+        {taak && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={veldLabel}>Bijlagen</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 8 }}>
+              {bijlagen.map((b) => (
+                <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                  <a
+                    href={`/api/taken/bijlage-downloaden?id=${b.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: KLEUR.klei, fontWeight: 700, textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}
+                  >
+                    📎 {b.bestandsnaam}
+                  </a>
+                  <span style={{ fontSize: 11.5, color: KLEUR.label, flexShrink: 0 }}>{formatGrootte(b.grootte)}</span>
+                  <button
+                    type="button"
+                    onClick={() => bijlageVerwijderen(b.id)}
+                    disabled={bijlageBezig}
+                    style={{ border: "none", background: "none", color: "#b91c1c", cursor: "pointer", fontSize: 12, flexShrink: 0 }}
+                  >
+                    Verwijderen
+                  </button>
+                </div>
+              ))}
+              {bijlagen.length === 0 && <span style={{ fontSize: 12.5, color: KLEUR.label }}>Nog geen bijlagen.</span>}
+            </div>
+            <input
+              type="file"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) bijlageUploaden(f); e.target.value = ""; }}
+              disabled={bijlageBezig}
+              style={{ fontSize: 12.5 }}
+            />
+            {bijlageBezig && <div style={{ fontSize: 12, color: KLEUR.label, marginTop: 4 }}>Bezig…</div>}
+          </div>
+        )}
 
         {fout && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 12 }}>{fout}</div>}
 
@@ -201,6 +305,11 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste })
         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, color: p.kleur, background: p.bg }}>{taak.prioriteit === "hoog" ? "⚠ " : ""}{p.label}</span>
         {deadline && (
           <span style={{ fontSize: 11.5, fontWeight: 700, color: deadline.kleur }}>{deadline.label}</span>
+        )}
+        {taak.bijlagen && taak.bijlagen.length > 0 && (
+          <span style={{ fontSize: 11.5, color: KLEUR.label }} title={`${taak.bijlagen.length} bijlage(n)`}>
+            📎 {taak.bijlagen.length}
+          </span>
         )}
         {taak.toegewezenen && taak.toegewezenen.length > 0 && (
           <span style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
