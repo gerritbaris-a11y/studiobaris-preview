@@ -177,7 +177,7 @@ export default function ProspectForm({
     put("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
     put("tone_of_voice", f.tone_of_voice.value);
     put("kleurvoorkeur", f.kleurvoorkeur.value);
-    put("notities", f.notities.value);
+    put("notities", f.notities ? f.notities.value : "");
     put("oude_website", f.oude_website.value);
     // Laatste controle vlak voor verzenden: het formulier kan ook zonder
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
@@ -395,7 +395,9 @@ export default function ProspectForm({
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
         <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
 
-        <label style={label}>{revise ? "Extra toelichting / research" : "Vrije onderzoeksnotities"}<span style={hint}>{revise ? "Alle losse opmerkingen die helpen bij het aanpassen." : "Plak hier alle losse research, reviews en opmerkingen. Hoe meer context, hoe beter we het bedrijf begrijpen."}</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+        {revise && (
+          <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+        )}
 
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
             onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
@@ -410,7 +412,7 @@ export default function ProspectForm({
           gezet en verwerkt door onze tekst- en beeldleverancier; ze worden niet gebruikt om modellen te trainen en niet
           aan anderen doorverkocht. Wordt het geen klant, dan halen we de previewsite en de aangeleverde bestanden
           binnen zes maanden weg. Wil je eerder dat we alles verwijderen, of wil je weten wat we van je hebben?
-          Mail <a href="mailto:gerritbaris@gmail.com" style={{ color: A }}>gerritbaris@gmail.com</a> en we regelen het.
+          Mail <a href="mailto:info@studiobaris.nl" style={{ color: A }}>info@studiobaris.nl</a> en we regelen het.
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
         </p>
 
