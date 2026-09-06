@@ -121,3 +121,46 @@ export async function kostenBijwerken(id, velden) {
 export async function kostenVerwijderen(id) {
   return await rpc("sb_kosten_verwijderen", { p_id: id });
 }
+
+// Urenregistratie — los van kosten/omzet/btw, puur voor het urencriterium
+// (1.225 uur per jaar) t.b.v. zelfstandigenaftrek/startersaftrek.
+
+const LEEG_UREN_OVERZICHT = {
+  jaar: new Date().getFullYear(),
+  totaal_uren: 0, urencriterium: 1225, percentage: 0, resterend: 1225,
+  huidig_jaar: true, projectie_einde_jaar: 0, op_schema: false,
+};
+
+export async function getUrenOverzicht(jaar) {
+  return await stil(
+    () => rpc("sb_uren_overzicht", { p_jaar: jaar || null }),
+    LEEG_UREN_OVERZICHT
+  );
+}
+
+export async function getUrenLijst(jaar) {
+  const data = await stil(() => rpc("sb_uren_lijst", { p_jaar: jaar || null }), []);
+  return Array.isArray(data) ? data : [];
+}
+
+export async function urenToevoegen(velden) {
+  return await rpc("sb_uren_toevoegen", {
+    p_datum: velden.datum || null,
+    p_aantal_uren: velden.aantalUren,
+    p_omschrijving: velden.omschrijving,
+    p_toegevoegd_door: velden.toegevoegdDoor || null,
+  });
+}
+
+export async function urenBijwerken(id, velden) {
+  return await rpc("sb_uren_bijwerken", {
+    p_id: id,
+    p_datum: velden.datum ?? null,
+    p_aantal_uren: velden.aantalUren ?? null,
+    p_omschrijving: velden.omschrijving ?? null,
+  });
+}
+
+export async function urenVerwijderen(id) {
+  return await rpc("sb_uren_verwijderen", { p_id: id });
+}
