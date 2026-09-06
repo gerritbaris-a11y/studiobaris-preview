@@ -70,7 +70,9 @@ const LEGE_REGEL = {
   bedragExcl: "", btwType: "HOOG_21", datum: vandaag(), terugkerend: false, frequentie: "maandelijks",
 };
 
-export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitieel, jaar, kwartaal, naam }) {
+const LEGE_UREN_REGEL = { id: null, datum: vandaag(), aantalUren: "", omschrijving: "" };
+
+export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitieel, jaar, kwartaal, urenOverzicht, urenInitieel, urenJaar, naam }) {
   const router = useRouter();
   const [kosten, setKosten] = useState(kostenInitieel);
   const [formOpen, setFormOpen] = useState(false);
@@ -78,6 +80,12 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
   const [schemaOpen, setSchemaOpen] = useState(false);
+
+  const [uren, setUren] = useState(urenInitieel);
+  const [urenFormOpen, setUrenFormOpen] = useState(false);
+  const [urenRegel, setUrenRegel] = useState(LEGE_UREN_REGEL);
+  const [urenBezig, setUrenBezig] = useState(false);
+  const [urenFout, setUrenFout] = useState("");
 
   // Alleen kosten-rekeningen aanbieden (geen omzet/balans) — dit formulier is
   // voor uitgaven, niet voor het hele rekeningschema.
@@ -91,13 +99,73 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
   );
 
   function periodeUrl(j, k) {
-    return `/boekhouding?jaar=${j}&kwartaal=${k}`;
+    return `/boekhouding?jaar=${j}&kwartaal=${k}&urenJaar=${urenJaar}`;
   }
   function vorigKwartaal() {
     return kwartaal === 1 ? { j: jaar - 1, k: 4 } : { j: jaar, k: kwartaal - 1 };
   }
   function volgendKwartaal() {
     return kwartaal === 4 ? { j: jaar + 1, k: 1 } : { j: jaar, k: kwartaal + 1 };
+  }
+
+  function urenJaarUrl(j) {
+    return `/boekhouding?jaar=${jaar}&kwartaal=${kwartaal}&urenJaar=${j}`;
+  }
+
+  function nieuweUrenRegel() {
+    setUrenRegel(LEGE_UREN_REGEL);
+    setUrenFout("");
+    setUrenFormOpen(true);
+  }
+  function bewerkUrenRegel(u) {
+    setUrenRegel({ id: u.id, datum: u.datum, aantalUren: String(u.aantal_uren), omschrijving: u.omschrijving });
+    setUrenFout("");
+    setUrenFormOpen(true);
+  }
+
+  async function urenOpslaan() {
+    setUrenFout("");
+    if (!urenRegel.omschrijving.trim()) return setUrenFout("Vul een omschrijving in.");
+    if (getal(urenRegel.aantalUren) <= 0) return setUrenFout("Vul een aantal uur groter dan 0 in.");
+
+    setUrenBezig(true);
+    try {
+      const pad = urenRegel.id ? "/api/uren/bijwerken" : "/api/uren/toevoegen";
+      const res = await fetch(pad, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: urenRegel.id || undefined,
+          datum: urenRegel.datum,
+          aantalUren: getal(urenRegel.aantalUren),
+          omschrijving: urenRegel.omschrijving.trim(),
+        }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Opslaan mislukte.");
+      setUrenFormOpen(false);
+      router.refresh();
+    } catch (e) {
+      setUrenFout(String(e.message || e));
+    }
+    setUrenBezig(false);
+  }
+
+  async function urenVerwijderenActie(id) {
+    if (!confirm("Deze urenregel verwijderen?")) return;
+    try {
+      const res = await fetch("/api/uren/verwijderen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Verwijderen mislukte.");
+      setUren((v) => v.filter((u) => u.id !== id));
+      router.refresh();
+    } catch (e) {
+      alert(String(e.message || e));
+    }
   }
 
   function nieuweRegel() {
@@ -382,6 +450,120 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
             ))}
             {kosten.length === 0 && (
               <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: KLEUR.label }}>Nog geen kosten in dit kwartaal.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Urenregistratie — los van kosten/omzet/btw, voor het urencriterium */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, marginTop: 8 }}>
+        <a href={urenJaarUrl(urenJaar - 1)} style={{ fontSize: 13, fontWeight: 700, color: KLEUR.klei, textDecoration: "none" }}>← {urenJaar - 1}</a>
+        <div style={{ fontFamily: HEAD, fontSize: 18, fontWeight: 800, color: KLEUR.inkt }}>Urenregistratie {urenJaar}</div>
+        <a href={urenJaarUrl(urenJaar + 1)} style={{ fontSize: 13, fontWeight: 700, color: KLEUR.klei, textDecoration: "none" }}>{urenJaar + 1} →</a>
+      </div>
+
+      <div style={{ ...kaart, padding: "16px 18px", marginBottom: 16 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
+          <Cijfer label="Uren dit jaar" waarde={`${urenOverzicht.totaal_uren}`} sub={`van de ${urenOverzicht.urencriterium} voor het urencriterium`} />
+          <Cijfer
+            label="Nog nodig"
+            waarde={`${urenOverzicht.resterend}`}
+            kleur={urenOverzicht.resterend > 0 ? "#b45309" : "#0f6e56"}
+            sub={urenOverzicht.resterend > 0 ? "uur te gaan" : "criterium al gehaald"}
+          />
+          {urenOverzicht.huidig_jaar && (
+            <Cijfer
+              label="Verwacht einde jaar"
+              waarde={`${urenOverzicht.projectie_einde_jaar}`}
+              kleur={urenOverzicht.op_schema ? "#0f6e56" : "#b91c1c"}
+              sub={urenOverzicht.op_schema ? "op dit tempo op schema" : "op dit tempo niet op schema"}
+            />
+          )}
+        </div>
+        <div style={{ height: 10, borderRadius: 6, background: KLEUR.baan, overflow: "hidden" }}>
+          <div style={{
+            height: "100%", width: `${Math.min(100, urenOverzicht.percentage)}%`,
+            background: urenOverzicht.percentage >= 100 ? "#0f6e56" : KLEUR.klei, borderRadius: 6,
+          }} />
+        </div>
+        <div style={{ fontSize: 12, color: KLEUR.label, marginTop: 6 }}>{urenOverzicht.percentage}% van het urencriterium (1.225 uur/jaar)</div>
+        <div style={{ margin: "14px 0 12px", borderTop: `1px solid ${KLEUR.lijn}` }} />
+        <p style={{ fontSize: 12.5, color: KLEUR.gedempt, margin: 0, lineHeight: 1.6 }}>
+          Dit is puur voor jezelf — géén onderdeel van de btw-aangifte. Als eenmanszaak/starter heb je bij minimaal
+          1.225 uur per jaar aan je onderneming recht op zelfstandigenaftrek en (de eerste jaren) startersaftrek. De
+          Belastingdienst schrijft geen vaste vorm voor, maar bij een controle moet je aannemelijk kunnen maken dat je
+          eraan voldoet — vandaar dit overzichtje: datum, aantal uur, en wat je deed.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <h2 style={{ fontSize: 17, margin: 0 }}>Geregistreerde uren</h2>
+        <Knop kind="primair" klein onClick={nieuweUrenRegel}>+ Uren registreren</Knop>
+      </div>
+
+      {urenFormOpen && (
+        <div style={{ ...kaart, padding: 16, marginBottom: 16, background: "#F7F5F0" }}>
+          <h3 style={{ fontSize: 14.5, margin: "0 0 12px" }}>{urenRegel.id ? "Urenregel bewerken" : "Uren registreren"}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 12 }}>
+            <div>
+              <label style={labelStijl}>Datum</label>
+              <input
+                style={veldStijl} type="date" value={urenRegel.datum}
+                onChange={(e) => setUrenRegel((v) => ({ ...v, datum: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStijl}>Aantal uur</label>
+              <input
+                style={veldStijl} inputMode="decimal" value={urenRegel.aantalUren} placeholder="Bijv. 6,5"
+                onChange={(e) => setUrenRegel((v) => ({ ...v, aantalUren: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label style={labelStijl}>Wat deed je?</label>
+              <input
+                style={veldStijl} value={urenRegel.omschrijving} placeholder="Bijv. Klantwerk StudioBaris, administratie"
+                onChange={(e) => setUrenRegel((v) => ({ ...v, omschrijving: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {urenFout && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{urenFout}</div>}
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Knop kind="primair" onClick={urenOpslaan} disabled={urenBezig}>{urenBezig ? "Bezig…" : "Opslaan"}</Knop>
+            <Knop kind="secondair" onClick={() => setUrenFormOpen(false)}>Annuleren</Knop>
+          </div>
+        </div>
+      )}
+
+      <div style={{ ...kaart, overflowX: "auto", marginBottom: 20 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
+          <thead>
+            <tr>
+              <th style={th}>Datum</th>
+              <th style={th}>Wat deed je</th>
+              <th style={{ ...th, textAlign: "right" }}>Aantal uur</th>
+              <th style={th}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {uren.map((u) => (
+              <tr key={u.id}>
+                <td style={{ ...td, whiteSpace: "nowrap" }}>{datumNL(u.datum)}</td>
+                <td style={td}>
+                  <div>{u.omschrijving}</div>
+                  {u.toegevoegd_door && <div style={{ fontSize: 11.5, color: KLEUR.label }}>{u.toegevoegd_door}</div>}
+                </td>
+                <td style={tdGetal}>{Number(u.aantal_uren).toLocaleString("nl-NL", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                <td style={{ ...td, whiteSpace: "nowrap", textAlign: "right" }}>
+                  <button onClick={() => bewerkUrenRegel(u)} style={{ background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 12.5, cursor: "pointer", marginRight: 10, fontFamily: "inherit" }}>bewerken</button>
+                  <button onClick={() => urenVerwijderenActie(u.id)} style={{ background: "none", border: "none", color: "#b91c1c", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" }}>verwijderen</button>
+                </td>
+              </tr>
+            ))}
+            {uren.length === 0 && (
+              <tr><td colSpan={4} style={{ padding: 24, textAlign: "center", color: KLEUR.label }}>Nog geen uren geregistreerd in {urenJaar}.</td></tr>
             )}
           </tbody>
         </table>

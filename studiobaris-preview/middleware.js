@@ -56,7 +56,7 @@ const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
 // beheer-rol; de rest een geldige sessie (zodat verkopers blijven werken).
-const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/facturen/status", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand", "/api/financieel/instellingen", "/api/taken/aanmaken", "/api/taken/bijwerken", "/api/taken/verplaatsen", "/api/taken/verwijderen", "/api/kosten/toevoegen", "/api/kosten/bijwerken", "/api/kosten/verwijderen"];
+const API_BEHEER = ["/api/klant/delete", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/facturen/status", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand", "/api/financieel/instellingen", "/api/taken/aanmaken", "/api/taken/bijwerken", "/api/taken/verplaatsen", "/api/taken/verwijderen", "/api/kosten/toevoegen", "/api/kosten/bijwerken", "/api/kosten/verwijderen", "/api/uren/toevoegen", "/api/uren/bijwerken", "/api/uren/verwijderen"];
 const API_INGELOGD = ["/api/klant/update", "/api/klant/gegevens", "/api/klant/verkoopbedrag", "/api/publish", "/api/publish-site"];
 
 function raakt(path, lijst) {
@@ -140,6 +140,9 @@ export const config = {
     "/api/kosten/toevoegen",
     "/api/kosten/bijwerken",
     "/api/kosten/verwijderen",
+    "/api/uren/toevoegen",
+    "/api/uren/bijwerken",
+    "/api/uren/verwijderen",
     "/api/taken/aanmaken",
     "/api/taken/bijwerken",
     "/api/taken/verplaatsen",
