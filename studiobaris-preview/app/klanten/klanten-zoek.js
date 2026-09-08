@@ -6,18 +6,18 @@ import { KLEUR } from "../werkplek-stijl";
 // Zoekbalk + filterknoppen voor Mijn klanten. Filtert de al-gerenderde
 // klantkaarten (met data-attributen) rechtstreeks in beeld, zonder herladen.
 // Zoekt op naam, plaats, telefoon, e-mail en verzamelaar; filtert op de fase
-// waar het geld zit (akkoord/betaald) en op klanten die reageerden.
+// waar de sale in zit (nog geen akkoord/akkoord). Betaalstatus en reacties
+// staan er bewust niet meer bij als filter: die zijn hier niet leidend (dat
+// zijn het Klantenregister en het financiële tabblad) en stonden al gewoon
+// op de kaart zelf.
 const FILTERS = [
   { key: "", label: "Alle" },
   { key: "geen", label: "Nog geen akkoord" },
   { key: "akkoord", label: "Akkoord" },
-  { key: "actief", label: "Betaald" },
-  { key: "reactie", label: "Klant reageerde" },
 ];
 
 function pastFilter(el, f) {
   if (!f) return true;
-  if (f === "reactie") return el.getAttribute("data-reactie") === "ja";
   return (el.getAttribute("data-betaal") || "geen") === f;
 }
 
