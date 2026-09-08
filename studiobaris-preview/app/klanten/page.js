@@ -1,14 +1,13 @@
 import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
-import PublishButton, {
-  FaseStepper, Contactpersoon, AppjeKnop, LinkChips, VerkoopBedrag, AppLinkKnop,
+import {
+  FaseStepper, Contactpersoon, AppjeKnop, LinkChips,
   GeenInteresseKnop, TerugNaarActiefKnop,
-  PersoonlijkeZin, PublishToggle,
+  PublishToggle,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
-  GegevensEditor, InzendingenKnop, KlantNaam,
-  VerwijderKnop, MarkeerAlsKlantKnop,
+  KlantNaam, VerwijderKnop,
 } from "../dashboard/dashboard-actions";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
@@ -29,35 +28,6 @@ function BetaalBadge({ status }) {
   };
   const [kleur, label] = map[status] || ["#9A9084", "Nog geen akkoord"];
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
-}
-
-// Checklist: wat moet er nog voordat je het appje kunt versturen?
-function Checklist({ r }) {
-  const items = [
-    ["Voornaam contactpersoon", Boolean((r.contactpersoon || "").trim())],
-    ["Telefoonnummer", Boolean((r.lead_phone || "").trim())],
-    ["Persoonlijke zin", Boolean((r.persoonlijk || "").trim())],
-    ["Verkoopbedrag", Number(r.websiteprijs) > 0],
-  ];
-  const klaar = items.every((i) => i[1]);
-  return (
-    <div style={{ background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
-      <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, color: klaar ? KLEUR.sage.tekst : KLEUR.amber.tekst, marginBottom: 8 }}>
-        {klaar ? "Klaar om te versturen" : "Nog te doen voor versturen"}
-      </div>
-      <div style={{ display: "grid", gap: 6 }}>
-        {items.map(([label, ok]) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: ok ? KLEUR.gedempt : KLEUR.inkt }}>
-            <span style={{ width: 18, height: 18, borderRadius: 999, display: "grid", placeItems: "center", flex: "0 0 auto",
-              background: ok ? KLEUR.sage.bg : KLEUR.rust.bg, color: ok ? KLEUR.sage.tekst : KLEUR.rust.tekst, fontSize: 12, fontWeight: 800 }}>
-              {ok ? "✓" : "✗"}
-            </span>
-            {label}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export default async function KlantenPage() {
@@ -177,65 +147,22 @@ export default async function KlantenPage() {
               )}
             </div>
 
-            <Checklist r={r} />
-
-            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} volledig heeftRest={Number(r.restbedrag) > 0} restBetaald={r.rest_status === "betaald"} stijl={r.stijl} />
-            <PersoonlijkeZin slug={r.slug} value={r.persoonlijk} />
+            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
               <AppjeKnop slug={r.slug} bedrijf={r.company_name} contact={r.contactpersoon} afzender={r.verzamelaar || naam} telefoon={r.lead_phone} demoGevuld={r.demo_gevuld} persoonlijk={r.persoonlijk} />
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-              <AppLinkKnop bedrijf={r.company_name} />
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12 }}>
-              <VerkoopBedrag slug={r.slug} value={r.websiteprijs} />
-              <span style={{ fontSize: 12.5, color: "#9A9084" }}>Vul in waarvoor je 'm hebt verkocht. Jouw commissie is 50% hiervan.</span>
-            </div>
 
             {beheer && (
-              <div style={{ borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12, display: "grid", gap: 10 }}>
+              <div style={{ borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 12, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, color: KLEUR.gedempt }}>
                   Beheer
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-                  <InzendingenKnop slug={r.slug} />
-                  {/* Prijs, betaalwijze, akkoordlink en facturen staan sinds
-                      kort allemaal onder Abonnementen. Twee plekken voor
-                      hetzelfde bedrag ging een keer mis, dus het staat hier
-                      alleen nog als verwijzing. */}
-                  <a
-                    href="/abonnementen"
-                    style={{ fontSize: 13, color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}
-                  >
-                    {r.maandbedrag ? `€ ${Number(r.maandbedrag).toFixed(2).replace(".", ",")} p/m` : "Nog geen maandbedrag"} — regel het bij Abonnementen →
-                  </a>
-                  <a
-                    href={`/facturen?klant=${encodeURIComponent(r.slug)}`}
-                    style={{ fontSize: 13, color: KLEUR.klei, fontWeight: 700, textDecoration: "none" }}
-                  >
-                    Facturen bekijken →
-                  </a>
-                  {r.klantnummer ? (
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "4px 10px", borderRadius: 999 }}>
-                      Klantnr. {r.klantnummer}
-                    </span>
-                  ) : (
-                    <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />
-                  )}
+                <KlantNaam slug={r.slug} value={r.verzamelaar} />
+                {(naam === "Gerrit" || naam === "Levi") && (
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-                  <KlantNaam slug={r.slug} value={r.verzamelaar} />
-                  <GegevensEditor slug={r.slug} data={r} />
-                  {r.heeft_concept && (
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <a href={`/${r.slug}?concept=1`} target="_blank" rel="noreferrer" style={{ color: KLEUR.klei, fontSize: 13 }}>Bekijk concept</a>
-                      <PublishButton slug={r.slug} />
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             )}
           </div>
