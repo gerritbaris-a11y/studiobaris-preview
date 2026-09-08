@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FASES, normFase } from "../../lib/fase";
 
 export default function PublishButton({ slug }) {
   const [s, setS] = useState("idle");
@@ -67,29 +68,11 @@ async function bewaarKlant(slug, payload) {
 }
 
 // De klantreis als klikbare fasebalk. Klik een fase om die te zetten.
-// Bewust kort gehouden tot 3 stappen. Klanten die (van vroeger, of via de
-// automatische flow) nog op een tussenliggende fase staan zoals "Klant-intake"
-// of "Feedback 1/2" tonen we hier als "Akkoord" — verder dan Akkoord, nog niet
-// Klaar. Dat is puur de weergave; hun echte pipeline_status blijft ongewijzigd.
-export const FASES = ["Preview", "Akkoord", "Klaar"];
-const OUD_NAAR_NIEUW = {
-  "Gebeld": "Preview",
-  "Preview klaar": "Preview",
-  "Klant-intake": "Akkoord",
-  "Feedback 1": "Akkoord",
-  "Feedback 2": "Akkoord",
-  "Wachten op feedback 1": "Akkoord",
-  "Wachten op feedback 2": "Akkoord",
-  "Wachten op feedback 3": "Akkoord",
-};
-
-// Vertaalt een pipeline_status (nieuw of nog oud, fijnmaziger) naar één van
-// de 3 fases. Gebruikt door zowel de klikbare fasebalk hieronder als de
-// filterknoppen op /klanten, zodat die twee altijd hetzelfde zeggen.
-export function normFase(huidige) {
-  const norm = OUD_NAAR_NIEUW[huidige] || huidige;
-  return FASES.includes(norm) ? norm : "Preview";
-}
+// Bewust kort gehouden tot 3 stappen (FASES/normFase: zie lib/fase.js).
+// Klanten die (van vroeger, of via de automatische flow) nog op een
+// tussenliggende fase staan zoals "Klant-intake" of "Feedback 1/2" tonen we
+// hier als "Akkoord" — verder dan Akkoord, nog niet Klaar. Dat is puur de
+// weergave; hun echte pipeline_status blijft ongewijzigd.
 
 // "Geen interesse": zet de klant op archief (pipeline_status "Afgewezen"). Hij
 // verdwijnt uit de actieve lijst, maar blijft bewaard en is terug te zetten.

@@ -6,7 +6,7 @@ import { KLEUR } from "../werkplek-stijl";
 // Zoekbalk + filterknoppen voor Mijn klanten. Filtert de al-gerenderde
 // klantkaarten (met data-attributen) rechtstreeks in beeld, zonder herladen.
 // Zoekt op naam, plaats, telefoon, e-mail en verzamelaar; filtert op de fase
-// uit de fasebalk (data-fase, zie normFase() in dashboard-actions.js) — niet
+// uit de fasebalk (data-fase, zie normFase() in lib/fase.js) — niet
 // op betaalstatus, die is hier niet leidend (dat zijn het Klantenregister en
 // het financiële tabblad) en staat al gewoon op de kaart zelf.
 // "Akkoord" telt ook klanten die al op "Klaar" staan mee: die zijn per
