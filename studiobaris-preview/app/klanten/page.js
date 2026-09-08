@@ -3,12 +3,17 @@ import { leesSessie, isBeheer } from "../../lib/auth";
 import {
   FaseStepper, Contactpersoon, AppjeKnop, LinkChips,
   GeenInteresseKnop, TerugNaarActiefKnop,
-  PublishToggle, normFase,
+  PublishToggle,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
   KlantNaam, VerwijderKnop,
 } from "../dashboard/dashboard-actions";
+// normFase() komt uit een apart, niet-"use client"-bestand: importeer je 'm
+// vanuit dashboard-actions.js (wel "use client"), dan is het op de server
+// geen aanroepbare functie meer maar een client-referentie — vandaar dit
+// aparte pad, ook al staat dezelfde functie ook al in dashboard-actions.js.
+import { normFase } from "../../lib/fase";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
 import KlantenZoek from "./klanten-zoek";
