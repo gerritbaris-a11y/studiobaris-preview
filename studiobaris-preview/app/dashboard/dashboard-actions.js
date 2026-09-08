@@ -67,13 +67,20 @@ async function bewaarKlant(slug, payload) {
 }
 
 // De klantreis als klikbare fasebalk. Klik een fase om die te zetten.
-export const FASES = ["Nieuw", "Preview", "Akkoord", "Klant-intake", "Feedback 1", "Feedback 2", "Klaar"];
+// Bewust kort gehouden tot 3 stappen. Klanten die (van vroeger, of via de
+// automatische flow) nog op een tussenliggende fase staan zoals "Klant-intake"
+// of "Feedback 1/2" tonen we hier als "Akkoord" — verder dan Akkoord, nog niet
+// Klaar. Dat is puur de weergave; hun echte pipeline_status blijft ongewijzigd.
+export const FASES = ["Preview", "Akkoord", "Klaar"];
 const OUD_NAAR_NIEUW = {
   "Gebeld": "Preview",
   "Preview klaar": "Preview",
-  "Wachten op feedback 1": "Feedback 1",
-  "Wachten op feedback 2": "Feedback 2",
-  "Wachten op feedback 3": "Feedback 2",
+  "Klant-intake": "Akkoord",
+  "Feedback 1": "Akkoord",
+  "Feedback 2": "Akkoord",
+  "Wachten op feedback 1": "Akkoord",
+  "Wachten op feedback 2": "Akkoord",
+  "Wachten op feedback 3": "Akkoord",
 };
 
 // "Geen interesse": zet de klant op archief (pipeline_status "Afgewezen"). Hij
@@ -861,7 +868,10 @@ export function AkkoordLink({ slug }) {
 }
 
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, volledig, heeftRest, restBetaald, stijl }) {
+// Bewust kort gehouden: alleen wat je nodig hebt om de sale te versturen en
+// binnen te halen. Website, Klant-intake, Feedback en Restbetaling staan hier
+// niet meer (die horen bij latere fases / staan elders).
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, stijl, bedrijf }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
   const [open, setOpen] = useState(false);
@@ -869,26 +879,10 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
   const PREVIEW = "https://preview.studiobaris.nl";
   const DEMO = "https://demo.studiobaris.nl";
 
-  // Alle links van deze klant, op één plek. Elke link is te kopiëren én te openen.
-  const links = [
-    { key: "w", naam: "Website", url: PREVIEW + "/" + slug, uit: !gepubliceerd, hint: gepubliceerd ? "De live website" : "Nog offline - eerst publiceren" },
-    { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" },
-    { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" },
-    { key: "i", naam: "Klant-intake", url: PREVIEW + "/intake/" + slug, verborgen: !volledig, hint: "Stuur dit na akkoord" },
-    { key: "f", naam: "Feedback", url: PREVIEW + "/feedback/" + slug, verborgen: !volledig, hint: "Voor feedbackronde 1 en 2" },
-    { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Helft vooraf + maandelijkse incasso" },
-    {
-      key: "r",
-      naam: restBetaald ? "Restbedrag (voldaan)" : "Restbetaling",
-      url: PREVIEW + "/restbetaling/" + slug,
-      uit: !heeftRest,
-      hint: !heeftRest
-        ? "Vul eerst een verkoopbedrag in"
-        : restBetaald
-          ? "Het restbedrag is al betaald"
-          : "De tweede helft, te sturen bij oplevering",
-    },
-  ].filter((l) => !l.verborgen);
+  const linkPreview = { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" };
+  const linkDemo = { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" };
+  const linkBetaal = { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Helft vooraf + maandelijkse incasso" };
+  const links = [linkPreview, linkDemo, linkBetaal];
 
   function copy(url, key) {
     try {
@@ -931,7 +925,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
           Stijl kiezen{stijl ? ` (${stijl})` : ""}
         </a>
 
-        {links.map((l) => (
+        {[linkPreview, linkDemo].map((l) => (
           <button
             key={l.key}
             onClick={() => !l.uit && copy(l.url, l.key)}
@@ -939,9 +933,9 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
             title={l.hint + (l.uit ? "" : "\n" + l.url)}
             style={{
               ...chip,
-              borderColor: l.uit ? "#ECE4D7" : l.key === "r" && restBetaald ? "#a7f3d0" : l.key === "d" ? (l.leeg ? "#E3DACB" : "#C05A38") : "#E3DACB",
-              color: l.uit ? "#B0A697" : l.key === "r" && restBetaald ? "#065f46" : l.key === "d" && !l.leeg ? "#a35400" : "#524A40",
-              background: copied === l.key ? "#ecfdf5" : l.key === "r" && restBetaald ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
+              borderColor: l.uit ? "#ECE4D7" : l.key === "d" ? (l.leeg ? "#E3DACB" : "#C05A38") : "#E3DACB",
+              color: l.uit ? "#B0A697" : l.key === "d" && !l.leeg ? "#a35400" : "#524A40",
+              background: copied === l.key ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
               cursor: l.uit ? "not-allowed" : "pointer",
             }}
           >
@@ -954,6 +948,16 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
             {demoBezig ? "Demo-app maken…" : "+ Demo-app maken"}
           </button>
         )}
+
+        <AppLinkKnop bedrijf={bedrijf} />
+
+        <button
+          onClick={() => copy(linkBetaal.url, linkBetaal.key)}
+          title={linkBetaal.hint + "\n" + linkBetaal.url}
+          style={{ ...chip, borderColor: "#E3DACB", color: "#524A40", background: copied === linkBetaal.key ? "#ecfdf5" : "#fff" }}
+        >
+          {copied === linkBetaal.key ? "Gekopieerd ✓" : linkBetaal.naam}
+        </button>
       </div>
 
       {/* Uitgeklapt: de volledige links, zichtbaar en los te kopiëren. */}
