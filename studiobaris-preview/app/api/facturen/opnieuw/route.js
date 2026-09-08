@@ -15,6 +15,9 @@ export async function POST(req) {
 
     const factuur = await getFactuur(nummer);
     if (!factuur) return NextResponse.json({ ok: false, error: "Factuur niet gevonden." }, { status: 404 });
+    if (factuur.status === "geannuleerd") {
+      return NextResponse.json({ ok: false, error: "Een geannuleerde factuur kan niet verstuurd worden." }, { status: 400 });
+    }
 
     const pdf = await factuurPdf(factuur);
     const mail = await mailFactuur(factuur, pdf);

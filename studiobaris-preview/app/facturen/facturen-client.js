@@ -21,6 +21,7 @@ const STATUS_CHIP = {
   verstuurd: "amber",
   betaald: "sage",
   mislukt: "rust",
+  geannuleerd: "grijs",
 };
 
 const STATUS_LABEL = {
@@ -28,7 +29,20 @@ const STATUS_LABEL = {
   verstuurd: "Verstuurd",
   betaald: "Betaald",
   mislukt: "Mislukt",
+  geannuleerd: "Geannuleerd",
 };
+
+// Welke statussen je vanuit een bepaalde status mag kiezen in de dropdown.
+// "geannuleerd" is bewust alleen bereikbaar vanuit "concept" (nooit een al
+// verstuurde/betaalde factuur — dat hoort via een creditfactuur te lopen),
+// en vanuit "geannuleerd" kan alleen terug naar "concept" (ongedaan maken).
+// Zelfde regels als sb_factuur_status() in de database; dit voorkomt dat de
+// dropdown een keuze aanbiedt die de server toch zou weigeren.
+function statusOpties(huidig) {
+  if (huidig === "geannuleerd") return ["geannuleerd", "concept"];
+  if (huidig === "concept") return ["concept", "verstuurd", "betaald", "mislukt", "geannuleerd"];
+  return ["concept", "verstuurd", "betaald", "mislukt"];
+}
 
 function euro(v) {
   const n = Number(v) || 0;
@@ -166,7 +180,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
           onChange={(e) => setZoek(e.target.value)}
         />
         <div style={{ display: "flex", gap: 6 }}>
-          {["alle", "concept", "verstuurd", "betaald", "mislukt"].map((s) => (
+          {["alle", "concept", "verstuurd", "betaald", "mislukt", "geannuleerd"].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -249,7 +263,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                       opacity: statusBezig === f.nummer ? 0.6 : 1,
                     }}
                   >
-                    {Object.keys(STATUS_LABEL).map((s) => (
+                    {statusOpties(f.status).map((s) => (
                       <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                     ))}
                   </select>
@@ -268,7 +282,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                     >
                       PDF ↓
                     </a>
-                    {!f.pdf_url && (
+                    {!f.pdf_url && f.status !== "geannuleerd" && (
                       <button
                         onClick={() => versturen(f.nummer)}
                         disabled={versturenBezig === f.nummer}

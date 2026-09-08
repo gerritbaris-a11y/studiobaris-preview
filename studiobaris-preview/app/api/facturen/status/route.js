@@ -4,7 +4,7 @@ import { getFactuur, setFactuurStatus } from "../../../../lib/abonnementen-data"
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TOEGESTAAN = ["concept", "verstuurd", "betaald", "mislukt"];
+const TOEGESTAAN = ["concept", "verstuurd", "betaald", "mislukt", "geannuleerd"];
 
 // Handmatige statuswijziging vanuit het facturenoverzicht — het vangnet voor
 // betalingen die niet (of niet meer) via Mollie lopen, zoals een overschrijving
