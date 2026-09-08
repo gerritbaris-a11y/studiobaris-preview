@@ -83,6 +83,14 @@ const OUD_NAAR_NIEUW = {
   "Wachten op feedback 3": "Akkoord",
 };
 
+// Vertaalt een pipeline_status (nieuw of nog oud, fijnmaziger) naar één van
+// de 3 fases. Gebruikt door zowel de klikbare fasebalk hieronder als de
+// filterknoppen op /klanten, zodat die twee altijd hetzelfde zeggen.
+export function normFase(huidige) {
+  const norm = OUD_NAAR_NIEUW[huidige] || huidige;
+  return FASES.includes(norm) ? norm : "Preview";
+}
+
 // "Geen interesse": zet de klant op archief (pipeline_status "Afgewezen"). Hij
 // verdwijnt uit de actieve lijst, maar blijft bewaard en is terug te zetten.
 export function GeenInteresseKnop({ slug, bedrijf, huidige }) {
@@ -440,8 +448,8 @@ export function HeractiveerKlantKnop({ slug, bedrijf }) {
 
 export function FaseStepper({ slug, huidige, bedrijf }) {
   const [bezig, setBezig] = useState(false);
-  const norm = OUD_NAAR_NIEUW[huidige] || huidige || "Nieuw";
-  const idx = Math.max(0, FASES.indexOf(norm));
+  const norm = normFase(huidige);
+  const idx = FASES.indexOf(norm);
   async function zet(f) {
     if (f === norm || bezig) return;
     setBezig(true);

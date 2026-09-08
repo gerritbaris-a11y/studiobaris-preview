@@ -3,7 +3,7 @@ import { leesSessie, isBeheer } from "../../lib/auth";
 import {
   FaseStepper, Contactpersoon, AppjeKnop, LinkChips,
   GeenInteresseKnop, TerugNaarActiefKnop,
-  PublishToggle,
+  PublishToggle, normFase,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
@@ -97,7 +97,7 @@ export default async function KlantenPage() {
         </div>
       )}
 
-      {actief.length > 1 && <KlantenZoek />}
+      {(actief.length > 1 || afgewezen.length > 0) && <KlantenZoek />}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {actief.map((r) => {
           let review = {};
@@ -107,8 +107,9 @@ export default async function KlantenPage() {
             : null;
           const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar, review.bron]
             .filter(Boolean).join(" ").toLowerCase();
+          const fase = normFase(r.pipeline_status);
           return (
-          <div key={r.slug} style={card} data-klant={zoektekst} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
+          <div key={r.slug} style={card} data-klant={zoektekst} data-fase={fase} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
@@ -177,15 +178,19 @@ export default async function KlantenPage() {
             <span style={{ fontSize: 13, color: "#9A9084" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {afgewezen.map((r) => (
-              <div key={r.slug} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px", opacity: 0.9 }}>
+            {afgewezen.map((r) => {
+              const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar]
+                .filter(Boolean).join(" ").toLowerCase();
+              return (
+              <div key={r.slug} data-klant={zoektekst} data-fase="archief" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px", opacity: 0.9 }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{r.company_name || r.slug}</div>
                   <div style={{ fontSize: 12.5, color: "#9A9084" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 </div>
                 <TerugNaarActiefKnop slug={r.slug} bedrijf={r.company_name} />
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
