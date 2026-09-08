@@ -6,19 +6,28 @@ import { KLEUR } from "../werkplek-stijl";
 // Zoekbalk + filterknoppen voor Mijn klanten. Filtert de al-gerenderde
 // klantkaarten (met data-attributen) rechtstreeks in beeld, zonder herladen.
 // Zoekt op naam, plaats, telefoon, e-mail en verzamelaar; filtert op de fase
-// waar de sale in zit (nog geen akkoord/akkoord). Betaalstatus en reacties
-// staan er bewust niet meer bij als filter: die zijn hier niet leidend (dat
-// zijn het Klantenregister en het financiële tabblad) en stonden al gewoon
-// op de kaart zelf.
+// uit de fasebalk (data-fase, zie normFase() in dashboard-actions.js) — niet
+// op betaalstatus, die is hier niet leidend (dat zijn het Klantenregister en
+// het financiële tabblad) en staat al gewoon op de kaart zelf.
+// "Akkoord" telt ook klanten die al op "Klaar" staan mee: die zijn per
+// definitie al voorbij Akkoord.
 const FILTERS = [
   { key: "", label: "Alle" },
   { key: "geen", label: "Nog geen akkoord" },
   { key: "akkoord", label: "Akkoord" },
+  { key: "archief", label: "Archief" },
 ];
 
 function pastFilter(el, f) {
+  const fase = el.getAttribute("data-fase") || "Preview";
+  if (f === "archief") return fase === "archief";
+  // Gearchiveerde klanten alleen tonen als de knop "Archief" actief staat,
+  // nooit onder Alle/Nog geen akkoord/Akkoord — anders vervuilen ze de
+  // actieve lijst weer.
+  if (fase === "archief") return false;
   if (!f) return true;
-  return (el.getAttribute("data-betaal") || "geen") === f;
+  if (f === "geen") return fase === "Preview";
+  return fase === "Akkoord" || fase === "Klaar";
 }
 
 export default function KlantenZoek() {
