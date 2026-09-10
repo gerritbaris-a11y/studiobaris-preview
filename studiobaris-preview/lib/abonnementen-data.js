@@ -65,14 +65,16 @@ export async function getKandidaten() {
 }
 
 // De afspraak vastleggen: prijs, maandbedrag en betaalwijze op één plek.
-// De aanbetaling wordt in de database afgeleid, nooit met de hand ingevuld.
-export async function setAfspraak(slug, { websiteprijs, maandbedrag, betaalwijze, incassodag }) {
+// De aanbetaling wordt in de database afgeleid — behalve bij "handmatig",
+// daar komt 'm rechtstreeks uit aanbetalingHandmatig (zie sb_abonnement_instellen).
+export async function setAfspraak(slug, { websiteprijs, maandbedrag, betaalwijze, incassodag, aanbetalingHandmatig }) {
   return await rpc("sb_abonnement_instellen", {
     p_slug: slug,
     p_websiteprijs: websiteprijs ?? null,
     p_maandbedrag: maandbedrag ?? null,
     p_betaalwijze: betaalwijze ?? null,
     p_incassodag: incassodag ?? null,
+    p_aanbetaling_handmatig: aanbetalingHandmatig ?? null,
   });
 }
 
