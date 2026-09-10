@@ -43,6 +43,10 @@ export async function factuurPdf(f) {
   const klant = snap.klant || {};
   const regels = Array.isArray(snap.regels) ? snap.regels : [];
   const maandelijks = f.soort === "maandelijks";
+  // Slottermijn (optie 5) loopt sinds het betaallinkenplan ook automatisch
+  // via het bestaande mandaat, net als de maandelijkse incasso — vandaar
+  // dezelfde "incassogegevens"-opmaak i.p.v. de oude "maak zelf over"-tekst.
+  const automatischeIncasso = maandelijks || f.soort === "slottermijn";
 
   const pdf = await PDFDocument.create();
   const pagina = pdf.addPage([595.28, 841.89]); // A4
@@ -118,7 +122,7 @@ export async function factuurPdf(f) {
   const gegevens = [
     ["Factuurnummer:", f.nummer],
     ["Factuurdatum:", datumNL(f.factuurdatum)],
-    maandelijks
+    automatischeIncasso
       ? ["Incassodatum:", datumNL(f.incassodatum || f.vervaldatum)]
       : ["Vervaldatum:", datumNL(f.vervaldatum)],
     ["Klantnummer:", klant.klantnummer || "—"],
@@ -213,22 +217,25 @@ export async function factuurPdf(f) {
   // ── Betaal- of incassogegevens ─────────────────────────────────────────────
   y -= 14;
   vlak(L, y - 1, 16, 1.5, GOUD);
-  tekst(maandelijks ? "Incassogegevens" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
+  tekst(automatischeIncasso ? "Incassogegevens" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
   y -= 8;
 
-  const punten = maandelijks
+  // Bij "oneoff" (de oude, handmatige /restbetaling-flow) is er geen mandaat
+  // en dus geen incassodatum bekend — die factuur ontstaat daar pas ná
+  // betaling en toont dan gewoon de betaalgegevens-tak hieronder.
+  const punten = automatischeIncasso
     ? [
-        `Dit bedrag wordt automatisch geïncasseerd op ${datumNL(f.incassodatum || f.vervaldatum)} van je rekening.`,
+        f.soort === "slottermijn"
+          ? `Dit bedrag wordt automatisch geïncasseerd op ${datumNL(f.incassodatum || f.vervaldatum)} van je rekening — de slottermijn van je website, nu deze is opgeleverd.`
+          : `Dit bedrag wordt automatisch geïncasseerd op ${datumNL(f.incassodatum || f.vervaldatum)} van je rekening.`,
         `Incassant-ID: ${BEDRIJF.incassantId}${snap.mandaat ? ` · Kenmerk machtiging: ${snap.mandaat}` : ""}`,
-        "Type incasso: doorlopend, SEPA basis. De afschrijving verschijnt als “StudioBaris via Mollie”.",
+        `Type incasso: ${maandelijks ? "doorlopend" : "eenmalig"}, SEPA basis. De afschrijving verschijnt als “StudioBaris via Mollie”.`,
         "Klopt er iets niet? Meld dit binnen 8 weken na afschrijving, dan kun je het bedrag laten terugboeken via je eigen bank.",
-        "Minimale looptijd 12 maanden vanaf akkoord; daarna maandelijks opzegbaar.",
+        ...(maandelijks ? ["Minimale looptijd 12 maanden vanaf akkoord; daarna maandelijks opzegbaar."] : []),
         `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
       ]
     : [
-        f.soort === "slottermijn"
-          ? "Deze slottermijn is verschuldigd bij oplevering; gelieve binnen 7 dagen na factuurdatum te betalen."
-          : "Gelieve het totaalbedrag binnen 14 dagen na factuurdatum over te maken, tenzij je al via de betaallink hebt betaald.",
+        "Gelieve het totaalbedrag binnen 14 dagen na factuurdatum over te maken, tenzij je al via de betaallink hebt betaald.",
         `Rekeningnummer (IBAN): ${BEDRIJF.iban} t.n.v. ${BEDRIJF.naam}`,
         `Vermeld bij betaling altijd het factuurnummer: ${f.nummer}`,
         "Minimale looptijd van de maandelijkse dienstverlening: 12 maanden vanaf akkoord; daarna maandelijks opzegbaar.",
@@ -272,11 +279,17 @@ export async function mailFactuur(f, pdfBytes) {
 
   const from = process.env.EMAIL_FROM || "StudioBaris <info@studiobaris.nl>";
   const maandelijks = f.soort === "maandelijks";
+  // Slottermijn loopt sinds het betaallinkenplan ook automatisch via het
+  // bestaande mandaat — zelfde "je hoeft niets te doen"-toon als de
+  // maandelijkse incasso, i.p.v. de oude "maak zelf over"-mail.
+  const automatischeIncasso = maandelijks || f.soort === "slottermijn";
   const bedrag = euro(f.bedrag_incl);
 
   const onderwerp = maandelijks
     ? `Factuur ${f.nummer} — ${periodeInWoorden(f.periode)}`
-    : `Factuur ${f.nummer} van StudioBaris`;
+    : f.soort === "slottermijn"
+      ? `Factuur ${f.nummer} — slottermijn van je website`
+      : `Factuur ${f.nummer} van StudioBaris`;
 
   const kern = maandelijks
     ? `<p>Hierbij de factuur voor <strong>${periodeInWoorden(f.periode)}</strong>.
@@ -285,8 +298,16 @@ export async function mailFactuur(f, pdfBytes) {
          van je rekening afgeschreven. Je hoeft dus niets te doen.</p>
        <p style="color:#6B6258;font-size:14px">Incassant-ID ${BEDRIJF.incassantId}. De afschrijving
          verschijnt op je afschrift als &ldquo;StudioBaris via Mollie&rdquo;.</p>`
-    : `<p>Hierbij de factuur voor je website en app, ten bedrage van
-         <strong>${bedrag}</strong> incl. btw.</p>`;
+    : automatischeIncasso // f.soort === "slottermijn"
+      ? `<p>Je website is opgeleverd en staat live — hierbij de factuur voor de slottermijn.
+           Het bedrag van <strong>${bedrag}</strong> incl. btw wordt op
+           <strong>${datumNL(f.incassodatum || f.vervaldatum)}</strong> automatisch
+           van je rekening afgeschreven, tegen dezelfde machtiging als je maandelijkse
+           vergoeding. Je hoeft dus niets te doen.</p>
+         <p style="color:#6B6258;font-size:14px">Incassant-ID ${BEDRIJF.incassantId}. De afschrijving
+           verschijnt op je afschrift als &ldquo;StudioBaris via Mollie&rdquo;.</p>`
+      : `<p>Hierbij de factuur voor je website en app, ten bedrage van
+           <strong>${bedrag}</strong> incl. btw.</p>`;
 
   const html = `
     <div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#2B2724;max-width:560px">

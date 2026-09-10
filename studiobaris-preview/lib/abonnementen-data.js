@@ -86,6 +86,20 @@ export async function opzeggenInDb(slug) {
   return await rpc("sb_abonnement_opzeggen", { p_slug: slug });
 }
 
+// ── Slottermijn (optie 5) ──────────────────────────────────────────────────
+// "Slottermijn versturen": zet het bedrag vast en de aankondigingsdatum.
+// De eigenlijke factuur/mail regelt de API-route zelf (zelfde patroon als
+// de andere facturen), dit stuk is alleen de klant-status.
+export async function slottermijnAankondigen(slug, bedrag) {
+  return await rpc("sb_slottermijn_aankondigen", { p_slug: slug, p_bedrag: bedrag });
+}
+
+// Voor de dagelijkse cron: klanten van wie de 14-dagen-termijn voorbij is.
+export async function getSlottermijnTeIncasseren() {
+  const data = await stil(() => rpc("sb_slottermijn_te_incasseren", {}), []);
+  return Array.isArray(data) ? data : [];
+}
+
 // ── Facturen ────────────────────────────────────────────────────────────────
 export async function maakFactuur({
   slug, soort, regels, periode = null, paymentId = null,

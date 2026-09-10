@@ -52,7 +52,65 @@ export async function POST(req) {
     const slug = payment && payment.metadata && payment.metadata.slug;
     if (!slug) return new NextResponse("geen slug", { status: 200 });
 
-    // Restbetaling (de tweede termijn van het websitebedrag, bij oplevering).
+    // Slottermijn (optie 5, automatisch): de factuur bestaat al — die ging
+    // 14 dagen eerder al de deur uit als vooraankondiging (zie
+    // /api/abonnement/slottermijn en de dagelijkse cron). Hier dus GEEN
+    // nieuwe factuur aanmaken, alleen de bestaande markeren. Bewust een
+    // andere metadata.soort dan hieronder ("rest"): dat is de oude,
+    // handmatige /restbetaling-link, die blijft ongemoeid bestaan als
+    // fallback en maakt haar factuur nog wél pas ná betaling.
+    if (payment.metadata && payment.metadata.soort === "slottermijn") {
+      if (payment.status === "paid") {
+        await setRest(slug, "betaald", payment.id);
+        const lijst = await getFacturenKlant(slug);
+        const bestaand = (Array.isArray(lijst) ? lijst : []).find(
+          (f) => f.soort === "slottermijn" && f.status !== "betaald"
+        );
+        if (bestaand) {
+          await setFactuurStatus(bestaand.nummer, "betaald");
+        } else {
+          // Zou niet moeten voorkomen (de vooraankondiging maakt 'm altijd
+          // aan), maar geen betaald geld mag zonder factuur blijven staan.
+          const info = await getBetaalinfo(slug);
+          const bedrag = Number(info && info.slottermijn_bedrag) || 0;
+          if (bedrag > 0) {
+            const factuur = await maakFactuur({
+              slug, soort: "slottermijn", paymentId: payment.id, vervaldagen: 7,
+              regels: [{ omschrijving: OMSCHRIJVING.slottermijn, bedrag_excl: bedrag }],
+            });
+            if (factuur && factuur.nummer) await setFactuurStatus(factuur.nummer, "betaald");
+          }
+        }
+      } else if (["failed", "canceled", "expired"].includes(payment.status)) {
+        await setRest(slug, "mislukt", payment.id);
+
+        // Zelfde patroon als een mislukte maandincasso: zichtbaar op het
+        // Bord, nooit dubbel voor dezelfde factuur.
+        const info = await getBetaalinfo(slug);
+        const naam = (info && info.company_name) || slug;
+        const titel = `Mislukte slottermijn-incasso: ${naam}`;
+        const taken = await getTaken();
+        const bestaatAl = (Array.isArray(taken) ? taken : []).some(
+          (t) => t.kolom !== "klaar" && t.titel === titel
+        );
+        if (!bestaatAl) {
+          await maakTaak({
+            titel,
+            omschrijving: "Automatische incasso van de slottermijn is mislukt. Controleer bij Mollie wat er aan de hand is en neem contact op met de klant.",
+            prioriteit: "hoog",
+            kolom: "te_doen",
+            klantSlug: slug,
+            aangemaaktDoor: "Mollie-webhook",
+          });
+        }
+      }
+      return new NextResponse("ok", { status: 200 });
+    }
+
+    // Restbetaling (de tweede termijn van het websitebedrag, bij oplevering)
+    // — de oude, handmatige flow. Blijft bestaan als fallback voor klanten
+    // zonder bruikbaar mandaat; niet meer actief aangeboden vanuit
+    // Beheren/Klantenregister (optie 5 hierboven is daar de standaardweg).
     if (payment.metadata && payment.metadata.soort === "rest") {
       if (payment.status === "paid") {
         await setRest(slug, "betaald", payment.id);
