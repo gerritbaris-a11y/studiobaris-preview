@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { actieveSleutelSoort } from "../../../../lib/mollie";
+import { actieveSleutelSoort } from "../../../lib/mollie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
