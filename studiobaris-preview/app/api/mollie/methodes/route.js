@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { leesSessie, isBeheer } from "../../../../lib/auth";
-import { mollie, mollieConfigured } from "../../../../lib/mollie";
+import { mollie, mollieConfigured, actieveSleutelSoort } from "../../../../lib/mollie";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +19,7 @@ export async function GET() {
 
   const uit = { ok: true };
   try {
-    const key = process.env.MOLLIE_API_KEY || "";
-    uit.sleutel = key.startsWith("live_") ? "live" : key.startsWith("test_") ? "test" : "onbekend";
+    uit.sleutel = actieveSleutelSoort();
 
     const alle = await mollie("/methods?locale=nl_NL", "GET");
     uit.actief = (alle?._embedded?.methods || []).map((m) => m.id);
