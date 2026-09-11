@@ -50,7 +50,7 @@ async function verify(token) {
   }
 }
 
-// Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /leads.
+// Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /klanten.
 const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/bord", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen", "/facturen", "/offertes", "/btw-aangifte", "/marges", "/boekhouding"];
 
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
@@ -90,7 +90,7 @@ export async function middleware(req) {
   const beheerOnly = BEHEER_ONLY.some((p) => path === p || path.startsWith(p + "/"));
   if (beheerOnly && sessie.rol !== "beheer") {
     const url = req.nextUrl.clone();
-    url.pathname = "/leads";
+    url.pathname = "/klanten";
     url.search = "";
     return NextResponse.redirect(url);
   }

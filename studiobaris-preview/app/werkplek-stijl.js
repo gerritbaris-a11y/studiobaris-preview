@@ -38,13 +38,17 @@ export const FONT_LINK =
 export const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
 export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 
-// De schermen van de werkplek. beheer=alles, verkoper=eerste drie.
+// De schermen van de werkplek. beheer=alles, verkoper=eerste twee.
 // "Mijn klanten" heet bewust "Mijn previews": dit is de verkooppijplijn van
 // vóór het tekenen (leads, previews, intake, feedback) — geen echte klanten.
 // Die staan onder de "Klanten"-groep hieronder.
+//
+// "Leads" staat bewust niet meer in dit menu (verkopers vinden hun leads nu
+// zelf, de automatische leadlijst leverde te veel irrelevante leads op) — de
+// pagina, /api/leads en de database erachter bestaan nog gewoon, voor als dit
+// later weer opgepakt wordt. Alleen uit de navigatie gehaald.
 export const NAV = [
   { href: "/vandaag", label: "Vandaag" },
-  { href: "/leads", label: "Leads" },
   { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
