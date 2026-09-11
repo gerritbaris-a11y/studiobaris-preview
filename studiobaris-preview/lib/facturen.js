@@ -54,13 +54,13 @@ export async function factuurPdf(f) {
   const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
 
-  const INKT = rgb(0.169, 0.153, 0.141);   // #2B2724 — logo, tabelbalk, koppen
+  const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy, logo/tabelbalk/koppen (nieuwe huisstijl)
   const GRIJS = rgb(0.42, 0.38, 0.33);
   const LIJN = rgb(0.88, 0.86, 0.82);
   const VLAK = rgb(0.972, 0.961, 0.943);   // lichte achtergrond voor het klantkaartje
   const ZEBRA = rgb(0.986, 0.981, 0.972);  // zeer lichte streeptint in de regeltabel
   const WIT = rgb(1, 1, 1);
-  const GOUD = rgb(0.729, 0.549, 0.263);   // warme accentkleur — uniform over alle factuurtypen
+  const GOUD = rgb(0.780, 0.604, 0.337);   // #C79A56 — nieuwe goud-accentkleur, uniform over alle factuurtypen
 
   const L = 50;
   const R = 545;
@@ -98,7 +98,7 @@ export async function factuurPdf(f) {
 
   // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
   vlak(L, y - 28, 32, 32, INKT);
-  vlak(L, y - 28, 32, 4, GOUD); // gouden voetje aan het beeldmerk
+  pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD }); // gouden accentstip, zelfde motief als het app-icoon
   tekst("B", L + 10, y - 18, { size: 16, vet: true, kleur: WIT });
   tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, vet: true, kleur: INKT });
   pagina.drawLine({
