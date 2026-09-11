@@ -1,12 +1,33 @@
 // Mollie API-helper (server-only). Sleutel via env: MOLLIE_API_KEY (begint met test_ of live_).
+//
+// Veiligheidsklep: buiten productie (Preview- en lokale deploys) geeft een
+// eventuele MOLLIE_TEST_API_KEY altijd voorrang boven MOLLIE_API_KEY, wat
+// die laatste ook bevat. Reden: op 11 sep 2026 bleek de Preview-omgeving in
+// Vercel een LIVE sleutel onder MOLLIE_API_KEY te hebben staan, waardoor een
+// testcheckout een echte bank-e.dentifier liet zien in plaats van Mollie's
+// testsimulatie. Met deze voorrang kan een verkeerd ingevulde omgevingsvariabele
+// nooit meer een live betaling starten vanaf een niet-productie-deploy.
+function apiKey() {
+  const isProductie = process.env.VERCEL_ENV === "production";
+  if (!isProductie && process.env.MOLLIE_TEST_API_KEY) return process.env.MOLLIE_TEST_API_KEY;
+  return process.env.MOLLIE_API_KEY;
+}
+
 const MOLLIE_API = "https://api.mollie.com/v2";
 
 export function mollieConfigured() {
-  return !!process.env.MOLLIE_API_KEY;
+  return !!apiKey();
+}
+
+// Voor diagnoseschermen (/api/mollie/methodes): welk type sleutel er nu
+// daadwerkelijk gebruikt wordt, zonder de sleutel zelf ergens bloot te geven.
+export function actieveSleutelSoort() {
+  const key = apiKey() || "";
+  return key.startsWith("live_") ? "live" : key.startsWith("test_") ? "test" : "onbekend";
 }
 
 export async function mollie(path, method = "GET", body) {
-  const key = process.env.MOLLIE_API_KEY;
+  const key = apiKey();
   if (!key) throw new Error("MOLLIE_API_KEY ontbreekt in de serveromgeving.");
   const res = await fetch(`${MOLLIE_API}${path}`, {
     method,

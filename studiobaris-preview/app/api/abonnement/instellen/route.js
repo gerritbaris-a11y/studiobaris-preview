@@ -19,8 +19,14 @@ export async function POST(req) {
     if (!slug) return NextResponse.json({ ok: false, error: "slug ontbreekt." }, { status: 400 });
 
     const betaalwijze = body.betaalwijze ? String(body.betaalwijze) : null;
-    if (betaalwijze && !["ineens", "twee_termijnen"].includes(betaalwijze)) {
+    // "slottermijn" staat hier bewust niet in de lijst: die betaalwijze zet
+    // je niet via Vastleggen, maar via de aparte "Slottermijn versturen"-
+    // actie (Stap 3). De database staat 'm hier verder gewoon toe.
+    if (betaalwijze && !["ineens", "twee_termijnen", "alleen_maandelijks", "handmatig"].includes(betaalwijze)) {
       return NextResponse.json({ ok: false, error: "Onbekende betaalwijze." }, { status: 400 });
+    }
+    if (betaalwijze === "handmatig" && getal(body.aanbetalingHandmatig) === null) {
+      return NextResponse.json({ ok: false, error: "Bij 'Handmatig' is een bedrag verplicht." }, { status: 400 });
     }
 
     const resultaat = await setAfspraak(slug, {
@@ -28,6 +34,7 @@ export async function POST(req) {
       maandbedrag: getal(body.maandbedrag),
       betaalwijze,
       incassodag: getal(body.incassodag),
+      aanbetalingHandmatig: getal(body.aanbetalingHandmatig),
     });
 
     return NextResponse.json({ ok: true, afspraak: resultaat });
