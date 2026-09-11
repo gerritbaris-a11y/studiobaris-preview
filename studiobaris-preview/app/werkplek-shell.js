@@ -84,7 +84,8 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
 
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.9)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: KLEUR.klei, color: "#fff", display: "grid", placeItems: "center", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>S</div>
+          {/* Zelfde beeldmerk als het app-icoon en de facturen/offertes: navy met goud "SB". */}
+          <div style={{ width: 34, height: 34, borderRadius: 8, background: KLEUR.navy, color: KLEUR.goud, display: "grid", placeItems: "center", fontFamily: HEAD, fontWeight: 800, fontSize: 13, letterSpacing: 0.5 }}>SB</div>
           <div style={{ lineHeight: 1.1 }}>
             <div style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 15 }}>StudioBaris</div>
             <div style={{ fontSize: 11, color: KLEUR.label, textTransform: "uppercase", letterSpacing: 1 }}>werkplek</div>

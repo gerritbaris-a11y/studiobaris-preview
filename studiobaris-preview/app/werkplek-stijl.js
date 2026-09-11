@@ -16,6 +16,11 @@ export const KLEUR = {
   klei: "#C05A38",
   kleiDonker: "#9E3B2E",
   kleiZacht: "#F5E2D9",
+  // Huisstijl van het beeldmerk zelf (app-icoon, facturen/offertes) — bewust
+  // los van de klei-kleuren hierboven, die blijven de actiekleur door de rest
+  // van de werkplek (knoppen, actieve tab, links).
+  navy: "#1A2B3D",
+  goud: "#C79A56",
   // redenkleuren
   rust: { dot: "#B24A3F", tekst: "#9E3B2E", bg: "#F6E1DB" },
   amber: { dot: "#C98A2B", tekst: "#8A6417", bg: "#F7EBD1" },
