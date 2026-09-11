@@ -38,7 +38,7 @@ export const FONT_LINK =
 export const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
 export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 
-// De schermen van de werkplek. beheer=alles, verkoper=eerste twee.
+// De schermen van de werkplek. beheer=alles, verkoper=alleen Mijn previews.
 // "Mijn klanten" heet bewust "Mijn previews": dit is de verkooppijplijn van
 // vóór het tekenen (leads, previews, intake, feedback) — geen echte klanten.
 // Die staan onder de "Klanten"-groep hieronder.
@@ -47,8 +47,10 @@ export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 // zelf, de automatische leadlijst leverde te veel irrelevante leads op) — de
 // pagina, /api/leads en de database erachter bestaan nog gewoon, voor als dit
 // later weer opgepakt wordt. Alleen uit de navigatie gehaald.
+//
+// "Vandaag" is om dezelfde reden vervallen: die taken staan toch al op het
+// Bord. De pagina en getVandaag() blijven gewoon bestaan, alleen uit dit menu.
 export const NAV = [
-  { href: "/vandaag", label: "Vandaag" },
   { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
