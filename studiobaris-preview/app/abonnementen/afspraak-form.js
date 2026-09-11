@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 
-// De afspraak per klant: wat de website kost, wat er maandelijks loopt, en of
-// het in één keer of in twee termijnen gaat. Eén plek voor het geld — daarom
-// staat dit niet meer op de klantkaart.
+// De afspraak per klant: wat de website kost, wat er maandelijks loopt, en
+// welke van de vier betaalwijzes hij krijgt (optie 5, de slottermijn, is een
+// aparte actie — zie SlottermijnKnop in klantenregister/klant-rij.js).
 //
 // De aanbetaling vul je hier bewust NIET zelf in: die volgt uit de betaalwijze
-// en wordt in de database afgeleid. Zo kan de restbetaling nooit meer scheef
-// lopen met wat de klant op zijn akkoordpagina ziet.
+// en wordt in de database afgeleid. Uitzondering: "Handmatig" (optie 4) —
+// daar bepaal jij zelf het bedrag, dus vraagt het formulier het bedrag twee
+// keer op en moeten beide overeenkomen voordat er iets wordt opgeslagen. Zo
+// kan een tikfout er nooit ongemerkt in sluipen.
 
 const BTW = 1.21;
 
@@ -33,6 +35,13 @@ const label = {
   color: KLEUR.label, fontWeight: 700, display: "block", marginBottom: 4,
 };
 
+function websitedeelVoor(betaalwijze, web, handmatigBedrag) {
+  if (betaalwijze === "twee_termijnen") return Math.round((web / 2) * 100) / 100;
+  if (betaalwijze === "alleen_maandelijks") return 0;
+  if (betaalwijze === "handmatig") return handmatigBedrag;
+  return web; // ineens
+}
+
 export default function AfspraakForm({ rij, onKlaar }) {
   const [websiteprijs, setWebsiteprijs] = useState(
     rij.websiteprijs === null || rij.websiteprijs === undefined ? "" : String(rij.websiteprijs)
@@ -40,17 +49,38 @@ export default function AfspraakForm({ rij, onKlaar }) {
   const [maandbedrag, setMaandbedrag] = useState(
     rij.maandbedrag === null || rij.maandbedrag === undefined ? "" : String(rij.maandbedrag)
   );
-  const [betaalwijze, setBetaalwijze] = useState(rij.betaalwijze || "ineens");
+  const [betaalwijze, setBetaalwijze] = useState(
+    rij.betaalwijze && rij.betaalwijze !== "slottermijn" ? rij.betaalwijze : "ineens"
+  );
+  const [aanbetalingHandmatig, setAanbetalingHandmatig] = useState(
+    rij.betaalwijze === "handmatig" && rij.aanbetaling !== null && rij.aanbetaling !== undefined
+      ? String(rij.aanbetaling)
+      : ""
+  );
+  const [aanbetalingBevestig, setAanbetalingBevestig] = useState("");
   const [status, setStatus] = useState("idle");
   const [fout, setFout] = useState("");
 
   const web = getal(websiteprijs);
   const maand = getal(maandbedrag);
-  const websitedeel = betaalwijze === "twee_termijnen" ? Math.round((web / 2) * 100) / 100 : web;
+  const handmatigBedrag = getal(aanbetalingHandmatig);
+  const handmatigOnbevestigd =
+    betaalwijze === "handmatig" && aanbetalingBevestig !== "" && getal(aanbetalingBevestig) !== handmatigBedrag;
+  const handmatigOntbreekt = betaalwijze === "handmatig" && aanbetalingHandmatig === "";
+
+  const websitedeel = websitedeelVoor(betaalwijze, web, handmatigBedrag);
   const rest = Math.round((web - websitedeel) * 100) / 100;
   const nu = Math.round((websitedeel + maand) * 100) / 100;
 
   async function bewaar() {
+    if (handmatigOntbreekt) {
+      setFout("Bij 'Handmatig' is een bedrag verplicht.");
+      return;
+    }
+    if (betaalwijze === "handmatig" && getal(aanbetalingBevestig) !== handmatigBedrag) {
+      setFout("De twee bedragen komen niet overeen — controleer en typ ze allebei opnieuw.");
+      return;
+    }
     setStatus("bezig");
     setFout("");
     try {
@@ -62,6 +92,7 @@ export default function AfspraakForm({ rij, onKlaar }) {
           websiteprijs: websiteprijs === "" ? null : web,
           maandbedrag: maandbedrag === "" ? null : maand,
           betaalwijze,
+          aanbetalingHandmatig: betaalwijze === "handmatig" ? handmatigBedrag : null,
         }),
       });
       const data = await res.json();
@@ -106,20 +137,59 @@ export default function AfspraakForm({ rij, onKlaar }) {
           >
             <option value="ineens">In één keer</option>
             <option value="twee_termijnen">In twee termijnen</option>
+            <option value="alleen_maandelijks">Alleen maandelijks</option>
+            <option value="handmatig">Handmatig</option>
           </select>
         </div>
+        {betaalwijze === "handmatig" && (
+          <>
+            <div>
+              <span style={label}>Aanbetaling, excl. btw</span>
+              <input
+                style={veld}
+                inputMode="decimal"
+                value={aanbetalingHandmatig}
+                placeholder="bedrag"
+                onChange={(e) => setAanbetalingHandmatig(e.target.value)}
+              />
+            </div>
+            <div>
+              <span style={label}>Bevestig bedrag</span>
+              <input
+                style={{ ...veld, borderColor: handmatigOnbevestigd ? "#E8A85C" : KLEUR.lijn2 }}
+                inputMode="decimal"
+                value={aanbetalingBevestig}
+                placeholder="nogmaals"
+                onChange={(e) => setAanbetalingBevestig(e.target.value)}
+              />
+            </div>
+          </>
+        )}
         <button
           onClick={bewaar}
-          disabled={status === "bezig"}
+          disabled={status === "bezig" || handmatigOntbreekt || handmatigOnbevestigd}
           style={{
             padding: "9px 16px", borderRadius: 9, border: "none", cursor: "pointer",
             background: KLEUR.klei, color: "#fff", fontWeight: 700, fontSize: 14,
-            fontFamily: HEAD, opacity: status === "bezig" ? 0.6 : 1,
+            fontFamily: HEAD, opacity: (status === "bezig" || handmatigOntbreekt || handmatigOnbevestigd) ? 0.6 : 1,
           }}
         >
           {status === "bezig" ? "Bezig…" : status === "klaar" ? "Opgeslagen ✓" : "Vastleggen"}
         </button>
       </div>
+
+      {betaalwijze === "handmatig" && (
+        <div style={{ fontSize: 12.5, color: KLEUR.label }}>
+          Bij "Handmatig" wordt de aanbetaling niet automatisch berekend — het bedrag hierboven is
+          precies wat er als eerste betaling (samen met de eerste maand) gevraagd wordt.
+        </div>
+      )}
+      {betaalwijze === "alleen_maandelijks" && (
+        <div style={{ fontSize: 12.5, color: KLEUR.label }}>
+          Geen aanbetaling voor de website vooraf — de eerste betaling is alleen de eerste maand.
+          Het websitebedrag kan later alsnog als slottermijn verstuurd worden (Klantenregister).
+        </div>
+      )}
 
       {/* Meteen zien wat de klant straks op zijn akkoordpagina te zien krijgt. */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -129,7 +199,13 @@ export default function AfspraakForm({ rij, onKlaar }) {
           onder={websitedeel > 0 ? `${euro(websitedeel)} website + ${euro(maand)} eerste maand` : "eerste maand"}
           nadruk
         />
-        {rest > 0 && <Blokje titel="Bij oplevering" bedrag={rest} onder="tweede termijn" />}
+        {rest > 0 && (
+          <Blokje
+            titel="Later (slottermijn)"
+            bedrag={rest}
+            onder={betaalwijze === "alleen_maandelijks" ? "nog te versturen" : "restant website"}
+          />
+        )}
         <Blokje titel="Elke maand daarna" bedrag={maand} onder="doorlopende incasso" />
       </div>
 
