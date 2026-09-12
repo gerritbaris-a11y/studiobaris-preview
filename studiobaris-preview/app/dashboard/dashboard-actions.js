@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FASES, normFase } from "../../lib/fase";
 
 export default function PublishButton({ slug }) {
@@ -741,12 +741,27 @@ export function KlantNaam({ slug, value, team = [] }) {
   const [opgeslagen, setOpgeslagen] = useState(value || "");
   const [bezig, setBezig] = useState(false);
   const gewijzigd = v !== (opgeslagen || "");
+  const elRef = useRef(null);
 
   async function bewaar(nieuweWaarde) {
     setV(nieuweWaarde);
     setBezig(true);
     const d = await bewaarKlant(slug, { verzamelaar: nieuweWaarde });
-    if (d.ok) setOpgeslagen(nieuweWaarde);
+    if (d.ok) {
+      setOpgeslagen(nieuweWaarde);
+      // Klantenregister filtert op data-verzamelaar op de <tr> (zie
+      // klant-rij.js/verkoper-filter.js). Zonder dit blijft die filter de
+      // oude waarde zien tot een page refresh; elders (Mijn klanten) bestaat
+      // dit attribuut niet en is dit gewoon een no-op.
+      const rij = elRef.current?.closest("[data-verzamelaar]");
+      if (rij) {
+        rij.setAttribute("data-verzamelaar", nieuweWaarde);
+        const volgende = rij.nextElementSibling;
+        if (volgende && volgende.hasAttribute("data-verzamelaar") && !volgende.hasAttribute("data-rij-hoofd")) {
+          volgende.setAttribute("data-verzamelaar", nieuweWaarde);
+        }
+      }
+    }
     setBezig(false);
   }
 
@@ -754,7 +769,7 @@ export function KlantNaam({ slug, value, team = [] }) {
   const onbekendeHuidigeWaarde = value && !namen.includes(value) ? value : null;
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} title="Wie behandelt deze klant">
+    <span ref={elRef} style={{ display: "inline-flex", alignItems: "center", gap: 6 }} title="Wie behandelt deze klant">
       <select
         value={v}
         onChange={(e) => bewaar(e.target.value)}

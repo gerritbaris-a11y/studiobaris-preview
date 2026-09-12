@@ -86,7 +86,7 @@ export default async function KlantenregisterPage() {
               </thead>
               <tbody>
                 {klanten.map((r) => (
-                  <KlantRij key={r.slug} r={r} variant="klant" />
+                  <KlantRij key={r.slug} r={r} variant="klant" team={team} />
                 ))}
               </tbody>
             </table>

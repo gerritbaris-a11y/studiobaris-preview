@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import {
-  Contactpersoon, GegevensEditor, VerwijderKnop,
+  Contactpersoon, GegevensEditor, VerwijderKnop, KlantNaam,
   MarkeerAlsKlantKnop, MarkeerAlsOudKlantKnop, HeractiveerKlantKnop,
 } from "../dashboard/dashboard-actions";
 import AfspraakForm from "../abonnementen/afspraak-form";
@@ -125,7 +125,7 @@ function schoonTelefoon(v) {
   return String(v).replace(/[^\d+]/g, "");
 }
 
-export default function KlantRij({ r, variant }) {
+export default function KlantRij({ r, variant, team = [] }) {
   const [open, setOpen] = useState(false);
   const telefoon = schoonTelefoon(r.lead_phone || r.b_telefoon) || "—";
   const email = r.lead_email || r.b_email || "—";
@@ -155,7 +155,9 @@ export default function KlantRij({ r, variant }) {
         <td style={td}>{email}</td>
         {variant !== "oud" && <td style={td}><PakketLabel type={r.pakket_type} /></td>}
         {variant === "klant" && (
-          <td style={{ ...td, color: KLEUR.gedempt }}>{r.verzamelaar || "—"}</td>
+          <td style={td} onClick={(e) => e.stopPropagation()}>
+            <KlantNaam slug={r.slug} value={r.verzamelaar} team={team} />
+          </td>
         )}
         {variant === "klant" && (
           <td style={{ ...td, textAlign: "right" }}>{r.maandbedrag ? euro(r.maandbedrag) + " p/m" : "—"}</td>

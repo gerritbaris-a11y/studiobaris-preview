@@ -209,7 +209,7 @@ export async function setOfferteStatus(nummer, status) {
 // Per kwartaal, gebaseerd op factuurdatum — zelfde logica als het
 // 'Overzicht & btw-aangifte'-tabblad in StudioBaris_Administratie.xlsx.
 export async function getOmzetOverzicht(jaar) {
-  return await stil(() => rpc("sb_omzet_overzicht", { p_jaar: jaar || null }), {
+  return await stil(() => rpc("sb_omzet_kwartaal", { p_jaar: jaar || null }), {
     jaar: jaar || new Date().getFullYear(),
     kwartalen: [1, 2, 3, 4].map((k) => ({ kwartaal: k, omzet_excl: 0, btw: 0, omzet_incl: 0 })),
     jaartotaal_excl: 0, jaartotaal_btw: 0, jaartotaal_incl: 0, nog_te_ontvangen: 0,
