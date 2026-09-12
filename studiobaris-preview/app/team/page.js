@@ -1,7 +1,6 @@
-import { getTeamLogin, getOmzet, getBtw } from "../../lib/server-data";
+import { getTeamLogin, getOmzet } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
-import { BTW_TARIEF } from "../../lib/mollie";
 import { ResetKnop } from "./team-actions";
 
 export const dynamic = "force-dynamic";
@@ -16,29 +15,30 @@ const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily
 export default async function TeamPage() {
   const sessie = leesSessie();
   const magAlles = isBeheer(sessie);
-  const [team, omzet, btw] = await Promise.all([getTeamLogin(), getOmzet(), getBtw()]);
-
-  // Btw die we opzij zetten. Ingevoerde bedragen zijn excl. btw; de klant betaalt
-  // incl. Wat binnenkomt aan btw dragen we later af, dus dat zetten we apart.
-  const pct = Math.round(BTW_TARIEF * 100);
-  const eenmaligExcl = Number(btw.ontvangen_eenmalig_excl || 0);
-  const eenmaligBtw = Math.round(eenmaligExcl * BTW_TARIEF * 100) / 100;
-  const eenmaligIncl = eenmaligExcl + eenmaligBtw;
-  const aboMaandExcl = Number(btw.lopend_abo_maand_excl || 0);
-  const aboMaandBtw = Math.round(aboMaandExcl * BTW_TARIEF * 100) / 100;
+  const [team, omzet] = await Promise.all([getTeamLogin(), getOmzet()]);
 
   const omzetVan = (naam) =>
     omzet.find((o) => o.persoon === naam) ||
     { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0, eigenaarsdeel_verdiend: 0, eigenaarsdeel_openstaand: 0, eigenaarsdeel_maand: 0 };
 
+  // Voor beheer (eigenaren) telt niet hun eigen 50%-commissie mee in het
+  // teamtotaal, maar hun helft van de gezamenlijke pot (eigenaarsdeel_*) —
+  // die twee helften samen zijn precies de volledige pot, dus dit telt niet
+  // dubbel. Voor verkopers verandert er niets.
+  const isBeheerNaam = (naam) => (team.find((t) => t.naam === naam) || {}).rol === "beheer";
   const totaal = omzet.reduce(
-    (a, o) => ({
-      verkoopbedrag: a.verkoopbedrag + Number(o.verkoopbedrag || 0),
-      commissie: a.commissie + Number(o.commissie || 0),
-      verdiend: a.verdiend + Number(o.verdiend || 0),
-      openstaand: a.openstaand + Number(o.openstaand || 0),
-      maand_commissie: a.maand_commissie + Number(o.maand_commissie || 0),
-    }),
+    (a, o) => {
+      const eigenaar = isBeheerNaam(o.persoon);
+      return {
+        verkoopbedrag: a.verkoopbedrag + Number(o.verkoopbedrag || 0),
+        commissie: a.commissie + (eigenaar
+          ? Number(o.eigenaarsdeel_verdiend || 0) + Number(o.eigenaarsdeel_openstaand || 0)
+          : Number(o.commissie || 0)),
+        verdiend: a.verdiend + Number(eigenaar ? o.eigenaarsdeel_verdiend : o.verdiend || 0),
+        openstaand: a.openstaand + Number(eigenaar ? o.eigenaarsdeel_openstaand : o.openstaand || 0),
+        maand_commissie: a.maand_commissie + Number(eigenaar ? o.eigenaarsdeel_maand : o.maand_commissie || 0),
+      };
+    },
     { verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0 }
   );
 
@@ -80,22 +80,27 @@ export default async function TeamPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
           {cel("Klanten", o.aantal)}
           {cel("Verkocht", euro(o.verkoopbedrag))}
-          {cel(t.vergoeding_model === "100eur" ? "Vergoeding (€100 p/klant)" : "Commissie (50%)", euro(o.commissie))}
-          {cel("Uitbetaald", euro(o.verdiend), "#0f6e56")}
-          {cel("Nog te verdienen", euro(o.openstaand), "#b45309")}
-          {t.vergoeding_model === "50pct_abo" && cel("Per maand (1/3 abo)", euro(o.maand_commissie), "#0f6e56")}
-          {t.vergoeding_model === "50pct_vast" && cel(`Per maand (${euro(t.maand_vast_bedrag)} p/klant)`, euro(o.maand_commissie), "#0f6e56")}
+          {t.rol === "beheer" ? (
+            <>
+              {cel("Omzet — uitbetaald", euro(o.eigenaarsdeel_verdiend), "#0f6e56")}
+              {cel("Omzet — nog te verdienen", euro(o.eigenaarsdeel_openstaand), "#b45309")}
+              {Number(o.eigenaarsdeel_maand) > 0 && cel("Omzet per maand", euro(o.eigenaarsdeel_maand), "#0f6e56")}
+            </>
+          ) : (
+            <>
+              {cel(t.vergoeding_model === "100eur" ? "Vergoeding (€100 p/klant)" : "Commissie (50%)", euro(o.commissie))}
+              {cel("Uitbetaald", euro(o.verdiend), "#0f6e56")}
+              {cel("Nog te verdienen", euro(o.openstaand), "#b45309")}
+              {t.vergoeding_model === "50pct_abo" && cel("Per maand (1/3 abo)", euro(o.maand_commissie), "#0f6e56")}
+              {t.vergoeding_model === "50pct_vast" && cel(`Per maand (${euro(t.maand_vast_bedrag)} p/klant)`, euro(o.maand_commissie), "#0f6e56")}
+            </>
+          )}
         </div>
         {t.rol === "beheer" && (
-          <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
-            <div style={{ fontSize: 11, color: "#9A9084", marginBottom: 8 }}>
-              Aandeel als eigenaar — 50/50 met de andere eigenaar, van verkopen door het verkoopteam
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-              {cel("Uitbetaald", euro(o.eigenaarsdeel_verdiend), "#0f6e56")}
-              {cel("Nog te verdienen", euro(o.eigenaarsdeel_openstaand), "#b45309")}
-              {Number(o.eigenaarsdeel_maand) > 0 && cel("Per maand", euro(o.eigenaarsdeel_maand), "#0f6e56")}
-            </div>
+          <div style={{ fontSize: 11.5, color: "#9A9084" }}>
+            "Omzet" is jouw helft van alles wat binnenkomt — 50/50 met de andere eigenaar, ook als jij zelf de
+            verkoop deed. Wie de verkoop op zijn naam heeft staan (bij "Verkocht") is dus alleen om te zien waar
+            een klant vandaan komt, niet wie het geld krijgt.
           </div>
         )}
       </div>
@@ -119,47 +124,6 @@ export default async function TeamPage() {
           {totVak("Nog te verdienen", euro(totaal.openstaand), "#ffd18a")}
           {totaal.maand_commissie > 0 && totVak("Commissie per maand", euro(totaal.maand_commissie), "#7ee2b8")}
         </div>
-      </div>
-
-      {/* Btw opzij zetten — apart van de omzet, zodat we niet voor verrassingen staan. */}
-      <div style={{ background: "#fff", border: "1px solid #E7DFD1", borderLeft: "5px solid #C98A2B", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: "#2B2724" }}>Btw — opzij zetten</div>
-          <span style={{ fontSize: 12.5, color: "#9A9084" }}>Dit geld is niet van ons; het gaat naar de Belastingdienst.</span>
-        </div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-end", marginTop: 8 }}>
-          <div style={{ flex: "1 1 200px", minWidth: 180 }}>
-            <div style={{ fontSize: 12, color: "#8A6417", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Nu apart houden</div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: "#8A6417", lineHeight: 1.05 }}>{euro(eenmaligBtw)}</div>
-            <div style={{ fontSize: 12.5, color: "#9A9084", marginTop: 3 }}>{pct}% btw over ontvangen betalingen</div>
-          </div>
-          <div style={{ flex: "1 1 200px", minWidth: 180 }}>
-            <div style={{ fontSize: 12, color: "#6B6258", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>Komt er elke maand bij</div>
-            <div style={{ fontSize: 30, fontWeight: 800, color: "#2B2724", lineHeight: 1.05 }}>{euro(aboMaandBtw)}<span style={{ fontSize: 15, fontWeight: 600, color: "#9A9084" }}> / maand</span></div>
-            <div style={{ fontSize: 12.5, color: "#9A9084", marginTop: 3 }}>{pct}% btw over lopende abonnementen</div>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 0, borderTop: "1px solid #F4EEE3", marginTop: 14, paddingTop: 12 }}>
-          {[
-            ["Ontvangen (incl. btw)", euro(eenmaligIncl), "#2B2724"],
-            ["Waarvan onze omzet (excl.)", euro(eenmaligExcl), "#2B2724"],
-            [`Waarvan btw (${pct}%)`, euro(eenmaligBtw), "#8A6417"],
-          ].map(([label, waarde, kleur], i) => (
-            <div key={label} style={{ flex: "1 1 150px", minWidth: 140, paddingLeft: i ? 14 : 0, borderLeft: i ? "1px solid #F4EEE3" : "none" }}>
-              <div style={{ fontSize: 12, color: "#9A9084" }}>{label}</div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: kleur }}>{waarde}</div>
-            </div>
-          ))}
-        </div>
-
-        <p style={{ fontSize: 12, color: "#9A9084", margin: "12px 0 0", lineHeight: 1.5 }}>
-          Indicatie op basis van betalingen die al binnen zijn ({btw.aantal_betaald} {btw.aantal_betaald === 1 ? "klant" : "klanten"} betaald,
-          {" "}{btw.aantal_abo} met een lopend abonnement). Btw draag je per aangifteperiode af aan de Belastingdienst; de btw die je zelf
-          over zakelijke kosten betaalt (voorbelasting) mag je hiervan aftrekken, dus de uiteindelijke afdracht kan lager uitvallen.
-          Houd dit even af met je boekhouder.
-        </p>
       </div>
 
       {verkopers.length > 0 && (
