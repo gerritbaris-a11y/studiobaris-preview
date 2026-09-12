@@ -21,22 +21,24 @@ export default async function TeamPage() {
     omzet.find((o) => o.persoon === naam) ||
     { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0, eigenaarsdeel_verdiend: 0, eigenaarsdeel_openstaand: 0, eigenaarsdeel_maand: 0 };
 
-  // Voor beheer (eigenaren) telt niet hun eigen 50%-commissie mee in het
-  // teamtotaal, maar hun helft van de gezamenlijke pot (eigenaarsdeel_*) —
-  // die twee helften samen zijn precies de volledige pot, dus dit telt niet
-  // dubbel. Voor verkopers verandert er niets.
+  // Dit blok is puur de commissie die aan het verkoopteam wordt uitbetaald
+  // of nog verschuldigd is — die begint pas te lopen zodra een verkoper
+  // zelf een verkoop doet. Gerrit en Levi horen hier niet bij: zij zijn geen
+  // "verkopers" die commissie krijgen, maar functioneren samen als het
+  // bedrijf zelf (hun eigen omzet staat op hun eigen kaart, als één
+  // gezamenlijke pot 50/50 verdeeld). "Verkocht" blijft wel het complete
+  // bedrag over iedereen, inclusief Gerrit/Levi — dat is puur "hoeveel is
+  // er in totaal verkocht", geen commissie-cijfer.
   const isBeheerNaam = (naam) => (team.find((t) => t.naam === naam) || {}).rol === "beheer";
   const totaal = omzet.reduce(
     (a, o) => {
       const eigenaar = isBeheerNaam(o.persoon);
       return {
         verkoopbedrag: a.verkoopbedrag + Number(o.verkoopbedrag || 0),
-        commissie: a.commissie + (eigenaar
-          ? Number(o.eigenaarsdeel_verdiend || 0) + Number(o.eigenaarsdeel_openstaand || 0)
-          : Number(o.commissie || 0)),
-        verdiend: a.verdiend + Number(eigenaar ? o.eigenaarsdeel_verdiend : o.verdiend || 0),
-        openstaand: a.openstaand + Number(eigenaar ? o.eigenaarsdeel_openstaand : o.openstaand || 0),
-        maand_commissie: a.maand_commissie + Number(eigenaar ? o.eigenaarsdeel_maand : o.maand_commissie || 0),
+        commissie: a.commissie + (eigenaar ? 0 : Number(o.commissie || 0)),
+        verdiend: a.verdiend + (eigenaar ? 0 : Number(o.verdiend || 0)),
+        openstaand: a.openstaand + (eigenaar ? 0 : Number(o.openstaand || 0)),
+        maand_commissie: a.maand_commissie + (eigenaar ? 0 : Number(o.maand_commissie || 0)),
       };
     },
     { verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0 }
