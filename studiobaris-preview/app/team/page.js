@@ -29,7 +29,7 @@ export default async function TeamPage() {
 
   const omzetVan = (naam) =>
     omzet.find((o) => o.persoon === naam) ||
-    { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0 };
+    { aantal: 0, verkoopbedrag: 0, commissie: 0, verdiend: 0, openstaand: 0, maand_commissie: 0, eigenaarsdeel_verdiend: 0, eigenaarsdeel_openstaand: 0, eigenaarsdeel_maand: 0 };
 
   const totaal = omzet.reduce(
     (a, o) => ({
@@ -86,6 +86,18 @@ export default async function TeamPage() {
           {t.vergoeding_model === "50pct_abo" && cel("Per maand (1/3 abo)", euro(o.maand_commissie), "#0f6e56")}
           {t.vergoeding_model === "50pct_vast" && cel(`Per maand (${euro(t.maand_vast_bedrag)} p/klant)`, euro(o.maand_commissie), "#0f6e56")}
         </div>
+        {t.rol === "beheer" && (
+          <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
+            <div style={{ fontSize: 11, color: "#9A9084", marginBottom: 8 }}>
+              Aandeel als eigenaar — 50/50 met de andere eigenaar, van verkopen door het verkoopteam
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+              {cel("Uitbetaald", euro(o.eigenaarsdeel_verdiend), "#0f6e56")}
+              {cel("Nog te verdienen", euro(o.eigenaarsdeel_openstaand), "#b45309")}
+              {Number(o.eigenaarsdeel_maand) > 0 && cel("Per maand", euro(o.eigenaarsdeel_maand), "#0f6e56")}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
