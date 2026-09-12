@@ -106,8 +106,18 @@ export default async function AkkoordPage({ params, searchParams }) {
         <h1 style={{ fontSize: 28 }}>We verwerken je betaling…</h1>
         <p style={{ color: "#555", fontSize: 17, lineHeight: 1.6, marginTop: 12 }}>
           Bedankt! Zodra de betaling is bevestigd, staat je machtiging klaar en gaan wij aan de slag.
-          Je hoeft verder niets te doen.
         </p>
+        <div style={{ marginTop: 26, padding: "18px 20px", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 12, textAlign: "left" }}>
+          <div style={{ fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: "#888" }}>Nog één ding</div>
+          <p style={{ margin: "6px 0 14px", color: "#444", fontSize: 15.5, lineHeight: 1.6 }}>
+            We hebben je adres, KvK- en BTW-nummer nodig voor de footer van je website en je facturen.
+            Twee minuten werk — en nu pas, omdat je er eerst niets voor hoefde op te zoeken.
+          </p>
+          <a href={`/gegevens/${params.slug}`}
+            style={{ display: "inline-block", background: "#FF8300", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
+            Gegevens aanvullen
+          </a>
+        </div>
       </main>
     );
   }

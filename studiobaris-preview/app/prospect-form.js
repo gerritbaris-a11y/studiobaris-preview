@@ -44,6 +44,10 @@ export default function ProspectForm({
 }) {
   const revise = mode === "revise";
   const intern = Boolean(afzender);
+  // Het volledige formulier is voor onszelf (leadlijst) en voor het
+  // aanpasformulier. De publieke intake is stap 1 van 2: alleen wat nodig is
+  // om een preview in de huisstijl te maken.
+  const uitgebreid = revise || intern;
   const v = prefill || {};
   const A = (thema && thema.accent) || "#FF8300";
   const Atint = hexNaarRgba(A, 0.12);
@@ -264,7 +268,7 @@ export default function ProspectForm({
         </div>
       ) : (
         <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>
-          StudioBaris - {revise ? "Workflow 2 - aanpassen" : "Workflow 1"}
+          StudioBaris{uitgebreid ? (revise ? " - Workflow 2 - aanpassen" : " - Workflow 1") : " - Stap 1 van 2"}
         </p>
       )}
       <h1 style={{ fontSize: 30, margin: "6px 0 4px" }}>{titel}</h1>
@@ -312,10 +316,20 @@ export default function ProspectForm({
         </div>
         <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder="Anders, namelijk... (optioneel)" />
 
+        {uitgebreid && (
+          <>
         <label style={label}>Slogan (optioneel)<span style={hint}>{revise ? "Vul in als de slogan anders moet." : "Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero."}</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+          </>
+        )}
 
+        {uitgebreid && (
+          <>
         <label style={label}>Diensten<span style={hint}>{revise ? "Vul in als er diensten bij moeten, weg moeten of anders omschreven moeten worden." : "Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok op de site - meer en specifieker geeft een vollere, sterkere pagina."}</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
+          </>
+        )}
 
+        {uitgebreid && (
+          <>
         <div style={label}>Kernwaarden (meerdere mogelijk)</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de waarden op de site aangepast moeten worden." : "Kies de waarden die het bedrijf typeren. Hiervan maken we de drie \"wat u krijgt\"-blokken met uitleg."}</span>
         <div>
@@ -325,6 +339,8 @@ export default function ProspectForm({
             </span>
           ))}
         </div>
+          </>
+        )}
 
         <div style={label}>Regio('s) actief</div>
         <span style={hint}>{revise ? "Vul in als het werkgebied op de site aangepast moet worden. Voeg elke plaats apart toe met \"+\"." : "Voeg elke plaats apart toe met \"+\". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid."}</span>
@@ -345,6 +361,8 @@ export default function ProspectForm({
           <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" defaultValue={v.telefoon || ""} /></label>
         </div>
         <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
+        {uitgebreid && (
+          <>
         <div style={{ display: "flex", gap: 14 }}>
           <label style={{ ...label, flex: 1 }}>Adres
             <span style={hint}>Kies een suggestie, dan weet je zeker dat straat, postcode en plaats exact goed staan - ze komen zo op de site en in Google.</span>
@@ -354,24 +372,12 @@ export default function ProspectForm({
         </div>
         <span style={hint}>{revise ? "Alleen invullen als adres of KvK aangepast moet worden." : "Adres en KvK komen in de footer; een adres helpt ook de lokale vindbaarheid."}</span>
         <label style={label}>BTW-nummer<span style={hint}>{revise ? "Alleen invullen als het BTW-nummer aangepast moet worden." : "Komt in de footer."}</span><input style={veld} name="btw" /></label>
-
-        {!revise && (
-          <>
-            {!intern && (
-              <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
-            )}
-            <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
-            <span style={hint}>Alleen voor intern gebruik - wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
-            <div>
-              {INTERESSE.map((opt) => (
-                <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
-                  <input type="checkbox" readOnly checked={interesse.includes(opt)} style={{ pointerEvents: "none" }} />{opt}
-                </span>
-              ))}
-            </div>
           </>
         )}
 
+
+        {uitgebreid && (
+          <>
         <div style={label}>Sociale media (links)</div>
         <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
         {socials.map((s, i) => (
@@ -383,29 +389,101 @@ export default function ProspectForm({
           </div>
         ))}
         <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
+          </>
+        )}
 
+        {uitgebreid && (
+          <>
         <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
           <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />
           Heeft een Google Bedrijfsprofiel
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
         <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
-
-        <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
-        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
-        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
-
-        {revise && (
-          <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+          </>
         )}
 
+        {uitgebreid && (
+          <>
+        <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
+          </>
+        )}
+        {uitgebreid && (
+          <>
+        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
+          </>
+        )}
+        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
             onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
         <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender. JPG of PNG, tot 12 stuks." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, tot 12 stuks."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
             onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
           {fotoFout && <span style={foutTekst}>{fotoFout}</span>}</label>
+        {!uitgebreid && (
+          <details style={{ marginTop: 26, border: "1px solid #e6e9ee", borderRadius: 10, background: "#fbfcfd" }}>
+            <summary style={{ cursor: "pointer", padding: "14px 16px", fontWeight: 600, fontSize: 15, color: "#222", listStyle: "revert" }}>
+              Wil je meer kwijt? <span style={{ fontWeight: 400, color: "#777" }}>&mdash; optioneel, maakt de preview beter</span>
+            </summary>
+            <div style={{ padding: "0 16px 18px" }}>
+        <label style={label}>Slogan (optioneel)<span style={hint}>{revise ? "Vul in als de slogan anders moet." : "Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero."}</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+        <label style={label}>Diensten<span style={hint}>{revise ? "Vul in als er diensten bij moeten, weg moeten of anders omschreven moeten worden." : "Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok op de site - meer en specifieker geeft een vollere, sterkere pagina."}</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
+        <div style={label}>Kernwaarden (meerdere mogelijk)</div>
+        <span style={hint}>{revise ? "Alleen aanvinken als de waarden op de site aangepast moeten worden." : "Kies de waarden die het bedrijf typeren. Hiervan maken we de drie \"wat u krijgt\"-blokken met uitleg."}</span>
+        <div>
+          {KERNWAARDEN.map((w) => (
+            <span key={w} style={chip(waarden.includes(w))} onClick={() => toggle(waarden, setWaarden, w)}>
+              <input type="checkbox" readOnly checked={waarden.includes(w)} style={{ pointerEvents: "none" }} />{w}
+            </span>
+          ))}
+        </div>
+        <div style={label}>Sociale media (links)</div>
+        <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
+        {socials.map((s, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={"Link " + (i + 1) + " (Facebook, Instagram, LinkedIn...)"} />
+            {socials.length > 1 && (
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
+        <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
+          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />
+          Heeft een Google Bedrijfsprofiel
+        </label>
+        {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
+        <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
+        <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
+        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
+            </div>
+          </details>
+        )}
 
+        {revise && (
+          <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
+        )}
+
+        {!revise && (
+          <>
+            {!intern && (
+              <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
+            )}
+            {intern && (
+              <>
+            <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
+            <span style={hint}>Alleen voor intern gebruik - wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
+            <div>
+              {INTERESSE.map((opt) => (
+                <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
+                  <input type="checkbox" readOnly checked={interesse.includes(opt)} style={{ pointerEvents: "none" }} />{opt}
+                </span>
+              ))}
+            </div>
+              </>
+            )}
+          </>
+        )}
         <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
           te maken en om contact op te nemen over dat voorstel. Het logo en de foto's worden op onze beveiligde opslag
@@ -415,16 +493,6 @@ export default function ProspectForm({
           Mail <a href="mailto:info@studiobaris.nl" style={{ color: A }}>info@studiobaris.nl</a> en we regelen het.
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
         </p>
-
-        {!revise && (
-          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 18, padding: "12px 14px", border: "1px solid #E3DACB", background: "#FBF8F2", borderRadius: 10 }}>
-            <input type="checkbox" checked={logoToestemming} onChange={(e) => setLogoToestemming(e.target.checked)} style={{ marginTop: 3, width: 18, height: 18, flex: "0 0 auto" }} />
-            <span style={{ fontSize: 14, lineHeight: 1.45 }}>
-              <strong>Mogen we jullie logo tonen op studiobaris.nl?</strong><br />
-              Na oplevering laten we graag zien met wie we werken. Jullie krijgen er ook een link vanaf onze site bij &mdash; goed voor je vindbaarheid in Google. Je kunt dit altijd terugdraaien.
-            </span>
-          </label>
-        )}
 
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}

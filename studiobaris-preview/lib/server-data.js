@@ -277,6 +277,19 @@ export async function updateKlant(slug, { verzamelaar = null, status = null, maa
   });
 }
 
+// Stap 2 van de intake: de zakelijke gegevens die we pas ná akkoord op de
+// preview vragen. Ze worden bijgeschreven in dezelfde notities-JSON waar het
+// intakeformulier de rest van de antwoorden in zet.
+export async function setBedrijfsgegevens(slug, { adres = null, kvk = null, btw = null, logoToestemming = null } = {}) {
+  return await rpc("set_bedrijfsgegevens", {
+    p_slug: slug,
+    p_adres: adres,
+    p_kvk: kvk,
+    p_btw: btw,
+    p_logo_toestemming: logoToestemming,
+  });
+}
+
 export async function setBetaling(slug, fields = {}) {
   return await rpc("set_betaling", {
     p_slug: slug,
