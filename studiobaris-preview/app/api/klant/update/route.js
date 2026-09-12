@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { updateKlant, log } from "../../../../lib/server-data";
+import { updateKlant, log, isGeldigeVerzamelaar } from "../../../../lib/server-data";
 import { leesSessie } from "../../../../lib/auth";
 
 export const runtime = "nodejs";
@@ -12,7 +12,13 @@ export async function POST(req) {
     const slug = body.slug;
     if (!slug) return NextResponse.json({ ok: false, error: "slug ontbreekt." }, { status: 400 });
 
+    // Let op: de RPC doet coalesce(p_verzamelaar, verzamelaar) — alleen een
+    // echte SQL null betekent daar "niet wijzigen". Een lege string is dus
+    // bewust géén null: dat is hoe je de koppeling juist wél loslaat.
     const verzamelaar = body.verzamelaar !== undefined ? String(body.verzamelaar) : null;
+    if (!(await isGeldigeVerzamelaar(verzamelaar))) {
+      return NextResponse.json({ ok: false, error: "Onbekend teamlid." }, { status: 400 });
+    }
     const status = body.pipeline_status !== undefined ? String(body.pipeline_status) : null;
     let maandbedrag = null;
     if (body.maandbedrag !== undefined && body.maandbedrag !== "") {

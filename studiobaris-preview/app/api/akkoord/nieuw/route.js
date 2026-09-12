@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { maakAkkoord } from "../../../../lib/server-data";
+import { maakAkkoord, isGeldigeVerzamelaar } from "../../../../lib/server-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +30,11 @@ export async function POST(req) {
 
     const pakketType = ["vol", "plugin"].includes(body.pakketType) ? body.pakketType : null;
 
+    const verzamelaar = body.verzamelaar ? String(body.verzamelaar).trim() : null;
+    if (!(await isGeldigeVerzamelaar(verzamelaar))) {
+      return NextResponse.json({ ok: false, error: "Onbekend teamlid." }, { status: 400 });
+    }
+
     const slug = await maakAkkoord({
       companyName,
       email: body.email ? String(body.email).trim() : null,
@@ -39,7 +44,7 @@ export async function POST(req) {
       maandbedrag,
       aanbetaling,
       diensten,
-      verzamelaar: body.verzamelaar ? String(body.verzamelaar).trim() : null,
+      verzamelaar,
     });
 
     if (!slug) {

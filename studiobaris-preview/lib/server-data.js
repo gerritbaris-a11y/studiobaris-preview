@@ -148,6 +148,16 @@ export async function getTeam() {
   return Array.isArray(data) ? data : [];
 }
 
+// Bewaakt de koppeling klant↔verkoper: een verzamelaar die niet exact een
+// bestaand teamlid is, telt straks niet mee in diens omzetoverzicht zonder
+// dat iemand dat merkt (sb_omzet_overzicht koppelt op exacte naam). Leeg mag
+// altijd — dat is de koppeling loslaten, geen tikfout.
+export async function isGeldigeVerzamelaar(naam) {
+  if (!naam) return true;
+  const team = await getTeam();
+  return team.some((t) => t.naam === naam);
+}
+
 // --- Login / accounts ---
 
 // Namen + rol + of er al een wachtwoord is ingesteld (voor de inlogpagina).

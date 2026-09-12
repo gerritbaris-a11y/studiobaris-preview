@@ -1,9 +1,10 @@
-import { getOverview } from "../../lib/server-data";
+import { getOverview, getTeam } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { NieuweKlantKnop } from "../dashboard/dashboard-actions";
 import KlantRij from "./klant-rij";
+import VerkoperFilter from "./verkoper-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function KlantenregisterPage() {
   const beheer = isBeheer(sessie);
 
   const alles = await getOverview();
+  const team = await getTeam();
 
   // Klanten: al een klantnummer, dus geactiveerd, en (nog) niet als
   // oud-klant gemarkeerd. Op volgorde van nummer.
@@ -68,6 +70,7 @@ export default async function KlantenregisterPage() {
           <div style={{ fontSize: 13.5, color: KLEUR.gedempt }}>Nog geen klanten met een klantnummer.</div>
         ) : (
           <div style={{ overflowX: "auto" }}>
+            <VerkoperFilter team={team} />
             <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 720 }}>
               <thead>
                 <tr>
@@ -77,6 +80,7 @@ export default async function KlantenregisterPage() {
                   <th style={th}>Telefoon</th>
                   <th style={th}>E-mail</th>
                   <th style={th}>Pakket</th>
+                  <th style={th}>Verkoper</th>
                   <th style={{ ...th, textAlign: "right" }}>Maandbedrag</th>
                 </tr>
               </thead>

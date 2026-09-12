@@ -165,7 +165,7 @@ export default async function KlantenPage() {
                 <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, color: KLEUR.gedempt }}>
                   Beheer
                 </div>
-                <KlantNaam slug={r.slug} value={r.verzamelaar} />
+                <KlantNaam slug={r.slug} value={r.verzamelaar} team={teamleden} />
                 {(naam === "Gerrit" || naam === "Levi") && (
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 )}

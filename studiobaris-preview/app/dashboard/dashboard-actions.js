@@ -730,30 +730,44 @@ export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevu
   );
 }
 
-export function KlantNaam({ slug, value }) {
+// Keuzelijst i.p.v. vrij tekstveld: een verzamelaar die niet exact een
+// teamlid is (tikfout, andere hoofdletter) telt niet mee in diens
+// omzetoverzicht, zonder dat iemand dat merkt. `team` komt van getTeam()/
+// getTeamLogin() ({naam, rol}[]); staat de huidige waarde er (bijv. door een
+// oud-teamlid) niet meer bij, dan blijft hij als extra optie zichtbaar zodat
+// hij niet stilzwijgend verdwijnt.
+export function KlantNaam({ slug, value, team = [] }) {
   const [v, setV] = useState(value || "");
   const [opgeslagen, setOpgeslagen] = useState(value || "");
   const [bezig, setBezig] = useState(false);
-  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+  const gewijzigd = v !== (opgeslagen || "");
 
-  async function bewaar() {
-    if (!gewijzigd) return;
+  async function bewaar(nieuweWaarde) {
+    setV(nieuweWaarde);
     setBezig(true);
-    const d = await bewaarKlant(slug, { verzamelaar: v });
-    if (d.ok) setOpgeslagen(v);
+    const d = await bewaarKlant(slug, { verzamelaar: nieuweWaarde });
+    if (d.ok) setOpgeslagen(nieuweWaarde);
     setBezig(false);
   }
 
+  const namen = team.map((t) => t.naam);
+  const onbekendeHuidigeWaarde = value && !namen.includes(value) ? value : null;
+
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }} title="Wie behandelt deze klant">
-      <input
+      <select
         value={v}
-        onChange={(e) => setV(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
-        placeholder="Naam"
-        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
-      />
-      <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
+        onChange={(e) => bewaar(e.target.value)}
+        disabled={bezig}
+        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+      >
+        <option value="">— kies —</option>
+        {onbekendeHuidigeWaarde && <option value={onbekendeHuidigeWaarde}>{onbekendeHuidigeWaarde} (niet meer in team)</option>}
+        {namen.map((n) => (
+          <option key={n} value={n}>{n}</option>
+        ))}
+      </select>
+      {bezig && <span style={{ fontSize: 11, color: "#9A9084" }}>bezig…</span>}
     </span>
   );
 }

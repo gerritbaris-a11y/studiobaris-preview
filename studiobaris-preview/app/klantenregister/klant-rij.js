@@ -129,13 +129,19 @@ export default function KlantRij({ r, variant }) {
   const [open, setOpen] = useState(false);
   const telefoon = schoonTelefoon(r.lead_phone || r.b_telefoon) || "—";
   const email = r.lead_email || r.b_email || "—";
-  const kolommen = variant === "klant" ? 7 : 6;
+  const kolommen = variant === "klant" ? 8 : 6;
+  // Portefeuille-filter (VerkoperFilter) werkt alleen op de Klanten-tabel —
+  // data-attributen daarom alleen daar meegeven, anders zou een filterklik
+  // ook rijen op Toekomstig/Oud onterecht verbergen.
+  const filterAttrs = variant === "klant" ? { "data-verzamelaar": r.verzamelaar || "", "data-rij-hoofd": "1" } : {};
+  const filterAttrsDetail = variant === "klant" ? { "data-verzamelaar": r.verzamelaar || "" } : {};
 
   return (
     <>
       <tr
         style={{ borderTop: `1px solid ${KLEUR.baanRand}`, cursor: "pointer" }}
         onClick={() => setOpen((v) => !v)}
+        {...filterAttrs}
       >
         {variant !== "toekomstig" && (
           <td style={{ ...td, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.klantnummer || "—"}</td>
@@ -148,6 +154,9 @@ export default function KlantRij({ r, variant }) {
         <td style={{ ...td, whiteSpace: "nowrap" }}>{telefoon}</td>
         <td style={td}>{email}</td>
         {variant !== "oud" && <td style={td}><PakketLabel type={r.pakket_type} /></td>}
+        {variant === "klant" && (
+          <td style={{ ...td, color: KLEUR.gedempt }}>{r.verzamelaar || "—"}</td>
+        )}
         {variant === "klant" && (
           <td style={{ ...td, textAlign: "right" }}>{r.maandbedrag ? euro(r.maandbedrag) + " p/m" : "—"}</td>
         )}
@@ -163,7 +172,7 @@ export default function KlantRij({ r, variant }) {
         )}
       </tr>
       {open && (
-        <tr style={{ background: KLEUR.baan }}>
+        <tr style={{ background: KLEUR.baan }} {...filterAttrsDetail}>
           <td colSpan={kolommen} style={{ padding: "14px 18px" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "grid", gap: 12 }}>
               {variant !== "oud" && (
