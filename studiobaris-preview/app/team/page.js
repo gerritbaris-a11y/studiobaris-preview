@@ -84,6 +84,7 @@ export default async function TeamPage() {
           {cel("Uitbetaald", euro(o.verdiend), "#0f6e56")}
           {cel("Nog te verdienen", euro(o.openstaand), "#b45309")}
           {t.vergoeding_model === "50pct_abo" && cel("Per maand (1/3 abo)", euro(o.maand_commissie), "#0f6e56")}
+          {t.vergoeding_model === "50pct_vast" && cel(`Per maand (${euro(t.maand_vast_bedrag)} p/klant)`, euro(o.maand_commissie), "#0f6e56")}
         </div>
       </div>
     );
