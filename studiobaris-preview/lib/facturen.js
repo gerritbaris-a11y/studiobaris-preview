@@ -6,7 +6,9 @@
 // (niet nog eens bovenaan) en het klantnummer staat bij de factuurgegevens,
 // net als in het sjabloon.
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { periodeInWoorden, periodeKort, datumNL } from "./mollie";
+import { BODONI_BOLD_BASE64 } from "./bodoni-moda-font";
 
 export const BEDRIJF = {
   naam: "StudioBaris",
@@ -36,8 +38,11 @@ function euro(v) {
 }
 
 // ── PDF ─────────────────────────────────────────────────────────────────────
-// Bewust met de ingebouwde Helvetica: geen lettertypebestanden nodig, dus
-// niets dat op Vercel kan ontbreken. Eén A4, altijd dezelfde indeling.
+// Bewust met de ingebouwde Helvetica voor alle lopende tekst: geen los
+// lettertypebestand nodig, dus niets dat op Vercel kan ontbreken. Alleen de
+// "B" en de "StudioBaris"-naam bovenaan gebruiken het merk-lettertype
+// (Bodoni Moda, zie lib/bodoni-moda-font.js) — dat zit als base64 ingebakken
+// in de code, om dezelfde reden. Eén A4, altijd dezelfde indeling.
 export async function factuurPdf(f) {
   const snap = f.snapshot || {};
   const klant = snap.klant || {};
@@ -49,10 +54,15 @@ export async function factuurPdf(f) {
   const automatischeIncasso = maandelijks || f.soort === "slottermijn";
 
   const pdf = await PDFDocument.create();
+  pdf.registerFontkit(fontkit);
   const pagina = pdf.addPage([595.28, 841.89]); // A4
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
+  // Merk-lettertype: alleen voor de "B" en de "StudioBaris"-naam bovenaan,
+  // zelfde lettertype als het app-icoon en de favicon. De rest van de tekst
+  // blijft bewust Helvetica (zie de opmerking hierboven bij de import).
+  const merk = await pdf.embedFont(Buffer.from(BODONI_BOLD_BASE64, "base64"));
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy, logo/tabelbalk/koppen (nieuwe huisstijl)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -70,11 +80,11 @@ export async function factuurPdf(f) {
     pagina.drawText(String(s == null ? "" : s), {
       x, y: yy,
       size: opt.size || 9.5,
-      font: opt.italic ? italic : opt.vet ? vet : font,
+      font: opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font,
       color: opt.kleur || INKT,
     });
   const breedteVan = (s, opt = {}) =>
-    (opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
+    (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
   const rechts = (s, xEind, yy, opt = {}) => tekst(s, xEind - breedteVan(s, opt), yy, opt);
   const midden = (s, x0, x1, yy, opt = {}) => tekst(s, x0 + (x1 - x0 - breedteVan(s, opt)) / 2, yy, opt);
   const lijn = (yy, x0 = L, x1 = R, kleur = LIJN, dikte = 0.75) =>
@@ -99,11 +109,11 @@ export async function factuurPdf(f) {
   // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
   vlak(L, y - 28, 32, 32, INKT);
   pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD }); // gouden accentstip, zelfde motief als het app-icoon
-  tekst("B", L + 10, y - 18, { size: 16, vet: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, vet: true, kleur: INKT });
+  tekst("B", L + 10, y - 18, { size: 16, merk: true, kleur: WIT });
+  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, merk: true, kleur: INKT });
   pagina.drawLine({
     start: { x: L + 42, y: y - 14 },
-    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { vet: true, size: 17 }), y: y - 14 },
+    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { merk: true, size: 17 }), y: y - 14 },
     thickness: 1.3, color: GOUD,
   });
 
@@ -209,9 +219,17 @@ export async function factuurPdf(f) {
   y -= 10;
 
   // ── Totaalbalk: een volle, donkere balk — het rustpunt van de pagina ──────
+  // Breedte berekend op wat er echt in moet (label + bedrag), niet op een
+  // vast aantal pixels — anders ging het scheef zodra het label of bedrag
+  // langer werd dan waar de balk oorspronkelijk op was afgemeten.
   const balkHoogte = 26;
-  vlak(xPrijs - 90, y - balkHoogte + 6, R - (xPrijs - 90), balkHoogte, INKT);
-  totaalregel("Totaal incl. btw", euro(f.bedrag_incl), xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });
+  const balkLabel = "Totaal incl. btw", balkWaarde = euro(f.bedrag_incl);
+  const balkStart = Math.min(
+    xPrijs - 90,
+    xTotaalKol - breedteVan(balkLabel, { size: 12 }) - 10 - breedteVan(balkWaarde, { vet: true, size: 12 }) - 16
+  );
+  vlak(balkStart, y - balkHoogte + 6, R - balkStart, balkHoogte, INKT);
+  totaalregel(balkLabel, balkWaarde, xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });
   y -= balkHoogte + 18;
 
   // ── Betaal- of incassogegevens ─────────────────────────────────────────────

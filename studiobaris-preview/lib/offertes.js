@@ -13,8 +13,10 @@
 //      volledig eenmalig), dan verschijnt er gewoon één blok, geen loze
 //      kopjes.
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { BEDRIJF } from "./facturen";
 import { datumNL } from "./mollie";
+import { BODONI_BOLD_BASE64 } from "./bodoni-moda-font";
 
 function euro(v) {
   const n = Number(v) || 0;
@@ -30,10 +32,14 @@ export async function offertePdf(o) {
   const heeftBeide = eenmaligRegels.length > 0 && maandRegels.length > 0;
 
   const pdf = await PDFDocument.create();
+  pdf.registerFontkit(fontkit);
   const pagina = pdf.addPage([595.28, 841.89]); // A4
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
+  // Merk-lettertype: alleen voor de "B" en de "StudioBaris"-naam bovenaan,
+  // zelfde lettertype als het app-icoon en de favicon (zie lib/facturen.js).
+  const merk = await pdf.embedFont(Buffer.from(BODONI_BOLD_BASE64, "base64"));
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy (nieuwe huisstijl, zelfde als facturen.js)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -51,11 +57,11 @@ export async function offertePdf(o) {
     pagina.drawText(String(s == null ? "" : s), {
       x, y: yy,
       size: opt.size || 9.5,
-      font: opt.italic ? italic : opt.vet ? vet : font,
+      font: opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font,
       color: opt.kleur || INKT,
     });
   const breedteVan = (s, opt = {}) =>
-    (opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
+    (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
   const rechts = (s, xEind, yy, opt = {}) => tekst(s, xEind - breedteVan(s, opt), yy, opt);
   const midden = (s, x0, x1, yy, opt = {}) => tekst(s, x0 + (x1 - x0 - breedteVan(s, opt)) / 2, yy, opt);
   const lijn = (yy, x0 = L, x1 = R, kleur = LIJN, dikte = 0.75) =>
@@ -77,11 +83,11 @@ export async function offertePdf(o) {
   // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
   vlak(L, y - 28, 32, 32, INKT);
   pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD }); // gouden accentstip, zelfde motief als het app-icoon
-  tekst("B", L + 10, y - 18, { size: 16, vet: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, vet: true, kleur: INKT });
+  tekst("B", L + 10, y - 18, { size: 16, merk: true, kleur: WIT });
+  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, merk: true, kleur: INKT });
   pagina.drawLine({
     start: { x: L + 42, y: y - 14 },
-    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { vet: true, size: 17 }), y: y - 14 },
+    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { merk: true, size: 17 }), y: y - 14 },
     thickness: 1.3, color: GOUD,
   });
 
@@ -198,14 +204,18 @@ export async function offertePdf(o) {
     totaalregel("Btw 21%", euro(btw), xPrijs, xTotaalKol, y, { kleur: GRIJS });
     y -= 10;
 
+    // Breedte berekend op wat er echt in moet (label + bedrag), niet op een
+    // vast aantal pixels — anders ging het scheef zodra het label langer
+    // werd (bijv. "Totaal incl. btw / maand") of het bedrag fors was.
     const balkHoogte = 26;
-    vlak(xPrijs - 90, y - balkHoogte + 6, R - (xPrijs - 90), balkHoogte, INKT);
-    totaalregel(
-      perMaand ? "Totaal incl. btw / maand" : "Totaal incl. btw",
-      euro(incl),
-      xPrijs, xTotaalKol, y - 8,
-      { size: 12, kleur: WIT }
+    const balkLabel = perMaand ? "Totaal incl. btw / maand" : "Totaal incl. btw";
+    const balkWaarde = euro(incl);
+    const balkStart = Math.min(
+      xPrijs - 90,
+      xTotaalKol - breedteVan(balkLabel, { size: 12 }) - 10 - breedteVan(balkWaarde, { vet: true, size: 12 }) - 16
     );
+    vlak(balkStart, y - balkHoogte + 6, R - balkStart, balkHoogte, INKT);
+    totaalregel(balkLabel, balkWaarde, xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });
     y -= balkHoogte + 22;
   }
 
