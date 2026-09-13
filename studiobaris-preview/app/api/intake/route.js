@@ -203,6 +203,23 @@ export async function POST(req) {
     }
     if (content.seo) content.seo.noindex = true;
 
+    // Contactgegevens op de preview. Vraagt de publieke intake niet meer om een
+    // telefoonnummer, dan zou het contactblok onderaan zonder knoppen komen te
+    // staan en de footerkolom leeg blijven - de preview oogt dan half af.
+    // Daarom vullen we hier onze eigen gegevens in als terugval. Bewust die van
+    // StudioBaris en geen verzonnen nummer: een preview staat op een openbare
+    // URL en die knoppen worden echte bel- en WhatsApp-links. Belt iemand toch,
+    // dan komt hij bij ons uit in plaats van bij een willekeurige vreemde.
+    // Na akkoord komen de echte gegevens van de klant hiervoor in de plaats.
+    const SB_TELEFOON = "06 16 73 21 05";
+    const SB_EMAIL = "info@studiobaris.nl";
+    content.bedrijf = content.bedrijf || {};
+    const leeg = (x) => !x || !String(x).trim();
+    const terugval = [];
+    if (leeg(content.bedrijf.telefoon)) { content.bedrijf.telefoon = SB_TELEFOON; terugval.push("telefoonnummer"); }
+    if (leeg(content.bedrijf.whatsapp)) { content.bedrijf.whatsapp = SB_TELEFOON; terugval.push("WhatsApp"); }
+    if (leeg(content.bedrijf.email)) { content.bedrijf.email = SB_EMAIL; terugval.push("e-mailadres"); }
+
     // _review apart bewaren (interne notitie), niet in de publiek leesbare content
     const review = content._review || {};
     delete content._review;
@@ -211,6 +228,21 @@ export async function POST(req) {
     if (v("interesse")) review.interesse = v("interesse");
     // Toestemming om het logo op studiobaris.nl te tonen na oplevering (backlink).
     review.logo_toestemming = v("logo_toestemming") === "ja";
+    if (terugval.length) {
+      review.let_op = Array.isArray(review.let_op) ? review.let_op : [];
+      review.let_op.push(
+        `Op de preview staan onze eigen contactgegevens als ${terugval.join(", ")} - ` +
+        `de klant heeft die niet aangeleverd. Vervangen door de echte gegevens voordat de site live gaat.`
+      );
+    }
+
+    // Wie heeft deze preview gemaakt? Een collega vult het formulier ingelogd in,
+    // dus dan staat zijn naam in "verzamelaar". Een prospect die vanaf
+    // studiobaris.nl op "Gratis preview" klikt is niet ingelogd en heeft die niet.
+    // Dat onderscheid leggen we hieronder expliciet vast, zodat het in het
+    // dashboard te zien is en niet als een leeg veld hoeft te worden geraden.
+    const verzamelaar = v("verzamelaar");
+    const herkomst = verzamelaar ? "intakeformulier" : "website";
 
     // Wegschrijven naar Supabase via beveiligde RPC (workflow-schema staat niet open voor REST)
     const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/create_preview`, {
@@ -226,7 +258,7 @@ export async function POST(req) {
         p_content: content,
         p_phone: v("telefoon"),
         p_email: v("email"),
-        p_source: "intakeformulier",
+        p_source: herkomst,
         p_notes: JSON.stringify(review),
       }),
     });
@@ -244,15 +276,19 @@ export async function POST(req) {
       console.error("demo-app aanmaken mislukt:", e && e.message);
     }
 
-    // De preview op naam zetten van de collega die hem maakte. Daar hangt zijn
-    // omzet aan vast, en hierdoor verschijnt de klant bij "Mijn klanten".
-    const verzamelaar = v("verzamelaar");
-    if (verzamelaar) {
-      try {
-        await updateKlant(slug, { verzamelaar, status: "Preview" });
-      } catch (e) {
-        console.error("verzamelaar zetten mislukt:", e && e.message);
-      }
+    // De preview in de pipeline zetten. Is hij door een collega gemaakt, dan ook
+    // op zijn naam: daar hangt zijn omzet aan vast, en hierdoor verschijnt de
+    // klant bij "Mijn klanten".
+    //
+    // Bij een aanvraag via de website blijft "verzamelaar" bewust leeg - er is
+    // niemand die er omzet aan mag ontlenen, en niemand mag hem per ongeluk in
+    // zijn commissie terugzien. De pipeline-status wordt wel gezet, anders komt
+    // zo'n aanvraag helemaal niet in je overzicht terecht. update_klant negeert
+    // null-waarden, dus de lege verzamelaar overschrijft niets.
+    try {
+      await updateKlant(slug, { verzamelaar: verzamelaar || null, status: "Preview" });
+    } catch (e) {
+      console.error("pipeline-status zetten mislukt:", e && e.message);
     }
 
     // De lead afsluiten: status op preview en de koppeling met deze preview leggen.
