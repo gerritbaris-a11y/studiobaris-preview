@@ -161,11 +161,14 @@ export default function ProspectForm({
     put("slogan", f.slogan.value);
     put("kernwaarden", waarden.join(", "));
     put("regio", regios.filter((r) => r.trim()).join(", "));
-    put("email", f.email.value);
-    put("telefoon", f.telefoon.value);
-    put("adres", f.adres.value);
-    put("kvk", f.kvk.value);
-    put("btw", f.btw.value);
+    // Velden die alleen in de uitgebreide versie van het formulier staan. In de
+    // publieke intake bestaan ze niet, dus eerst kijken of ze er zijn.
+    const val = (naam) => (f[naam] ? f[naam].value : "");
+    put("email", val("email"));
+    put("telefoon", val("telefoon"));
+    put("adres", val("adres"));
+    put("kvk", val("kvk"));
+    put("btw", val("btw"));
     if (!revise) {
       // Intern ingevuld? Dan is de bron de verkoper zelf; dat bepaalt bij wie
       // de klant en de omzet terechtkomen.
@@ -179,14 +182,14 @@ export default function ProspectForm({
     fd.append("google_business", heeftGoogle ? "ja" : "");
     fd.append("logo_toestemming", logoToestemming ? "ja" : "");
     put("google_url", heeftGoogle && f.google_url ? f.google_url.value : "");
-    put("tone_of_voice", f.tone_of_voice.value);
-    put("kleurvoorkeur", f.kleurvoorkeur.value);
-    put("notities", f.notities ? f.notities.value : "");
-    put("oude_website", f.oude_website.value);
+    put("tone_of_voice", val("tone_of_voice"));
+    put("kleurvoorkeur", val("kleurvoorkeur"));
+    put("notities", val("notities"));
+    put("oude_website", val("oude_website"));
     // Laatste controle vlak voor verzenden: het formulier kan ook zonder
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
-    const foutLogo = controleerBestanden(f.logo.files, "logo");
-    const foutFotos = controleerBestanden(f.fotos.files, "foto");
+    const foutLogo = controleerBestanden(f.logo ? f.logo.files : null, "logo");
+    const foutFotos = controleerBestanden(f.fotos ? f.fotos.files : null, "foto");
     if (foutLogo || foutFotos) {
       setLogoFout(foutLogo || "");
       setFotoFout(foutFotos || "");
@@ -199,7 +202,10 @@ export default function ProspectForm({
       // Eerst de beelden rechtstreeks naar de opslag, daarna pas het formulier.
       // Zo blijft het verzoek klein en kan het niet stuklopen op de grens die
       // het platform aan de omvang van een verzoek stelt.
-      const { logoUrl, fotoUrls } = await uploadBestanden(f.logo.files[0] || null, Array.from(f.fotos.files));
+      const { logoUrl, fotoUrls } = await uploadBestanden(
+        f.logo && f.logo.files[0] ? f.logo.files[0] : null,
+        f.fotos ? Array.from(f.fotos.files) : []
+      );
       if (logoUrl) fd.append("logo_url", logoUrl);
       if (fotoUrls.length) fd.append("foto_urls", JSON.stringify(fotoUrls));
 
@@ -287,7 +293,10 @@ export default function ProspectForm({
 
         <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>
 
-        {!geThematiseerd && (
+        {/* Stijl vragen we niet aan de aanvrager: alle drie de stijlen staan in het
+            dashboard en zijn daar met een klik te wisselen. Zonder keuze valt
+            merk.stijl terug op "stoer". */}
+        {revise && !geThematiseerd && (
           <>
             <div style={label}>{revise ? "Andere stijl? (optioneel)" : "Kies een stijl voor de website"}</div>
             <span style={hint}>{revise ? "Laat ongekozen om de huidige stijl te behouden. Kies een stijl als je de hele look wilt omgooien." : "Hoe wil je dat de site overkomt? Je keuze wordt meteen toegepast op de preview."}</span>
@@ -328,7 +337,7 @@ export default function ProspectForm({
           </>
         )}
 
-        {uitgebreid && (
+        {revise && (
           <>
         <div style={label}>Kernwaarden (meerdere mogelijk)</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de waarden op de site aangepast moeten worden." : "Kies de waarden die het bedrijf typeren. Hiervan maken we de drie \"wat u krijgt\"-blokken met uitleg."}</span>
@@ -356,11 +365,24 @@ export default function ProspectForm({
         ))}
         <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Regio toevoegen</button>
 
-        <div style={{ display: "flex", gap: 14 }}>
-          <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" defaultValue={v.email || ""} /></label>
-          <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" defaultValue={v.telefoon || ""} /></label>
-        </div>
-        <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
+        {uitgebreid ? (
+          <>
+            <div style={{ display: "flex", gap: 14 }}>
+              <label style={{ ...label, flex: 1 }}>E-mail<input style={veld} name="email" type="email" defaultValue={v.email || ""} /></label>
+              <label style={{ ...label, flex: 1 }}>Telefoonnummer<input style={veld} name="telefoon" defaultValue={v.telefoon || ""} /></label>
+            </div>
+            <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
+          </>
+        ) : (
+          /* In de publieke intake vragen we alleen een e-mailadres, en niet voor de
+             site maar om contact op te kunnen nemen: de aanvrager krijgt de
+             previewlink niet te zien. De contactgegevens die op de site komen te
+             staan halen we pas na akkoord op. */
+          <label style={label}>E-mail *
+            <span style={hint}>Hier laten we weten dat je preview klaarstaat. Verder gebruiken we het nergens voor.</span>
+            <input style={veld} name="email" type="email" required defaultValue={v.email || ""} />
+          </label>
+        )}
         {uitgebreid && (
           <>
         <div style={{ display: "flex", gap: 14 }}>
@@ -403,12 +425,12 @@ export default function ProspectForm({
           </>
         )}
 
-        {uitgebreid && (
+        {revise && (
           <>
         <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
           </>
         )}
-        {uitgebreid && (
+        {revise && (
           <>
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
           </>
@@ -417,26 +439,19 @@ export default function ProspectForm({
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
             onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
-        <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender. JPG of PNG, tot 12 stuks." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, tot 12 stuks."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
+        {uitgebreid && (
+          <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender. JPG of PNG, tot 12 stuks." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, tot 12 stuks."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
             onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
           {fotoFout && <span style={foutTekst}>{fotoFout}</span>}</label>
+        )}
+        {/* De publieke intake is bewust kort. Wat hier niet staat wordt niet
+            gevraagd: de preview vult het zelf. Kernwaarden worden afgeleid en in
+            _review.afgeleid genoteerd, kleuren komen uit het logo, en ontbrekende
+            beelden worden opgevangen door de branchefoto's uit preview-assets.js. */}
         {!uitgebreid && (
-          <details style={{ marginTop: 26, border: "1px solid #e6e9ee", borderRadius: 10, background: "#fbfcfd" }}>
-            <summary style={{ cursor: "pointer", padding: "14px 16px", fontWeight: 600, fontSize: 15, color: "#222", listStyle: "revert" }}>
-              Wil je meer kwijt? <span style={{ fontWeight: 400, color: "#777" }}>&mdash; optioneel, maakt de preview beter</span>
-            </summary>
-            <div style={{ padding: "0 16px 18px" }}>
-        <label style={label}>Slogan (optioneel)<span style={hint}>{revise ? "Vul in als de slogan anders moet." : "Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero."}</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
-        <label style={label}>Diensten<span style={hint}>{revise ? "Vul in als er diensten bij moeten, weg moeten of anders omschreven moeten worden." : "Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok op de site - meer en specifieker geeft een vollere, sterkere pagina."}</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
-        <div style={label}>Kernwaarden (meerdere mogelijk)</div>
-        <span style={hint}>{revise ? "Alleen aanvinken als de waarden op de site aangepast moeten worden." : "Kies de waarden die het bedrijf typeren. Hiervan maken we de drie \"wat u krijgt\"-blokken met uitleg."}</span>
-        <div>
-          {KERNWAARDEN.map((w) => (
-            <span key={w} style={chip(waarden.includes(w))} onClick={() => toggle(waarden, setWaarden, w)}>
-              <input type="checkbox" readOnly checked={waarden.includes(w)} style={{ pointerEvents: "none" }} />{w}
-            </span>
-          ))}
-        </div>
+          <>
+        <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+        <label style={label}>Diensten<span style={hint}>Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok én een eigen pagina - meer en specifieker geeft een vollere site.</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
         <div style={label}>Sociale media (links)</div>
         <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
         {socials.map((s, i) => (
@@ -454,10 +469,7 @@ export default function ProspectForm({
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
         <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
-        <label style={label}>Tone of voice<span style={hint}>{revise ? "Vul in als de toon van de teksten anders moet." : "Beschrijf de schrijfstijl in een paar woorden. Dit bepaalt de toon van alle teksten op de site."}</span><textarea style={{ ...veld, minHeight: 60 }} name="tone_of_voice" placeholder="Bijv. nuchter, persoonlijk, geen verkooppraat" /></label>
-        <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
-            </div>
-          </details>
+          </>
         )}
 
         {revise && (
@@ -466,9 +478,6 @@ export default function ProspectForm({
 
         {!revise && (
           <>
-            {!intern && (
-              <label style={label}>Hoe bij ons terechtgekomen?<span style={hint}>Alleen voor jou (op het dashboard), niet op de site.</span><input style={veld} name="bron" placeholder="Bijv. via Jan de Vries, Google, doorverwijzing" /></label>
-            )}
             {intern && (
               <>
             <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
