@@ -44,10 +44,11 @@ export default function ProspectForm({
 }) {
   const revise = mode === "revise";
   const intern = Boolean(afzender);
-  // Het volledige formulier is voor onszelf (leadlijst) en voor het
-  // aanpasformulier. De publieke intake is stap 1 van 2: alleen wat nodig is
-  // om een preview in de huisstijl te maken.
-  const uitgebreid = revise || intern;
+  // Het volledige formulier is alleen nog het aanpasformulier (Workflow 2).
+  // De intake is overal stap 1 van 2 - ook als wij hem zelf invullen vanuit de
+  // leadlijst. Zelfde korte lijst, zodat we niet twee formulieren onderhouden.
+  // Het interesseblok blijft wel intern; dat is geen invoer voor de preview.
+  const uitgebreid = revise;
   const v = prefill || {};
   const A = (thema && thema.accent) || "#FF8300";
   const Atint = hexNaarRgba(A, 0.12);
