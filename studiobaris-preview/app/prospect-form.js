@@ -5,9 +5,24 @@ import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie"
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
 
-const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #d8dde3", borderRadius: 8, marginTop: 6, fontFamily: "inherit" };
-const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: "#222" };
-const hint = { display: "block", fontSize: 12.5, color: "#777", fontWeight: 400, margin: "3px 0 0", lineHeight: 1.4 };
+// Huisstijl-tokens, 1-op-1 overgenomen van studiobaris.nl. Gelden voor de
+// vaste chrome (achtergrond, tekst, koppen, font) ongeacht de modus. Het
+// accent (A, verderop) blijft wél per-klant instelbaar via de thema-prop in
+// workflow 2 ("je website aanpassen") — dat is bewust ongewijzigd.
+const HUISSTIJL = {
+  achtergrond: "#F6F7F8",
+  donker: "#16202E",
+  body: "#4A5750",
+  accent: "#E79B43",
+  accentTekst: "#16202E",
+  accentDonker: "#CF8531",
+};
+const FONT_HREF = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
+const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
+
+const veld = { display: "block", width: "100%", padding: "10px 12px", fontSize: 15, border: "1px solid #DADFE3", borderRadius: 12, marginTop: 6, fontFamily: "inherit" };
+const label = { display: "block", marginTop: 18, fontSize: 14, fontWeight: 600, color: HUISSTIJL.donker };
+const hint = { display: "block", fontSize: 12.5, color: HUISSTIJL.body, fontWeight: 400, margin: "3px 0 0", lineHeight: 1.4 };
 
 function hexNaarRgba(hex, a) {
   const h = String(hex || "").replace("#", "");
@@ -50,14 +65,18 @@ export default function ProspectForm({
   // Het interesseblok blijft wel intern; dat is geen invoer voor de preview.
   const uitgebreid = revise;
   const v = prefill || {};
-  const A = (thema && thema.accent) || "#FF8300";
+  const A = (thema && thema.accent) || HUISSTIJL.accent;
   const Atint = hexNaarRgba(A, 0.12);
   const geThematiseerd = !!(thema && thema.accent);
+  // Tekst op de accentknop: bij ons eigen accent (lichte oker) staat de
+  // huisstijl-donkere tekst voorgeschreven; bij een client-eigen accentkleur
+  // (workflow 2) blijft wit de veilige, kleur-onafhankelijke keuze.
+  const ATekst = geThematiseerd ? "#fff" : HUISSTIJL.accentTekst;
 
-  const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? A : "#d8dde3"), background: actief ? Atint : "#fff", color: "#333", cursor: "pointer", fontSize: 14, fontWeight: 500 });
+  const chip = (actief) => ({ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", marginRight: 8, marginTop: 8, borderRadius: 999, border: "1.5px solid " + (actief ? A : "#DADFE3"), background: actief ? Atint : "#fff", color: HUISSTIJL.donker, cursor: "pointer", fontSize: 14, fontWeight: 500 });
 
   const foutTekst = { display: "block", color: "#c0392b", fontSize: 13, marginTop: 6, lineHeight: 1.45 };
-  const avgTekst = { fontSize: 12.5, color: "#6b7280", lineHeight: 1.6, marginTop: 18, background: "#f7f8fa", border: "1px solid #e6e9ee", borderRadius: 10, padding: "12px 14px" };
+  const avgTekst = { fontSize: 12.5, color: HUISSTIJL.body, lineHeight: 1.6, marginTop: 18, background: "#fff", border: "1px solid #E7EAED", borderRadius: 12, padding: "12px 14px" };
 
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
@@ -251,37 +270,68 @@ export default function ProspectForm({
       );
     }
     return (
-      <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center", color: "#222" }}>
-        <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
-        <h1 style={{ fontSize: 30 }}>Bedankt!</h1>
-        <p style={{ color: "#555", marginTop: 14, fontSize: 18, lineHeight: 1.6 }}>
-          {revise
-            ? "We hebben je aanpassingen ontvangen en werken je website bij. Je krijgt binnenkort de vernieuwde versie van ons te zien."
-            : "We hebben je gegevens goed ontvangen en gaan er meteen mee aan de slag. We nemen zo snel mogelijk contact met je op."}
-        </p>
-      </main>
+      <>
+        <style dangerouslySetInnerHTML={{ __html: `@import url('${FONT_HREF}');` }} />
+        <main style={{ minHeight: "100vh", background: HUISSTIJL.achtergrond, margin: 0 }}>
+          <div style={{ maxWidth: 600, margin: "0 auto", padding: "14vh 24px 24px", fontFamily: FONT, textAlign: "center", color: HUISSTIJL.body }}>
+            <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
+            <h1 style={{ fontSize: 30, fontWeight: 800, color: HUISSTIJL.donker }}>Bedankt!</h1>
+            <p style={{ marginTop: 14, fontSize: 18, lineHeight: 1.6 }}>
+              {revise
+                ? "We hebben je aanpassingen ontvangen en werken je website bij. Je krijgt binnenkort de vernieuwde versie van ons te zien."
+                : "We hebben je gegevens goed ontvangen en gaan er meteen mee aan de slag. We nemen zo snel mogelijk contact met je op."}
+            </p>
+          </div>
+        </main>
+      </>
     );
   }
 
   const labelTekst = (verplicht, basis, reviseTekst) => (revise ? reviseTekst : basis) + (verplicht && !revise ? " *" : "");
 
   return (
-    <main style={{ maxWidth: 720, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
-      {geThematiseerd ? (
-        <div style={{ background: A, color: "#fff", borderRadius: 14, padding: "18px 20px", marginBottom: 18 }}>
-          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.85 }}>Jouw nieuwe website</div>
-          {thema.bedrijf && <div style={{ fontSize: 24, fontWeight: 800, marginTop: 2 }}>{thema.bedrijf}</div>}
-          <div style={{ fontSize: 14, opacity: 0.92, marginTop: 4 }}>Vul hieronder aan - alles in de stijl die we voor je gekozen hebben.</div>
-        </div>
-      ) : (
-        <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>
-          StudioBaris{uitgebreid ? (revise ? " - Workflow 2 - aanpassen" : " - Workflow 1") : " - Stap 1 van 2"}
-        </p>
-      )}
-      <h1 style={{ fontSize: 30, margin: "6px 0 4px" }}>{titel}</h1>
-      <p style={{ color: "#555", marginBottom: 8 }}>{intro}</p>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `@import url('${FONT_HREF}');` }} />
+      <main style={{ minHeight: "100vh", background: HUISSTIJL.achtergrond, fontFamily: FONT }}>
+        {/* Header met logo, alleen buiten workflow 2 — daar staat de pagina
+            bewust in de kleuren van de klant zelf, niet in StudioBaris-chrome. */}
+        {!geThematiseerd && (
+          <header style={{ background: "#fff", borderBottom: "1px solid #E7EAED" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 24px" }}>
+              <a href="https://studiobaris.nl" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: HUISSTIJL.accentDonker, display: "inline-block" }} />
+                <span style={{ fontWeight: 800, fontSize: 19, color: HUISSTIJL.donker, letterSpacing: -0.3 }}>StudioBaris</span>
+              </a>
+            </div>
+          </header>
+        )}
 
-      <form onSubmit={onSubmit}>
+        <div style={{ maxWidth: 720, margin: "0 auto", padding: "5vh 24px 60px", color: HUISSTIJL.body }}>
+          {geThematiseerd ? (
+            <div style={{ background: A, color: "#fff", borderRadius: 14, padding: "18px 20px", marginBottom: 18 }}>
+              <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.85 }}>Jouw nieuwe website</div>
+              {thema.bedrijf && <div style={{ fontSize: 24, fontWeight: 800, marginTop: 2 }}>{thema.bedrijf}</div>}
+              <div style={{ fontSize: 14, opacity: 0.92, marginTop: 4 }}>Vul hieronder aan - alles in de stijl die we voor je gekozen hebben.</div>
+            </div>
+          ) : (
+            <>
+              {/* Visuele stap-indicator, alleen bij de echte stap 1 (niet bij
+                  workflow 2's "aanpassen"-tekst hieronder). */}
+              {!uitgebreid && (
+                <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+                  <span style={{ width: 32, height: 5, borderRadius: 999, background: HUISSTIJL.accent }} />
+                  <span style={{ width: 32, height: 5, borderRadius: 999, background: "#DADFE3" }} />
+                </div>
+              )}
+              <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: HUISSTIJL.body, fontWeight: 700, margin: 0 }}>
+                StudioBaris{uitgebreid ? (revise ? " - Workflow 2 - aanpassen" : " - Workflow 1") : " - Stap 1 van 2"}
+              </p>
+            </>
+          )}
+          <h1 style={{ fontSize: 30, margin: "6px 0 4px", fontWeight: 800, color: HUISSTIJL.donker }}>{titel}</h1>
+          <p style={{ color: HUISSTIJL.body, marginBottom: 8 }}>{intro}</p>
+
+          <form onSubmit={onSubmit}>
         {revise && (
           <div style={{ background: Atint, border: "1.5px solid " + A, borderRadius: 12, padding: "14px 16px", marginTop: 10 }}>
             <label style={{ ...label, marginTop: 0 }}>
@@ -303,12 +353,12 @@ export default function ProspectForm({
             <span style={hint}>{revise ? "Laat ongekozen om de huidige stijl te behouden. Kies een stijl als je de hele look wilt omgooien." : "Hoe wil je dat de site overkomt? Je keuze wordt meteen toegepast op de preview."}</span>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10, marginTop: 8 }}>
               {STIJLEN.map((s) => (
-                <div key={s.id} onClick={() => setStijl(s.id)} style={{ cursor: "pointer", border: "1.5px solid " + (stijl === s.id ? A : "#d8dde3"), background: stijl === s.id ? Atint : "#fff", borderRadius: 10, padding: "12px 14px" }}>
+                <div key={s.id} onClick={() => setStijl(s.id)} style={{ cursor: "pointer", border: "1.5px solid " + (stijl === s.id ? A : "#DADFE3"), background: stijl === s.id ? Atint : "#fff", borderRadius: 12, padding: "12px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <input type="radio" readOnly checked={stijl === s.id} style={{ pointerEvents: "none" }} />
-                    <strong style={{ color: "#222" }}>{s.naam}</strong>
+                    <input type="radio" readOnly checked={stijl === s.id} style={{ pointerEvents: "none", accentColor: A }} />
+                    <strong style={{ color: HUISSTIJL.donker }}>{s.naam}</strong>
                   </div>
-                  <div style={{ fontSize: 12.5, color: "#777", marginTop: 3 }}>{s.uitleg}</div>
+                  <div style={{ fontSize: 12.5, color: HUISSTIJL.body, marginTop: 3 }}>{s.uitleg}</div>
                 </div>
               ))}
             </div>
@@ -360,11 +410,11 @@ export default function ProspectForm({
               <LocatieVeld waarde={r} onChange={(val) => setRegio(i, val)} soort="plaats" stijl={{ ...veld, marginTop: 0, width: "100%" }} accent={A} placeholder={"Regio " + (i + 1)} />
             </div>
             {regios.length > 1 && (
-              <button type="button" onClick={() => setRegios(regios.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
+              <button type="button" onClick={() => setRegios(regios.filter((_, j) => j !== i))} style={{ border: "1px solid #DADFE3", background: "#fff", color: HUISSTIJL.donker, borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18, fontFamily: FONT }}>-</button>
             )}
           </div>
         ))}
-        <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Regio toevoegen</button>
+        <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: HUISSTIJL.donker, borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: FONT }}>+ Regio toevoegen</button>
 
         {uitgebreid ? (
           <>
@@ -407,18 +457,18 @@ export default function ProspectForm({
           <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={"Link " + (i + 1) + " (Facebook, Instagram, LinkedIn...)"} />
             {socials.length > 1 && (
-              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #DADFE3", background: "#fff", color: HUISSTIJL.donker, borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18, fontFamily: FONT }}>-</button>
             )}
           </div>
         ))}
-        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: HUISSTIJL.donker, borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: FONT }}>+ Link toevoegen</button>
           </>
         )}
 
         {uitgebreid && (
           <>
         <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
-          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />
+          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} style={{ accentColor: A }} />
           Heeft een Google Bedrijfsprofiel
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
@@ -459,13 +509,13 @@ export default function ProspectForm({
           <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
             <input style={{ ...veld, marginTop: 0 }} value={s} onChange={(e) => setSocial(i, e.target.value)} placeholder={"Link " + (i + 1) + " (Facebook, Instagram, LinkedIn...)"} />
             {socials.length > 1 && (
-              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #DADFE3", background: "#fff", color: HUISSTIJL.donker, borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18, fontFamily: FONT }}>-</button>
             )}
           </div>
         ))}
-        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#333", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14 }}>+ Link toevoegen</button>
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: HUISSTIJL.donker, borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: FONT }}>+ Link toevoegen</button>
         <label style={{ ...label, display: "flex", alignItems: "center", gap: 8 }}>
-          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} />
+          <input type="checkbox" checked={heeftGoogle} onChange={(e) => setHeeftGoogle(e.target.checked)} style={{ accentColor: A }} />
           Heeft een Google Bedrijfsprofiel
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
@@ -504,11 +554,13 @@ export default function ProspectForm({
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
         </p>
 
-        <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: "#fff", border: "none", padding: "13px 24px", borderRadius: 10, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+        <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: ATekst, border: "none", padding: "13px 26px", borderRadius: 999, fontFamily: FONT, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}
         </button>
         {error && <p style={{ color: "#c0392b", marginTop: 14 }}>{error}</p>}
-      </form>
-    </main>
+          </form>
+        </div>
+      </main>
+    </>
   );
 }
