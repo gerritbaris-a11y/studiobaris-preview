@@ -52,6 +52,10 @@ export default async function Page({ params, searchParams }) {
   // Vul lege velden met duidelijk-neppe voorbeelden, zodat de verkoop-preview
   // nooit kaal oogt. Alleen hier (preview) — de echte klantsite krijgt dit niet.
   const c = vulVoorbeeld(content || {});
+  // Concept/review-previews staan nog niet op "gepubliceerd" — dienst- en
+  // projectpagina's kijken daar wél naar (via getPreview), dus zonder deze
+  // query-param zouden ze "niet gevonden" tonen zodra iemand doorklikt.
+  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
   const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
   if (stijl === "modern") return <ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
   if (stijl === "persoonlijk") return <PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
@@ -225,7 +229,7 @@ export default async function Page({ params, searchParams }) {
           <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat we doen</span><h2>Onze specialiteiten</h2><p>Werk waar we onze naam onder zetten.</p></div>
           <div className="grid2">
             {diensten.map((d, i) => (
-              <a className="dc" key={i} href={`/${params.slug}/dienst/${i}`}>
+              <a className="dc" key={i} href={`/${params.slug}/dienst/${i}${modeQuery}`}>
                 <div className="dph" style={{ backgroundImage: `url(${d.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                 <div className="db"><h3>{d.titel}</h3><p>{d.omschrijving}</p><span className="dl">Lees meer &rarr;</span></div>
               </a>
@@ -250,7 +254,7 @@ export default async function Page({ params, searchParams }) {
         <div className="grid3">
           {projecten.length > 0
             ? projecten.map((p, i) => (
-                <a className="pc" key={i} href={`/${params.slug}/project/${i}`}>
+                <a className="pc" key={i} href={`/${params.slug}/project/${i}${modeQuery}`}>
                   <div className="pph" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>

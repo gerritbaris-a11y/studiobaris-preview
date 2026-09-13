@@ -11,6 +11,11 @@ function waLink(n) {
 
 // Stijl "Strak & Modern": licht, typografisch, rustige accordion-diensten.
 export default function ModernSite({ content, slug = "", isConcept, isReview }) {
+  // Concept/review-previews staan nog niet op "gepubliceerd" — de dienst-
+  // en projectpagina's kijken daar wél naar (via getPreview), dus zonder
+  // deze query-param zouden ze "niet gevonden" tonen zodra iemand vanaf een
+  // concept- of review-link doorklikt.
+  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -148,7 +153,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
             <details className="acd" key={i}>
               <summary>{d.titel}<span className="pl">+</span></summary>
               <p>{d.omschrijving}</p>
-              <a className="acdl" href={`/${slug}/dienst/${i}`}>Lees meer &rarr;</a>
+              <a className="acdl" href={`/${slug}/dienst/${i}${modeQuery}`}>Lees meer &rarr;</a>
             </details>
           ))}
         </div></section>
@@ -170,7 +175,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
         <div className="grid" style={{ marginTop: "1.8rem" }}>
           {projecten.length > 0
             ? projecten.map((p, i) => (
-                <a className="pcard" key={i} href={`/${slug}/project/${i}`}>
+                <a className="pcard" key={i} href={`/${slug}/project/${i}${modeQuery}`}>
                   <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>

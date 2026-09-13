@@ -1,20 +1,37 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../../../lib/preview";
+import { getConcept, getFull } from "../../../../lib/server-data";
 import { brandVars } from "../../../../lib/brand";
 import { vulVoorbeeld } from "../../../../lib/preview-voorbeeld";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }) {
-  const row = await getPreview(params.slug);
-  const d = row && row.content && (row.content.diensten || [])[parseInt(params.i, 10)];
+// Concept- en review-previews staan nog niet op "gepubliceerd" (dat is
+// bewust, gebeurt pas later) — getPreview() kijkt daar wél naar. Zonder
+// dezelfde concept/review-branching als de hoofdpagina zou een doorklik
+// vanaf een concept- of review-link hier "niet gevonden" laten zien.
+async function haalContentOp(slug, searchParams) {
+  const isConcept = searchParams?.concept === "1";
+  const isReview = searchParams?.review === "1";
+  if (isConcept) return await getConcept(slug);
+  if (isReview) return await getFull(slug);
+  const row = await getPreview(slug);
+  return row ? row.content : null;
+}
+
+export async function generateMetadata({ params, searchParams }) {
+  const content = await haalContentOp(params.slug, searchParams);
+  const d = content && (content.diensten || [])[parseInt(params.i, 10)];
   return { title: d ? d.titel : "Dienst", robots: { index: false, follow: false } };
 }
 
-export default async function DienstPage({ params }) {
-  const row = await getPreview(params.slug);
-  if (!row) notFound();
-  const c = vulVoorbeeld(row.content || {});
+export default async function DienstPage({ params, searchParams }) {
+  const isConcept = searchParams?.concept === "1";
+  const isReview = searchParams?.review === "1";
+  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
+  const content = await haalContentOp(params.slug, searchParams);
+  if (!content) notFound();
+  const c = vulVoorbeeld(content || {});
   const b = c.bedrijf || {};
   const m = c.merk || {};
   const d = (c.diensten || [])[parseInt(params.i, 10)];
@@ -43,14 +60,14 @@ export default async function DienstPage({ params }) {
     <div className="dt" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <header className="hd">
-        <a className="logo" href={`/${params.slug}`}>{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 36, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</a>
-        <a className="back" href={`/${params.slug}`}>← Terug naar de site</a>
+        <a className="logo" href={`/${params.slug}${modeQuery}`}>{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 36, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</a>
+        <a className="back" href={`/${params.slug}${modeQuery}`}>← Terug naar de site</a>
       </header>
       <section className="top"><div className="wrap"><div className="eyebrow">Dienst</div><h1>{d.titel}</h1></div></section>
       <section className="body"><div className="wrap">
         <div className="img" style={d.beeld_url ? { backgroundImage: `url(${d.beeld_url})`, color: "transparent" } : undefined}>{d.beeld_url ? "" : "📷 Foto bij deze dienst"}</div>
         <p>{d.omschrijving}</p>
-        <a className="cta" href={b.telefoon ? `tel:${b.telefoon}` : `/${params.slug}`}>Offerte aanvragen</a>
+        <a className="cta" href={b.telefoon ? `tel:${b.telefoon}` : `/${params.slug}${modeQuery}`}>Offerte aanvragen</a>
       </div></section>
     </div>
   );

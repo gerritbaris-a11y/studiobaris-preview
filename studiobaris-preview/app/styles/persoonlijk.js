@@ -11,6 +11,11 @@ function waLink(n) {
 
 // Stijl "Warm & Persoonlijk": vakman centraal, verhaal + werkwijze in stappen.
 export default function PersoonlijkSite({ content, slug = "", isConcept, isReview }) {
+  // Concept/review-previews staan nog niet op "gepubliceerd" — de dienst-
+  // en projectpagina's kijken daar wél naar (via getPreview), dus zonder
+  // deze query-param zouden ze "niet gevonden" tonen zodra iemand vanaf een
+  // concept- of review-link doorklikt.
+  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -140,7 +145,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
           <h2>Wat ik voor je doe</h2>
           <div className="grid" style={{ marginTop: "1.6rem" }}>
             {diensten.map((d, i) => (
-              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p><a href={`/${slug}/dienst/${i}`} style={{ color: "var(--orange)", fontWeight: 700, fontSize: ".9rem", display: "inline-block", marginTop: ".5rem" }}>Lees meer &rarr;</a></div>
+              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p><a href={`/${slug}/dienst/${i}${modeQuery}`} style={{ color: "var(--orange)", fontWeight: 700, fontSize: ".9rem", display: "inline-block", marginTop: ".5rem" }}>Lees meer &rarr;</a></div>
             ))}
           </div>
         </div></section>
@@ -151,7 +156,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
         <div className="grid" style={{ marginTop: "1.6rem" }}>
           {projecten.length > 0
             ? projecten.map((p, i) => (
-                <a className="pcard" key={i} href={`/${slug}/project/${i}`}>
+                <a className="pcard" key={i} href={`/${slug}/project/${i}${modeQuery}`}>
                   <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
                   <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
