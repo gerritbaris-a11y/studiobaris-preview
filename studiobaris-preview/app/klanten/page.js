@@ -166,6 +166,17 @@ export default async function KlantenPage() {
                   Beheer
                 </div>
                 <KlantNaam slug={r.slug} value={r.verzamelaar} team={teamleden} />
+                {!r.verzamelaar && r.source_doc === "website" && (
+                  <span
+                    title="Deze preview is aangevraagd via het formulier op studiobaris.nl, niet gemaakt door iemand van het team"
+                    style={{
+                      fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 999,
+                      background: "#FBF8F2", border: "1px solid #E3DACB", color: "#8A7C68", whiteSpace: "nowrap",
+                    }}
+                  >
+                    Via website
+                  </span>
+                )}
                 {(naam === "Gerrit" || naam === "Levi") && (
                   <div style={{ marginLeft: "auto" }}><VerwijderKnop slug={r.slug} naam={r.company_name} /></div>
                 )}
