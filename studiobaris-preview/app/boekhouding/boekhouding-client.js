@@ -68,6 +68,7 @@ function Cijfer({ label, waarde, kleur, sub }) {
 const LEGE_REGEL = {
   id: null, grootboekCode: "", omschrijving: "", leverancier: "",
   bedragExcl: "", btwType: "HOOG_21", datum: vandaag(), terugkerend: false, frequentie: "maandelijks",
+  eindDatum: "",
 };
 
 const LEGE_UREN_REGEL = { id: null, datum: vandaag(), aantalUren: "", omschrijving: "" };
@@ -179,6 +180,7 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
       leverancier: k.leverancier || "", bedragExcl: String(k.bedrag_excl),
       btwType: k.btw_type, datum: k.datum, terugkerend: !!k.terugkerend,
       frequentie: k.frequentie || "maandelijks",
+      eindDatum: k.eind_datum || "",
     });
     setFout("");
     setFormOpen(true);
@@ -216,6 +218,7 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
           datum: regel.datum,
           terugkerend: regel.terugkerend,
           frequentie: regel.terugkerend ? regel.frequentie : null,
+          eindDatum: regel.terugkerend ? (regel.eindDatum || null) : null,
         }),
       });
       const d = await res.json();
@@ -406,6 +409,21 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
             </div>
           </div>
 
+          {regel.terugkerend && (
+            <div style={{ marginBottom: 12, maxWidth: 260 }}>
+              <label style={labelStijl}>Stopt per (optioneel)</label>
+              <input
+                style={veldStijl} type="date" value={regel.eindDatum}
+                onChange={(e) => setRegel((v) => ({ ...v, eindDatum: e.target.value }))}
+              />
+              <p style={{ fontSize: 12, color: KLEUR.gedempt, margin: "6px 0 0", lineHeight: 1.5 }}>
+                Vanaf deze datum telt de kost niet meer mee — laat leeg zolang 'm nog gewoon doorloopt.
+                Bijvoorbeeld: stap je over op één gezamenlijk abonnement, vul dan hier de datum in waarop
+                dit losse abonnement stopt.
+              </p>
+            </div>
+          )}
+
           {fout && <div style={{ color: "#b91c1c", fontSize: 13, marginBottom: 10 }}>{fout}</div>}
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -434,7 +452,12 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
                 <td style={td}>
                   <div style={{ fontWeight: 600 }}>{k.omschrijving}</div>
                   {k.leverancier && <div style={{ fontSize: 12, color: KLEUR.label }}>{k.leverancier}</div>}
-                  {k.terugkerend && <span style={{ marginTop: 4, display: "inline-block" }}><Chip kleur="sage">terugkerend · {k.frequentie === "jaarlijks" ? "jaarlijks" : "maandelijks"}</Chip></span>}
+                  {k.terugkerend && (
+                    <span style={{ marginTop: 4, display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
+                      <Chip kleur="sage">terugkerend · {k.frequentie === "jaarlijks" ? "jaarlijks" : "maandelijks"}</Chip>
+                      {k.eind_datum && <Chip kleur="klei">stopt per {datumNL(k.eind_datum)}</Chip>}
+                    </span>
+                  )}
                 </td>
                 <td style={td}>
                   <div>{k.grootboek_naam}</div>

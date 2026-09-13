@@ -99,6 +99,7 @@ export async function kostenToevoegen(velden) {
     p_terugkerend: !!velden.terugkerend,
     p_frequentie: velden.frequentie || null,
     p_toegevoegd_door: velden.toegevoegdDoor || null,
+    p_eind_datum: velden.eindDatum || null,
   });
 }
 
@@ -115,6 +116,11 @@ export async function kostenBijwerken(id, velden) {
     p_datum: velden.datum ?? null,
     p_terugkerend: velden.terugkerend ?? null,
     p_frequentie: velden.frequentie ?? null,
+    // eindDatumGezet onderscheidt "dit veld niet aangeraakt" van "expliciet
+    // leeggemaakt" — anders zou elke bewerking een al gezette stopdatum
+    // stilletjes kunnen wissen.
+    p_eind_datum_gezet: velden.eindDatumGezet ?? false,
+    p_eind_datum: velden.eindDatum ?? null,
   });
 }
 

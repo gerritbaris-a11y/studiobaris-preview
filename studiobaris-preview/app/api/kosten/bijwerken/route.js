@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { id, grootboekCode, omschrijving, leverancier, bedragExcl, btwTarief, btwType, datum, terugkerend, frequentie } = body;
+    const { id, grootboekCode, omschrijving, leverancier, bedragExcl, btwTarief, btwType, datum, terugkerend, frequentie, eindDatum } = body;
 
     if (!id) {
       return NextResponse.json({ ok: false, error: "Geen kostenregel opgegeven." }, { status: 400 });
@@ -37,6 +37,11 @@ export async function POST(req) {
       datum,
       terugkerend,
       frequentie: terugkerend === false ? null : frequentie,
+      // eindDatum wordt altijd vanuit het formulier meegestuurd (ook als
+      // leeg), dus "aanwezig in de body" betekent hier "de gebruiker heeft
+      // dit veld gezien en bewust zo gelaten" — vandaar eindDatumGezet.
+      eindDatumGezet: eindDatum !== undefined,
+      eindDatum: terugkerend === false ? null : eindDatum || null,
     });
 
     return NextResponse.json({ ok: true, kosten });

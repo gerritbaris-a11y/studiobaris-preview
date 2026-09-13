@@ -13,7 +13,7 @@ export async function POST(req) {
   try {
     const sessie = leesSessie();
     const body = await req.json();
-    const { grootboekCode, omschrijving, leverancier, bedragExcl, btwTarief, btwType, datum, terugkerend, frequentie } = body;
+    const { grootboekCode, omschrijving, leverancier, bedragExcl, btwTarief, btwType, datum, terugkerend, frequentie, eindDatum } = body;
 
     if (!grootboekCode) {
       return NextResponse.json({ ok: false, error: "Kies een grootboekrekening." }, { status: 400 });
@@ -40,6 +40,7 @@ export async function POST(req) {
       datum,
       terugkerend,
       frequentie: terugkerend ? frequentie || "maandelijks" : null,
+      eindDatum: terugkerend ? eindDatum || null : null,
       toegevoegdDoor: sessie?.naam || null,
     });
 
