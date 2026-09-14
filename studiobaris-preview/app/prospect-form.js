@@ -315,16 +315,8 @@ export default function ProspectForm({
             </div>
           ) : (
             <>
-              {/* Visuele stap-indicator, alleen bij de echte stap 1 (niet bij
-                  workflow 2's "aanpassen"-tekst hieronder). */}
-              {!uitgebreid && (
-                <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
-                  <span style={{ width: 32, height: 5, borderRadius: 999, background: HUISSTIJL.accent }} />
-                  <span style={{ width: 32, height: 5, borderRadius: 999, background: "#DADFE3" }} />
-                </div>
-              )}
               <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: HUISSTIJL.body, fontWeight: 700, margin: 0 }}>
-                StudioBaris{uitgebreid ? (revise ? " - Workflow 2 - aanpassen" : " - Workflow 1") : " - Stap 1 van 2"}
+                StudioBaris{revise ? " - Workflow 2 - aanpassen" : ""}
               </p>
             </>
           )}
@@ -527,23 +519,6 @@ export default function ProspectForm({
           <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
         )}
 
-        {!revise && (
-          <>
-            {intern && (
-              <>
-            <div style={label}>Interesse / pakket (meerdere mogelijk)</div>
-            <span style={hint}>Alleen voor intern gebruik - wat de klant wil afnemen. Verschijnt op je dashboard, niet op de site.</span>
-            <div>
-              {INTERESSE.map((opt) => (
-                <span key={opt} style={chip(interesse.includes(opt))} onClick={() => toggle(interesse, setInteresse, opt)}>
-                  <input type="checkbox" readOnly checked={interesse.includes(opt)} style={{ pointerEvents: "none" }} />{opt}
-                </span>
-              ))}
-            </div>
-              </>
-            )}
-          </>
-        )}
         <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
           te maken en om contact op te nemen over dat voorstel. Het logo en de foto's worden op onze beveiligde opslag
