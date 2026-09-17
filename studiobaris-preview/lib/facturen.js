@@ -233,9 +233,18 @@ export async function factuurPdf(f) {
   y -= balkHoogte + 18;
 
   // ── Betaal- of incassogegevens ─────────────────────────────────────────────
+  // Een "eenmalig"/"aanbetaling"-factuur met een mollie_payment_id komt uit de
+  // Mollie-webhook ná een geslaagde betaling via de betaallink (zie
+  // app/api/mollie/webhook/route.js) — het geld staat dan al binnen op het
+  // moment dat deze PDF wordt opgemaakt. Een factuur zónder payment-id komt
+  // uit een handmatige aanmaak (Beheer) en moet nog echt betaald worden.
+  // Dat onderscheid voorkomt dat iemand die net heeft afgerekend alsnog een
+  // "maak binnen 14 dagen over naar IBAN ..."-instructie krijgt.
+  const alBetaaldViaLink = !automatischeIncasso && Boolean(f.mollie_payment_id);
+
   y -= 14;
   vlak(L, y - 1, 16, 1.5, GOUD);
-  tekst(automatischeIncasso ? "Incassogegevens" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
+  tekst(automatischeIncasso ? "Incassogegevens" : alBetaaldViaLink ? "Betaalstatus" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
   y -= 8;
 
   // Bij "oneoff" (de oude, handmatige /restbetaling-flow) is er geen mandaat
@@ -252,13 +261,19 @@ export async function factuurPdf(f) {
         ...(maandelijks ? ["Minimale looptijd 12 maanden vanaf akkoord; daarna maandelijks opzegbaar."] : []),
         `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
       ]
-    : [
-        "Gelieve het totaalbedrag binnen 14 dagen na factuurdatum over te maken, tenzij je al via de betaallink hebt betaald.",
-        `Rekeningnummer (IBAN): ${BEDRIJF.iban} t.n.v. ${BEDRIJF.naam}`,
-        `Vermeld bij betaling altijd het factuurnummer: ${f.nummer}`,
-        "Minimale looptijd van de maandelijkse dienstverlening: 12 maanden vanaf akkoord; daarna maandelijks opzegbaar.",
-        `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
-      ];
+    : alBetaaldViaLink
+      ? [
+          "Dit bedrag is al voldaan via de betaallink — er hoeft niets meer overgemaakt te worden.",
+          "Minimale looptijd van de maandelijkse dienstverlening: 12 maanden vanaf akkoord; daarna maandelijks opzegbaar.",
+          `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
+        ]
+      : [
+          "Gelieve het totaalbedrag binnen 14 dagen na factuurdatum over te maken, tenzij je al via de betaallink hebt betaald.",
+          `Rekeningnummer (IBAN): ${BEDRIJF.iban} t.n.v. ${BEDRIJF.naam}`,
+          `Vermeld bij betaling altijd het factuurnummer: ${f.nummer}`,
+          "Minimale looptijd van de maandelijkse dienstverlening: 12 maanden vanaf akkoord; daarna maandelijks opzegbaar.",
+          `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
+        ];
 
   for (const p of punten) {
     y -= 14;
