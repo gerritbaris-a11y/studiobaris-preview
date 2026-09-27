@@ -272,7 +272,7 @@ export default function MargesClient({ marges }) {
         De kolom "AI (gemeten)" is de werkelijke rekenkost van de app deze maand, gemeten per klant — geen
         schatting. Bij weinig gebruik is dit nog verwaarloosbaar klein; dat kan later oplopen bij meer klanten of
         drukker gebruik. De eenmalige bouwkosten (websiteprijs) tellen hier niet mee in de p/m-marge, om appels met
-        appels te vergelijken — die zie je apart op de Facturen- en Omzet &amp; btw-pagina's.
+        appels te vergelijken — die zie je apart op de Facturen- en Boekhouding-pagina's.
       </p>
     </div>
   );

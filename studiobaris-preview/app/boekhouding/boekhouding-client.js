@@ -405,8 +405,7 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
 
       <div style={{ background: "#F7F5F0", border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: KLEUR.gedempt, lineHeight: 1.6 }}>
         Dit is een schatting op basis van wat hier is ingevoerd — geen automatische indiening. Vul 'm zelf in op{" "}
-        <strong>mijn.belastingdienst.nl</strong> zodra het kwartaal voorbij is. Voor het officiële omzetoverzicht per
-        kwartaal (factuurstelsel) zie <a href="/btw-aangifte" style={{ color: KLEUR.klei, fontWeight: 700 }}>Omzet &amp; btw</a>.
+        <strong>mijn.belastingdienst.nl</strong> zodra het kwartaal voorbij is.
       </div>
 
       {/* Btw per rubriek */}
