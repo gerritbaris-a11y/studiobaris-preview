@@ -83,7 +83,6 @@ export const NAV_GROEPEN = [
     items: [
       { href: "/facturen", label: "Facturen" },
       { href: "/offertes", label: "Offertes" },
-      { href: "/btw-aangifte", label: "Omzet & btw" },
       { href: "/marges", label: "Marges" },
       { href: "/kosten", label: "Kosten & resultaat" },
     ],
