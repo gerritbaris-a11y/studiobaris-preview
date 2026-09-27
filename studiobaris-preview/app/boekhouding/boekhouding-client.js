@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { Knop, Chip } from "../werkplek-shell";
@@ -65,6 +65,10 @@ function Cijfer({ label, waarde, kleur, sub }) {
   );
 }
 
+// Wat je als factuur kunt koppelen: de pdf uit je mail, of een foto/scan van een bon.
+const FACTUUR_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.heic,application/pdf,image/*";
+const FACTUUR_MAX_BYTES = 25 * 1024 * 1024;
+
 const LEGE_REGEL = {
   id: null, grootboekCode: "", omschrijving: "", leverancier: "",
   bedragExcl: "", btwType: "HOOG_21", datum: vandaag(), terugkerend: false, frequentie: "maandelijks",
@@ -81,6 +85,21 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
   const [schemaOpen, setSchemaOpen] = useState(false);
+
+  // Facturen koppelen: één verborgen bestandskiezer voor de hele tabel; we
+  // onthouden voor welke kostenregel hij geopend werd.
+  const factuurInput = useRef(null);
+  const [factuurVoor, setFactuurVoor] = useState(null);
+  const [factuurBezig, setFactuurBezig] = useState(null); // kostenId die nu uploadt
+  const [sleepOver, setSleepOver] = useState(null);
+
+  // De server-lijst is na router.refresh() leidend; tussendoor houden we
+  // lokale wijzigingen (upload/verwijder) bij in `kosten`.
+  const [vorigeInitieel, setVorigeInitieel] = useState(kostenInitieel);
+  if (kostenInitieel !== vorigeInitieel) {
+    setVorigeInitieel(kostenInitieel);
+    setKosten(kostenInitieel);
+  }
 
   const [uren, setUren] = useState(urenInitieel);
   const [urenFormOpen, setUrenFormOpen] = useState(false);
@@ -168,6 +187,88 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
       alert(String(e.message || e));
     }
   }
+
+  function kiesFactuur(kostenId) {
+    setFactuurVoor(kostenId);
+    if (factuurInput.current) {
+      factuurInput.current.value = "";
+      factuurInput.current.click();
+    }
+  }
+
+  async function factuurUploaden(kostenId, bestand) {
+    if (!kostenId || !bestand) return;
+    if (bestand.size > FACTUUR_MAX_BYTES) {
+      alert(`"${bestand.name}" is te groot. Maximaal 25 MB per factuur.`);
+      return;
+    }
+    setFactuurBezig(kostenId);
+    try {
+      const res1 = await fetch("/api/kosten/factuur-upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kostenId, bestandsnaam: bestand.name, grootte: bestand.size }),
+      });
+      const d1 = await res1.json();
+      if (!res1.ok || !d1.ok) throw new Error(d1.error || "Upload voorbereiden mislukt.");
+
+      const put = await fetch(d1.url, {
+        method: "PUT",
+        headers: { "Content-Type": bestand.type || "application/octet-stream" },
+        body: bestand,
+      });
+      if (!put.ok) throw new Error("Uploaden naar de opslag mislukt. Probeer het nog eens.");
+
+      const res2 = await fetch("/api/kosten/factuur-bevestigen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kostenId, pad: d1.pad, bestandsnaam: bestand.name,
+          grootte: bestand.size, contentType: bestand.type || null,
+        }),
+      });
+      const d2 = await res2.json();
+      if (!res2.ok || !d2.ok) throw new Error(d2.error || "Koppelen van de factuur mislukt.");
+
+      setKosten((v) => v.map((k) => (k.id === kostenId ? { ...k, facturen: [d2.factuur, ...(k.facturen || [])] } : k)));
+    } catch (e) {
+      alert(String(e.message || e));
+    }
+    setFactuurBezig(null);
+  }
+
+  async function factuurVerwijderen(kostenId, factuurId) {
+    if (!confirm("Deze factuur loskoppelen en verwijderen?")) return;
+    try {
+      const res = await fetch("/api/kosten/factuur-verwijderen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: factuurId }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Verwijderen mislukte.");
+      setKosten((v) => v.map((k) => (k.id === kostenId ? { ...k, facturen: (k.facturen || []).filter((f) => f.id !== factuurId) } : k)));
+    } catch (e) {
+      alert(String(e.message || e));
+    }
+  }
+
+  // Totaal onder de kostentabel. Een maandelijkse kost telt 3x mee in een
+  // kwartaal (aantal_keer), precies zoals het Kosten-cijfer bovenaan — zo
+  // lopen die twee altijd gelijk. Voorstellen (nog niet goedgekeurd) tellen
+  // daar ook niet mee.
+  const kostenTotaal = useMemo(() => {
+    let excl = 0, btw = 0;
+    for (const k of kosten) {
+      if (k.status === "voorstel") continue;
+      const n = Number(k.aantal_keer ?? 1) || 0;
+      excl += (Number(k.bedrag_excl) || 0) * n;
+      btw += (Number(k.btw_bedrag) || 0) * n;
+    }
+    excl = Math.round(excl * 100) / 100;
+    btw = Math.round(btw * 100) / 100;
+    return { excl, btw, incl: Math.round((excl + btw) * 100) / 100 };
+  }, [kosten]);
 
   function nieuweRegel() {
     setRegel(LEGE_REGEL);
@@ -433,6 +534,11 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
         </div>
       )}
 
+      <input
+        ref={factuurInput} type="file" accept={FACTUUR_ACCEPT} style={{ display: "none" }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f && factuurVoor) factuurUploaden(factuurVoor, f); }}
+      />
+
       <div style={{ ...kaart, overflowX: "auto", marginBottom: 20 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
           <thead>
@@ -447,7 +553,17 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
           </thead>
           <tbody>
             {kosten.map((k) => (
-              <tr key={k.id}>
+              <tr
+                key={k.id}
+                onDragOver={(e) => { e.preventDefault(); setSleepOver(k.id); }}
+                onDragLeave={() => setSleepOver((v) => (v === k.id ? null : v))}
+                onDrop={(e) => {
+                  e.preventDefault(); setSleepOver(null);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) factuurUploaden(k.id, f);
+                }}
+                style={sleepOver === k.id ? { background: "#F3EDE3", outline: `2px dashed ${KLEUR.klei}`, outlineOffset: -2 } : undefined}
+              >
                 <td style={{ ...td, whiteSpace: "nowrap" }}>{datumNL(k.datum)}</td>
                 <td style={td}>
                   <div style={{ fontWeight: 600 }}>{k.omschrijving}</div>
@@ -458,14 +574,57 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
                       {k.eind_datum && <Chip kleur="klei">stopt per {datumNL(k.eind_datum)}</Chip>}
                     </span>
                   )}
+                  {(k.facturen || []).length > 0 && (
+                    <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {k.facturen.map((f) => (
+                        <span key={f.id} style={{
+                          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12,
+                          background: KLEUR.baan, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 999, padding: "3px 4px 3px 10px",
+                          maxWidth: 260,
+                        }}>
+                          <a
+                            href={`/api/kosten/factuur-downloaden?id=${f.id}`} target="_blank" rel="noreferrer"
+                            title={`${f.bestandsnaam}${f.created_at ? " · toegevoegd " + datumNL(f.created_at) : ""}`}
+                            style={{ color: KLEUR.inkt, textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                          >
+                            📎 {f.bestandsnaam}
+                          </a>
+                          <button
+                            onClick={() => factuurVerwijderen(k.id, f.id)} title="Factuur verwijderen"
+                            style={{ background: "none", border: "none", color: KLEUR.label, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: "0 4px", fontFamily: "inherit" }}
+                          >×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {factuurBezig === k.id && <div style={{ fontSize: 12, color: KLEUR.label, marginTop: 4 }}>Factuur uploaden…</div>}
                 </td>
                 <td style={td}>
                   <div>{k.grootboek_naam}</div>
                   <div style={{ fontSize: 11.5, color: KLEUR.label }}>{BTW_TYPE_LABEL[k.btw_type] || k.btw_type}</div>
                 </td>
-                <td style={tdGetal}>{euro(k.bedrag_excl)}</td>
-                <td style={tdGetal}>{euro(k.btw_bedrag)}</td>
+                <td style={tdGetal}>
+                  {euro(k.bedrag_excl)}
+                  {Number(k.aantal_keer) > 1 && (
+                    <div style={{ fontSize: 11.5, color: KLEUR.label, whiteSpace: "nowrap" }}>
+                      × {Number(k.aantal_keer)} dit kwartaal = {euro(Number(k.bedrag_excl) * Number(k.aantal_keer))}
+                    </div>
+                  )}
+                </td>
+                <td style={tdGetal}>
+                  {euro(k.btw_bedrag)}
+                  {Number(k.aantal_keer) > 1 && (
+                    <div style={{ fontSize: 11.5, color: KLEUR.label, whiteSpace: "nowrap" }}>
+                      = {euro(Number(k.btw_bedrag) * Number(k.aantal_keer))}
+                    </div>
+                  )}
+                </td>
                 <td style={{ ...td, whiteSpace: "nowrap", textAlign: "right" }}>
+                  <button
+                    onClick={() => kiesFactuur(k.id)} disabled={factuurBezig === k.id}
+                    title="Factuur uploaden en aan deze kost koppelen (je kunt 'm ook op de regel slepen)"
+                    style={{ background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 12.5, cursor: "pointer", marginRight: 10, fontFamily: "inherit" }}
+                  >+ factuur</button>
                   <button onClick={() => bewerkRegel(k)} style={{ background: "none", border: "none", color: KLEUR.klei, fontWeight: 700, fontSize: 12.5, cursor: "pointer", marginRight: 10, fontFamily: "inherit" }}>bewerken</button>
                   <button onClick={() => verwijderen(k.id)} style={{ background: "none", border: "none", color: "#b91c1c", fontWeight: 700, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" }}>verwijderen</button>
                 </td>
@@ -475,6 +634,21 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
               <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: KLEUR.label }}>Nog geen kosten in dit kwartaal.</td></tr>
             )}
           </tbody>
+          {kosten.length > 0 && (
+            <tfoot>
+              <tr style={{ background: KLEUR.baan }}>
+                <td style={{ ...td, borderBottom: "none", fontWeight: 800 }} colSpan={3}>
+                  Totaal kosten {KWARTAAL_LABEL[kwartaal]} {jaar}
+                  <div style={{ fontSize: 12, fontWeight: 400, color: KLEUR.label }}>
+                    incl. btw {euro(kostenTotaal.incl)} · terugkerende kosten tellen mee voor elke maand in dit kwartaal
+                  </div>
+                </td>
+                <td style={{ ...tdGetal, borderBottom: "none", fontWeight: 800 }}>{euro(kostenTotaal.excl)}</td>
+                <td style={{ ...tdGetal, borderBottom: "none", fontWeight: 800 }}>{euro(kostenTotaal.btw)}</td>
+                <td style={{ ...td, borderBottom: "none" }}></td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 

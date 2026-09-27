@@ -125,7 +125,13 @@ export async function kostenBijwerken(id, velden) {
 }
 
 export async function kostenVerwijderen(id) {
-  return await rpc("sb_kosten_verwijderen", { p_id: id });
+  // Eerst de paden van gekoppelde facturen onthouden; na het verwijderen van
+  // de regel gaan de factuur-rijen via cascade mee, en halen we de bestanden
+  // zelf uit de opslag (anders blijven er wezen achter).
+  const paden = await stil(() => rpc("sb_kosten_factuur_paden", { p_kosten_id: id }), []);
+  const resultaat = await rpc("sb_kosten_verwijderen", { p_id: id });
+  await verwijderFacturenUitStorage(Array.isArray(paden) ? paden : []);
+  return resultaat;
 }
 
 // Urenregistratie — los van kosten/omzet/btw, puur voor het urencriterium
@@ -169,4 +175,78 @@ export async function urenBijwerken(id, velden) {
 
 export async function urenVerwijderen(id) {
   return await rpc("sb_uren_verwijderen", { p_id: id });
+}
+
+// --- Facturen bij kosten ---
+// Privé Storage-bucket "kosten-facturen": alleen bereikbaar met de
+// service-role sleutel. Zelfde aanpak als de taak-bijlagen: de browser
+// uploadt rechtstreeks via een kortlopende signed URL (buiten de ~4,5 MB
+// platformlimiet om), en downloaden gaat via een kortlopende signed URL.
+const FACTUREN_BUCKET = "kosten-facturen";
+
+async function storageFetch(pad, opties = {}) {
+  const k = key();
+  if (!k) throw new Error("SUPABASE_SERVICE_ROLE_KEY ontbreekt in de serveromgeving.");
+  const res = await fetch(`${SUPABASE_URL}/storage/v1${pad}`, {
+    ...opties,
+    headers: { apikey: k, Authorization: `Bearer ${k}`, ...(opties.headers || {}) },
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(`Opslagfout (${res.status}): ${t.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+export async function maakFactuurUploadUrl(pad) {
+  const data = await storageFetch(`/object/upload/sign/${FACTUREN_BUCKET}/${pad}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expiresIn: 60 * 10 }),
+  });
+  return { url: `${SUPABASE_URL}/storage/v1${data.url}` };
+}
+
+export async function maakFactuurDownloadUrl(pad, verlooptNa = 60 * 10) {
+  const data = await storageFetch(`/object/sign/${FACTUREN_BUCKET}/${pad}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expiresIn: verlooptNa }),
+  });
+  return { url: `${SUPABASE_URL}/storage/v1${data.signedURL}` };
+}
+
+async function verwijderFacturenUitStorage(paden) {
+  const lijst = (paden || []).filter(Boolean);
+  if (!lijst.length) return;
+  const k = key();
+  if (!k) return;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${FACTUREN_BUCKET}`, {
+    method: "DELETE",
+    headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ prefixes: lijst }),
+  });
+  // Niet fataal: de databaseregel is al weg. Wel loggen.
+  if (!res.ok) console.error("Kon factuur niet uit opslag verwijderen:", lijst, res.status);
+}
+
+export async function kostenFactuurToevoegen({ kostenId, pad, bestandsnaam, grootte = null, contentType = null, geuploadDoor = null }) {
+  return await rpc("sb_kosten_factuur_toevoegen", {
+    p_kosten_id: kostenId,
+    p_pad: pad,
+    p_bestandsnaam: bestandsnaam,
+    p_grootte: grootte,
+    p_content_type: contentType,
+    p_geupload_door: geuploadDoor,
+  });
+}
+
+export async function kostenFactuurOphalen(id) {
+  return await rpc("sb_kosten_factuur_ophalen", { p_id: id });
+}
+
+export async function kostenFactuurVerwijderen(id) {
+  const resultaat = await rpc("sb_kosten_factuur_verwijderen", { p_id: id });
+  if (resultaat?.pad) await verwijderFacturenUitStorage([resultaat.pad]);
+  return resultaat;
 }
