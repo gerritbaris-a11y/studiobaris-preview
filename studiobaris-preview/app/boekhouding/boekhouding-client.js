@@ -257,17 +257,28 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
   // kwartaal (aantal_keer), precies zoals het Kosten-cijfer bovenaan — zo
   // lopen die twee altijd gelijk. Voorstellen (nog niet goedgekeurd) tellen
   // daar ook niet mee.
+  //
+  // Verlegde btw (bijv. Anthropic, Vercel, Supabase) betaal je NIET aan de
+  // leverancier: je geeft 'm aan in rubriek 4a/4b en trekt 'm in 5b weer af,
+  // netto € 0. Die hoort dus niet in "wat je echt betaald hebt" — daarom
+  // splitsen we betaalde en verlegde btw.
   const kostenTotaal = useMemo(() => {
-    let excl = 0, btw = 0;
+    let excl = 0, btwBetaald = 0, btwVerlegd = 0;
     for (const k of kosten) {
       if (k.status === "voorstel") continue;
       const n = Number(k.aantal_keer ?? 1) || 0;
+      const btw = (Number(k.btw_bedrag) || 0) * n;
       excl += (Number(k.bedrag_excl) || 0) * n;
-      btw += (Number(k.btw_bedrag) || 0) * n;
+      if (String(k.btw_type || "").startsWith("REVERSE_CHARGE")) btwVerlegd += btw;
+      else btwBetaald += btw;
     }
-    excl = Math.round(excl * 100) / 100;
-    btw = Math.round(btw * 100) / 100;
-    return { excl, btw, incl: Math.round((excl + btw) * 100) / 100 };
+    const r = (v) => Math.round(v * 100) / 100;
+    return {
+      excl: r(excl),
+      btwBetaald: r(btwBetaald),
+      btwVerlegd: r(btwVerlegd),
+      betaald: r(excl + btwBetaald),
+    };
   }, [kosten]);
 
   function nieuweRegel() {
@@ -613,6 +624,9 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
                 </td>
                 <td style={tdGetal}>
                   {euro(k.btw_bedrag)}
+                  {String(k.btw_type || "").startsWith("REVERSE_CHARGE") && (
+                    <div style={{ fontSize: 11.5, color: KLEUR.label, whiteSpace: "nowrap" }}>verlegd</div>
+                  )}
                   {Number(k.aantal_keer) > 1 && (
                     <div style={{ fontSize: 11.5, color: KLEUR.label, whiteSpace: "nowrap" }}>
                       = {euro(Number(k.btw_bedrag) * Number(k.aantal_keer))}
@@ -639,12 +653,22 @@ export default function BoekhoudingClient({ overzicht, rekeningen, kostenInitiee
               <tr style={{ background: KLEUR.baan }}>
                 <td style={{ ...td, borderBottom: "none", fontWeight: 800 }} colSpan={3}>
                   Totaal kosten {KWARTAAL_LABEL[kwartaal]} {jaar}
-                  <div style={{ fontSize: 12, fontWeight: 400, color: KLEUR.label }}>
-                    incl. btw {euro(kostenTotaal.incl)} · terugkerende kosten tellen mee voor elke maand in dit kwartaal
+                  <div style={{ fontSize: 12, fontWeight: 400, color: KLEUR.label, lineHeight: 1.5 }}>
+                    Echt betaald (excl. + betaalde btw): <strong style={{ color: KLEUR.inkt }}>{euro(kostenTotaal.betaald)}</strong>
+                    {kostenTotaal.btwVerlegd > 0 && (
+                      <> · verlegde btw {euro(kostenTotaal.btwVerlegd)} betaal je niet aan de leverancier; die geef je aan én trek je af in de aangifte (netto € 0)</>
+                    )}
+                    <br />Terugkerende kosten tellen mee voor elke maand in dit kwartaal.
                   </div>
                 </td>
                 <td style={{ ...tdGetal, borderBottom: "none", fontWeight: 800 }}>{euro(kostenTotaal.excl)}</td>
-                <td style={{ ...tdGetal, borderBottom: "none", fontWeight: 800 }}>{euro(kostenTotaal.btw)}</td>
+                <td style={{ ...tdGetal, borderBottom: "none", fontWeight: 800 }}>
+                  {euro(kostenTotaal.btwBetaald)}
+                  <div style={{ fontSize: 11.5, fontWeight: 400, color: KLEUR.label, whiteSpace: "nowrap" }}>betaald</div>
+                  {kostenTotaal.btwVerlegd > 0 && (
+                    <div style={{ fontSize: 11.5, fontWeight: 400, color: KLEUR.label, whiteSpace: "nowrap" }}>+ {euro(kostenTotaal.btwVerlegd)} verlegd</div>
+                  )}
+                </td>
                 <td style={{ ...td, borderBottom: "none" }}></td>
               </tr>
             </tfoot>
