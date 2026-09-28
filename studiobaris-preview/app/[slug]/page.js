@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { getPreview, googleFontsHref } from "../../lib/preview";
-import { getConcept, getFull } from "../../lib/server-data";
+import { getConcept, getFull, logBriefScan } from "../../lib/server-data";
 import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
 import { vulVoorbeeld } from "../../lib/preview-voorbeeld";
 import ModernSite from "../styles/modern";
@@ -34,6 +35,10 @@ const WaIcon = ({ s = 20 }) => (
 );
 
 export default async function Page({ params, searchParams }) {
+  // QR-code op een papieren brief gescand? Vastleggen voor het dashboard.
+  if (searchParams?.bron === "brief") {
+    await logBriefScan(params.slug, headers().get("user-agent"));
+  }
   const isConcept = searchParams?.concept === "1";
   const isReview = searchParams?.review === "1";
   let content;

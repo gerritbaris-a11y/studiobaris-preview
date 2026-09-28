@@ -269,6 +269,19 @@ export async function getFull(slug) {
   return data || null;
 }
 
+// Legt vast dat iemand de QR-code op een papieren brief heeft gescand
+// (preview-link met ?bron=brief). Verschijnt daarna bovenaan "Vandaag".
+// Best-effort: mag de pagina nooit ophouden of laten falen.
+export async function logBriefScan(slug, userAgent) {
+  const apparaat = /mobi|android|iphone|ipad/i.test(userAgent || "") ? "mobiel" : "desktop";
+  try {
+    await Promise.race([
+      rpc("sb_qr_scan", { p_slug: slug, p_apparaat: apparaat }),
+      new Promise((r) => setTimeout(r, 1500)),
+    ]);
+  } catch {}
+}
+
 export async function getOverview() {
   const data = await rpc("get_overview", {});
   return Array.isArray(data) ? data : [];
