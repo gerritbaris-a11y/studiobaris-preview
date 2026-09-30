@@ -1,8 +1,9 @@
-import { getTaken } from "../../lib/taken-data";
+import { getTaken, getAiUpdate } from "../../lib/taken-data";
 import { getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import BordClient from "./bord-client";
+import AiUpdateBlok from "./ai-update-blok";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function BordPage() {
   const naam = sessie && sessie.naam ? sessie.naam : "collega";
   const beheer = isBeheer(sessie);
 
-  const [taken, team] = await Promise.all([getTaken(), getTeamLogin()]);
+  const [taken, team, aiUpdate] = await Promise.all([getTaken(), getTeamLogin(), getAiUpdate()]);
 
   return (
     <WerkplekShell
@@ -24,6 +25,7 @@ export default async function BordPage() {
       titel="Bord"
       sub="Sleep een kaartje naar een andere kolom om de status te wijzigen."
     >
+      <AiUpdateBlok update={aiUpdate} />
       <BordClient taken={taken} team={team} ingelogdAls={naam} />
     </WerkplekShell>
   );
