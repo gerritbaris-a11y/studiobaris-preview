@@ -229,25 +229,6 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         @media (min-width: 1080px) { .sb-cards { grid-template-columns: repeat(3, 1fr); } }
       `}</style>
 
-      {beheer && (
-        <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12.5, color: "#9A9084" }}>Lijst:</span>
-          {[["actueel", "Actuele lijst"], ["oud", "Oude import"]].map(([k, label]) => {
-            const aan = (filters.lijst || "actueel") === k;
-            return (
-              <button key={k}
-                onClick={() => router.push(k === "actueel" ? "/leads" : "/leads?lijst=oud")}
-                style={{ padding: "5px 11px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-                  border: "1px solid " + (aan ? "#C05A38" : "#ECE4D7"),
-                  background: aan ? "#C05A38" : "#fff", color: aan ? "#fff" : "#6B6258" }}>
-                {label}
-              </button>
-            );
-          })}
-          <span style={{ fontSize: 12, color: "#B0A697" }}>(oude import ziet alleen beheer)</span>
-        </div>
-      )}
-
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         {tabBtn("werk", "Werkstapel", f.werk)}
         {tabBtn("afgerond", "Afgerond", f.afgerond)}

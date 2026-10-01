@@ -46,9 +46,9 @@ export default async function LeadsPage({ searchParams }) {
   const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
 
-  // Standaard de actuele (gescande) lijst. De oude import van 7.900 leads blijft
-  // bestaan, maar alleen beheer kan daar nog naartoe schakelen.
-  const lijst = beheer && sp.lijst === "oud" ? "oud" : "actueel";
+  // Alleen de actuele (gescande) lijst is zichtbaar. De oude import van 7.900
+  // leads blijft op de achtergrond in de database staan, maar niet op het dashboard.
+  const lijst = "actueel";
 
   const filters = {
     lijst,
