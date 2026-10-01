@@ -3,6 +3,7 @@ import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
 import { nicheFoto, voordeelIcon, heroAchtergrond } from "../../lib/preview-assets";
 import { vulVoorbeeld } from "../../lib/preview-voorbeeld";
+import { getWerk } from "../../lib/aanpassen";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
 
@@ -36,8 +37,17 @@ const WaIcon = ({ s = 20 }) => (
 export default async function Page({ params, searchParams }) {
   const isConcept = searchParams?.concept === "1";
   const isReview = searchParams?.review === "1";
+  // Werkversie uit het Aanpassen-scherm: nog niet live, alleen via deze link.
+  const isWerk = searchParams?.werk === "1";
   let content;
-  if (isConcept) {
+  if (isWerk) {
+    content = await getWerk(params.slug);
+    if (!content) {
+      const row = await getPreview(params.slug);
+      content = row ? row.content : (await getFull(params.slug));
+    }
+    if (!content) notFound();
+  } else if (isConcept) {
     content = await getConcept(params.slug);
     if (!content) notFound();
   } else if (isReview) {

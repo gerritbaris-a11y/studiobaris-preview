@@ -109,6 +109,7 @@ export const config = {
     "/api/vakfotos/:path*",
     "/leads/:path*",
     "/klanten/:path*",
+    "/aanpassen/:path*",
     "/vergelijk/:path*",
     "/overzicht/:path*",
     "/bord/:path*",

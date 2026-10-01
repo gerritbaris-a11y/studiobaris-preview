@@ -941,6 +941,9 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#2B2724", color: "#2B2724", fontWeight: 700 }}>
           {open ? "Links verbergen" : "Alle links"}
         </button>
+        <a href={`/aanpassen/${slug}`} style={{ ...chip, borderColor: "#C05A38", color: "#fff", background: "#C05A38", fontWeight: 700 }}>
+          Aanpassen
+        </a>
         <a href={`/vergelijk/${slug}`} style={{ ...chip, borderColor: "#7c3aed", color: "#6d28d9", background: "#faf5ff" }}>
           Stijl kiezen{stijl ? ` (${stijl})` : ""}
         </a>
