@@ -46,12 +46,18 @@ export default async function LeadsPage({ searchParams }) {
   const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
 
+  // Standaard de actuele (gescande) lijst. De oude import van 7.900 leads blijft
+  // bestaan, maar alleen beheer kan daar nog naartoe schakelen.
+  const lijst = beheer && sp.lijst === "oud" ? "oud" : "actueel";
+
   const filters = {
+    lijst,
     tab: sp.tab === "afgerond" ? "afgerond" : sp.tab === "archief" ? "archief" : "werk",
     zoek: sp.zoek || "",
     provincie: sp.provincie || "",
     vakgebied: sp.vakgebied || "",
-    potentie: sp.potentie || "",
+    potentie: lijst === "oud" ? sp.potentie || "" : "",
+    site: lijst === "actueel" ? sp.site || "" : "",
     wie: sp.wie || "alles",
     limiet: Number(sp.limiet) > 0 ? Math.min(Number(sp.limiet), 300) : 30,
     reden: sp.reden || "",
@@ -59,7 +65,7 @@ export default async function LeadsPage({ searchParams }) {
 
   const [resultaat, facetten, omzet] = await Promise.all([
     zoekLeads({ naam, ...filters }),
-    getLeadFacetten(naam),
+    getLeadFacetten(naam, lijst),
     getOmzet(),
   ]);
   const mijn = omzet.find((o) => o.persoon === naam) || null;
@@ -76,7 +82,7 @@ export default async function LeadsPage({ searchParams }) {
     >
       {sessie && <OmzetBalk naam={naam} cijfers={mijn} />}
 
-      {naam === "Gerrit" && facetten.socials > 0 && (
+      {lijst === "oud" && naam === "Gerrit" && facetten.socials > 0 && (
         <div style={{ background: KLEUR.kleiZacht, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: KLEUR.kleiDonker }}>
           <strong>{facetten.socials}</strong> bedrijven hebben wél social media maar géén website — de hoogste kans op conversie. Die staan alleen bij jou, bovenaan.
         </div>

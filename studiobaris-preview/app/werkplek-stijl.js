@@ -58,6 +58,8 @@ export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 export const NAV = [
   { href: "/vandaag", label: "Vandaag", beheer: true },
   { href: "/klanten", label: "Mijn previews" },
+  // Leads: voor iedereen met een login (verkopers én beheer).
+  { href: "/leads", label: "Leads" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
