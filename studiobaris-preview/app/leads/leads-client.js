@@ -74,6 +74,30 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   const [siteVeld, setSiteVeld] = useState({});
   const [melding, setMelding] = useState(null); // { id, tekst } bij een botsing
   const eersteRender = useRef(true);
+  const [sync, setSync] = useState({ bezig: false, tekst: "" });
+
+  // Haalt de nieuwste versie van de Google Sheet op. Gebeurt ook elke ochtend
+  // automatisch; deze knop is voor als je niet wilt wachten.
+  async function bijwerken() {
+    setSync({ bezig: true, tekst: "" });
+    try {
+      const res = await fetch("/api/leads/sync", { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok) {
+        setSync({ bezig: false, tekst: "Bijwerken mislukt: " + (j.error || "onbekende fout") });
+        return;
+      }
+      const delen = [`${j.in_sheet} leads in de Sheet`];
+      if (j.nieuw) delen.push(`${j.nieuw} nieuw`);
+      if (j.gearchiveerd) delen.push(`${j.gearchiveerd} gearchiveerd (niet meer in de Sheet)`);
+      if (j.terug_uit_archief) delen.push(`${j.terug_uit_archief} terug uit het archief`);
+      if (j.archiveren_overgeslagen) delen.push("archiveren overgeslagen: de Sheet leek onvolledig");
+      setSync({ bezig: false, tekst: "Bijgewerkt — " + delen.join(", ") + "." });
+      router.refresh();
+    } catch {
+      setSync({ bezig: false, tekst: "Bijwerken mislukt: geen verbinding." });
+    }
+  }
 
   // Nieuwe gegevens van de server overnemen zodra de filters wijzigen.
   useEffect(() => { setLeads(initieel || []); }, [initieel]);
@@ -228,6 +252,16 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         }
         @media (min-width: 1080px) { .sb-cards { grid-template-columns: repeat(3, 1fr); } }
       `}</style>
+
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <button onClick={bijwerken} disabled={sync.bezig}
+          style={{ border: "1px solid #E3DACB", background: "#fff", color: "#524A40", borderRadius: 9, padding: "7px 12px", fontSize: 13, fontWeight: 700, cursor: sync.bezig ? "wait" : "pointer" }}>
+          {sync.bezig ? "Bezig met bijwerken…" : "↻ Nu bijwerken uit de Sheet"}
+        </button>
+        <span style={{ fontSize: 12.5, color: "#9A9084" }}>
+          {sync.tekst || "Wordt ook elke ochtend automatisch bijgewerkt."}
+        </span>
+      </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         {tabBtn("werk", "Werkstapel", f.werk)}
