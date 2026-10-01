@@ -15,8 +15,10 @@ export default async function AdressenlijstPage() {
   const beheer = isBeheer(sessie);
 
   const alles = await getOverview();
+  // Gearchiveerde previews ("Geen interesse", pipeline_status "Afgewezen")
+  // horen niet in de lijst — zelfde regel als bij Mijn previews.
   const rijen = alles
-    .filter((r) => r.gepubliceerd)
+    .filter((r) => r.gepubliceerd && (r.pipeline_status || "") !== "Afgewezen")
     .map((r) => ({
       slug: r.slug,
       bedrijf: r.company_name || r.slug,
