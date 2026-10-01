@@ -1000,9 +1000,6 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
               )}
             </div>
           ))}
-          <p style={{ fontSize: 11.5, color: "#9A9084", margin: 0 }}>
-            Tip: de knop &quot;Appje versturen&quot; zet de preview- en demo-link al kant-en-klaar in een WhatsApp-bericht.
-          </p>
         </div>
       )}
     </div>

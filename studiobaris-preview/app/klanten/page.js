@@ -1,7 +1,7 @@
 import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
-  FaseStepper, Contactpersoon, AppjeKnop, LinkChips,
+  FaseStepper, Contactpersoon, LinkChips,
   GeenInteresseKnop, TerugNaarActiefKnop,
   PublishToggle,
   // Beheerfuncties die eerst alleen op de oude /dashboard stonden. Die pagina
@@ -110,7 +110,7 @@ export default async function KlantenPage() {
           const reactieOp = r.laatste_feedback_op
             ? new Date(r.laatste_feedback_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
             : null;
-          const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar, review.bron]
+          const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.b_adres, r.verzamelaar, review.bron]
             .filter(Boolean).join(" ").toLowerCase();
           const fase = normFase(r.pipeline_status);
           return (
@@ -119,6 +119,7 @@ export default async function KlantenPage() {
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
+                {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#6B6258", marginTop: 1 }}>{r.b_adres.trim()}</div>}
                 {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
                 {review.logo_toestemming && (
                   <div style={{ display: "inline-block", marginTop: 6, fontSize: 12, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "2px 9px", borderRadius: 999 }}>
@@ -157,7 +158,6 @@ export default async function KlantenPage() {
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
-              <AppjeKnop slug={r.slug} bedrijf={r.company_name} contact={r.contactpersoon} afzender={r.verzamelaar || naam} telefoon={r.lead_phone} demoGevuld={r.demo_gevuld} persoonlijk={r.persoonlijk} />
             </div>
 
             {beheer && (

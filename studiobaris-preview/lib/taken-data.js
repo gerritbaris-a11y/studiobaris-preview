@@ -158,3 +158,12 @@ export async function bijlageVerwijderen(id) {
   if (resultaat?.pad) await verwijderUitStorage(resultaat.pad);
   return resultaat;
 }
+
+// --- Wekelijkse AI-update (bovenaan het Bord) ---
+// Gevuld door de geplande taak "Wekelijkse AI-update" in workflow.ai_updates.
+// Geeft null terug als er nog geen update is of als het ophalen mislukt;
+// het Bord werkt dan gewoon zonder het blok.
+export async function getAiUpdate() {
+  const data = await stil(() => rpc("sb_ai_update_laatste", {}), null);
+  return data && typeof data === "object" && data.id ? data : null;
+}
