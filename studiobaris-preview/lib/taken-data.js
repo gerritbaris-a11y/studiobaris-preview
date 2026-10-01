@@ -167,3 +167,30 @@ export async function getAiUpdate() {
   const data = await stil(() => rpc("sb_ai_update_laatste", {}), null);
   return data && typeof data === "object" && data.id ? data : null;
 }
+
+// --- Previewvoorstellen (tabblad Vandaag, onder de AI-update) ---
+// Klaargezet door de dagelijkse zoekronde in workflow.preview_voorstellen.
+// Ophalen mislukt (bijv. tabel nog niet aangemaakt): lege lijst, Vandaag
+// werkt dan gewoon zonder dit blok.
+export async function getVoorstellen() {
+  const data = await stil(() => rpc("sb_voorstellen_overzicht", {}), null);
+  return {
+    open: data && Array.isArray(data.open) ? data.open : [],
+    dezeWeek: (data && data.deze_week) || { gemaakt: 0, afgewezen: 0 },
+  };
+}
+
+export async function getVoorstel(id) {
+  return await rpc("sb_voorstel", { p_id: id });
+}
+
+export async function setVoorstelStatus(id, status, { door = null, reden = null, slug = null, fout = null } = {}) {
+  return await rpc("sb_voorstel_status", {
+    p_id: id,
+    p_status: status,
+    p_door: door,
+    p_reden: reden,
+    p_slug: slug,
+    p_fout: fout,
+  });
+}

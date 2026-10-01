@@ -1,6 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
-import { nicheFoto } from "../../lib/preview-assets";
+import { nicheFoto, heroAchtergrond } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -69,6 +69,9 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz .bp{background:var(--orange);color:#fff;font-weight:700;padding:.85rem 1.5rem;border-radius:999px;display:inline-block}
     .pz .trust{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;justify-content:center;margin-top:1.4rem;color:#6b5d4d;font-size:.9rem}
     .pz .trust span{display:flex;gap:.4rem;align-items:center}.pz .tick{color:var(--orange);font-weight:800}
+    .pz .hero.metfoto{padding:4.4rem 0 4.6rem}
+    .pz .hero.metfoto h1,.pz .hero.metfoto .trust{color:#fff}
+    .pz .hero.metfoto p{color:rgba(255,255,255,.9)}
     .pz .sec{padding:3.4rem 0}
     .pz .sec h2{font-size:clamp(1.5rem,3vw,2rem);text-align:center;margin-bottom:.4rem}
     .pz .lead{color:#6b5d4d;text-align:center;max-width:60ch;margin:0 auto 2rem}
@@ -110,7 +113,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
         <a className="cta" href="#contact">{hero.cta_tekst || "Contact"}</a>
       </div></header>
 
-      <section className="hero"><div className="wrap">
+      <section className={hero.achtergrond ? "hero metfoto" : "hero"} style={heroAchtergrond(hero.achtergrond, "rgba(42,32,24,.55)")}><div className="wrap">
         <div className="pf" style={persoonFoto ? { backgroundImage: `url(${persoonFoto})`, color: "transparent" } : undefined}>
           {persoonFoto ? "" : (
             <svg viewBox="0 0 100 100" aria-hidden="true">

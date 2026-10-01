@@ -14,6 +14,7 @@ const INTERN = [
   "/kosten",
   "/vandaag",
   "/adressenlijst",
+  "/vakfotos",
   "/team",
   "/storingen",
   "/restbetalingen",

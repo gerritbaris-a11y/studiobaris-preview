@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
-import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
+import { nicheFoto, voordeelIcon, heroAchtergrond } from "../../lib/preview-assets";
 import { vulVoorbeeld } from "../../lib/preview-voorbeeld";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
@@ -207,7 +207,7 @@ export default async function Page({ params, searchParams }) {
         <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
       </div></header>
 
-      <section className="hero">
+      <section className="hero" style={heroAchtergrond(hero.achtergrond, "rgba(17,17,17,.68)")}>
         <span className="eyebrow">{b.branche || b.naam}</span>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
