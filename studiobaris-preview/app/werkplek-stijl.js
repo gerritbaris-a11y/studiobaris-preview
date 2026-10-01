@@ -59,7 +59,6 @@ export const NAV = [
   { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
-  { href: "/boekhouding", label: "Boekhouding", beheer: true },
   { href: "/team", label: "Team & omzet", beheer: true },
 ];
 
@@ -85,6 +84,7 @@ export const NAV_GROEPEN = [
       { href: "/offertes", label: "Offertes" },
       { href: "/marges", label: "Marges" },
       { href: "/kosten", label: "Kosten & resultaat" },
+      { href: "/boekhouding", label: "Boekhouding" },
     ],
   },
 ];
