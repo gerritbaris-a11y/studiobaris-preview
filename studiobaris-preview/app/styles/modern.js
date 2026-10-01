@@ -1,6 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
-import { nicheFoto, voordeelIcon } from "../../lib/preview-assets";
+import { nicheFoto, voordeelIcon, heroAchtergrond } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -74,6 +74,10 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
     .md .trust{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-top:1.8rem;color:#55606e;font-size:.92rem}
     .md .trust span{display:flex;gap:.4rem;align-items:center}
     .md .tick{color:var(--orange);font-weight:800}
+    .md .hero.metfoto{padding:5.5rem 0 5rem}
+    .md .hero.metfoto h1,.md .hero.metfoto .trust{color:#fff}
+    .md .hero.metfoto p{color:rgba(255,255,255,.88)}
+    .md .hero.metfoto .bs{border-color:#fff;color:#fff}
     .md .sec{padding:3.6rem 0;border-top:1px solid #eef0f3}
     .md .sec h2{font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:.4rem}
     .md .lead{color:#55606e;margin-bottom:1.8rem;max-width:60ch}
@@ -132,7 +136,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
         <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
       </div></header>
 
-      <section className="hero"><div className="wrap">
+      <section className={hero.achtergrond ? "hero metfoto" : "hero"} style={heroAchtergrond(hero.achtergrond, "rgba(16,21,31,.6)")}><div className="wrap">
         <div className="eyebrow">{b.branche || b.naam}</div>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}

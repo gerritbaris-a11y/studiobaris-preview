@@ -9,6 +9,7 @@ import {
 import { callClaude } from "../../../lib/anthropic";
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
+import { vakfotosVoor } from "../../../lib/vakfotos";
 import { log, updateKlant, updateLead, getLead } from "../../../lib/server-data";
 
 export const runtime = "nodejs";
@@ -200,6 +201,34 @@ export async function POST(req) {
         if (content.projecten[i]) content.projecten[i].beeld_url = url;
         else content.projecten.push({ titel: "Project", plaats: "", beeld_url: url });
       });
+    }
+
+    // Eigen beeldbank per vakgebied (/vakfotos): een achtergrondfoto achter de
+    // tekst bovenaan, en - als de klant zelf geen foto's aanleverde - twee
+    // projectfoto's. Lukt dit niet of is er niets voor dit vakgebied, dan blijft
+    // de preview zoals hij was (stockfoto's als terugval). Nooit een harde fout.
+    try {
+      const vak = await vakfotosVoor(v("branche") || (content.bedrijf && content.bedrijf.branche) || naam, slug);
+      content.hero = content.hero || {};
+      if (!content.hero.achtergrond && vak.hero) content.hero.achtergrond = vak.hero;
+      if (!fotoUrls.length && vak.projecten.length) {
+        content.projecten = Array.isArray(content.projecten) ? content.projecten : [];
+        if (content.projecten.length === 0) {
+          // Geen projecten genoemd: zelf tegels maken met een vakfoto en de
+          // naam van een dienst, anders toont de site alleen stockfoto's.
+          const diensten = Array.isArray(content.diensten) ? content.diensten : [];
+          vak.projecten.forEach((url, i) => {
+            const d = diensten[i] || {};
+            content.projecten.push({ titel: d.titel || d.naam || "Recent werk", plaats: "", beeld_url: url });
+          });
+        } else {
+          vak.projecten.forEach((url, i) => {
+            if (content.projecten[i] && !content.projecten[i].beeld_url) content.projecten[i].beeld_url = url;
+          });
+        }
+      }
+    } catch (e) {
+      console.error("vakfoto's kiezen mislukt:", e && e.message);
     }
     if (content.seo) content.seo.noindex = true;
 

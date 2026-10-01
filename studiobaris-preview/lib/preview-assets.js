@@ -21,7 +21,7 @@ const SETS = {
   generiek: ["photo-1517581177682-a085bb7ffb15", "photo-1618832515490-e181c4794a45", "photo-1505798577917-a65157d3320a", "photo-1634586648651-f1fb9ec10d90", "photo-1610459716431-e07abcf74230"],
 };
 
-function nicheKey(branche) {
+export function nicheKey(branche) {
   const b = String(branche || "").toLowerCase();
   if (b.includes("dak")) return "dakdekker";
   if (b.includes("schilder") || b.includes("behang")) return "schilder";
@@ -36,6 +36,18 @@ function nicheKey(branche) {
   if (b.includes("schoonmaak") || b.includes("schoonma") || b.includes("cleaning") || b.includes("reinig")) return "schoonmaak";
   if (b.includes("aannem") || b.includes("bouwbedr") || b.includes("verbouw") || b.includes("renovat") || b.includes("klus")) return "aannemer";
   return "generiek";
+}
+
+// Achtergrondfoto achter de tekst bovenaan de preview (content.hero.achtergrond).
+// De overlay houdt de tekst leesbaar: donker bij een donkere hero, licht bij een
+// lichte. Zonder foto geeft dit niets terug en blijft de hero zoals hij was.
+export function heroAchtergrond(url, overlay) {
+  if (!url || typeof url !== "string") return undefined;
+  return {
+    backgroundImage: `linear-gradient(${overlay}, ${overlay}), url(${JSON.stringify(url)})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
 }
 
 // Geeft een niche-passende foto-URL terug (index zorgt voor afwisseling per blok).

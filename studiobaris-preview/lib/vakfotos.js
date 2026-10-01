@@ -1,0 +1,107 @@
+// Vakfoto's: eigen beeldbank per vakgebied (schilder, loodgieter, ...), die
+// beheer via /vakfotos uploadt. Staan in de opslag onder
+// klant-media/vakfotos/<vakgebied>/. Een nieuwe preview zonder eigen foto's
+// krijgt hieruit een achtergrondfoto voor de hero en twee projectfoto's.
+// Is er voor een vakgebied (nog) niets, dan valt de preview terug op de
+// standaard stockfoto's uit preview-assets.js, zoals voorheen.
+
+import { nicheKey } from "./preview-assets";
+
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ipiqrsxbsgylxhgzlhsd.supabase.co";
+const BUCKET = "klant-media";
+export const VAK_MAP = "vakfotos";
+
+// Volgorde en namen zoals ze op de uploadpagina staan. De sleutel is dezelfde
+// als nicheKey() oplevert, zodat "Schildersbedrijf" en "behanger" ook bij de
+// schilderfoto's uitkomen en "installateur" bij de loodgieter.
+export const VAKGEBIEDEN = [
+  { key: "schilder", label: "Schilder" },
+  { key: "timmerman", label: "Timmerman" },
+  { key: "loodgieter", label: "Loodgieter / installateur" },
+  { key: "hovenier", label: "Hovenier" },
+  { key: "dakdekker", label: "Dakdekker" },
+  { key: "elektricien", label: "Elektricien" },
+  { key: "metselaar", label: "Metselaar" },
+  { key: "stukadoor", label: "Stukadoor" },
+  { key: "tegelzetter", label: "Tegelzetter" },
+  { key: "aannemer", label: "Aannemer / klusbedrijf" },
+];
+
+export function isVakgebied(key) {
+  return VAKGEBIEDEN.some((v) => v.key === key);
+}
+
+function sleutel() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+}
+
+export function publiekeUrl(pad) {
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${pad}`;
+}
+
+// Alle foto's van één vakgebied, nieuwste eerst. Bij een fout: lege lijst.
+export async function getVakfotos(key) {
+  const k = sleutel();
+  if (!k || !isVakgebied(key)) return [];
+  try {
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`, {
+      method: "POST",
+      headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ prefix: `${VAK_MAP}/${key}`, limit: 200, offset: 0, sortBy: { column: "created_at", order: "desc" } }),
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const rijen = await res.json();
+    return (Array.isArray(rijen) ? rijen : [])
+      .filter((r) => r && r.id && r.name && !r.name.startsWith("."))
+      .map((r) => ({ naam: r.name, url: publiekeUrl(`${VAK_MAP}/${key}/${r.name}`) }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getAlleVakfotos() {
+  const lijsten = await Promise.all(VAKGEBIEDEN.map((v) => getVakfotos(v.key)));
+  return VAKGEBIEDEN.map((v, i) => ({ ...v, fotos: lijsten[i] }));
+}
+
+export async function verwijderVakfoto(key, naam) {
+  const k = sleutel();
+  if (!k || !isVakgebied(key) || !naam || naam.includes("/")) return false;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}`, {
+    method: "DELETE",
+    headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ prefixes: [`${VAK_MAP}/${key}/${naam}`] }),
+  });
+  return res.ok;
+}
+
+// Vaste maar per bedrijf verschillende keuze: dezelfde slug geeft steeds
+// dezelfde foto's, twee schilders naast elkaar krijgen (meestal) andere.
+function hash(tekst) {
+  let h = 2166136261;
+  for (const c of String(tekst || "")) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return h >>> 0;
+}
+
+function gehusseld(lijst, zaad) {
+  const uit = lijst.slice();
+  let h = hash(zaad) || 1;
+  for (let i = uit.length - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+    const j = h % (i + 1);
+    [uit[i], uit[j]] = [uit[j], uit[i]];
+  }
+  return uit;
+}
+
+// Achtergrond + twee à drie projectfoto's voor een preview (drie vult het
+// raster op de site mooi). De achtergrond is nooit ook een projectfoto. Heeft
+// het vakgebied weinig foto's, dan krijg je wat er is (de achtergrond gaat voor).
+export async function vakfotosVoor(branche, zaad) {
+  const key = nicheKey(branche);
+  if (!isVakgebied(key)) return { key, hero: null, projecten: [] };
+  const fotos = gehusseld(await getVakfotos(key), zaad).map((f) => f.url);
+  return { key, hero: fotos[0] || null, projecten: fotos.slice(1, 4) };
+}
