@@ -3,6 +3,10 @@
     {
       "path": "/api/facturen/dagelijks",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/leads/sync",
+      "schedule": "15 5 * * *"
     }
   ]
 }

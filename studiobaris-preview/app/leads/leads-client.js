@@ -27,6 +27,29 @@ const POTENTIE_KLEUR = {
   "Erg laag": "#B0A697",
 };
 
+// Uitkomst van de websitescan in de actuele lijst.
+const SITE_LABELS = {
+  "GEEN SITE": "Geen website",
+  "ALLEEN SOCIAL": "Alleen social media",
+  PARKED: "Domein geparkeerd / leeg",
+  VEROUDERD: "Verouderde website",
+};
+const SITE_KLEUR = {
+  "GEEN SITE": "#1d7a46",
+  "ALLEEN SOCIAL": "#9E3B2E",
+  PARKED: "#b45309",
+  VEROUDERD: "#7c3aed",
+};
+
+function datumNL(d) {
+  if (!d) return "";
+  const t = new Date(d);
+  return isNaN(t) ? "" : t.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+}
+function host(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
+}
+
 const FASE_PILLS = ["nieuw", "opgepakt", "benaderd", "preview"];
 const DONE = ["klant", "afgewezen"];
 
@@ -51,11 +74,36 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   const [siteVeld, setSiteVeld] = useState({});
   const [melding, setMelding] = useState(null); // { id, tekst } bij een botsing
   const eersteRender = useRef(true);
+  const [sync, setSync] = useState({ bezig: false, tekst: "" });
+
+  // Haalt de nieuwste versie van de Google Sheet op. Gebeurt ook elke ochtend
+  // automatisch; deze knop is voor als je niet wilt wachten.
+  async function bijwerken() {
+    setSync({ bezig: true, tekst: "" });
+    try {
+      const res = await fetch("/api/leads/sync", { method: "POST" });
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok) {
+        setSync({ bezig: false, tekst: "Bijwerken mislukt: " + (j.error || "onbekende fout") });
+        return;
+      }
+      const delen = [`${j.in_sheet} leads in de Sheet`];
+      if (j.nieuw) delen.push(`${j.nieuw} nieuw`);
+      if (j.gearchiveerd) delen.push(`${j.gearchiveerd} gearchiveerd (niet meer in de Sheet)`);
+      if (j.terug_uit_archief) delen.push(`${j.terug_uit_archief} terug uit het archief`);
+      if (j.archiveren_overgeslagen) delen.push("archiveren overgeslagen: de Sheet leek onvolledig");
+      setSync({ bezig: false, tekst: "Bijgewerkt — " + delen.join(", ") + "." });
+      router.refresh();
+    } catch {
+      setSync({ bezig: false, tekst: "Bijwerken mislukt: geen verbinding." });
+    }
+  }
 
   // Nieuwe gegevens van de server overnemen zodra de filters wijzigen.
   useEffect(() => { setLeads(initieel || []); }, [initieel]);
 
-  const f = facetten || { provincies: [], vakgebieden: [], werk: 0, afgerond: 0, socials: 0 };
+  const f = facetten || { provincies: [], vakgebieden: [], sites: [], werk: 0, afgerond: 0, socials: 0 };
+  const actueel = (filters.lijst || "actueel") === "actueel";
   const limiet = Number(filters.limiet || 30);
 
   function zet(veranderingen) {
@@ -205,6 +253,16 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         @media (min-width: 1080px) { .sb-cards { grid-template-columns: repeat(3, 1fr); } }
       `}</style>
 
+      <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <button onClick={bijwerken} disabled={sync.bezig}
+          style={{ border: "1px solid #E3DACB", background: "#fff", color: "#524A40", borderRadius: 9, padding: "7px 12px", fontSize: 13, fontWeight: 700, cursor: sync.bezig ? "wait" : "pointer" }}>
+          {sync.bezig ? "Bezig met bijwerken…" : "↻ Nu bijwerken uit de Sheet"}
+        </button>
+        <span style={{ fontSize: 12.5, color: "#9A9084" }}>
+          {sync.tekst || "Wordt ook elke ochtend automatisch bijgewerkt."}
+        </span>
+      </div>
+
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         {tabBtn("werk", "Werkstapel", f.werk)}
         {tabBtn("afgerond", "Afgerond", f.afgerond)}
@@ -248,15 +306,24 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           <option value="">Alle vakgebieden</option>
           {f.vakgebieden.map((v) => <option key={v} value={v}>{v}</option>)}
         </select>
-        <select value={filters.potentie || ""} onChange={(e) => zet({ potentie: e.target.value })} style={sel}>
-          <option value="">Alle potentie</option>
-          {["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
+        {actueel ? (
+          <select value={filters.site || ""} onChange={(e) => zet({ site: e.target.value })} style={sel}>
+            <option value="">Alle website-situaties</option>
+            {(f.sites || []).map((s) => (
+              <option key={s.site} value={s.site}>{SITE_LABELS[s.site] || s.site} ({s.aantal})</option>
+            ))}
+          </select>
+        ) : (
+          <select value={filters.potentie || ""} onChange={(e) => zet({ potentie: e.target.value })} style={sel}>
+            <option value="">Alle potentie</option>
+            {["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        )}
       </div>
 
       <div style={{ fontSize: 13, color: "#B0A697", marginBottom: 10 }}>
         {leads.length.toLocaleString("nl-NL")} van {Number(totaal || 0).toLocaleString("nl-NL")}
-        {tab === "werk" ? " openstaande leads — Zuid-Holland eerst" : " afgeronde leads"}
+        {tab === "werk" ? " openstaande leads — Zuid-Holland eerst" : tab === "archief" ? " gearchiveerde leads" : " afgeronde leads"}
       </div>
 
       <div className="sb-cards">
@@ -316,14 +383,37 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
               <div style={{ fontSize: 14, display: "flex", flexWrap: "wrap", gap: "2px 14px" }}>
                 {l.telefoon && <a href={`tel:${l.telefoon.replace(/\s/g, "")}`} style={{ color: "#2B2724", textDecoration: "none", fontWeight: 600 }}>{l.telefoon}</a>}
                 {l.email && <a href={`mailto:${l.email}`} style={{ color: "#9E3B2E", textDecoration: "none" }}>{l.email}</a>}
-                {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>website</a> : <span style={{ color: "#b45309" }}>geen website</span>}
+                {l.website ? <a href={l.website} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>website</a>
+                  : (l.gevonden_url && (l.website_status === "PARKED" || l.website_status === "VEROUDERD"))
+                    ? <a href={l.gevonden_url} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>{host(l.gevonden_url)}</a>
+                    : (l.gevonden_url && !l.facebook && !l.instagram)
+                      ? <a href={l.gevonden_url} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>{host(l.gevonden_url)}</a>
+                      : <span style={{ color: "#b45309" }}>geen website</span>}
+                {!l.telefoon && actueel && <span style={{ color: "#B0A697" }}>telefoon nog onbekend</span>}
                 {l.facebook && <a href={l.facebook} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>facebook</a>}
                 {l.instagram && <a href={l.instagram} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>instagram</a>}
                 {l.linkedin && <a href={l.linkedin} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>linkedin</a>}
                 {l.google_maps && <a href={l.google_maps} target="_blank" rel="noreferrer" style={{ color: "#9E3B2E" }}>maps</a>}
               </div>
 
-              {l.alleen_socials && (
+              {l.website_status && (
+                <div style={{ display: "inline-flex", alignSelf: "flex-start", gap: 6, alignItems: "center", background: "#FBF7F0", border: "1px solid #E3DACB", color: SITE_KLEUR[l.website_status] || "#524A40", borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 700 }}>
+                  {SITE_LABELS[l.website_status] || l.website_status}
+                </div>
+              )}
+
+              {actueel && l.reden && (
+                <div style={{ fontSize: 13, color: "#524A40", lineHeight: 1.4 }}>{l.reden}</div>
+              )}
+
+              {actueel && (l.bron_url || l.scan_datum) && (
+                <div style={{ fontSize: 12, color: "#9A9084" }}>
+                  {l.bron_url && <>Gevonden via <a href={l.bron_url} target="_blank" rel="noreferrer" style={{ color: "#9A9084" }}>{host(l.bron_url)}</a></>}
+                  {l.scan_datum && <>{l.bron_url ? " · " : ""}gescand {datumNL(l.scan_datum)}</>}
+                </div>
+              )}
+
+              {!l.website_status && l.alleen_socials && (
                 <div style={{ display: "inline-flex", alignSelf: "flex-start", background: "#FBF7F0", border: "1px solid #E3DACB", color: "#9E3B2E", borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 600 }}>
                   Wel social media, geen website
                 </div>
