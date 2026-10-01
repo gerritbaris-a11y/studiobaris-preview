@@ -9,6 +9,20 @@ export const maxDuration = 300;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
 
+// De leadlijst kent vakgebieden die de vakfoto-indeling niet herkent. Door er
+// een herkenbaar woord bij te zetten krijgen die previews tóch de juiste
+// vakfoto's (anders vallen ze terug op algemene stockfoto's).
+const BRANCHE = {
+  bestrater: "bestrater (tuinbestrating en sierbestrating)",
+  groenvoorziening: "groenvoorziening en tuinonderhoud",
+  boomverzorger: "boomverzorger (bomen en tuin)",
+  tuinaanleg: "tuinaanleg",
+};
+function branche(v) {
+  const k = String(v || "").trim().toLowerCase();
+  return BRANCHE[k] || v;
+}
+
 // "Preview aanvragen" op de leadlijst = meteen een preview maken, net als het
 // goedkeuren van een voorstel op de Vandaag-tab. We vullen het intakeformulier
 // met wat we van de lead weten en laten de bestaande intake-route het werk doen
@@ -45,7 +59,7 @@ export async function POST(req) {
   const fd = new FormData();
   const zet = (k, w) => { const t = w ? String(w).trim() : ""; if (t) fd.set(k, t); };
   zet("naam", lead.bedrijfsnaam);
-  zet("branche", lead.vakgebied);
+  zet("branche", branche(lead.vakgebied));
   zet("regio", lead.plaats);
   zet("telefoon", lead.telefoon);
   zet("email", lead.email);
