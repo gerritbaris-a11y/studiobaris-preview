@@ -51,7 +51,7 @@ async function verify(token) {
 }
 
 // Alleen voor beheerders (Gerrit/Levi). Verkopers → doorgestuurd naar /klanten.
-const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/bord", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen", "/facturen", "/offertes", "/btw-aangifte", "/marges", "/boekhouding"];
+const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads/import", "/overzicht", "/bord", "/vragen", "/kosten", "/storingen", "/restbetalingen", "/abonnementen", "/facturen", "/offertes", "/btw-aangifte", "/marges", "/boekhouding", "/vandaag", "/adressenlijst"];
 
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
@@ -102,6 +102,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/vandaag/:path*",
+    "/adressenlijst/:path*",
     "/leads/:path*",
     "/klanten/:path*",
     "/vergelijk/:path*",

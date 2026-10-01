@@ -53,9 +53,10 @@ export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
 // pagina, /api/leads en de database erachter bestaan nog gewoon, voor als dit
 // later weer opgepakt wordt. Alleen uit de navigatie gehaald.
 //
-// "Vandaag" is om dezelfde reden vervallen: die taken staan toch al op het
-// Bord. De pagina en getVandaag() blijven gewoon bestaan, alleen uit dit menu.
+// "Vandaag" is terug als startscherm voor beheer, maar nu met de wekelijkse
+// AI-update i.p.v. de oude takenlijst (die taken staan op het Bord).
 export const NAV = [
+  { href: "/vandaag", label: "Vandaag", beheer: true },
   { href: "/klanten", label: "Mijn previews" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
   { href: "/bord", label: "Bord", beheer: true },
@@ -71,6 +72,7 @@ export const NAV_GROEPEN = [
     beheer: true,
     items: [
       { href: "/klantenregister", label: "Klantenregister" },
+      { href: "/adressenlijst", label: "Adressenlijst" },
       { href: "/abonnementen", label: "Abonnementen" },
       { href: "/restbetalingen", label: "Restbetalingen" },
       { href: "/storingen", label: "Storingen" },
