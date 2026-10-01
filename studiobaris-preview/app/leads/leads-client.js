@@ -75,6 +75,32 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   const [melding, setMelding] = useState(null); // { id, tekst } bij een botsing
   const eersteRender = useRef(true);
   const [sync, setSync] = useState({ bezig: false, tekst: "" });
+  const [preview, setPreview] = useState({}); // per lead: { bezig, fout, url }
+
+  // Eén klik: de preview wordt meteen gemaakt (zelfde route als het goedkeuren
+  // van een voorstel op Vandaag). De lead komt daarbij op jouw naam te staan.
+  async function maakPreview(l) {
+    if (!window.confirm(`Preview maken voor ${l.bedrijfsnaam}? Dit duurt ongeveer een minuut.`)) return;
+    setPreview((p) => ({ ...p, [l.id]: { bezig: true } }));
+    try {
+      const res = await fetch("/api/leads/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: l.id }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!j.ok) {
+        setPreview((p) => ({ ...p, [l.id]: { fout: j.error || "Preview maken mislukt." } }));
+        return;
+      }
+      setPreview((p) => ({ ...p, [l.id]: { url: j.url } }));
+      setLeads((prev) => prev.map((x) => (x.id === l.id
+        ? { ...x, status: "preview", preview_slug: j.slug, owner: x.owner || mij }
+        : x)));
+    } catch {
+      setPreview((p) => ({ ...p, [l.id]: { fout: "Geen verbinding." } }));
+    }
+  }
 
   // Haalt de nieuwste versie van de Google Sheet op. Gebeurt ook elke ochtend
   // automatisch; deze knop is voor als je niet wilt wachten.
@@ -479,12 +505,36 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 </div>
               )}
 
-              {!done && tab !== "archief" && (
-                <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
-                  style={{ display: "block", textAlign: "center", background: "#C05A38", color: "#fff", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2 }}>
-                  Preview aanvragen
-                </a>
-              )}
+              {(() => {
+                const pv = preview[l.id] || {};
+                const knop = { display: "block", width: "100%", textAlign: "center", padding: "11px", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", marginTop: 2, border: "none", fontFamily: "inherit", boxSizing: "border-box" };
+                const url = pv.url || (l.preview_slug ? `https://preview.studiobaris.nl/${l.preview_slug}` : "");
+                if (url) {
+                  return (
+                    <a href={url} target="_blank" rel="noreferrer" style={{ ...knop, background: "#1d7a46", color: "#fff" }}>
+                      Bekijk preview ↗
+                    </a>
+                  );
+                }
+                if (done || tab === "archief") return null;
+                return (
+                  <div>
+                    <button onClick={() => maakPreview(l)} disabled={pv.bezig}
+                      style={{ ...knop, background: pv.bezig ? "#D9A08C" : "#C05A38", color: "#fff", cursor: pv.bezig ? "wait" : "pointer" }}>
+                      {pv.bezig ? "Preview wordt gemaakt… (±1 min)" : "Preview aanvragen"}
+                    </button>
+                    {pv.fout && (
+                      <div style={{ marginTop: 6, background: "#FDECEA", border: "1px solid #F5C6C0", color: "#9E3B2E", borderRadius: 8, padding: "7px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                        {pv.fout}
+                      </div>
+                    )}
+                    <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
+                      style={{ display: "block", textAlign: "center", fontSize: 12, color: "#9A9084", marginTop: 6 }}>
+                      of zelf invullen via het formulier (met eigen foto's)
+                    </a>
+                  </div>
+                );
+              })()}
 
               {/* Archiveren met een reden, of terug uit het archief. */}
               <div style={{ display: "flex", gap: 6, alignItems: "center", borderTop: "1px solid #F4EEE3", paddingTop: 8, marginTop: 2 }}>

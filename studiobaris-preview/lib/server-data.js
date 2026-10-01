@@ -101,6 +101,12 @@ export async function getLead(id) {
   return Array.isArray(data) && data[0] ? data[0] : null;
 }
 
+// Eén lead met alles wat nodig is om er automatisch een preview van te maken.
+export async function getLeadVoorPreview(id) {
+  const data = await rest(`leads?select=id,bedrijfsnaam,status,owner,vakgebied,plaats,provincie,adres,telefoon,email,website,website_status,gevonden_url,reden,preview_slug&id=eq.${encodeURIComponent(id)}&limit=1`);
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
+
 // Logboek: wie deed wat, wanneer. Mag nooit de actie zelf laten mislukken.
 export async function log({ persoon, soort, leadId = null, slug = null, bedrijf = null, van = null, naar = null, details = null }) {
   try {
