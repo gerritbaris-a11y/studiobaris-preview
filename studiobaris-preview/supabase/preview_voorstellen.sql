@@ -1,3 +1,4 @@
+-- Uitgevoerd op productie op 2026-10-01 (migratie preview_voorstellen).
 -- Previewvoorstellen: kandidaten die Claude dagelijks klaarzet en die beheer
 -- op het tabblad Vandaag goedkeurt of afwijst. Alleen bereikbaar via de
 -- security-definer-functies hieronder (service_role), net als ai_updates/taken.
@@ -29,6 +30,7 @@ create table workflow.preview_voorstellen (
 );
 
 create index preview_voorstellen_status_idx on workflow.preview_voorstellen (status, created_at);
+create index preview_voorstellen_lead_idx on workflow.preview_voorstellen (lead_id);
 
 alter table workflow.preview_voorstellen enable row level security;
 revoke all on workflow.preview_voorstellen from anon, authenticated;
