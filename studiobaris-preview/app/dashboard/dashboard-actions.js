@@ -887,6 +887,37 @@ export function AkkoordLink({ slug }) {
   );
 }
 
+// De betaallink (akkoord-pagina: helft vooraf + maandelijkse incasso).
+// Eén bron voor de URL, zodat /klanten en het Klantenregister altijd
+// dezelfde link geven.
+export function betaallinkUrl(slug) {
+  return "https://preview.studiobaris.nl/akkoord/" + slug;
+}
+
+// Losse Betaallink-knop (kopiëren + openen), o.a. voor het Klantenregister.
+export function BetaallinkKnop({ slug, style }) {
+  const [copied, setCopied] = useState(false);
+  const url = betaallinkUrl(slug);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true); setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  }
+  return (
+    <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+      <button onClick={copy} title={"Helft vooraf + maandelijkse incasso\n" + url}
+        style={{ ...style, background: copied ? "#ecfdf5" : (style && style.background) || "#fff" }}>
+        {copied ? "Gekopieerd ✓" : "Betaallink kopiëren"}
+      </button>
+      <a href={url} target="_blank" rel="noreferrer" title={url}
+        style={{ ...style, textDecoration: "none", fontWeight: 400 }}>
+        Open ↗
+      </a>
+    </span>
+  );
+}
+
 // Alle deelbare links van een klant op één plek, met kopieer-knoppen.
 // Bewust kort gehouden: alleen wat je nodig hebt om de sale te versturen en
 // binnen te halen. Website, Klant-intake, Feedback en Restbetaling staan hier
@@ -901,7 +932,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
 
   const linkPreview = { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" };
   const linkDemo = { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" };
-  const linkBetaal = { key: "b", naam: "Betaallink", url: PREVIEW + "/akkoord/" + slug, hint: "Helft vooraf + maandelijkse incasso" };
+  const linkBetaal = { key: "b", naam: "Betaallink", url: betaallinkUrl(slug), hint: "Helft vooraf + maandelijkse incasso" };
   const links = [linkPreview, linkDemo, linkBetaal];
 
   function copy(url, key) {

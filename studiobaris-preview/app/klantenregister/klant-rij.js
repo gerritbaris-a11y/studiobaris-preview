@@ -5,6 +5,7 @@ import { KLEUR, HEAD } from "../werkplek-stijl";
 import {
   Contactpersoon, GegevensEditor, VerwijderKnop, KlantNaam,
   MarkeerAlsKlantKnop, MarkeerAlsOudKlantKnop, HeractiveerKlantKnop,
+  BetaallinkKnop,
 } from "../dashboard/dashboard-actions";
 import AfspraakForm from "../abonnementen/afspraak-form";
 
@@ -207,6 +208,9 @@ export default function KlantRij({ r, variant, team = [] }) {
                   <a href={`/facturen?klant=${encodeURIComponent(r.slug)}`} style={{ color: KLEUR.klei, fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
                     Facturen bekijken →
                   </a>
+                )}
+                {(variant === "klant" || variant === "toekomstig") && (
+                  <BetaallinkKnop slug={r.slug} style={actieKnop} />
                 )}
                 {variant === "klant" && <SlottermijnKnop r={r} />}
                 {variant === "klant" && (
