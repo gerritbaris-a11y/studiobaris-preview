@@ -891,7 +891,9 @@ export function AkkoordLink({ slug }) {
 // Eén bron voor de URL, zodat /klanten en het Klantenregister altijd
 // dezelfde link geven.
 export function betaallinkUrl(slug) {
-  return "https://preview.studiobaris.nl/akkoord/" + slug;
+  // betalen.studiobaris.nl wijst naar dezelfde site als preview.studiobaris.nl;
+  // oude links op het preview-adres blijven dus ook gewoon werken.
+  return "https://betalen.studiobaris.nl/akkoord/" + slug;
 }
 
 // Losse Betaallink-knop (kopiëren + openen), o.a. voor het Klantenregister.
