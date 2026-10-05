@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KLEUR, HEAD, BODY } from "../werkplek-stijl";
+import { slottermijnUrl } from "../../lib/betaallink";
 
 function euro(n) {
   const v = Number(n || 0);
@@ -11,10 +12,9 @@ function euro(n) {
 export default function RestClient({ lijst }) {
   const [gekopieerd, setGekopieerd] = useState("");
 
-  const basis = typeof window !== "undefined" ? window.location.origin : "https://team.studiobaris.nl";
 
   function herinnering(k) {
-    const link = `${basis}/restbetaling/${k.slug}`;
+    const link = slottermijnUrl(k.slug);
     const naam = k.contact || k.klant;
     const bedrag = k.restbedrag > 0 ? ` van ${euro(k.restbedrag)}` : "";
     return [
@@ -93,7 +93,7 @@ export default function RestClient({ lijst }) {
                 {gekopieerd === k.slug ? "Gekopieerd ✓" : "Kopieer tekst"}
               </button>
               <a
-                href={`${basis}/restbetaling/${k.slug}`}
+                href={slottermijnUrl(k.slug)}
                 target="_blank"
                 rel="noreferrer"
                 style={{ background: KLEUR.klei, color: "#fff", borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 700, fontFamily: BODY, display: "inline-flex", alignItems: "center" }}

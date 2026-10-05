@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getBetaalinfo, setRest } from "../../../../lib/server-data";
 import { mollie, mollieConfigured, inclBtw } from "../../../../lib/mollie";
+import { slottermijnUrl } from "../../../../lib/betaallink";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export async function POST(req) {
       sequenceType: "oneoff",
       method: "ideal",
       description: `Restbedrag website ${info.company_name || slug}`,
-      redirectUrl: `${SITE_URL}/restbetaling/${slug}?status=klaar`,
+      redirectUrl: `${slottermijnUrl(slug)}?status=klaar`,
       webhookUrl: `${SITE_URL}/api/mollie/webhook`,
       metadata: { slug, soort: "rest" },
     });

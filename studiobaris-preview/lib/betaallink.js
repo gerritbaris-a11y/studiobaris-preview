@@ -6,3 +6,10 @@ export const BETAAL_BASIS = "https://betalen.studiobaris.nl";
 export function betaallinkUrl(slug) {
   return BETAAL_BASIS + "/akkoord/" + slug;
 }
+
+// Het slottermijn (tweede helft van het websitebedrag) als losse iDEAL-betaling.
+// /slottermijn/<slug> toont dezelfde pagina als het oude /restbetaling/<slug>,
+// dat ook blijft werken.
+export function slottermijnUrl(slug) {
+  return BETAAL_BASIS + "/slottermijn/" + slug;
+}

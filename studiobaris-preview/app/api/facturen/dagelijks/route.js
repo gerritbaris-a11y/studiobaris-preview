@@ -8,6 +8,7 @@ import { berekenSlottermijn } from "../../../../lib/betaling-berekening";
 import { mollie, mollieConfigured, inclBtw } from "../../../../lib/mollie";
 import { setRest } from "../../../../lib/server-data";
 import { maakTaak, getTaken } from "../../../../lib/taken-data";
+import { slottermijnUrl } from "../../../../lib/betaallink";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,7 +111,7 @@ export async function GET(req) {
         if (!bestaatAl) {
           await maakTaak({
             titel,
-            omschrijving: `De 14-dagen-termijn voor de slottermijn (${OMSCHRIJVING.slottermijn}, € ${Number(k.bedrag).toFixed(2)}) is voorbij, maar er is geen bruikbaar SEPA-mandaat om automatisch te incasseren. Stuur zelf de betaallink via /restbetaling/${k.slug}.`,
+            omschrijving: `De 14-dagen-termijn voor de slottermijn (${OMSCHRIJVING.slottermijn}, € ${Number(k.bedrag).toFixed(2)}) is voorbij, maar er is geen bruikbaar SEPA-mandaat om automatisch te incasseren. Stuur zelf de betaallink: ${slottermijnUrl(k.slug)}`,
             prioriteit: "normaal",
             kolom: "te_doen",
             klantSlug: k.slug,
