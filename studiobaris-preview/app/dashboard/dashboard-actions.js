@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { FASES, normFase } from "../../lib/fase";
+import { betaallinkUrl } from "../../lib/betaallink";
+export { betaallinkUrl };
 
 export default function PublishButton({ slug }) {
   const [s, setS] = useState("idle");
@@ -875,7 +877,7 @@ export function AkkoordLink({ slug }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
-      await navigator.clipboard.writeText(window.location.origin + "/akkoord/" + slug);
+      await navigator.clipboard.writeText(betaallinkUrl(slug));
       setCopied(true); setTimeout(() => setCopied(false), 1400);
     } catch {}
   }
@@ -887,14 +889,6 @@ export function AkkoordLink({ slug }) {
   );
 }
 
-// De betaallink (akkoord-pagina: helft vooraf + maandelijkse incasso).
-// Eén bron voor de URL, zodat /klanten en het Klantenregister altijd
-// dezelfde link geven.
-export function betaallinkUrl(slug) {
-  // betalen.studiobaris.nl wijst naar dezelfde site als preview.studiobaris.nl;
-  // oude links op het preview-adres blijven dus ook gewoon werken.
-  return "https://betalen.studiobaris.nl/akkoord/" + slug;
-}
 
 // Losse Betaallink-knop (kopiëren + openen), o.a. voor het Klantenregister.
 export function BetaallinkKnop({ slug, style }) {

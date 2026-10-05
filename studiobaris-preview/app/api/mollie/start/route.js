@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getBetaalinfo, setBetaling } from "../../../../lib/server-data";
 import { mollie, mollieConfigured, inclBtw } from "../../../../lib/mollie";
+import { betaallinkUrl } from "../../../../lib/betaallink";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,7 +65,7 @@ export async function POST(req) {
       sequenceType: "first",
       method: "ideal",
       description: eersteOmschrijving,
-      redirectUrl: `${SITE_URL}/akkoord/${slug}?status=klaar`,
+      redirectUrl: `${betaallinkUrl(slug)}?status=klaar`,
       webhookUrl: `${SITE_URL}/api/mollie/webhook`,
       metadata: { slug },
     });

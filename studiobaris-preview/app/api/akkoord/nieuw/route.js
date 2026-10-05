@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { maakAkkoord, isGeldigeVerzamelaar } from "../../../../lib/server-data";
+import { betaallinkUrl } from "../../../../lib/betaallink";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
 
 export async function POST(req) {
   try {
@@ -51,7 +51,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Aanmaken mislukt. Probeer het opnieuw." }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, slug, url: `${SITE_URL}/akkoord/${slug}` });
+    return NextResponse.json({ ok: true, slug, url: betaallinkUrl(slug) });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
   }

@@ -6,6 +6,7 @@ import AfspraakForm from "./afspraak-form";
 import { Chip } from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { VerwijderKnop } from "../dashboard/dashboard-actions";
+import { betaallinkUrl } from "../../lib/betaallink";
 
 // Eén klant in het overzicht: de regel zelf, en daaronder — als je 'm opent —
 // alles wat je met zijn geld kunt doen. Facturen, de afspraak, opzeggen.
@@ -195,7 +196,7 @@ export default function KlantRegel({ rij, facturen, siteUrl }) {
 
               <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", borderTop: `1px solid ${KLEUR.lijn}`, paddingTop: 12 }}>
                 <a
-                  href={`${siteUrl}/akkoord/${rij.slug}`}
+                  href={betaallinkUrl(rij.slug)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ ...knop, textDecoration: "none", color: KLEUR.klei }}
