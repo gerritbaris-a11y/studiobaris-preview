@@ -17,6 +17,7 @@ import { normFase } from "../../lib/fase";
 import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
 import KlantenZoek from "./klanten-zoek";
+import HostingCheck from "./hosting-check";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
@@ -65,6 +66,7 @@ export default async function KlantenPage() {
       titel={beheer ? "Alle previews" : "Mijn previews"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
+      <HostingCheck />
       <DocumentenKaart beheer={beheer} model={mijnModel} />
 
       {mijnLeads.length > 0 && (
