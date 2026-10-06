@@ -3,7 +3,7 @@ import { KLEUR, HEAD } from "./werkplek-stijl";
 // Welke handleiding hoort bij welk vergoedingsmodel.
 const HANDLEIDING = {
   "50pct": ["handleiding-50procent.pdf", "50% van het verkoopbedrag"],
-  "50pct_abo": ["handleiding-50procent-abo.pdf", "50% van het verkoopbedrag + 1/3 van het maandbedrag"],
+  "50pct_abo": ["verdienoverzicht-50procent-abo.html", "50% van het verkoopbedrag + 1/3 van het maandbedrag"],
   "100eur": ["handleiding-100euro.pdf", "€100 per verkochte website"],
 };
 
@@ -13,7 +13,7 @@ export default function DocumentenKaart({ beheer, model }) {
   const docs = beheer
     ? [
         ["handleiding-50procent.pdf", "Verkoophandleiding — 50%", "Nick, Maurits en Kevin"],
-        ["handleiding-50procent-abo.pdf", "Verkoophandleiding — 50% + 1/3 abo", "Brent"],
+        ["verdienoverzicht-50procent-abo.html", "Verkoophandleiding — 50% + 1/3 abo", "Brent en Benne"],
         ["handleiding-100euro.pdf", "Verkoophandleiding — €100 per klant", "reservemodel"],
       ]
     : [[eigen[0], "Jouw verkoophandleiding", eigen[1]]];
