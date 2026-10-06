@@ -42,7 +42,7 @@ function Regel({ titel, item, uitleg }) {
   );
 }
 
-export function maakMail(r, naam, bedrijf) {
+export function maakMail(r, naam, bedrijf, verkoper = "") {
   const partij = r.domeinBij.onbekend ? "[naam van uw provider]" : r.domeinBij.naam;
   const wie = naam.trim() || "[uw naam]";
   const regels = [
@@ -71,10 +71,35 @@ export function maakMail(r, naam, bedrijf) {
     "Met vriendelijke groet,",
     wie,
   );
-  return { onderwerp: `Verzoek verhuiscode ${r.domein}`, tekst: regels.join("\n") };
+  const onderwerpProvider = `Verzoek verhuiscode ${r.domein}`;
+
+  // Introductie voor de prospect: deze hele tekst gaat naar hem toe, hij stuurt
+  // het deel tussen de lijnen door naar zijn provider.
+  const bij = r.domeinBij.onbekend ? "je provider (de partij waar je de factuur voor je domein betaalt)" : r.domeinBij.naam;
+  const intro = [
+    naam.trim() ? `Hoi ${naam.trim()},` : "Hoi,",
+    "",
+    `Om je website naar ons over te zetten hebben we de verhuiscode van ${r.domein} nodig. Die vraag je zelf aan bij ${bij}. Hieronder staat een mail die je daarvoor kunt gebruiken.`,
+    "",
+    `Zo werkt het: kopieer de tekst tussen de lijnen, vul je klantnummer in (dat staat op je factuur of in je klantenpaneel van ${r.domeinBij.onbekend ? "je provider" : r.domeinBij.naam}) en stuur hem vanaf het mailadres dat daar bij je account bekend is. Zodra je de verhuiscode binnen hebt, stuur je hem door naar mij. Wij regelen de rest.`,
+    "",
+    "Je zegt hiermee niets op: in de mail staat uitdrukkelijk dat je pakket en je e-mail gewoon blijven werken.",
+    "",
+    "Groet,",
+    verkoper.trim() ? `${verkoper.trim()}, StudioBaris` : "StudioBaris",
+    "",
+    "------------------------------------------------------------",
+    `Onderwerp: ${onderwerpProvider}`,
+    "",
+  ];
+  const slot = ["------------------------------------------------------------"];
+  return {
+    onderwerp: `Verhuiscode opvragen voor ${r.domein}`,
+    tekst: [...intro, ...regels, ...slot].join("\n"),
+  };
 }
 
-export default function HostingCheck() {
+export default function HostingCheck({ verkoper = "" }) {
   const [adres, setAdres] = useState("");
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
@@ -101,7 +126,7 @@ export default function HostingCheck() {
     setBezig(false);
   }
 
-  const mail = r && !r.domeinBij.eigen ? maakMail(r, naam, bedrijf) : null;
+  const mail = r && !r.domeinBij.eigen ? maakMail(r, naam, bedrijf, verkoper) : null;
 
   async function kopieer() {
     try {
@@ -158,8 +183,7 @@ export default function HostingCheck() {
             <div style={{ marginTop: 14, background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ fontWeight: 800, fontSize: 14.5, marginBottom: 4 }}>Mail voor de verhuiscode</div>
               <div style={{ fontSize: 12.5, color: "#6B6258", marginBottom: 10 }}>
-                Deze mail stuurt de prospect zelf naar {r.domeinBij.onbekend ? "zijn provider" : r.domeinBij.naam}, vanaf het mailadres dat daar bekend is
-                (of via het contactformulier in zijn klantenpaneel).
+                Deze mail stuur je naar de prospect. Bovenaan staat uitleg voor hem; het deel tussen de lijnen stuurt hij zelf door naar {r.domeinBij.onbekend ? "zijn provider" : r.domeinBij.naam}.
                 {r.domeinBij.onbekend && " Vul de naam van de provider zelf in: die konden we niet met zekerheid vinden."}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>

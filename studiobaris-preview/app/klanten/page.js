@@ -66,7 +66,7 @@ export default async function KlantenPage() {
       titel={beheer ? "Alle previews" : "Mijn previews"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
-      <HostingCheck />
+      <HostingCheck verkoper={naam} />
       <DocumentenKaart beheer={beheer} model={mijnModel} />
 
       {mijnLeads.length > 0 && (
