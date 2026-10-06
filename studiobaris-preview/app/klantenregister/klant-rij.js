@@ -118,6 +118,176 @@ function SlottermijnKnop({ r }) {
   );
 }
 
+// --- App-inloglink -------------------------------------------------------
+// Elke klant met een app heeft een persoonlijke link (app.studiobaris.nl/in/…).
+// Die is 14 dagen geldig; nieuwe telefoon of link kwijt → "Nieuwe link maken"
+// en de vorige vervalt. "Bruikbaar" = niet verlopen en nog niet gebruikt.
+
+function korteDatum(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getDate()} ${MAANDEN[d.getMonth()]}`;
+}
+
+function linkStatus(app) {
+  if (!app || !app.url) return { bruikbaar: false, tekst: "Nog geen link" };
+  const verlopen = app.verloopt && new Date(app.verloopt).getTime() < Date.now();
+  if (verlopen) return { bruikbaar: false, tekst: `Verlopen op ${korteDatum(app.verloopt)}` };
+  if (app.gebruikt) {
+    return { bruikbaar: false, tekst: `Al gebruikt op ${korteDatum(app.gebruikt)} · geldig t/m ${korteDatum(app.verloopt) || "?"}` };
+  }
+  return { bruikbaar: true, tekst: `Nog niet gebruikt · geldig t/m ${korteDatum(app.verloopt) || "?"}` };
+}
+
+function waNummer(tel) {
+  const t = String(tel || "").replace(/[^\d+]/g, "");
+  if (!t) return null;
+  if (t.startsWith("+")) return t.slice(1);
+  if (t.startsWith("00")) return t.slice(2);
+  if (t.startsWith("0")) return "31" + t.slice(1);
+  return t;
+}
+
+function useAppLink(startApp) {
+  const [app, setApp] = useState(startApp);
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
+
+  async function maakNieuw() {
+    setBezig(true); setFout("");
+    try {
+      const res = await fetch("/api/klant/applink", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: app.id }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || "Nieuwe link maken mislukt.");
+      const nieuw = { ...app, url: j.url, verloopt: j.verloopt, gebruikt: null };
+      setApp(nieuw);
+      setBezig(false);
+      return nieuw;
+    } catch (e) {
+      setFout(String(e.message || e));
+      setBezig(false);
+      return null;
+    }
+  }
+  return { app, bezig, fout, maakNieuw };
+}
+
+async function kopieer(tekst) {
+  try { await navigator.clipboard.writeText(tekst); return true; } catch { return false; }
+}
+
+// Compacte knop in de rij: kopieert de link als die nog bruikbaar is, maakt
+// anders eerst een nieuwe en kopieert die.
+function AppLinkSnel({ app: startApp }) {
+  const { app, bezig, fout, maakNieuw } = useAppLink(startApp);
+  const [klaar, setKlaar] = useState("");
+  if (!startApp) return <span style={{ fontSize: 12, color: KLEUR.label }}>Geen app</span>;
+  const st = linkStatus(app);
+
+  async function klik() {
+    let doel = app;
+    if (!st.bruikbaar) {
+      doel = await maakNieuw();
+      if (!doel) return;
+    }
+    const ok = await kopieer(doel.url);
+    setKlaar(ok ? (st.bruikbaar ? "Gekopieerd ✓" : "Nieuw + gekopieerd ✓") : "Kopiëren lukte niet");
+    setTimeout(() => setKlaar(""), 2200);
+  }
+
+  return (
+    <button
+      onClick={klik}
+      disabled={bezig}
+      title={(fout || st.tekst) + (app.url ? "\n" + app.url : "")}
+      style={{ ...actieKnop, padding: "5px 9px", fontSize: 12, background: klaar ? "#ecfdf5" : "#fff", opacity: bezig ? 0.6 : 1 }}
+    >
+      {bezig ? "Bezig…" : klaar || fout ? (klaar || "Mislukt") : st.bruikbaar ? "Kopieer app-link" : "Nieuwe app-link"}
+    </button>
+  );
+}
+
+// Volledig blok in de opengeklapte rij.
+function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
+  const { app, bezig, fout, maakNieuw } = useAppLink(startApp);
+  const [klaar, setKlaar] = useState(false);
+
+  if (!startApp) {
+    return (
+      <div style={{ fontSize: 13, color: KLEUR.label }}>
+        Geen app-account gevonden voor deze klant. De app wordt aangemaakt bij oplevering — staat hij er wel al,
+        dan wijkt de naam te veel af van het register.
+      </div>
+    );
+  }
+
+  const st = linkStatus(app);
+  const wa = waNummer(telefoon);
+  const waTekst =
+    `Hoi! Hier is je persoonlijke link naar de StudioBaris-app${bedrijf ? ` voor ${bedrijf}` : ""}:\n${app.url}\n\n` +
+    `Open hem op je telefoon en zet de app daarna op je beginscherm (iPhone: Safari → Deel → "Zet op beginscherm"; ` +
+    `Android: Chrome → menu → "Toevoegen aan startscherm"). De link is 14 dagen geldig.`;
+
+  async function nieuw() {
+    const tekst = st.bruikbaar
+      ? "Er staat nog een geldige, ongebruikte link. Toch een nieuwe maken? De huidige werkt dan niet meer."
+      : "Nieuwe link maken? De oude link werkt daarna niet meer.";
+    if (!confirm(tekst)) return;
+    await maakNieuw();
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {app.url ? (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            readOnly
+            value={app.url}
+            onFocus={(e) => e.target.select()}
+            style={{ flex: "1 1 320px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 7, fontFamily: "inherit", color: KLEUR.labelDonker || "#524A40", background: "#fff" }}
+          />
+          <button
+            onClick={async () => { if (await kopieer(app.url)) { setKlaar(true); setTimeout(() => setKlaar(false), 1600); } }}
+            style={{ ...actieKnop, background: klaar ? "#ecfdf5" : "#fff" }}
+          >
+            {klaar ? "Gekopieerd ✓" : "Kopieer"}
+          </button>
+          {wa && (
+            <a
+              href={`https://wa.me/${wa}?text=${encodeURIComponent(waTekst)}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...actieKnop, textDecoration: "none" }}
+            >
+              Via WhatsApp ↗
+            </a>
+          )}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 12.5, color: st.bruikbaar ? "#1d7a46" : KLEUR.kleiDonker || "#b45309", fontWeight: 600 }}>
+          {st.tekst}
+        </span>
+        {!st.bruikbaar && app.url && (
+          <span style={{ fontSize: 12, color: KLEUR.label }}>— maak een nieuwe link voor je hem verstuurt.</span>
+        )}
+        <button onClick={nieuw} disabled={bezig} style={{ ...actieKnop, marginLeft: "auto", opacity: bezig ? 0.6 : 1 }}>
+          {bezig ? "Bezig…" : "↻ Nieuwe link maken"}
+        </button>
+      </div>
+      {fout && <div style={{ fontSize: 12, color: KLEUR.kleiDonker || "#b45309" }}>{fout}</div>}
+      <div style={{ fontSize: 11.5, color: KLEUR.label }}>
+        App-account: {app.naam}. Een nieuwe link is 14 dagen geldig; de vorige vervalt direct.
+      </div>
+    </div>
+  );
+}
+
 // Telefoonnummers komen soms met spaties/streepjes binnen (bijv. handmatig
 // overgetypt); voor een uniforme kolom laten we alleen cijfers en een
 // eventuele voorloop-"+" staan.
@@ -126,11 +296,11 @@ function schoonTelefoon(v) {
   return String(v).replace(/[^\d+]/g, "");
 }
 
-export default function KlantRij({ r, variant, team = [] }) {
+export default function KlantRij({ r, variant, team = [], app = null }) {
   const [open, setOpen] = useState(false);
   const telefoon = schoonTelefoon(r.lead_phone || r.b_telefoon) || "—";
   const email = r.lead_email || r.b_email || "—";
-  const kolommen = variant === "klant" ? 8 : 6;
+  const kolommen = variant === "klant" ? 9 : 6;
   // Portefeuille-filter (VerkoperFilter) werkt alleen op de Klanten-tabel —
   // data-attributen daarom alleen daar meegeven, anders zou een filterklik
   // ook rijen op Toekomstig/Oud onterecht verbergen.
@@ -163,6 +333,11 @@ export default function KlantRij({ r, variant, team = [] }) {
         {variant === "klant" && (
           <td style={{ ...td, textAlign: "right" }}>{r.maandbedrag ? euro(r.maandbedrag) + " p/m" : "—"}</td>
         )}
+        {variant === "klant" && (
+          <td style={{ ...td, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+            <AppLinkSnel app={app} />
+          </td>
+        )}
         {variant === "toekomstig" && (
           <td style={{ ...td, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
             <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />
@@ -188,6 +363,15 @@ export default function KlantRij({ r, variant, team = [] }) {
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />
                 <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
+
+              {(variant === "klant" || (variant === "toekomstig" && app)) && (
+                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+                    App-inloglink
+                  </div>
+                  <AppLinkBlok app={app} telefoon={r.lead_phone || r.b_telefoon} bedrijf={r.company_name} />
+                </div>
+              )}
 
               {(variant === "klant" || variant === "toekomstig") && (
                 <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>

@@ -1,4 +1,4 @@
-import { getOverview, getTeam } from "../../lib/server-data";
+import { getOverview, getTeam, getAppAccounts, zoekAppAccount, appLinkInfo } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
@@ -29,6 +29,8 @@ export default async function KlantenregisterPage() {
 
   const alles = await getOverview();
   const team = await getTeam();
+  const appAccounts = await getAppAccounts();
+  const appVan = (r) => appLinkInfo(zoekAppAccount(r, appAccounts));
 
   // Klanten: al een klantnummer, dus geactiveerd, en (nog) niet als
   // oud-klant gemarkeerd. Op volgorde van nummer.
@@ -82,11 +84,12 @@ export default async function KlantenregisterPage() {
                   <th style={th}>Pakket</th>
                   <th style={th}>Verkoper</th>
                   <th style={{ ...th, textAlign: "right" }}>Maandbedrag</th>
+                  <th style={{ ...th, textAlign: "right" }}>App</th>
                 </tr>
               </thead>
               <tbody>
                 {klanten.map((r) => (
-                  <KlantRij key={r.slug} r={r} variant="klant" team={team} />
+                  <KlantRij key={r.slug} r={r} variant="klant" team={team} app={appVan(r)} />
                 ))}
               </tbody>
             </table>
@@ -116,7 +119,7 @@ export default async function KlantenregisterPage() {
               </thead>
               <tbody>
                 {toekomstig.map((r) => (
-                  <KlantRij key={r.slug} r={r} variant="toekomstig" />
+                  <KlantRij key={r.slug} r={r} variant="toekomstig" app={appVan(r)} />
                 ))}
               </tbody>
             </table>
