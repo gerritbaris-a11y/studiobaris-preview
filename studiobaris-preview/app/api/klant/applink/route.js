@@ -11,7 +11,7 @@ const DAGEN = 14;
 
 // Maakt een verse inloglink voor de app van een klant (14 dagen geldig).
 // De vorige link vervalt daarmee. Alleen vanuit het Klantenregister (beheer)
-// en alleen voor definitieve klanten; { id } = het app-account (companies.id).
+// en alleen voor wie daarin staat; { id } = het app-account (companies.id).
 export async function POST(req) {
   const sessie = leesSessie();
   if (!sessie) return NextResponse.json({ ok: false, error: "Niet ingelogd." }, { status: 401 });
@@ -22,15 +22,16 @@ export async function POST(req) {
     if (!isBeheer(sessie)) return NextResponse.json({ ok: false, error: "Alleen voor beheer." }, { status: 403 });
     if (!id) return NextResponse.json({ ok: false, error: "id ontbreekt." }, { status: 400 });
 
-    // Alleen voor definitieve klanten: een klantnummer en geen oud-klant.
-    // Previews en toekomstige klanten krijgen geen app-link.
+    // Alleen voor wie in het Klantenregister staat: klanten (klantnummer),
+    // toekomstige klanten (klant_kandidaat) en oud-klanten. Losse
+    // previews/leads krijgen geen app-link — die hebben de demo-app.
     const [rijen, accounts] = await Promise.all([getOverview(), getAppAccounts()]);
     const klant = rijen.find(
-      (r) => r.klantnummer && !r.oud_klant && zoekAppAccount(r, accounts)?.id === id
+      (r) => (r.klantnummer || r.klant_kandidaat) && zoekAppAccount(r, accounts)?.id === id
     );
     if (!klant) {
       return NextResponse.json(
-        { ok: false, error: "Alleen voor definitieve klanten (met klantnummer)." },
+        { ok: false, error: "Alleen voor klanten in het Klantenregister." },
         { status: 403 }
       );
     }

@@ -364,14 +364,12 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
                 <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
 
-              {variant === "klant" && (
-                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
-                    App-inloglink
-                  </div>
-                  <AppLinkBlok app={app} telefoon={r.lead_phone || r.b_telefoon} bedrijf={r.company_name} />
+              <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+                  App-inloglink
                 </div>
-              )}
+                <AppLinkBlok app={app} telefoon={r.lead_phone || r.b_telefoon} bedrijf={r.company_name} />
+              </div>
 
               {(variant === "klant" || variant === "toekomstig") && (
                 <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>

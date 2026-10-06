@@ -119,7 +119,7 @@ export default async function KlantenregisterPage() {
               </thead>
               <tbody>
                 {toekomstig.map((r) => (
-                  <KlantRij key={r.slug} r={r} variant="toekomstig" />
+                  <KlantRij key={r.slug} r={r} variant="toekomstig" app={appVan(r)} />
                 ))}
               </tbody>
             </table>
@@ -147,7 +147,7 @@ export default async function KlantenregisterPage() {
               </thead>
               <tbody>
                 {oudKlanten.map((r) => (
-                  <KlantRij key={r.slug} r={r} variant="oud" />
+                  <KlantRij key={r.slug} r={r} variant="oud" app={appVan(r)} />
                 ))}
               </tbody>
             </table>
