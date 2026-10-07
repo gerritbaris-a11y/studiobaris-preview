@@ -57,6 +57,9 @@ export async function POST(req) {
   // Een offline site of portaalpagina levert niets op; alleen een echte,
   // verouderde site lezen we uit voor extra feiten.
   if (v.website && v.website_status === "verouderd") zet("oude_website", v.website);
+  // Site altijd bewaren voor de vergelijk-link; huisstijl alleen van een site die werkt.
+  zet("website", v.website);
+  if (["offline", "portaal", "geen"].includes(v.website_status)) fd.set("huisstijl_lezen", "nee");
   zet("notities", [v.reden, intake.notities].filter(Boolean).join("\n\n"));
   fd.set("stijl", STIJLEN.includes(intake.stijl) ? intake.stijl : "stoer");
   if (door) fd.set("verzamelaar", door);

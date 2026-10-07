@@ -123,6 +123,14 @@ export default async function KlantenPage() {
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#6B6258", marginTop: 1 }}>{r.b_adres.trim()}</div>}
                 {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
+                {review.kleur_bron && (
+                  <div
+                    title={review.kleur_bron === "gegokt" ? "Geen logo of website gevonden: kleuren zijn afgeleid uit de branche. Even nakijken." : "Kleuren overgenomen uit: " + review.kleur_bron}
+                    style={{ display: "inline-block", marginTop: 6, marginRight: 6, fontSize: 12, fontWeight: 700, padding: "2px 9px", borderRadius: 999,
+                      color: review.kleur_bron === "gegokt" ? "#854f0b" : "#0f6e56", background: review.kleur_bron === "gegokt" ? "#fdf1dc" : "#e7f3ea" }}>
+                    {review.kleur_bron === "gegokt" ? "Kleuren geschat, check huisstijl" : "✓ Kleuren uit " + review.kleur_bron.replace("+", " + ")}
+                  </div>
+                )}
                 {review.logo_toestemming && (
                   <div style={{ display: "inline-block", marginTop: 6, fontSize: 12, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "2px 9px", borderRadius: 999 }}>
                     ✓ Logo mag op onze site
@@ -156,7 +164,7 @@ export default async function KlantenPage() {
               )}
             </div>
 
-            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} />
+            <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />

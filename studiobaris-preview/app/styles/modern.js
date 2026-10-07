@@ -1,6 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
-import { nicheFoto, voordeelIcon, heroAchtergrond } from "../../lib/preview-assets";
+import { nicheFoto, voordeelIcon, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -58,18 +58,22 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
     .md .hd{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid #eef0f3}
     .md .hd-in{max-width:1000px;margin:0 auto;padding:.9rem 24px;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
     .md .logo{font-weight:800;font-size:1.2rem;color:#10151f}
-    .md .logo .o{color:var(--orange)}
+    .md .logo .o{color:var(--orange-ink)}
     .md .logo small{display:block;font-size:.68rem;font-weight:500;color:#9aa3b0;letter-spacing:.3px}
+    .md{scroll-behavior:smooth}.md section[id]{scroll-margin-top:80px}
     .md .nav{display:flex;gap:1.3rem;font-size:.9rem;color:#55606e}
-    .md .cta{background:var(--orange);color:#fff;padding:.55rem 1.1rem;border-radius:8px;font-weight:700;font-size:.88rem}
+    .md .nav a:hover{color:var(--orange)}
+    @media(max-width:700px){.md .nav{order:3;width:100%;justify-content:center;gap:1rem;font-size:.86rem}}
+    .md .cta{background:var(--orange);color:var(--on-orange);padding:.55rem 1.1rem;border-radius:8px;font-weight:700;font-size:.88rem}
     .md .hero{padding:4.5rem 0 4rem;background:linear-gradient(180deg,#ffffff,var(--bg))}
     .md .hero .wrap{max-width:820px}
-    .md .eyebrow{color:var(--orange);font-weight:700;font-size:.78rem;letter-spacing:2px;text-transform:uppercase}
+    .md .hero .eyebrow{color:var(--orange)}
+    .md .eyebrow{color:var(--orange-ink);font-weight:700;font-size:.78rem;letter-spacing:2px;text-transform:uppercase}
     .md .hero h1{font-size:clamp(2.1rem,6vw,3.4rem);margin:.7rem 0}
     .md .hero h1 .ac{color:var(--orange)}
     .md .hero p{font-size:1.12rem;color:#55606e;max-width:58ch;margin-bottom:1.6rem}
     .md .btns{display:flex;gap:.8rem;flex-wrap:wrap}
-    .md .bp{background:var(--orange);color:#fff;font-weight:700;padding:.9rem 1.4rem;border-radius:10px}
+    .md .bp{background:var(--orange);color:var(--on-orange);font-weight:700;padding:.9rem 1.4rem;border-radius:10px}
     .md .bs{border:1.5px solid #10151f;color:#10151f;font-weight:600;padding:.9rem 1.4rem;border-radius:10px}
     .md .trust{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-top:1.8rem;color:#55606e;font-size:.92rem}
     .md .trust span{display:flex;gap:.4rem;align-items:center}
@@ -84,9 +88,9 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
     .md details.acd{border-bottom:1px solid #e7eaee;padding:1.05rem 0}
     .md details.acd summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;font-size:1.12rem;color:#10151f;list-style:none}
     .md details.acd summary::-webkit-details-marker{display:none}
-    .md details.acd .pl{color:var(--orange);font-size:1.5rem;line-height:1}
+    .md details.acd .pl{color:var(--orange-ink);font-size:1.5rem;line-height:1}
     .md details.acd p{color:#55606e;margin-top:.7rem;max-width:66ch}
-    .md details.acd .acdl{display:inline-block;margin-top:.6rem;color:var(--orange);font-weight:700;font-size:.9rem}
+    .md details.acd .acdl{display:inline-block;margin-top:.6rem;color:var(--orange-ink);font-weight:700;font-size:.9rem}
     .md a.pcard:hover{border-color:var(--orange)}
     .md .voord{display:grid;grid-template-columns:1fr;gap:1.5rem}
     .md .vd{display:flex;gap:.9rem;align-items:flex-start}
@@ -102,7 +106,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
     .md .rev{border-left:3px solid var(--orange);padding:.3rem 0 .3rem 1.2rem;margin-bottom:1.6rem}
     .md .rev .q{font-size:1.12rem;color:#2a3340;font-style:italic}
     .md .rev .nm{font-weight:700;margin-top:.5rem;color:#10151f;font-style:normal}
-    .md .stars{color:var(--orange);letter-spacing:2px;margin-bottom:.4rem}
+    .md .stars{color:var(--orange-ink);letter-spacing:2px;margin-bottom:.4rem}
     .md .ctaband{background:var(--bg);border-radius:18px;padding:3rem 1.6rem;text-align:center;margin:1rem 0}
     .md .ctaband h2{font-size:clamp(1.5rem,3vw,2.1rem)}
     .md .ctaband p{color:#55606e;margin:.6rem auto 1.4rem;max-width:52ch}
@@ -129,14 +133,16 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
         <nav className="nav">
-          {diensten.length > 0 && <a href="#diensten">Diensten</a>}
+          <a href="#home">Home</a>
+          <a href="#diensten">Diensten</a>
           <a href="#werk">Projecten</a>
+          <a href="#over">Over</a>
           <a href="#contact">Contact</a>
         </nav>
         <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
       </div></header>
 
-      <section className={hero.achtergrond ? "hero metfoto" : "hero"} style={heroAchtergrond(hero.achtergrond, "rgba(16,21,31,.6)")}><div className="wrap">
+      <section className="hero metfoto" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}><div className="wrap">
         <div className="eyebrow">{b.branche || b.naam}</div>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
@@ -152,7 +158,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
       {diensten.length > 0 && (
         <section className="sec" id="diensten"><div className="wrap">
           <h2>Onze diensten</h2>
-          <p className="lead">{c.over_ons || "Werk waar we onze naam onder zetten."}</p>
+          <p className="lead">Werk waar we onze naam onder zetten.</p>
           {diensten.map((d, i) => (
             <details className="acd" key={i}>
               <summary>{d.titel}<span className="pl">+</span></summary>
@@ -192,6 +198,13 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
         </div>
       </div></section>
 
+      <section className="sec" id="over"><div className="wrap">
+        <div className="eyebrow">Over ons</div>
+        <h2 style={{ marginTop: ".5rem" }}>Over {b.naam}</h2>
+        <p className="lead" style={{ marginTop: ".6rem" }}>{c.over_ons}</p>
+        {b.regio && <p style={{ color: "#9aa3b0", fontSize: ".92rem" }}>Werkgebied: {b.regio}</p>}
+      </div></section>
+
       <section className="sec"><div className="wrap">
         <h2>Wat klanten zeggen</h2>
         <div style={{ marginTop: "1.8rem" }}>
@@ -204,7 +217,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
               ))}
         </div>
         {b.google_business_url
-          ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-d)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
+          ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-ink)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
           : (reviews.length === 0 && <p className="phnote">Lever jullie (Google-)reviews aan en ze verschijnen hier.</p>)}
       </div></section>
 

@@ -44,11 +44,23 @@ export function nicheKey(branche) {
 export function heroAchtergrond(url, overlay) {
   if (!url || typeof url !== "string") return undefined;
   return {
+    backgroundColor: "var(--black)", // laadt de foto niet, dan toch een nette merkkleur
     backgroundImage: `linear-gradient(${overlay}, ${overlay}), url(${JSON.stringify(url)})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };
 }
+
+// Sfeerbeeld voor de hero als er (nog) geen eigen vakfoto is: dezelfde
+// niche-set, maar breder zodat hij ook op een groot scherm scherp is.
+export function heroFoto(branche) {
+  const set = SETS[nicheKey(branche)] || SETS.generiek;
+  return `https://images.unsplash.com/${set[0]}?auto=format&fit=crop&w=1800&q=70`;
+}
+
+// Licht transparante laag in de eigen basiskleur van de klant over de foto:
+// de foto blijft zichtbaar (charme, "pronkstuk"), de tekst blijft leesbaar.
+export const MERK_OVERLAY = "color-mix(in srgb, var(--black) 66%, transparent)";
 
 // Geeft een niche-passende foto-URL terug (index zorgt voor afwisseling per blok).
 export function nicheFoto(branche, i = 0) {

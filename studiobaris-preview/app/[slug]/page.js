@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
-import { nicheFoto, voordeelIcon, heroAchtergrond } from "../../lib/preview-assets";
+import { nicheFoto, voordeelIcon, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 import { vulVoorbeeld } from "../../lib/preview-voorbeeld";
 import { getWerk } from "../../lib/aanpassen";
+import { brandVars } from "../../lib/brand";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
 
@@ -101,19 +102,7 @@ export default async function Page({ params, searchParams }) {
     ? heroKop.slice(0, heroKop.toLowerCase().lastIndexOf(heroAcc.toLowerCase())).trim()
     : heroKop;
 
-  const vars = {
-    "--black": m.primaire_kleur || "#0F0F0F",
-    "--soft": m.primaire_kleur || "#1a1a1a",
-    "--orange": m.secundaire_kleur || "#FF8300",
-    "--orange-d": "color-mix(in srgb, " + (m.secundaire_kleur || "#FF8300") + " 85%, black)",
-    "--white": "#fff",
-    "--bg": m.accent_kleur || "#F8F9FA",
-    "--line": "#E5E7EB",
-    "--gtext": "#334155",
-    "--gsoft": "#94A3B8",
-    "--font-head": m.koppen_font ? `'${m.koppen_font}', system-ui, sans-serif` : "system-ui, sans-serif",
-    "--font-body": m.tekst_font ? `'${m.tekst_font}', system-ui, sans-serif` : "system-ui, sans-serif",
-  };
+  const vars = { ...brandVars(m), "--white": "#fff" };
 
   const css = `
     @import url('${fontsHref}');
@@ -124,19 +113,20 @@ export default async function Page({ params, searchParams }) {
     .vp .hd{position:sticky;top:0;z-index:50;background:var(--white);border-bottom:1px solid var(--line);padding:.9rem 1.2rem}
     .vp .hd-in{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.6rem .9rem;flex-wrap:wrap}
     .vp .logo{font-size:1.2rem;font-weight:800;color:var(--black)}
-    .vp .logo .o{color:var(--orange)}
+    .vp .logo .o{color:var(--orange-ink)}
     .vp .nav{order:3;width:100%;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
     .vp .nav a{font-size:.88rem;font-weight:500;color:var(--gtext);border-bottom:2px solid transparent;padding-bottom:2px}
     .vp .nav a:hover{color:var(--black);border-color:var(--orange)}
-    .vp .cta{background:var(--orange);color:#fff;padding:.55rem 1rem;border-radius:8px;font-weight:700;font-size:.9rem}
+    .vp .cta{background:var(--orange);color:var(--on-orange);padding:.55rem 1rem;border-radius:8px;font-weight:700;font-size:.9rem}
     .vp .cta:hover{background:var(--orange-d)}
+    .vp{scroll-behavior:smooth}.vp section[id]{scroll-margin-top:80px}
     .vp .hero{position:relative;background:var(--black);color:#fff;padding:3.4rem 1.3rem 3.8rem;text-align:center}
     .vp .eyebrow{display:inline-block;color:var(--orange);font-weight:700;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.9rem}
     .vp .hero h1{color:#fff;font-size:2rem;margin-bottom:.9rem}
     .vp .hero h1 .ac{color:var(--orange)}
     .vp .hero p{color:rgba(255,255,255,.82);max-width:620px;margin:0 auto 1.6rem;font-size:1.02rem}
     .vp .hbtns{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center;margin-bottom:1.8rem}
-    .vp .bp{background:var(--orange);color:#fff;padding:.85rem 1.3rem;border-radius:10px;font-weight:700}
+    .vp .bp{background:var(--orange);color:var(--on-orange);padding:.85rem 1.3rem;border-radius:10px;font-weight:700}
     .vp .bp:hover{background:var(--orange-d)}
     .vp .bs{border:1.5px solid rgba(255,255,255,.4);color:#fff;padding:.85rem 1.3rem;border-radius:10px;font-weight:600}
     .vp .bs:hover{border-color:var(--orange)}
@@ -156,7 +146,7 @@ export default async function Page({ params, searchParams }) {
     .vp .db{padding:1.2rem}
     .vp .db h3{font-size:1.2rem;margin-bottom:.4rem}
     .vp .db p{font-size:.95rem;color:var(--gtext);margin-bottom:.5rem}
-    .vp .dl{color:var(--orange);font-weight:700;font-size:.9rem}
+    .vp .dl{color:var(--orange-ink);font-weight:700;font-size:.9rem}
     .vp .bel{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:1.4rem;text-align:center}
     .vp .belic{width:52px;height:52px;border-radius:12px;background:var(--black);color:var(--orange);display:grid;place-items:center;margin:0 auto 1rem;font-size:1.4rem}
     .vp .bel h3{font-size:1.1rem;margin-bottom:.4rem}
@@ -168,7 +158,7 @@ export default async function Page({ params, searchParams }) {
     .vp .pm{color:var(--gsoft);font-size:.85rem;margin-top:.2rem}
     .vp .phnote{text-align:center;color:var(--gsoft);font-size:.9rem;margin-top:1rem}
     .vp .rev{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:1.3rem}
-    .vp .stars{color:var(--orange);letter-spacing:2px;margin-bottom:.6rem}
+    .vp .stars{color:var(--orange-ink);letter-spacing:2px;margin-bottom:.6rem}
     .vp .rq{font-size:.95rem;color:var(--gtext);margin-bottom:.9rem}
     .vp .ra{display:flex;align-items:center;gap:.6rem}
     .vp .av{width:38px;height:38px;border-radius:50%;background:var(--black);color:var(--orange);display:grid;place-items:center;font-weight:800}
@@ -209,15 +199,16 @@ export default async function Page({ params, searchParams }) {
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 42, width: "auto", display: "block" }} /> : <>{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span></>}</div>
         <nav className="nav">
+          <a href="#home">Home</a>
           <a href="#diensten">Diensten</a>
           <a href="#werk">Projecten</a>
-          <a href="#reviews">Reviews</a>
+          <a href="#over">Over</a>
           <a href="#contact">Contact</a>
         </nav>
         <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
       </div></header>
 
-      <section className="hero" style={heroAchtergrond(hero.achtergrond, "rgba(17,17,17,.68)")}>
+      <section className="hero" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}>
         <span className="eyebrow">{b.branche || b.naam}</span>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
@@ -236,7 +227,7 @@ export default async function Page({ params, searchParams }) {
 
       {diensten.length > 0 && (
         <section className="sec" id="diensten"><div className="in">
-          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat we doen</span><h2>Onze specialiteiten</h2><p>Werk waar we onze naam onder zetten.</p></div>
+          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-ink)" }}>Wat we doen</span><h2>Onze specialiteiten</h2><p>Werk waar we onze naam onder zetten.</p></div>
           <div className="grid2">
             {diensten.map((d, i) => (
               <a className="dc" key={i} href={`/${params.slug}/dienst/${i}${modeQuery}`}>
@@ -250,7 +241,7 @@ export default async function Page({ params, searchParams }) {
 
       {voordelen.length > 0 && (
         <section className="sec alt"><div className="in">
-          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Wat u krijgt</span><h2>Wat u van ons mag verwachten</h2></div>
+          <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-ink)" }}>Wat u krijgt</span><h2>Wat u van ons mag verwachten</h2></div>
           <div className="grid3">
             {voordelen.map((v, i) => (
               <div className="bel" key={i}><div className="belic">{voordeelIcon(v.titel, v.tekst)}</div><h3>{v.titel}</h3><p>{v.tekst}</p></div>
@@ -260,7 +251,7 @@ export default async function Page({ params, searchParams }) {
       )}
 
       <section className="sec" id="werk"><div className="in">
-        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Portfolio</span><h2>Een greep uit recent werk</h2></div>
+        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-ink)" }}>Portfolio</span><h2>Een greep uit recent werk</h2></div>
         <div className="grid3">
           {projecten.length > 0
             ? projecten.map((p, i) => (
@@ -277,8 +268,13 @@ export default async function Page({ params, searchParams }) {
         </div>
       </div></section>
 
+      <section className="sec" id="over"><div className="in">
+        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-ink)" }}>Over ons</span><h2>Over {b.naam}</h2><p>{c.over_ons}</p></div>
+        {b.regio && <p className="phnote">Werkgebied: {b.regio}</p>}
+      </div></section>
+
       <section className="sec alt" id="reviews"><div className="in">
-        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-d)" }}>Reviews</span><h2>Wat klanten zeggen</h2></div>
+        <div className="sh"><span className="eyebrow" style={{ color: "var(--orange-ink)" }}>Reviews</span><h2>Wat klanten zeggen</h2></div>
         <div className="grid3">
           {reviews.length > 0
             ? reviews.map((r, i) => (
@@ -297,7 +293,7 @@ export default async function Page({ params, searchParams }) {
               ))}
         </div>
         {b.google_business_url
-          ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-d)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
+          ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-ink)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
           : (reviews.length === 0 && <p className="phnote">Lever jullie (Google-)reviews aan en ze verschijnen hier.</p>)}
       </div></section>
 

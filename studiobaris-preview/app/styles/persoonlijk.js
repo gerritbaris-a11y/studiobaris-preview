@@ -1,6 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
-import { nicheFoto, heroAchtergrond } from "../../lib/preview-assets";
+import { nicheFoto, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
 function waLink(n) {
   if (!n) return null;
@@ -57,16 +57,19 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz .wrap{max-width:980px;margin:0 auto;padding:0 24px}
     .pz .hd{position:sticky;top:0;z-index:50;background:rgba(255,253,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid #f0e7da}
     .pz .hd-in{max-width:980px;margin:0 auto;padding:.85rem 24px;display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap}
-    .pz .logo{font-weight:800;font-size:1.2rem;color:#2a2018}.pz .logo .o{color:var(--orange)}
+    .pz .logo{font-weight:800;font-size:1.2rem;color:#2a2018}.pz .logo .o{color:var(--orange-ink)}
+    .pz{scroll-behavior:smooth}.pz section[id]{scroll-margin-top:80px}
     .pz .nav{display:flex;gap:1.2rem;font-size:.9rem;color:#6b5d4d}
-    .pz .cta{background:var(--orange);color:#fff;padding:.55rem 1.1rem;border-radius:999px;font-weight:700;font-size:.88rem}
+    .pz .nav a:hover{color:var(--orange)}
+    @media(max-width:700px){.pz .nav{order:3;width:100%;justify-content:center;gap:1rem;font-size:.86rem}}
+    .pz .cta{background:var(--orange);color:var(--on-orange);padding:.55rem 1.1rem;border-radius:999px;font-weight:700;font-size:.88rem}
     .pz .hero{background:#fdf3e7;padding:3.4rem 0 3.6rem;text-align:center}
     .pz .pf{width:120px;height:120px;border-radius:50%;margin:0 auto 1.2rem;background:#e7d2b8 center/cover no-repeat;display:grid;place-items:center;color:#9a6b3a;font-size:.85rem;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden}
     .pz .pf svg{width:100%;height:100%;display:block}
     .pz .eyebrow{color:var(--orange);font-weight:700;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase}
     .pz .hero h1{font-size:clamp(1.9rem,5vw,2.8rem);margin:.6rem 0}
     .pz .hero p{color:#6b5d4d;font-size:1.08rem;max-width:56ch;margin:0 auto 1.4rem}
-    .pz .bp{background:var(--orange);color:#fff;font-weight:700;padding:.85rem 1.5rem;border-radius:999px;display:inline-block}
+    .pz .bp{background:var(--orange);color:var(--on-orange);font-weight:700;padding:.85rem 1.5rem;border-radius:999px;display:inline-block}
     .pz .trust{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;justify-content:center;margin-top:1.4rem;color:#6b5d4d;font-size:.9rem}
     .pz .trust span{display:flex;gap:.4rem;align-items:center}.pz .tick{color:var(--orange);font-weight:800}
     .pz .hero.metfoto{padding:4.4rem 0 4.6rem}
@@ -77,7 +80,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz .lead{color:#6b5d4d;text-align:center;max-width:60ch;margin:0 auto 2rem}
     .pz .steps{max-width:640px;margin:0 auto}
     .pz .step{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.4rem}
-    .pz .num{flex:none;width:38px;height:38px;border-radius:50%;background:var(--orange);color:#fff;font-weight:800;display:grid;place-items:center}
+    .pz .num{flex:none;width:38px;height:38px;border-radius:50%;background:var(--orange);color:var(--on-orange);font-weight:800;display:grid;place-items:center}
     .pz .step h3{font-size:1.1rem}.pz .step p{color:#6b5d4d;margin-top:.15rem}
     .pz .alt{background:#fdf3e7}
     .pz .grid{display:grid;grid-template-columns:1fr;gap:1.1rem}
@@ -87,7 +90,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz .pimg{height:180px;background:#efe4d4;background-size:cover;background-position:center;display:grid;place-items:center;color:#a98d6a;font-size:.88rem}
     .pz .pcard .pb{padding:.9rem 1.1rem}.pz .pcard h3{font-size:1rem}.pz .pcard .pm{color:#a98d6a;font-size:.84rem;margin-top:.15rem}
     .pz .rev{background:#fff;border:1px solid #f0e7da;border-radius:16px;padding:1.3rem}
-    .pz .stars{color:var(--orange);letter-spacing:2px;margin-bottom:.5rem}
+    .pz .stars{color:var(--orange-ink);letter-spacing:2px;margin-bottom:.5rem}
     .pz .rq{color:#4a3f33;font-size:.98rem;font-style:italic}.pz .rn{font-weight:700;color:#2a2018;margin-top:.6rem}
     .pz .phnote{text-align:center;color:#a98d6a;font-size:.9rem;margin-top:1rem}
     .pz .ctaband{text-align:center;padding:3rem 0}
@@ -109,11 +112,11 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
-        <nav className="nav"><a href="#diensten">Diensten</a><a href="#werk">Projecten</a><a href="#contact">Contact</a></nav>
+        <nav className="nav"><a href="#home">Home</a><a href="#diensten">Diensten</a><a href="#werk">Projecten</a><a href="#over">Over</a><a href="#contact">Contact</a></nav>
         <a className="cta" href="#contact">{hero.cta_tekst || "Contact"}</a>
       </div></header>
 
-      <section className={hero.achtergrond ? "hero metfoto" : "hero"} style={heroAchtergrond(hero.achtergrond, "rgba(42,32,24,.55)")}><div className="wrap">
+      <section className="hero metfoto" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}><div className="wrap">
         <div className="pf" style={persoonFoto ? { backgroundImage: `url(${persoonFoto})`, color: "transparent" } : undefined}>
           {persoonFoto ? "" : (
             <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -148,7 +151,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
           <h2>Wat ik voor je doe</h2>
           <div className="grid" style={{ marginTop: "1.6rem" }}>
             {diensten.map((d, i) => (
-              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p><a href={`/${slug}/dienst/${i}${modeQuery}`} style={{ color: "var(--orange)", fontWeight: 700, fontSize: ".9rem", display: "inline-block", marginTop: ".5rem" }}>Lees meer &rarr;</a></div>
+              <div className="card" key={i}><h3>{d.titel}</h3><p>{d.omschrijving}</p><a href={`/${slug}/dienst/${i}${modeQuery}`} style={{ color: "var(--orange-ink)", fontWeight: 700, fontSize: ".9rem", display: "inline-block", marginTop: ".5rem" }}>Lees meer &rarr;</a></div>
             ))}
           </div>
         </div></section>
@@ -170,6 +173,12 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
         </div>
       </div></section>
 
+      <section className="sec" id="over"><div className="wrap">
+        <h2>Over {b.naam}</h2>
+        <p className="lead" style={{ marginTop: ".6rem" }}>{c.over_ons}</p>
+        {b.regio && <p className="phnote" style={{ marginTop: 0 }}>Werkgebied: {b.regio}</p>}
+      </div></section>
+
       <section className="sec alt"><div className="wrap">
         <h2>Wat klanten zeggen</h2>
         <div className="grid" style={{ marginTop: "1.6rem" }}>
@@ -181,7 +190,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
                 <div className="rev" key={i} style={{ opacity: 0.75 }}><div className="stars">★★★★★</div><p className="rq">&ldquo;Hier verschijnt straks een review van een tevreden klant.&rdquo;</p><div className="rn">Klantnaam</div></div>
               ))}
         </div>
-        {b.google_business_url && <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-d)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>}
+        {b.google_business_url && <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-ink)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>}
       </div></section>
 
       <section className="ctaband" id="contact"><div className="wrap">
@@ -189,7 +198,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
         <p className="lead">{cta.tekst || "Neem gerust contact op voor een vrijblijvende offerte."}</p>
         <div>
           {wa && <a className="bp" href={wa}>WhatsApp ons</a>}
-          {b.telefoon && <a className="bp" href={`tel:${b.telefoon}`} style={{ marginLeft: 8, background: "#2a2018" }}>Bel {b.telefoon}</a>}
+          {b.telefoon && <a className="bp" href={`tel:${b.telefoon}`} style={{ marginLeft: 8, background: "#2a2018", color: "#fff" }}>Bel {b.telefoon}</a>}
         </div>
       </div></section>
 

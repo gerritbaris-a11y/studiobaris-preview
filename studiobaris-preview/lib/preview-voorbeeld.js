@@ -61,10 +61,16 @@ export function vulVoorbeeld(content) {
     hero.subkop = `Vakwerk in ${b.regio}, netjes afgewerkt en op tijd opgeleverd. Vraag vrijblijvend een offerte aan.`;
   }
 
+  // "Over"-sectie staat standaard in het menu; zonder eigen tekst een korte,
+  // feitelijke zin uit wat we wél weten (geen verzonnen claims).
+  const overOns = !leeg(c.over_ons)
+    ? c.over_ons
+    : `${b.naam || "Wij"} is ${b.branche ? "uw " + String(b.branche).toLowerCase() : "actief"} in ${b.regio}. Vertel hier straks in een paar zinnen wie je bent, hoe je werkt en waar je trots op bent.`;
+
   const diensten = Array.isArray(c.diensten) && c.diensten.length ? c.diensten : VOORBEELD_DIENSTEN;
   const voordelen = Array.isArray(c.voordelen) && c.voordelen.length ? c.voordelen : VOORBEELD_VOORDELEN;
   const reviews = Array.isArray(c.reviews) && c.reviews.length ? c.reviews : VOORBEELD_REVIEWS;
   const usps = Array.isArray(c.usps) && c.usps.length ? c.usps : VOORBEELD_USPS;
 
-  return { ...c, bedrijf: b, hero, cta_blok: cta, diensten, voordelen, reviews, usps };
+  return { ...c, over_ons: overOns, bedrijf: b, hero, cta_blok: cta, diensten, voordelen, reviews, usps };
 }

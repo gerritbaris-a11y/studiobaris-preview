@@ -10,6 +10,7 @@ import { callClaude } from "../../../lib/anthropic";
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
 import { vakfotosVoor } from "../../../lib/vakfotos";
+import { leesHuisstijl, borgContrast } from "../../../lib/huisstijl";
 import { log, updateKlant, updateLead, getLead } from "../../../lib/server-data";
 
 export const runtime = "nodejs";
@@ -42,6 +43,25 @@ async function uploadImage(file, path) {
  * De browser heeft 'm rechtstreeks in de opslag gezet; wij halen 'm hier op.
  * Deze weg kent de omvangsgrens van een binnenkomend verzoek niet.
  */
+async function uploadBuffer(buf, type, path) {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      apikey: SERVICE_KEY,
+      "Content-Type": type || "application/octet-stream",
+      "x-upsert": "true",
+    },
+    body: buf,
+  });
+  if (!res.ok) throw new Error("Upload mislukt: " + (await res.text()));
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+}
+
+// Sites waar we wél naar mogen linken, maar waarvan de kleuren niet van de
+// ondernemer zijn (social media, klusplatforms): daar lezen we geen huisstijl.
+const GEEN_EIGEN_SITE = /facebook\.|instagram\.|linkedin\.|werkspot\.|google\.|goo\.gl|maps\.app|marktplaats\.|tiktok\.|youtube\.|wa\.me|linktr\.ee|houzz\.|trustoo\.|homedeal\./i;
+
 async function haalAfbeelding(url) {
   try {
     const res = await fetch(url);
@@ -158,6 +178,37 @@ export async function POST(req) {
       fotoUrls.push(await uploadImage(fotos[i], `${slug}/foto-${i + 1}.${ext}`));
     }
 
+    // Huidige website: voor de link in het dashboard en om de huisstijl
+    // (logo + kleuren) over te nemen. "website" is altijd de site van de
+    // prospect; "oude_website" alleen als de inhoud ook bruikbaar is.
+    const website = v("website") || v("oude_website");
+    const huisstijlToegestaan = website && !GEEN_EIGEN_SITE.test(website) && v("huisstijl_lezen") !== "nee";
+    let huisstijl = null;
+    if (huisstijlToegestaan) {
+      try {
+        huisstijl = await Promise.race([
+          leesHuisstijl(website, naam),
+          new Promise((klaar) => setTimeout(() => klaar(null), 25000)),
+        ]);
+      } catch (e) {
+        console.error("huisstijl lezen mislukt:", e && e.message);
+      }
+    }
+    // Logo van de site naar onze eigen opslag (de preview linkt nooit naar
+    // een plaatje op hun server), en laten meekijken door de AI.
+    let siteLogoUrl = "";
+    if (huisstijl && huisstijl.logo) {
+      try {
+        const ext = { "image/svg+xml": "svg", "image/jpeg": "jpg", "image/jpg": "jpg", "image/webp": "webp", "image/gif": "gif" }[huisstijl.logo.type] || "png";
+        siteLogoUrl = await uploadBuffer(huisstijl.logo.buf, huisstijl.logo.type, `${slug}/logo-site.${ext}`);
+        if (!logoImage && /^image\/(jpeg|png|gif|webp)$/.test(huisstijl.logo.type)) {
+          logoImage = { data: huisstijl.logo.buf.toString("base64"), media_type: huisstijl.logo.type };
+        }
+      } catch (e) {
+        console.error("logo van site opslaan mislukt:", e && e.message);
+      }
+    }
+
     // Onderzoekstekst opbouwen voor Claude (incl. tekst van hun huidige website, indien opgegeven)
     const oudeSite = v("oude_website") ? await fetchSiteText(v("oude_website")) : "";
     const docText = [
@@ -176,7 +227,8 @@ export async function POST(req) {
       `Google Bedrijfsprofiel: ${v("google_business") ? "ja" + (v("google_url") ? " (" + v("google_url") + ")" : "") : "niet aangegeven"}`,
       `Tone of voice: ${v("tone_of_voice")}`,
       `Kleurvoorkeur: ${v("kleurvoorkeur")}`,
-      logoUrl ? `Logo aanwezig (url): ${logoUrl}` : "Logo: niet aangeleverd",
+      logoUrl ? `Logo aanwezig (url): ${logoUrl}` : siteLogoUrl ? "Logo: overgenomen van hun huidige website (zie meegestuurde afbeelding)" : "Logo: niet aangeleverd",
+      huisstijl && huisstijl.primaire_kleur ? `Huisstijlkleuren van hun huidige website: basis ${huisstijl.primaire_kleur}, accent ${huisstijl.secundaire_kleur} (bron: ${huisstijl.bron}). Gebruik precies deze.` : "",
       fotoUrls.length ? `Aantal foto's aangeleverd: ${fotoUrls.length}` : "Foto's: niet aangeleverd",
       "",
       "Vrije onderzoeksnotities:",
@@ -195,6 +247,22 @@ export async function POST(req) {
     content.merk = content.merk || {};
     content.merk.stijl = v("stijl") || "stoer";
     if (logoUrl) content.merk.logo_url = logoUrl;
+    else if (siteLogoUrl && huisstijl && huisstijl.logoTonen) content.merk.logo_url = siteLogoUrl;
+
+    // Kleuren: wat we zelf van logo/site hebben gemeten gaat vóór wat de AI
+    // ervan maakt. Daarna altijd een contrastcontrole.
+    let kleurBron = "gegokt";
+    if (huisstijl && huisstijl.primaire_kleur) {
+      content.merk.primaire_kleur = huisstijl.primaire_kleur;
+      content.merk.secundaire_kleur = huisstijl.secundaire_kleur;
+      kleurBron = huisstijl.bron;
+    } else if (logoImage) {
+      kleurBron = "logo (AI)";
+    } else if (v("kleurvoorkeur")) {
+      kleurBron = "kleurvoorkeur";
+    }
+    const geborgd = borgContrast(content.merk);
+    content.merk = geborgd.merk;
     if (fotoUrls.length) {
       content.projecten = Array.isArray(content.projecten) ? content.projecten : [];
       fotoUrls.forEach((url, i) => {
@@ -257,6 +325,15 @@ export async function POST(req) {
     if (v("interesse")) review.interesse = v("interesse");
     // Toestemming om het logo op studiobaris.nl te tonen na oplevering (backlink).
     review.logo_toestemming = v("logo_toestemming") === "ja";
+    // Bestaande website (voor de vergelijk-link in het dashboard) en waar de
+    // kleuren vandaan komen, zodat je ziet welke previews extra controle nodig hebben.
+    if (website) review.website = /^https?:\/\//i.test(website) ? website : "https://" + website;
+    review.kleur_bron = kleurBron;
+    if (geborgd.notities.length || kleurBron === "gegokt") {
+      review.let_op = Array.isArray(review.let_op) ? review.let_op : [];
+      if (kleurBron === "gegokt") review.let_op.push("Kleuren zijn afgeleid uit de branche (geen logo of website gevonden). Controleer de huisstijl.");
+      review.let_op.push(...geborgd.notities);
+    }
     if (terugval.length) {
       review.let_op = Array.isArray(review.let_op) ? review.let_op : [];
       review.let_op.push(

@@ -67,6 +67,11 @@ export async function POST(req) {
   // Alleen een echte, verouderde site levert bruikbare feiten op.
   const oud = lead.website || (lead.website_status === "VEROUDERD" ? lead.gevonden_url : "");
   if (oud) zet("oude_website", oud);
+  // De site van de prospect altijd bewaren (link in het dashboard) en daar de
+  // huisstijl van lezen, behalve als het alleen social media of een geparkeerd
+  // domein is.
+  zet("website", lead.website || lead.gevonden_url);
+  if (["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
   zet("notities", lead.reden);
   fd.set("stijl", "stoer");
   fd.set("verzamelaar", naam);

@@ -918,7 +918,7 @@ export function BetaallinkKnop({ slug, style }) {
 // Bewust kort gehouden: alleen wat je nodig hebt om de sale te versturen en
 // binnen te halen. Website, Klant-intake, Feedback en Restbetaling staan hier
 // niet meer (die horen bij latere fases / staan elders).
-export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, stijl, bedrijf }) {
+export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken, stijl, bedrijf, website }) {
   const [copied, setCopied] = useState("");
   const [demoBezig, setDemoBezig] = useState(false);
   const [open, setOpen] = useState(false);
@@ -929,7 +929,11 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
   const linkPreview = { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" };
   const linkDemo = { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" };
   const linkBetaal = { key: "b", naam: "Betaallink", url: betaallinkUrl(slug), hint: "Helft vooraf + maandelijkse incasso" };
-  const links = [linkPreview, linkDemo, linkBetaal];
+  // Huidige website van de prospect: om de huisstijl van de preview er snel
+  // naast te leggen. Alleen als we die kennen.
+  const siteUrl = website ? (/^https?:\/\//i.test(website) ? website : "https://" + website) : "";
+  const linkSite = siteUrl ? { key: "w", naam: "Huidige website", url: siteUrl, hint: "Bestaande site van de prospect" } : null;
+  const links = [linkPreview, linkDemo, linkBetaal, linkSite].filter(Boolean);
 
   function copy(url, key) {
     try {
@@ -1013,7 +1017,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         <div style={{ marginTop: 10, background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
           {links.map((l) => (
             <div key={l.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#2B2724", minWidth: 92 }}>{l.naam}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#2B2724", minWidth: 116 }}>{l.naam}</span>
               <input
                 readOnly
                 value={l.uit ? "—" : l.url}
