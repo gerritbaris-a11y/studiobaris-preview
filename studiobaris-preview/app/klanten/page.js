@@ -8,6 +8,7 @@ import {
   // is samengevoegd met deze; zonder deze regel zou o.a. de akkoordlink - en
   // daarmee de hele betaalflow - onbereikbaar worden.
   KlantNaam, VerwijderKnop,
+  HuisstijlKnop, HuisstijlAllesKnop,
 } from "../dashboard/dashboard-actions";
 // normFase() komt uit een apart, niet-"use client"-bestand: importeer je 'm
 // vanuit dashboard-actions.js (wel "use client"), dan is het op de server
@@ -67,6 +68,9 @@ export default async function KlantenPage() {
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
       <HostingCheck verkoper={naam} />
+      {beheer && (
+        <HuisstijlAllesKnop slugs={actief.filter((r) => { try { return !!JSON.parse(r.internal_notes || "{}").website; } catch { return false; } }).map((r) => r.slug)} />
+      )}
       <DocumentenKaart beheer={beheer} model={mijnModel} />
 
       {mijnLeads.length > 0 && (
@@ -131,6 +135,7 @@ export default async function KlantenPage() {
                     {review.kleur_bron === "gegokt" ? "Kleuren geschat, check huisstijl" : "✓ Kleuren uit " + review.kleur_bron.replace("+", " + ")}
                   </div>
                 )}
+                {beheer && review.website && <div><HuisstijlKnop slug={r.slug} compact /></div>}
                 {review.logo_toestemming && (
                   <div style={{ display: "inline-block", marginTop: 6, fontSize: 12, fontWeight: 700, color: "#0f6e56", background: "#e7f3ea", padding: "2px 9px", borderRadius: 999 }}>
                     ✓ Logo mag op onze site

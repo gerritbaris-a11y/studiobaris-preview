@@ -1117,3 +1117,64 @@ export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
   );
 }
 
+
+// Huisstijl (logo + kleuren) opnieuw ophalen van de bestaande site van de prospect.
+export function HuisstijlKnop({ slug, compact }) {
+  const [s, setS] = useState("idle");
+  const [msg, setMsg] = useState("");
+  async function go() {
+    setS("bezig"); setMsg("");
+    try {
+      const res = await fetch("/api/klant/huisstijl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug }) });
+      const j = await res.json();
+      if (j.ok) { setS("klaar"); setMsg("Kleuren uit " + String(j.bron).replace("+", " + ") + (j.logo ? ", logo overgenomen" : "")); setTimeout(() => location.reload(), 1200); }
+      else { setS("fout"); setMsg(j.error || "Mislukt"); }
+    } catch (e) { setS("fout"); setMsg(String(e)); }
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+      <button onClick={go} disabled={s === "bezig"} title="Logo en kleuren opnieuw overnemen van de huidige website"
+        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#524A40", padding: compact ? "2px 8px" : "5px 10px", borderRadius: 999, fontSize: 12, cursor: "pointer", marginTop: compact ? 6 : 0 }}>
+        {s === "bezig" ? "Huisstijl ophalen…" : "↻ Huisstijl van site"}
+      </button>
+      {msg && <span style={{ fontSize: 12, color: s === "fout" ? "#b91c1c" : "#0f6e56", marginTop: compact ? 6 : 0 }}>{msg}</span>}
+    </span>
+  );
+}
+
+// Voor beheer: in één keer de huisstijl ophalen voor alle previews met een
+// bekende website. Gaat ze één voor één af, zodat je ziet waar het lukt.
+export function HuisstijlAllesKnop({ slugs = [] }) {
+  const [bezig, setBezig] = useState(false);
+  const [stand, setStand] = useState(null);
+  if (!slugs.length) return null;
+  async function go() {
+    if (!confirm(`Logo en kleuren opnieuw ophalen voor ${slugs.length} previews met een bestaande website?\n\nTeksten en foto's blijven zoals ze zijn.`)) return;
+    setBezig(true);
+    let gelukt = 0, mislukt = 0;
+    for (let i = 0; i < slugs.length; i++) {
+      setStand({ i: i + 1, n: slugs.length, gelukt, mislukt });
+      try {
+        const res = await fetch("/api/klant/huisstijl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: slugs[i] }) });
+        const j = await res.json();
+        if (j.ok) gelukt++; else mislukt++;
+      } catch { mislukt++; }
+    }
+    setStand({ i: slugs.length, n: slugs.length, gelukt, mislukt, klaar: true });
+    setBezig(false);
+  }
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+      <button onClick={go} disabled={bezig}
+        style={{ background: "#fff", border: "1px solid #C05A38", color: "#a35400", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+        {bezig ? "Bezig…" : `↻ Huisstijl ophalen voor alle ${slugs.length} previews met website`}
+      </button>
+      {stand && (
+        <span style={{ fontSize: 13, color: "#524A40" }}>
+          {stand.klaar ? `Klaar: ${stand.gelukt} bijgewerkt, ${stand.mislukt} niet gelukt (site plat of geen logo/kleuren).` : `${stand.i} van ${stand.n}…`}
+          {stand.klaar && <> <a href="" onClick={(e) => { e.preventDefault(); location.reload(); }} style={{ color: "#C05A38" }}>Vernieuwen</a></>}
+        </span>
+      )}
+    </div>
+  );
+}
