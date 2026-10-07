@@ -412,6 +412,70 @@ export async function nieuweLogin(id, dagen = 3650) {
   return await rpc("sb_klant_nieuwe_login", { p_id: id, p_dagen: dagen });
 }
 
+// --- App-inloglinks op het Klantenregister ---
+
+export const KLANT_APP_BASE = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobaris.nl";
+
+// Alle echte app-accounts (geen demo's) met hun huidige inloglink-status.
+export async function getAppAccounts() {
+  const data = await rest(
+    "companies?select=id,slug,name,login_token,login_token_expires_at,login_token_used_at" +
+      "&is_demo=not.is.true&demo_van_slug=is.null"
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+// Naam/slug gelijk trekken: "Oudshoorn Hoveniers vof" en "Oudshoorn Hoveniers"
+// zijn dezelfde klant, net als "kaandorp-bouw" en "Kaandorp Bouw en Renovatie".
+function normNaam(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, " en ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(vof|bv|b v|v o f)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Zoekt bij een rij uit het register het bijbehorende app-account. Eerst exact
+// (slug, naam), dan "de ene naam begint met de andere" — alleen als dat precies
+// één account oplevert, anders liever geen koppeling dan een verkeerde.
+export function zoekAppAccount(rij, accounts) {
+  if (!rij || !Array.isArray(accounts) || accounts.length === 0) return null;
+  const opSlug = accounts.find((a) => a.slug === rij.slug);
+  if (opSlug) return opSlug;
+
+  const kandidatenNamen = [normNaam(rij.company_name), normNaam(String(rij.slug || "").replace(/-/g, " "))].filter(Boolean);
+  const exact = accounts.filter((a) => {
+    const an = [normNaam(a.name), normNaam(String(a.slug || "").replace(/-/g, " "))];
+    return an.some((x) => x && kandidatenNamen.includes(x));
+  });
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return null;
+
+  const prefix = accounts.filter((a) => {
+    const an = [normNaam(a.name), normNaam(String(a.slug || "").replace(/-/g, " "))];
+    return an.some((x) =>
+      kandidatenNamen.some((k) => x.length >= 6 && k.length >= 6 && (x.startsWith(k + " ") || k.startsWith(x + " ")))
+    );
+  });
+  return prefix.length === 1 ? prefix[0] : null;
+}
+
+// Wat het register over de app-link van een klant mag weten (alleen beheer
+// ziet deze pagina).
+export function appLinkInfo(account) {
+  if (!account) return null;
+  return {
+    id: account.id,
+    naam: account.name,
+    url: account.login_token ? KLANT_APP_BASE + "/in/" + account.login_token : null,
+    verloopt: account.login_token_expires_at || null,
+    gebruikt: account.login_token_used_at || null,
+  };
+}
+
 // --- Akkoord-link aanmaken (werknemer-tool) ---
 
 export async function maakAkkoord({
