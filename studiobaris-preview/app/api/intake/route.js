@@ -430,7 +430,12 @@ export async function POST(req) {
 
     const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
     const url = `${SITE_URL}/${slug}`;
-    await sendPreviewEmail({ naam, url, review }).catch(() => {});
+    // Alleen mailen bij een aanvraag via studiobaris.nl (een prospect). Previews
+    // die het team zelf maakt (intake, leadlijst, voorstellen) staan al in het
+    // dashboard en hoeven geen mail.
+    if (herkomst === "website") {
+      await sendPreviewEmail({ naam, url, review }).catch(() => {});
+    }
     return NextResponse.json({ ok: true, slug, url, review, demo });
   } catch (e) {
     return NextResponse.json({ ok: false, error: String(e.message || e) }, { status: 500 });
