@@ -262,7 +262,7 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
   );
 }
 
-function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste }) {
+function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, onStatus, isEerste, isLaatste }) {
   const deadline = formatDeadline(taak.deadline);
   const p = PRIORITEIT[taak.prioriteit] || PRIORITEIT.normaal;
   return (
@@ -302,6 +302,23 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, isEerste, isLaatste })
         <div style={{ fontSize: 12.5, color: KLEUR.gedempt, marginBottom: 8, lineHeight: 1.4 }}>{taak.omschrijving}</div>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+        <select
+          aria-label="Status"
+          title="Status wijzigen"
+          value={taak.kolom}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => { e.stopPropagation(); onStatus(taak, e.target.value); }}
+          style={{
+            fontSize: 11.5, fontWeight: 700, padding: "2px 6px", borderRadius: 999,
+            border: `1px solid ${KLEUR.lijn2}`, background: "#fff", color: KLEUR.labelDonker,
+            fontFamily: "inherit", cursor: "pointer",
+          }}
+        >
+          {KOLOMMEN.map((k) => (
+            <option key={k.key} value={k.key}>{k.label}</option>
+          ))}
+        </select>
         <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, color: p.kleur, background: p.bg }}>{taak.prioriteit === "hoog" ? "⚠ " : ""}{p.label}</span>
         {deadline && (
           <span style={{ fontSize: 11.5, fontWeight: 700, color: deadline.kleur }}>{deadline.label}</span>
@@ -379,6 +396,13 @@ export default function BordClient({ taken, team, ingelogdAls }) {
     verplaatsNaarKolom(kolom, [...huidigeIds, info.id]);
   }
 
+  // Status wijzigen via het menu op het kaartje: kaartje gaat onderaan de gekozen kolom.
+  function wijzigStatus(taak, nieuweKolom) {
+    if (!nieuweKolom || nieuweKolom === taak.kolom) return;
+    const huidigeIds = perKolom(nieuweKolom).map((t) => t.id).filter((id) => id !== taak.id);
+    verplaatsNaarKolom(nieuweKolom, [...huidigeIds, taak.id]);
+  }
+
   function verplaatsBinnenKolom(taak, richting) {
     const ids = perKolom(taak.kolom).map((t) => t.id);
     const idx = ids.indexOf(taak.id);
@@ -419,6 +443,7 @@ export default function BordClient({ taken, team, ingelogdAls }) {
                   onKlik={setModalTaak}
                   onSlepen={(id, vanKolom) => { slepend.current = { id, vanKolom }; }}
                   onVerplaats={verplaatsBinnenKolom}
+                  onStatus={wijzigStatus}
                   isEerste={i === 0}
                   isLaatste={i === items.length - 1}
                 />
