@@ -22,7 +22,7 @@ export default async function BordPage() {
       beheer={beheer}
       actief="/bord"
       titel="Bord"
-      sub="Sleep een kaartje naar een andere kolom om de status te wijzigen."
+      sub="Wijzig de status via het menu op een kaartje, of sleep het naar een andere kolom."
     >
       <BordClient taken={taken} team={team} ingelogdAls={naam} />
     </WerkplekShell>

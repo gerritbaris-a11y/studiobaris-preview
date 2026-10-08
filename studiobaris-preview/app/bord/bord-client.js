@@ -17,6 +17,12 @@ const PRIORITEIT = {
   hoog: { label: "Hoog", kleur: "#9E3B2E", bg: "#F5E2D9" },
 };
 
+const STATUS_KLEUR = {
+  te_doen: { kleur: "#6B6258", bg: "#EFEAE0" },
+  mee_bezig: { kleur: "#1D4E89", bg: "#E1ECF7" },
+  klaar: { kleur: "#3F6B43", bg: "#E7EFE3" },
+};
+
 const kaart = { background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 14 };
 const veldLabel = { display: "block", fontSize: 12.5, fontWeight: 700, color: KLEUR.labelDonker, marginBottom: 5 };
 const veldInput = {
@@ -310,8 +316,10 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, onStatus, isEerste, is
           onMouseDown={(e) => e.stopPropagation()}
           onChange={(e) => { e.stopPropagation(); onStatus(taak, e.target.value); }}
           style={{
-            fontSize: 11.5, fontWeight: 700, padding: "2px 6px", borderRadius: 999,
-            border: `1px solid ${KLEUR.lijn2}`, background: "#fff", color: KLEUR.labelDonker,
+            fontSize: 12.5, fontWeight: 700, padding: "4px 8px", borderRadius: 8,
+            border: `1.5px solid ${(STATUS_KLEUR[taak.kolom] || STATUS_KLEUR.te_doen).kleur}`,
+            background: (STATUS_KLEUR[taak.kolom] || STATUS_KLEUR.te_doen).bg,
+            color: (STATUS_KLEUR[taak.kolom] || STATUS_KLEUR.te_doen).kleur,
             fontFamily: "inherit", cursor: "pointer",
           }}
         >
@@ -367,9 +375,11 @@ export default function BordClient({ taken, team, ingelogdAls }) {
     setLijst((prev) => {
       const gezet = new Set(taakIds);
       const rest = prev.filter((t) => !gezet.has(t.id) || t.kolom !== kolom);
+      // volgorde meteen bijwerken: de kolommen sorteren op volgorde, dus zonder
+      // dit bleef het kaartje visueel op zijn oude plek staan (▲/▼ leek kapot).
       const nieuw = prev
         .filter((t) => gezet.has(t.id))
-        .map((t) => ({ ...t, kolom }));
+        .map((t) => ({ ...t, kolom, volgorde: taakIds.indexOf(t.id) + 1 }));
       const geordend = taakIds.map((id) => nieuw.find((t) => t.id === id)).filter(Boolean);
       return [...rest.filter((t) => !gezet.has(t.id)), ...geordend];
     });
@@ -380,6 +390,8 @@ export default function BordClient({ taken, team, ingelogdAls }) {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Verplaatsen mislukt.");
+      if (Array.isArray(data.taken)) setLijst(data.taken);
+      setFout("");
     } catch (e) {
       setFout(String(e.message || e));
       router.refresh();
