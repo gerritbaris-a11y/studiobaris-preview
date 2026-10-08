@@ -44,8 +44,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
   const vars = brandVars(m);
   const fontsHref = googleFontsHref(m.koppen_font, m.tekst_font);
   // Foto van de vakman. Nooit het logo hier tonen (dat hoort in de header).
-  // Zonder foto tonen we standaard een persoon-silhouet, zodat duidelijk is
-  // dat hier een portret van de ondernemer komt.
+  // Zonder foto tonen we niets (het lege silhouet vonden we hinderlijk).
   const persoonFoto = m.persoon_foto || m.foto_url || b.foto || hero.foto || null;
 
   const css = `
@@ -117,14 +116,8 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
       </div></header>
 
       <section className="hero metfoto" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}><div className="wrap">
-        <div className="pf" style={persoonFoto ? { backgroundImage: `url(${persoonFoto})`, color: "transparent" } : undefined}>
-          {persoonFoto ? "" : (
-            <svg viewBox="0 0 100 100" aria-hidden="true">
-              <circle cx="50" cy="40" r="19" fill="#b98a55" />
-              <path d="M50 63c-19 0-33 12-35 33h70c-2-21-16-33-35-33z" fill="#b98a55" />
-            </svg>
-          )}
-        </div>
+        {/* Portretfoto alleen tonen als er echt een foto van de vakman is. */}
+        {persoonFoto && <div className="pf" style={{ backgroundImage: `url(${persoonFoto})`, color: "transparent" }} />}
         <div className="eyebrow">{b.branche || b.naam}</div>
         <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : b.naam}</h1>
         <p>{hero.subkop || c.over_ons || ""}</p>
