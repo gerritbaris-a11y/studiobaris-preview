@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFactuur, setFactuurStatus } from "../../../../lib/abonnementen-data";
 import { factuurPdf, mailFactuur } from "../../../../lib/facturen";
+import { getFactuurAdres } from "../../../../lib/server-data";
 import { backupNaarDrive } from "../../../../lib/drive-backup";
 
 export const runtime = "nodejs";
@@ -20,7 +21,11 @@ export async function POST(req) {
     }
 
     const pdf = await factuurPdf(factuur);
-    const mail = await mailFactuur(factuur, pdf);
+    // Altijd naar het huidige factuuradres, ook als dat na het maken van de
+    // factuur in het Klantenregister is gewijzigd.
+    const slug = factuur.snapshot && factuur.snapshot.klant && factuur.snapshot.klant.slug;
+    const naar = slug ? await getFactuurAdres(slug).catch(() => null) : null;
+    const mail = await mailFactuur(factuur, pdf, { naar });
     if (!mail.sent) {
       return NextResponse.json({ ok: false, error: mail.reason || "Mailen mislukte." }, { status: 502 });
     }

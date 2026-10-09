@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import {
-  Contactpersoon, GegevensEditor, VerwijderKnop, KlantNaam,
+  Contactpersoon, FactuurEmail, GegevensEditor, VerwijderKnop, KlantNaam,
   MarkeerAlsKlantKnop, MarkeerAlsOudKlantKnop, HeractiveerKlantKnop,
   BetaallinkKnop,
 } from "../dashboard/dashboard-actions";
@@ -323,7 +323,12 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
         </td>
         <td style={td}>{r.contactpersoon || "—"}</td>
         <td style={{ ...td, whiteSpace: "nowrap" }}>{telefoon}</td>
-        <td style={td}>{email}</td>
+        <td style={td}>
+          {email}
+          {r.factuur_email && r.factuur_email !== email && (
+            <div style={{ fontSize: 11.5, color: KLEUR.label }}>facturen: {r.factuur_email}</div>
+          )}
+        </td>
         {variant !== "oud" && <td style={td}><PakketLabel type={r.pakket_type} /></td>}
         {variant === "klant" && (
           <td style={td} onClick={(e) => e.stopPropagation()}>
@@ -361,6 +366,7 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
                 <Contactpersoon slug={r.slug} value={r.contactpersoon} />
+                <FactuurEmail slug={r.slug} value={r.factuur_email} standaard={r.b_email || r.lead_email} />
                 <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
 

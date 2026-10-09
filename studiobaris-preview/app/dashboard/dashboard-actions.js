@@ -551,6 +551,53 @@ export function Contactpersoon({ slug, value }) {
   );
 }
 
+// Apart e-mailadres voor facturen. Leeg laten = facturen naar het standaardadres.
+export function FactuurEmail({ slug, value, standaard }) {
+  const [v, setV] = useState(value || "");
+  const [opgeslagen, setOpgeslagen] = useState(value || "");
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
+  const gewijzigd = v.trim() !== (opgeslagen || "").trim();
+
+  async function bewaar() {
+    if (!gewijzigd) return;
+    setBezig(true);
+    setFout("");
+    const res = await fetch("/api/klant/factuur-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, email: v }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (d.ok) setOpgeslagen(v.trim());
+    else setFout(d.error || "Opslaan mislukt.");
+    setBezig(false);
+  }
+
+  return (
+    <span style={{ display: "inline-flex", flexDirection: "column", gap: 3 }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
+        title="Facturen gaan naar dit adres. Leeg = naar het standaard e-mailadres.">
+        <span style={{ color: "#B0A697", fontSize: 12 }}>Factuur-e-mail</span>
+        <input
+          type="email"
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
+          placeholder={standaard || "leeg = standaardadres"}
+          style={{ width: 220, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        />
+        <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
+      </span>
+      <span style={{ fontSize: 11.5, color: fout ? "#B03A2E" : "#9A9084" }}>
+        {fout || (opgeslagen.trim()
+          ? "Facturen gaan naar dit adres."
+          : `Leeg: facturen gaan naar ${standaard || "het standaardadres"}.`)}
+      </span>
+    </span>
+  );
+}
+
 // Kleine opslaanknop bij een veld. Verschijnt zodra je iets hebt gewijzigd,
 // en bevestigt daarna dat het is opgeslagen. Enter werkt ook.
 function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {

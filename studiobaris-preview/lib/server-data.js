@@ -230,6 +230,19 @@ export async function setContactpersoon(slug, naam) {
   return await rpc("sb_set_contactpersoon", { p_slug: slug, p_naam: naam });
 }
 
+// Apart e-mailadres voor facturen. Leeg = standaardadres van de klant.
+export async function setFactuurEmail(slug, email) {
+  const r = await rpc("sb_set_factuur_email", { p_slug: slug, p_email: email });
+  if (r === null) throw new Error("Opslaan in de database mislukte.");
+  return r;
+}
+
+// Het adres waar facturen van deze klant nu heen gaan.
+export async function getFactuurAdres(slug) {
+  const data = await rpc("sb_factuur_adres", { p_slug: slug });
+  return typeof data === "string" && data ? data : null;
+}
+
 // De persoonlijke openingszin van het verkoopappje.
 export async function setPersoonlijk(slug, tekst) {
   return await rpc("sb_set_persoonlijk", { p_slug: slug, p_tekst: tekst });

@@ -301,13 +301,15 @@ export async function factuurPdf(f) {
 }
 
 // ── E-mail ──────────────────────────────────────────────────────────────────
-export async function mailFactuur(f, pdfBytes) {
+export async function mailFactuur(f, pdfBytes, opties = {}) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { sent: false, reason: "geen RESEND_API_KEY" };
 
   const snap = f.snapshot || {};
   const klant = snap.klant || {};
-  const naar = klant.email;
+  // opties.naar: actueel factuuradres (bij opnieuw versturen), anders het
+  // adres dat bij het maken van de factuur is vastgelegd.
+  const naar = opties.naar || klant.email;
   if (!naar) return { sent: false, reason: "klant heeft geen e-mailadres" };
 
   const from = process.env.EMAIL_FROM || "StudioBaris <info@studiobaris.nl>";
