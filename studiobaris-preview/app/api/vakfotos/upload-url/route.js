@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { leesSessie, isBeheer } from "../../../../lib/auth";
-import { isVakgebied, VAK_MAP, publiekeUrl } from "../../../../lib/vakfotos";
+import { isVakgebied, VAK_MAP, HERO_MAP, publiekeUrl } from "../../../../lib/vakfotos";
 import { TOEGESTANE_EXTENSIES, MAX_BESTAND_BYTES, extensieVan } from "../../../../lib/bestand-validatie";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BUCKET = "klant-media";
 
 // Tijdelijke uploadlinks voor vakfoto's, op een pad dat wij bepalen
-// (vakfotos/<vakgebied>/<uniek>.<ext>). Zelfde opzet als /api/upload-url;
+// (vakfotos/<vakgebied>/<uniek>.<ext>, of .../hero/<uniek>.<ext> voor hero-foto's). Zelfde opzet als /api/upload-url;
 // de browser stuurt de bestanden daarna rechtstreeks naar de opslag.
 export async function POST(req) {
   if (!isBeheer(leesSessie())) return NextResponse.json({ ok: false, error: "Alleen voor beheer." }, { status: 403 });
@@ -21,6 +21,7 @@ export async function POST(req) {
   const body = await req.json().catch(() => null);
   const vakgebied = body && body.vakgebied;
   const bestanden = body && Array.isArray(body.bestanden) ? body.bestanden : [];
+  const map = body && body.soort === "hero" ? `${VAK_MAP}/${vakgebied}/${HERO_MAP}` : `${VAK_MAP}/${vakgebied}`;
   if (!isVakgebied(vakgebied)) return NextResponse.json({ ok: false, error: "Onbekend vakgebied." }, { status: 400 });
   if (!bestanden.length || bestanden.length > 40) {
     return NextResponse.json({ ok: false, error: "Kies 1 tot 40 foto's per keer." }, { status: 400 });
@@ -32,7 +33,7 @@ export async function POST(req) {
     if (Number((b && b.grootte) || 0) > MAX_BESTAND_BYTES) {
       return NextResponse.json({ ok: false, error: `"${b.naam}" is te groot.` }, { status: 400 });
     }
-    const pad = `${VAK_MAP}/${vakgebied}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const pad = `${map}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const res = await fetch(`${SUPABASE_URL}/storage/v1/object/upload/sign/${BUCKET}/${pad}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, "Content-Type": "application/json" },
