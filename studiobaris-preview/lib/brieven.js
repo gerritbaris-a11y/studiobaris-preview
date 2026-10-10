@@ -217,7 +217,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
 
   // ── Zijkolom: QR-code + actieblok ─────────────────────────────────────────
   const zijTop = 640;
-  const ZIJ_H = 318;
+  const ZIJ_H = 360;
   const zijB = R - ZIJ_L;
   vlak(ZIJ_L, zijTop - ZIJ_H, zijB, ZIJ_H, VLAK);
   vlak(ZIJ_L, zijTop - ZIJ_H, zijB, 3, GOUD);
@@ -234,11 +234,23 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
       if (qr.modules.get(r, k)) vlak(qrX + (k + 1) * cel, qrY + qrMaat - (r + 2) * cel, cel + 0.05, cel + 0.05, INKT);
     }
   }
-  // URL onder de QR (afgebroken als hij te lang is)
+  // Onder de QR: het adres voluit, zodat niemand hoeft te scannen. Mensen
+  // zijn (terecht) voorzichtig met QR-codes op post; een leesbaar adres op
+  // ons eigen domein, plus "geen inlog of betaalgegevens", neemt dat weg.
   let uy = qrY - 13;
-  // Op de "/" afbreken: een URL heeft geen spaties om op te wrappen.
-  for (const regel of wrap(url.replace("https://", "").replace("/", "/ "), font, 7.5, zijB - 24).map((r) => r.replace("/ ", "/"))) {
+  for (const regel of wrap(v("Liever niet scannen? Typ dan dit adres in je browser:", "Liever niet scannen? Typ dan dit adres in jullie browser:"), font, 7.5, zijB - 24)) {
     tekst(regel, qrX, uy, { size: 7.5, kleur: GRIJS });
+    uy -= 10;
+  }
+  uy -= 3;
+  // Op de "/" afbreken: een URL heeft geen spaties om op te wrappen.
+  for (const regel of wrap(url.replace("https://", "").replace("/", "/ "), vet, 9, zijB - 24).map((r) => r.replace("/ ", "/"))) {
+    tekst(regel, qrX, uy, { size: 9, vet: true });
+    uy -= 12;
+  }
+  uy -= 2;
+  for (const regel of wrap("Gewoon kijken: geen inlog, geen betaalgegevens.", italic, 7.5, zijB - 24)) {
+    tekst(regel, qrX, uy, { size: 7.5, italic: true, kleur: GRIJS });
     uy -= 10;
   }
   uy -= 8;
@@ -269,15 +281,15 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
     { t: teksten.aanhef },
     { t: teksten.opening },
     { t: v(
-        "Je bent vakman, geen websitebouwer. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor je klaar, met je naam en je diensten erop. Scan de QR-code hiernaast en je ziet hem meteen.",
-        "Jullie zijn vakmensen, geen websitebouwers. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast en jullie zien hem meteen.") },
+        "Je bent vakman, geen websitebouwer. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor je klaar, met je naam en je diensten erop. Scan de QR-code hiernaast of typ het adres eronder in je browser, en je ziet hem meteen. Je hoeft nergens in te loggen of iets in te vullen.",
+        "Jullie zijn vakmensen, geen websitebouwers. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast of typ het adres eronder in jullie browser, en jullie zien hem meteen. Jullie hoeven nergens in te loggen of iets in te vullen.") },
     { t: "Het echte verschil zit in de app die erbij hoort. " + teksten.app },
     { t: v(
         `Wat kost het? Normaal €599 eenmalig, en daarna €29,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat je deze brief van ons hebt gekregen, betaal je geen €599 maar €399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`,
         `Wat kost het? Normaal €599 eenmalig, en daarna €29,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat jullie deze brief van ons hebben gekregen, betalen jullie geen €599 maar €399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`) },
     { t: v(
-        `Wat je nu doet: scan de QR-code en bekijk je website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vind je hem niks? Dan gooi je deze brief gewoon weg.`,
-        `Wat jullie nu doen: scan de QR-code en bekijk jullie website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vinden jullie hem niks? Dan gooien jullie deze brief gewoon weg.`) },
+        `Wat je nu doet: scan de QR-code of typ het adres in, en bekijk je website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vind je hem niks? Dan gooi je deze brief gewoon weg.`,
+        `Wat jullie nu doen: scan de QR-code of typ het adres in, en bekijk jullie website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vinden jullie hem niks? Dan gooien jullie deze brief gewoon weg.`) },
   ];
   const ps = `P.S. De €399 geldt tot en met ${eindeTekst}. Daarna is het weer €599. Eén appje naar ${TEL} is genoeg.`;
 
