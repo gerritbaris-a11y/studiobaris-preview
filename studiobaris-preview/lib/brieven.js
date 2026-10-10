@@ -4,7 +4,7 @@
 // Per online preview één printklare A4-brief: persoonlijke opening en een
 // app-alinea met een beeld uit het eigen vak (door Claude geschreven op basis
 // van de preview-inhoud), een QR-code naar de eigen preview, de brief-actie
-// (€399 i.p.v. €599) die 3 weken na de dagtekening afloopt, en een witregel-
+// (€ 399 i.p.v. € 599) die 3 weken na de dagtekening afloopt, en een witregel-
 // blok waar degene die de brief maakt met de hand ondertekent.
 //
 // Opbouw van de tekst: Boron-stijl (persoonlijk, één-op-één, korte zinnen,
@@ -260,13 +260,13 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
   uy -= 14;
   tekst("Website + app, eenmalig", ZIJ_L + 12, uy, { size: 9 });
   uy -= 24;
-  const oud = "€599";
+  const oud = "€\u00A0599";
   tekst(oud, ZIJ_L + 12, uy, { size: 14, kleur: GRIJS });
   const oudB = breedte(oud, { size: 14 });
   pagina.drawLine({ start: { x: ZIJ_L + 11, y: uy + 5 }, end: { x: ZIJ_L + 13 + oudB, y: uy + 5 }, thickness: 1.2, color: GRIJS });
-  tekst("€399", ZIJ_L + 22 + oudB, uy - 1, { size: 21, vet: true });
+  tekst("€\u00A0399", ZIJ_L + 22 + oudB, uy - 1, { size: 21, vet: true });
   uy -= 15;
-  tekst("daarna €29,95 per maand", ZIJ_L + 12, uy, { size: 8.5 });
+  tekst("daarna €\u00A029,95 per maand", ZIJ_L + 12, uy, { size: 8.5 });
   uy -= 11;
   tekst("alle bedragen excl. btw", ZIJ_L + 12, uy, { size: 8, italic: true, kleur: GRIJS });
   // Deadlinebalk onderaan het blok
@@ -285,13 +285,13 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
         "Jullie zijn vakmensen, geen websitebouwers. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast of typ het adres eronder in jullie browser, en jullie zien hem meteen. Jullie hoeven nergens in te loggen of iets in te vullen.") },
     { t: "Het echte verschil zit in de app die erbij hoort. " + teksten.app },
     { t: v(
-        `Wat kost het? Normaal €599 eenmalig, en daarna €29,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat je deze brief van ons hebt gekregen, betaal je geen €599 maar €399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`,
-        `Wat kost het? Normaal €599 eenmalig, en daarna €29,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat jullie deze brief van ons hebben gekregen, betalen jullie geen €599 maar €399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`) },
+        `Wat kost het? Normaal €\u00A0599 eenmalig, en daarna €\u00A029,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat je deze brief van ons hebt gekregen, betaal je geen €\u00A0599 maar €\u00A0399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`,
+        `Wat kost het? Normaal €\u00A0599 eenmalig, en daarna €\u00A029,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat jullie deze brief van ons hebben gekregen, betalen jullie geen €\u00A0599 maar €\u00A0399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`) },
     { t: v(
         `Wat je nu doet: scan de QR-code of typ het adres in, en bekijk je website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vind je hem niks? Dan gooi je deze brief gewoon weg.`,
         `Wat jullie nu doen: scan de QR-code of typ het adres in, en bekijk jullie website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vinden jullie hem niks? Dan gooien jullie deze brief gewoon weg.`) },
   ];
-  const ps = `P.S. De €399 geldt tot en met ${eindeTekst}. Daarna is het weer €599. Eén appje naar ${TEL} is genoeg.`;
+  const ps = `P.S. De €\u00A0399 geldt tot en met ${eindeTekst}. Daarna is het weer €\u00A0599. Eén appje naar ${TEL} is genoeg.`;
 
   // Past alles op één pagina? Zo niet: lettergrootte stapsgewijs omlaag.
   const kolB = KOL_R - L;
