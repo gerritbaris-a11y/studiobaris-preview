@@ -1,4 +1,4 @@
-import { getOverview } from "../../lib/server-data";
+import { getOverview, getBrievenLijst } from "../../lib/server-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import AdressenTabel from "./adressen-tabel";
@@ -14,7 +14,7 @@ export default async function AdressenlijstPage() {
   const naam = sessie && sessie.naam ? sessie.naam : "collega";
   const beheer = isBeheer(sessie);
 
-  const alles = await getOverview();
+  const [alles, brieven] = await Promise.all([getOverview(), getBrievenLijst()]);
   // Gearchiveerde previews ("Geen interesse", pipeline_status "Afgewezen")
   // horen niet in de lijst — zelfde regel als bij Mijn previews.
   const rijen = alles
@@ -37,7 +37,7 @@ export default async function AdressenlijstPage() {
       titel="Adressenlijst"
       sub={`${rijen.length} online previews${zonderAdres ? `, waarvan ${zonderAdres} nog zonder adres` : ""}. Vink aan wie je wilt bezoeken en kopieer alleen die.`}
     >
-      <AdressenTabel rijen={rijen} />
+      <AdressenTabel rijen={rijen} brieven={brieven} />
     </WerkplekShell>
   );
 }
