@@ -8,6 +8,8 @@ import { Knop } from "../werkplek-shell";
 // "Alles in beeld" aan en kopieer alleen die selectie voor de route.
 // Is er niets aangevinkt, dan kopieert de knop alles wat in beeld staat.
 // De selectie wordt niet opgeslagen; herladen = opnieuw beginnen.
+// Kolom "Brief": maakt per bedrijf een printklare brief (PDF, nieuw tabblad)
+// met QR-code naar de eigen preview, ondertekend door wie ingelogd is.
 
 const th = {
   textAlign: "left", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
@@ -15,6 +17,11 @@ const th = {
   background: KLEUR.baan, borderBottom: `1px solid ${KLEUR.baanRand}`, whiteSpace: "nowrap",
 };
 const td = { padding: "10px 14px", borderBottom: `1px solid ${KLEUR.lijn}`, fontSize: 14, verticalAlign: "top" };
+const briefKnop = {
+  display: "inline-block", padding: "6px 12px", borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+  border: `1px solid ${KLEUR.klei}`, color: KLEUR.kleiDonker, background: "#fff", textDecoration: "none",
+  whiteSpace: "nowrap", fontFamily: BODY,
+};
 const vinkje = { width: 18, height: 18, cursor: "pointer", accentColor: KLEUR.klei, margin: 0 };
 
 export default function AdressenTabel({ rijen }) {
@@ -103,6 +110,7 @@ export default function AdressenTabel({ rijen }) {
                 <th style={th}>Bedrijf</th>
                 <th style={th}>Telefoon</th>
                 <th style={th}>Adres</th>
+                <th style={th}>Brief</th>
               </tr>
             </thead>
             <tbody>
@@ -120,11 +128,23 @@ export default function AdressenTabel({ rijen }) {
                       ) : "—"}
                     </td>
                     <td style={{ ...td, color: r.adres ? KLEUR.gedempt : KLEUR.label }}>{r.adres || "Adres onbekend"}</td>
+                    <td style={{ ...td, whiteSpace: "nowrap" }}>
+                      <a
+                        href={`/api/brieven/pdf?slug=${encodeURIComponent(r.slug)}`}
+                        target="_blank"
+                        rel="noopener"
+                        onClick={(e) => e.stopPropagation()}
+                        style={briefKnop}
+                        title="Printklare brief met QR-code naar de preview (wordt in een nieuw tabblad gemaakt, duurt ca. 10 seconden)"
+                      >
+                        Brief maken
+                      </a>
+                    </td>
                   </tr>
                 );
               })}
               {zichtbaar.length === 0 && (
-                <tr><td colSpan={4} style={{ ...td, color: KLEUR.label }}>{rijen.length ? "Niets gevonden." : "Nog geen online previews."}</td></tr>
+                <tr><td colSpan={5} style={{ ...td, color: KLEUR.label }}>{rijen.length ? "Niets gevonden." : "Nog geen online previews."}</td></tr>
               )}
             </tbody>
           </table>
