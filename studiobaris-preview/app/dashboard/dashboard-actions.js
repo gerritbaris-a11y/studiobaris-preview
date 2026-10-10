@@ -1142,13 +1142,13 @@ export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
   const velden = [["slogan", "Slogan"], ["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
 
   return (
-    <div style={{ marginTop: 8 }}>
+    <div>
       <button onClick={() => setOpen(!open)}
         style={{ background: "#fff", border: "1px solid #E3DACB", color: "#C05A38", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
         {open ? "Sluiten" : "Gegevens bewerken"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 230 }}>
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 320, boxSizing: "border-box" }}>
           {velden.map(([k, label]) => (
             <label key={k} style={lab}>{label}
               <input style={inp} value={v[k]} onChange={(e) => set(k, e.target.value)} />

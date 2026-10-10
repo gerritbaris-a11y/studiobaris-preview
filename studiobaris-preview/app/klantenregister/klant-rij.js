@@ -364,9 +364,11 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
                 </div>
               )}
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                <Contactpersoon slug={r.slug} value={r.contactpersoon} />
-                <FactuurEmail slug={r.slug} value={r.factuur_email} standaard={r.b_email || r.lead_email} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+                  <Contactpersoon slug={r.slug} value={r.contactpersoon} />
+                  <FactuurEmail slug={r.slug} value={r.factuur_email} standaard={r.b_email || r.lead_email} />
+                </div>
                 <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
 
