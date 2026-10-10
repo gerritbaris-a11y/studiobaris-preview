@@ -147,8 +147,20 @@ function wrap(tekst, font, size, maxBreedte) {
   return regels;
 }
 
-// opties: { rij, content, teksten, afzender, dagtekening (Date) }
-export async function briefPdf({ rij, content, teksten, afzender, dagtekening }) {
+// Teksten die in het bewerkvenster zijn aangepast: schoonmaken, lengte
+// begrenzen (alles moet op één A4 passen) en de vorm controleren.
+const MAX = { aanhef: 80, opening: 600, eigen: 400, app: 700 };
+export function normaliseerTeksten(t) {
+  const x = t || {};
+  const uit = { vorm: x.vorm === "je" ? "je" : "jullie" };
+  for (const veld of Object.keys(MAX)) uit[veld] = schoon(x[veld] || "").slice(0, MAX[veld]);
+  return uit;
+}
+
+// opties: { rij, content, teksten, afzender, dagtekening (Date), notitieVlak }
+// teksten: { vorm, aanhef, opening, eigen (optioneel), app }
+// notitieVlak: lege lijntjes in de rechterkolom voor een handgeschreven notitie.
+export async function briefPdf({ rij, content, teksten, afzender, dagtekening, notitieVlak = true }) {
   const c = content || {};
   const b = c.bedrijf || {};
   const bedrijf = schoon(rij.company_name || b.naam || rij.slug);
@@ -274,12 +286,23 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
   vlak(ZIJ_L, balkY, zijB, 30, INKT);
   midden(`Reageer t/m ${datumLang(einde)}`, ZIJ_L, R, balkY + 11, { size: 8.5, vet: true, kleur: WIT });
 
+  // ── Notitievlak: lege lijnen voor een handgeschreven persoonlijke noot ────
+  // Bewust zonder kop of label, zodat het als een gewone marge oogt als je er
+  // niets op schrijft. Loopt van onder het actieblok tot net boven de voet.
+  if (notitieVlak) {
+    for (let ly = zijTop - ZIJ_H - 26; ly >= 96; ly -= 22) {
+      pagina.drawLine({ start: { x: ZIJ_L, y: ly }, end: { x: R, y: ly }, thickness: 0.5, color: LIJN });
+    }
+  }
+
   // ── Hoofdtekst ────────────────────────────────────────────────────────────
   // Kop: bedrijfsnaam-zin, en "Hij is al gemaakt." altijd op een eigen regel.
   const kop = `Een website voor ${bedrijf}.\nHij is al gemaakt.`;
   const alineas = [
     { t: teksten.aanhef },
     { t: teksten.opening },
+    // Eigen regel uit het bewerkvenster (bv. "Ik kwam vandaag even langs").
+    ...(teksten.eigen && teksten.eigen.trim() ? [{ t: teksten.eigen.trim() }] : []),
     { t: v(
         "Je bent vakman, geen websitebouwer. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor je klaar, met je naam en je diensten erop. Scan de QR-code hiernaast of typ het adres eronder in je browser, en je ziet hem meteen. Je hoeft nergens in te loggen of iets in te vullen.",
         "Jullie zijn vakmensen, geen websitebouwers. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast of typ het adres eronder in jullie browser, en jullie zien hem meteen. Jullie hoeven nergens in te loggen of iets in te vullen.") },
@@ -303,7 +326,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening })
     const lead = size * 1.38;
     const kopRegels = wrap(kop, vet, size + 5, kolB);
     const blokken = alineas.map((a) => wrap(a.t, font, size, kolB));
-    const psRegels = wrap(ps, italic, size, R - L);
+    const psRegels = wrap(ps, italic, size, notitieVlak ? kolB : R - L);
     const hoogte =
       kopRegels.length * (size + 5) * 1.2 + 14 +
       blokken.reduce((s, r) => s + r.length * lead + lead * 0.6, 0) +

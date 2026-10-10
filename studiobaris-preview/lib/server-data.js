@@ -600,3 +600,24 @@ export async function getRestbetalingen(wie = "") {
   const data = await rpc("sb_restbetalingen", { p_wie: wie || "" });
   return Array.isArray(data) ? data : [];
 }
+
+// Brieven (Adressenlijst → "Brief maken"): de definitieve tekst per preview,
+// zodat opnieuw printen dezelfde brief geeft en zichtbaar is wie er al één kreeg.
+export async function getBrief(slug) {
+  const data = await rpc("sb_brief_get", { p_slug: slug });
+  return data && data !== true ? data : null;
+}
+
+export async function slaBriefOp(slug, teksten, notitieVlak, afzender) {
+  return await rpc("sb_brief_opslaan", {
+    p_slug: slug,
+    p_teksten: teksten,
+    p_notitie_vlak: notitieVlak !== false,
+    p_afzender: afzender || null,
+  });
+}
+
+export async function getBrievenLijst() {
+  const data = await rpc("sb_brieven_lijst", {});
+  return Array.isArray(data) ? data : [];
+}

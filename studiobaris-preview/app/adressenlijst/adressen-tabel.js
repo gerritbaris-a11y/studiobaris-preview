@@ -3,13 +3,16 @@
 import { useMemo, useState } from "react";
 import { KLEUR, BODY } from "../werkplek-stijl";
 import { Knop } from "../werkplek-shell";
+import BriefModal from "./brief-modal";
 
 // Adressenlijst met zoekveld en aanvinkvakjes. Typ bijv. "Katwijk", vink
 // "Alles in beeld" aan en kopieer alleen die selectie voor de route.
 // Is er niets aangevinkt, dan kopieert de knop alles wat in beeld staat.
 // De selectie wordt niet opgeslagen; herladen = opnieuw beginnen.
-// Kolom "Brief": maakt per bedrijf een printklare brief (PDF, nieuw tabblad)
-// met QR-code naar de eigen preview, ondertekend door wie ingelogd is.
+// Kolom "Brief": opent een bewerkvenster met de (door Claude geschreven of
+// eerder opgeslagen) brieftekst; daarna wordt een printklare PDF gemaakt met
+// QR-code naar de eigen preview, ondertekend door wie ingelogd is. Onder de
+// knop staat wie er wanneer al een brief voor maakte.
 
 const th = {
   textAlign: "left", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
@@ -24,7 +27,13 @@ const briefKnop = {
 };
 const vinkje = { width: 18, height: 18, cursor: "pointer", accentColor: KLEUR.klei, margin: 0 };
 
-export default function AdressenTabel({ rijen }) {
+function datumKort(iso) {
+  try { return new Date(iso).toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" }); } catch { return ""; }
+}
+
+export default function AdressenTabel({ rijen, brieven = [] }) {
+  const [briefRij, setBriefRij] = useState(null);
+  const [gemaakt, setGemaakt] = useState(() => Object.fromEntries(brieven.map((b) => [b.slug, b])));
   const [zoek, setZoek] = useState("");
   const [gekozen, setGekozen] = useState(() => new Set());
   const [status, setStatus] = useState("idle");
@@ -129,16 +138,19 @@ export default function AdressenTabel({ rijen }) {
                     </td>
                     <td style={{ ...td, color: r.adres ? KLEUR.gedempt : KLEUR.label }}>{r.adres || "Adres onbekend"}</td>
                     <td style={{ ...td, whiteSpace: "nowrap" }}>
-                      <a
-                        href={`/api/brieven/pdf?slug=${encodeURIComponent(r.slug)}`}
-                        target="_blank"
-                        rel="noopener"
-                        onClick={(e) => e.stopPropagation()}
-                        style={briefKnop}
-                        title="Printklare brief met QR-code naar de preview (wordt in een nieuw tabblad gemaakt, duurt ca. 10 seconden)"
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setBriefRij(r); }}
+                        style={{ ...briefKnop, cursor: "pointer" }}
+                        title="Tekst bekijken en aanpassen, daarna een printklare PDF maken"
                       >
-                        Brief maken
-                      </a>
+                        {gemaakt[r.slug] ? "Brief bekijken" : "Brief maken"}
+                      </button>
+                      {gemaakt[r.slug] && (
+                        <div style={{ fontSize: 11.5, color: KLEUR.labelDonker, marginTop: 4 }}>
+                          {gemaakt[r.slug].afzender || "Gemaakt"}{gemaakt[r.slug].bijgewerkt_op ? ` · ${datumKort(gemaakt[r.slug].bijgewerkt_op)}` : ""}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -150,6 +162,16 @@ export default function AdressenTabel({ rijen }) {
           </table>
         </div>
       </div>
+      {briefRij && (
+        <BriefModal
+          rij={briefRij}
+          onSluiten={() => setBriefRij(null)}
+          onGemaakt={(slug) => {
+            setGemaakt((g) => ({ ...g, [slug]: { slug, afzender: "Net gemaakt", bijgewerkt_op: new Date().toISOString() } }));
+            setBriefRij(null);
+          }}
+        />
+      )}
     </>
   );
 }
