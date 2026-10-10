@@ -19,7 +19,7 @@ export default async function VakfotosPage() {
       beheer={beheer}
       actief="/vakfotos"
       titel="Vakfoto's"
-      sub="Foto's per vakgebied voor nieuwe previews: één wordt de achtergrond bovenaan, twee komen bij de projecten. Liggende foto's werken het best als achtergrond."
+      sub="Foto's per vakgebied voor nieuwe previews. Hero-foto's worden de achtergrond bovenaan (breed, minstens 1920 px); de gewone vakfoto's komen bij de projecten. Zonder hero-foto valt de preview terug op een gewone vakfoto."
     >
       <VakfotosClient vakken={vakken} />
     </WerkplekShell>
