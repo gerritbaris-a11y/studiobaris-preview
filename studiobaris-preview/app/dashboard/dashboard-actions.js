@@ -1139,7 +1139,7 @@ export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
 
   const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, marginTop: 2 };
   const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
-  const velden = [["slogan", "Slogan"], ["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
+  const velden = [["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
 
   return (
     <div>
@@ -1148,7 +1148,7 @@ export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
         {open ? "Sluiten" : "Gegevens bewerken"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 320, boxSizing: "border-box" }}>
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 440, maxWidth: "100%", boxSizing: "border-box" }}>
           {velden.map(([k, label]) => (
             <label key={k} style={lab}>{label}
               <input style={inp} value={v[k]} onChange={(e) => set(k, e.target.value)} />
