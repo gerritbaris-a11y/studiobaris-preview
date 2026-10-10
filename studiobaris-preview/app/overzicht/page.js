@@ -1,115 +1,232 @@
-import { getRapport, getTeam } from "../../lib/server-data";
+import { getCockpit, GROEIPAD, OUTREACH_DOEL_PER_WEEK } from "../../lib/cockpit-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR } from "../werkplek-stijl";
 
 export const dynamic = "force-dynamic";
 
-const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "16px 18px" };
+// Het Overzicht is een cockpit: liggen we op koers, en doen we genoeg om er te komen?
+// Bewust geen conversiepercentages: met deze aantallen geven die een vertekend beeld.
 
-const PERIODES = [
-  { d: 7, label: "7 dagen" },
-  { d: 30, label: "30 dagen" },
-  { d: 90, label: "90 dagen" },
-  { d: 0, label: "Sinds het begin" },
-];
+const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "18px 20px" };
+const kopje = { fontSize: 16, margin: "0 0 4px", color: KLEUR.inkt };
+const uitleg = { fontSize: 12.5, color: "#9A9084", margin: "0 0 16px", lineHeight: 1.45 };
+const labelStijl = { fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#9A9084", fontWeight: 700, marginBottom: 6 };
 
-const SOORT_LABEL = {
-  lead_status: "status gewijzigd",
-  lead_owner: "lead opgepakt",
-  preview: "preview gemaakt",
-  klant_fase: "fase gewijzigd",
-};
-
-function euro(n) {
-  return "€ " + Number(n || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function euro(n, dec = 2) {
+  return "€ " + Number(n || 0).toLocaleString("nl-NL", { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
-function Cijfer({ label, waarde, kleur, sub }) {
+function Status({ goed, tekst }) {
+  const c = goed ? KLEUR.sage : KLEUR.amber;
   return (
-    <div style={{ ...kaart, flex: "1 1 150px", minWidth: 150 }}>
-      <div style={{ fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#9A9084", fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 27, fontWeight: 800, color: kleur || "#2B2724", lineHeight: 1.1 }}>{waarde}</div>
-      {sub && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 3 }}>{sub}</div>}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: c.tekst, background: c.bg, padding: "4px 10px", borderRadius: 999 }}>
+      <span aria-hidden="true">{goed ? "✓" : "!"}</span>
+      {tekst}
+    </span>
+  );
+}
+
+// Eén getal tegen een doel, met een balkje.
+function Meter({ label, waarde, doel, toon, sub }) {
+  const pct = doel > 0 ? Math.min(100, Math.round((waarde / doel) * 100)) : 0;
+  return (
+    <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+      <div style={labelStijl}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 34, fontWeight: 800, color: KLEUR.inkt, lineHeight: 1 }}>{toon(waarde)}</span>
+        <span style={{ fontSize: 14, color: "#6B6258" }}>van {toon(doel)}</span>
+      </div>
+      <div style={{ background: KLEUR.baan, borderRadius: 999, height: 8, marginTop: 10, overflow: "hidden" }}>
+        <div style={{ width: Math.max(pct, waarde > 0 ? 2 : 0) + "%", height: "100%", background: KLEUR.klei, borderRadius: 999 }} />
+      </div>
+      {sub && <div style={{ fontSize: 12.5, color: "#6B6258", marginTop: 8 }}>{sub}</div>}
     </div>
   );
 }
 
-// De trechter: hoeveel leads zitten waar, en hoeveel procent komt door naar de volgende stap.
-function Trechter({ t }) {
-  const stappen = [
-    { key: "totaal", label: "In de lijst", kleur: "#9A9084" },
-    { key: "opgepakt", label: "Opgepakt", kleur: "#b45309" },
-    { key: "benaderd", label: "Benaderd", kleur: "#9E3B2E" },
-    { key: "preview", label: "Preview aangevraagd", kleur: "#7c3aed" },
-    { key: "klant", label: "Klant geworden", kleur: "#1d7a46" },
-  ];
-  const max = Math.max(1, Number(t.totaal || 0));
+function OpKoers({ k }) {
+  const doelMaand = GROEIPAD.perMaand;
+  // Verwacht tot nu toe deze maand (naar rato van de dagen).
+  const verwachtNu = (doelMaand * k.dagInMaand) / k.dagenInMaand;
+  const maandGoed = k.nieuwDezeMaand >= Math.floor(verwachtNu);
+  const totaalGoed = k.klanten >= k.doelKlanten;
+  const achter = k.doelKlanten - k.klanten;
   return (
-    <div style={{ ...kaart }}>
-      <h2 style={{ fontSize: 16, margin: "0 0 4px" }}>De trechter</h2>
-      <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 14px" }}>
-        Waar staat elke lead nu. Dit is een momentopname van de hele lijst, geen historie.
-      </p>
-      {stappen.map((s) => {
-        const n = Number(t[s.key] || 0);
-        const pct = Math.round((n / max) * 100);
-        return (
-          <div key={s.key} style={{ marginBottom: 11 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, color: "#524A40" }}>{s.label}</span>
-              <span style={{ color: "#6B6258" }}>
-                <strong style={{ color: "#2B2724" }}>{n.toLocaleString("nl-NL")}</strong>
-                {s.key !== "totaal" && <span style={{ marginLeft: 6, fontSize: 12 }}>{pct}%</span>}
-              </span>
-            </div>
-            <div style={{ background: "#F4EEE3", borderRadius: 999, height: 9, overflow: "hidden" }}>
-              <div style={{ width: Math.max(pct, n > 0 ? 1 : 0) + "%", height: "100%", background: s.kleur }} />
-            </div>
-          </div>
-        );
-      })}
-      <div style={{ borderTop: "1px solid #F4EEE3", marginTop: 14, paddingTop: 12, display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-        <span style={{ color: "#b91c1c", fontWeight: 600 }}>Afgewezen</span>
-        <strong style={{ color: "#b91c1c" }}>{Number(t.afgewezen || 0).toLocaleString("nl-NL")}</strong>
+    <div style={kaart}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
+        <div>
+          <h2 style={kopje}>Op koers?</h2>
+          <p style={{ ...uitleg, marginBottom: 18 }}>
+            Betalende klanten en vaste maandomzet, tegenover het groeipad uit het stappenplan
+            ({GROEIPAD.bandLaag.toLocaleString("nl-NL")}–{GROEIPAD.bandHoog.toLocaleString("nl-NL")} nieuwe klanten per maand).
+          </p>
+        </div>
+        <Status goed={totaalGoed} tekst={totaalGoed ? "Op schema" : `${achter} ${achter === 1 ? "klant" : "klanten"} achter op schema`} />
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 28 }}>
+        <Meter
+          label="Nieuwe klanten deze maand"
+          waarde={k.nieuwDezeMaand}
+          doel={doelMaand}
+          toon={(n) => String(n)}
+          sub={
+            <>
+              {maandGoed ? "Ligt op tempo" : "Loopt achter op tempo"} · dag {k.dagInMaand} van {k.dagenInMaand} · vorige maand {k.nieuwVorigeMaand}
+            </>
+          }
+        />
+        <Meter
+          label="Betalende klanten"
+          waarde={k.klanten}
+          doel={k.doelKlanten}
+          toon={(n) => String(n)}
+          sub="Groeipad: waar we volgens het plan nu zouden staan"
+        />
+        <Meter
+          label="Vaste maandomzet (MRR)"
+          waarde={k.mrr}
+          doel={k.doelMrr}
+          toon={(n) => euro(n, 0)}
+          sub={`${euro(k.mrr)} per maand, excl. btw`}
+        />
       </div>
     </div>
   );
 }
 
-export default async function OverzichtPage({ searchParams }) {
+function weekLabel(maandag) {
+  const d = new Date(maandag + "T12:00:00Z");
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+function Outreach({ weken }) {
+  const doel = OUTREACH_DOEL_PER_WEEK;
+  const nu = weken[weken.length - 1] || { aantal: 0, perPersoon: {} };
+  const vorige = weken[weken.length - 2] || { aantal: 0 };
+  const max = Math.max(doel, ...weken.map((w) => w.aantal), 1);
+  const hoogte = 120;
+  const personen = Object.entries(nu.perPersoon).sort((a, b) => b[1] - a[1]);
+  return (
+    <div style={kaart}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
+        <div>
+          <h2 style={kopje}>Outreach deze week</h2>
+          <p style={uitleg}>
+            Hoeveel leads we zelf benaderd hebben: een preview gemaakt (voor brief of mail) of op &quot;benaderd&quot; gezet.
+            Dit is het getal dat we in de hand hebben; klanten volgen pas weken later.
+          </p>
+        </div>
+        <Status goed={nu.aantal >= doel} tekst={nu.aantal >= doel ? "Weekdoel gehaald" : `Nog ${doel - nu.aantal} te gaan`} />
+      </div>
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+        <span style={{ fontSize: 34, fontWeight: 800, color: KLEUR.inkt, lineHeight: 1 }}>{nu.aantal}</span>
+        <span style={{ fontSize: 14, color: "#6B6258" }}>van {doel} deze week · vorige week {vorige.aantal}</span>
+      </div>
+      {personen.length > 0 && (
+        <div style={{ fontSize: 13, color: "#6B6258", marginBottom: 18 }}>
+          {personen.map(([p, n], i) => (
+            <span key={p}>
+              {i > 0 && " · "}
+              <strong style={{ color: KLEUR.inkt }}>{p}</strong> {n}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Laatste 8 weken */}
+      <div style={labelStijl}>
+        Laatste {weken.length} weken{" "}
+        <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>· stippellijn = weekdoel ({doel})</span>
+      </div>
+      <div style={{ position: "relative", height: hoogte + 22, marginTop: 18 }}>
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", left: 0, right: 0, bottom: 22 + (doel / max) * hoogte, borderTop: `1.5px dashed ${KLEUR.label}` }}
+        />
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0, display: "flex", alignItems: "flex-end", gap: 6 }}>
+          {weken.map((w, i) => {
+            const h = Math.round((w.aantal / max) * hoogte);
+            const huidig = i === weken.length - 1;
+            return (
+              <div key={w.week} title={`Week van ${weekLabel(w.week)}: ${w.aantal} benaderd`} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: huidig ? KLEUR.inkt : "#6B6258", marginBottom: 3 }}>{w.aantal || ""}</span>
+                <div style={{ width: "100%", maxWidth: 34, height: Math.max(h, w.aantal > 0 ? 3 : 1), background: huidig ? KLEUR.klei : "#E3B7A5", borderRadius: "4px 4px 0 0" }} />
+                <span style={{ fontSize: 10.5, color: "#9A9084", marginTop: 6, whiteSpace: "nowrap" }}>{weekLabel(w.week)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function tekstVoor(a) {
+  const B = ({ children }) => <strong style={{ color: KLEUR.inkt }}>{children}</strong>;
+  switch (a.soort) {
+    case "previews": {
+      const n = a.namen.length;
+      const getoond = a.namen.slice(0, 3).join(", ");
+      return (
+        <>
+          {n === 1 ? "preview gemaakt voor " : `${n} previews gemaakt: `}
+          <B>{getoond}</B>
+          {n > 3 && <span style={{ color: "#9A9084" }}> en {n - 3} meer</span>}
+        </>
+      );
+    }
+    case "klant":
+      return <>🎉 nieuwe klant: <B>{a.wat}</B></>;
+    case "fase":
+      return <><B>{a.wat}</B> → {a.naar}</>;
+    case "lead_benaderd":
+      return <>benaderd: <B>{a.wat}</B></>;
+    case "lead_klant":
+      return <>lead klant geworden: <B>{a.wat}</B></>;
+    case "lead_afgewezen":
+      return <>afgewezen: <B>{a.wat}</B></>;
+    case "sync":
+      return <>{a.aantal} nieuwe {a.aantal === 1 ? "lead" : "leads"} uit de leadlijst</>;
+    case "gegevens":
+      return <>gegevens aangevuld: <B>{a.wat}</B></>;
+    default:
+      return a.soort;
+  }
+}
+
+function Activiteit({ items }) {
+  return (
+    <div style={kaart}>
+      <h2 style={kopje}>Activiteit</h2>
+      <p style={uitleg}>Wat er de afgelopen 7 dagen gebeurd is.</p>
+      {items.length === 0 ? (
+        <p style={{ fontSize: 13.5, color: "#9A9084", margin: 0 }}>Deze week nog niets vastgelegd.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {items.map((a, i) => (
+            <div
+              key={i}
+              style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "9px 0", borderTop: i ? `1px solid ${KLEUR.baan}` : "none", fontSize: 13.5, flexWrap: "wrap" }}
+            >
+              <span style={{ color: "#9A9084", fontSize: 12, whiteSpace: "nowrap", minWidth: 96 }}>
+                {new Date(a.moment).toLocaleString("nl-NL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" })}
+              </span>
+              <span style={{ fontWeight: 700, color: KLEUR.inkt, minWidth: 60 }}>{a.persoon || "—"}</span>
+              <span style={{ color: KLEUR.gedempt, flex: "1 1 220px", minWidth: 0 }}>{tekstVoor(a)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default async function OverzichtPage() {
   const sessie = leesSessie();
   const beheer = isBeheer(sessie);
-  const sp = (await searchParams) || {};
-  const dagen = sp.dagen !== undefined ? Number(sp.dagen) : 30;
-  const persoon = sp.persoon || "";
-
-  const [rap, team] = await Promise.all([getRapport(dagen, persoon), getTeam()]);
-  const r = rap || {};
-  const t = r.trechter || {};
-  const personen = r.per_persoon || [];
-  const recent = r.recent || [];
-  const verbrand = r.verbrand_per_fase || [];
-  const klantfases = r.klantfases || [];
-  const betaling = r.betaling || {};
-
-  const link = (d, p) => {
-    const q = new URLSearchParams();
-    if (d !== 30) q.set("dagen", String(d));
-    if (p) q.set("persoon", p);
-    const s = q.toString();
-    return "/overzicht" + (s ? "?" + s : "");
-  };
-
-  const knop = (aan) => ({
-    padding: "8px 14px", borderRadius: 999, fontSize: 13.5, fontWeight: 700, textDecoration: "none",
-    border: "1px solid " + (aan ? KLEUR.klei : KLEUR.lijn2),
-    background: aan ? KLEUR.klei : "#fff",
-    color: aan ? "#fff" : KLEUR.gedempt,
-  });
-
-  const totaalVerkocht = personen.reduce((s, p) => s + Number(p.verkocht || 0), 0);
-  const totaalOpen = personen.reduce((s, p) => s + Number(p.open_leads || 0), 0);
+  const c = await getCockpit();
 
   return (
     <WerkplekShell
@@ -117,170 +234,17 @@ export default async function OverzichtPage({ searchParams }) {
       beheer={beheer}
       actief="/overzicht"
       titel="Overzicht"
-      sub="Alles wat het team doet, op één plek. Kies een periode en eventueel een persoon."
+      sub="Liggen we op koers, en doen we genoeg om er te komen?"
     >
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-        {PERIODES.map((p) => (
-          <a key={p.d} href={link(p.d, persoon)} style={knop(dagen === p.d)}>{p.label}</a>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-        <a href={link(dagen, "")} style={knop(!persoon)}>Iedereen</a>
-        {team.map((u) => (
-          <a key={u.naam} href={link(dagen, u.naam)} style={knop(persoon === u.naam)}>{u.naam}</a>
-        ))}
-      </div>
-
-      {/* Kerncijfers */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
-        <Cijfer label="Klanten" waarde={Number(t.klant || 0).toLocaleString("nl-NL")} kleur="#1d7a46" sub="uit de leadlijst gewonnen" />
-        <Cijfer label="Previews" waarde={Number(t.preview || 0).toLocaleString("nl-NL")} kleur="#7c3aed" sub="lopen nu" />
-        <Cijfer label="Open leads" waarde={totaalOpen.toLocaleString("nl-NL")} sub="opgepakt, nog niet afgerond" />
-        <Cijfer label="Afgewezen" waarde={Number(t.afgewezen || 0).toLocaleString("nl-NL")} kleur="#b91c1c" sub="verbrand" />
-        <Cijfer label="Verkocht" waarde={euro(totaalVerkocht)} kleur="#C05A38" sub="eenmalige websiteprijs" />
-        <Cijfer label="Acties" waarde={Number(r.acties_totaal || 0).toLocaleString("nl-NL")} sub={"in deze periode"} />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, marginBottom: 14 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: 14 }}>
-          <Trechter t={t} />
-
-          <div style={kaart}>
-            <h2 style={{ fontSize: 16, margin: "0 0 4px" }}>Waar sneuvelen ze?</h2>
-            <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 14px" }}>
-              In welke stap stond een lead toen hij werd afgewezen. Dit komt uit het logboek en telt alleen
-              afwijzingen vanaf nu.
-            </p>
-            {verbrand.length === 0 ? (
-              <p style={{ fontSize: 13.5, color: "#9A9084", margin: 0 }}>
-                Nog geen afwijzingen vastgelegd in deze periode.
-              </p>
-            ) : (
-              verbrand.map((v) => {
-                const max = Math.max(...verbrand.map((x) => Number(x.aantal)));
-                const pct = Math.round((Number(v.aantal) / max) * 100);
-                return (
-                  <div key={v.fase} style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600, color: "#524A40", textTransform: "capitalize" }}>{v.fase}</span>
-                      <strong style={{ color: "#b91c1c" }}>{v.aantal}</strong>
-                    </div>
-                    <div style={{ background: "#F4EEE3", borderRadius: 999, height: 9 }}>
-                      <div style={{ width: pct + "%", height: "100%", background: "#ef4444", borderRadius: 999 }} />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <div style={kaart}>
-            <h2 style={{ fontSize: 16, margin: "0 0 4px" }}>Klantreis</h2>
-            <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 14px" }}>
-              Waar staan de klanten die al een preview hebben.
-            </p>
-            {klantfases.length === 0 ? (
-              <p style={{ fontSize: 13.5, color: "#9A9084", margin: 0 }}>Nog geen klanten.</p>
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-                <tbody>
-                  {klantfases.map((k) => (
-                    <tr key={k.fase} style={{ borderBottom: "1px solid #F4EEE3" }}>
-                      <td style={{ padding: "7px 0", color: "#524A40", fontWeight: 600 }}>{k.fase}</td>
-                      <td style={{ padding: "7px 0", textAlign: "right", color: "#2B2724", fontWeight: 700 }}>{k.aantal}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            <div style={{ borderTop: "1px solid #ECE4D7", marginTop: 12, paddingTop: 10, fontSize: 13 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ color: "#0f6e56", fontWeight: 600 }}>Aanbetaling voldaan</span>
-                <strong>{betaling.actief || 0}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ color: "#854f0b", fontWeight: 600 }}>Akkoord, nog niet betaald</span>
-                <strong>{betaling.akkoord || 0}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#9A9084", fontWeight: 600 }}>Nog geen akkoord</span>
-                <strong>{betaling.geen || 0}</strong>
-              </div>
-            </div>
-          </div>
+      {c.fout && (
+        <div style={{ ...kaart, background: KLEUR.amber.bg, borderColor: KLEUR.amber.bg, color: KLEUR.amber.tekst, fontSize: 13.5, marginBottom: 14 }}>
+          Niet alle cijfers konden worden opgehaald; wat hieronder staat kan onvolledig zijn.
         </div>
-
-        {/* Wie doet wat */}
-        <div style={kaart}>
-          <h2 style={{ fontSize: 16, margin: "0 0 4px" }}>Wie doet wat</h2>
-          <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 12px" }}>
-            Acties in de gekozen periode. &quot;Open&quot; en &quot;verkocht&quot; zijn de actuele stand.
-          </p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 640 }}>
-              <thead>
-                <tr style={{ textAlign: "left", color: "#9A9084", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  <th style={{ padding: "6px 8px 8px 0" }}>Persoon</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Opgepakt</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Benaderd</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Previews</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Gewonnen</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Verloren</th>
-                  <th style={{ padding: "6px 8px 8px" }}>Open</th>
-                  <th style={{ padding: "6px 0 8px 8px", textAlign: "right" }}>Verkocht</th>
-                </tr>
-              </thead>
-              <tbody>
-                {personen.map((p) => (
-                  <tr key={p.persoon} style={{ borderTop: "1px solid #F4EEE3" }}>
-                    <td style={{ padding: "9px 8px 9px 0", fontWeight: 700, color: "#2B2724" }}>
-                      {p.persoon}
-                      <span style={{ fontWeight: 400, color: "#9A9084", fontSize: 12 }}> · {p.rol}</span>
-                    </td>
-                    <td style={{ padding: "9px 8px" }}>{p.opgepakt}</td>
-                    <td style={{ padding: "9px 8px" }}>{p.benaderd}</td>
-                    <td style={{ padding: "9px 8px", color: "#7c3aed", fontWeight: 600 }}>{p.previews}</td>
-                    <td style={{ padding: "9px 8px", color: "#1d7a46", fontWeight: 700 }}>{p.gewonnen}</td>
-                    <td style={{ padding: "9px 8px", color: "#b91c1c" }}>{p.verloren}</td>
-                    <td style={{ padding: "9px 8px" }}>{p.open_leads}</td>
-                    <td style={{ padding: "9px 0 9px 8px", textAlign: "right", fontWeight: 700 }}>{euro(p.verkocht)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Tijdlijn */}
-        <div style={kaart}>
-          <h2 style={{ fontSize: 16, margin: "0 0 4px" }}>Laatste acties</h2>
-          <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 12px" }}>
-            Het logboek loopt vanaf vandaag. Wat er daarvoor gebeurde is niet vastgelegd.
-          </p>
-          {recent.length === 0 ? (
-            <p style={{ fontSize: 13.5, color: "#9A9084", margin: 0 }}>
-              Nog geen acties in deze periode. Zodra iemand een lead oppakt of een status wijzigt, verschijnt het hier.
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {recent.map((a, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "baseline", padding: "8px 0", borderTop: i ? "1px solid #F4EEE3" : "none", fontSize: 13.5 }}>
-                  <span style={{ color: "#9A9084", fontSize: 12, whiteSpace: "nowrap", minWidth: 92 }}>
-                    {new Date(a.moment).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <span style={{ fontWeight: 700, color: "#2B2724", minWidth: 70 }}>{a.persoon || "—"}</span>
-                  <span style={{ color: "#524A40" }}>
-                    {SOORT_LABEL[a.soort] || a.soort}
-                    {a.wat && <> — <strong style={{ color: "#524A40" }}>{a.wat}</strong></>}
-                    {a.van && a.naar && <span style={{ color: "#9A9084" }}> ({a.van} → {a.naar})</span>}
-                    {!a.van && a.naar && <span style={{ color: "#9A9084" }}> ({a.naar})</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      )}
+      <div style={{ display: "grid", gap: 14 }}>
+        <OpKoers k={c.koers} />
+        <Outreach weken={c.outreach} />
+        <Activiteit items={c.activiteit} />
       </div>
     </WerkplekShell>
   );
