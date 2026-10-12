@@ -9,12 +9,13 @@ import { KLEUR } from "../werkplek-stijl";
 // uit de fasebalk (data-fase, zie normFase() in lib/fase.js) — niet
 // op betaalstatus, die is hier niet leidend (dat zijn het Klantenregister en
 // het financiële tabblad) en staat al gewoon op de kaart zelf.
-// "Akkoord" telt ook klanten die al op "Klaar" staan mee: die zijn per
-// definitie al voorbij Akkoord.
+// Previews op "Klaar" staan alleen onder hun eigen knop "Klaar", niet onder
+// Alle of Akkoord: die zijn afgerond en maken de werklijst anders onrustig.
 const FILTERS = [
   { key: "", label: "Alle" },
   { key: "geen", label: "Nog geen akkoord" },
   { key: "akkoord", label: "Akkoord" },
+  { key: "klaar", label: "Klaar" },
   { key: "archief", label: "Archief" },
 ];
 
@@ -22,12 +23,15 @@ function pastFilter(el, f) {
   const fase = el.getAttribute("data-fase") || "Preview";
   if (f === "archief") return fase === "archief";
   // Gearchiveerde klanten alleen tonen als de knop "Archief" actief staat,
-  // nooit onder Alle/Nog geen akkoord/Akkoord — anders vervuilen ze de
+  // nooit onder Alle/Nog geen akkoord/Akkoord/Klaar — anders vervuilen ze de
   // actieve lijst weer.
   if (fase === "archief") return false;
+  if (f === "klaar") return fase === "Klaar";
+  // Klaar = afgerond: alleen onder de knop "Klaar", nergens anders.
+  if (fase === "Klaar") return false;
   if (!f) return true;
   if (f === "geen") return fase === "Preview";
-  return fase === "Akkoord" || fase === "Klaar";
+  return fase === "Akkoord";
 }
 
 export default function KlantenZoek() {

@@ -108,7 +108,9 @@ export default async function KlantenPage() {
         </div>
       )}
 
-      {(actief.length > 1 || afgewezen.length > 0) && <KlantenZoek />}
+      {/* Ook bij maar één preview tonen zodra er één op Klaar staat: die is
+          onder Alle verborgen en alleen via de knop Klaar terug te vinden. */}
+      {(actief.length > 1 || afgewezen.length > 0 || actief.some((r) => normFase(r.pipeline_status) === "Klaar")) && <KlantenZoek />}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         {actief.map((r) => {
           let review = {};
