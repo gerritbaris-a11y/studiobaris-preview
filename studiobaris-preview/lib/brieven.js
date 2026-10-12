@@ -19,6 +19,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { BEDRIJF } from "./facturen";
 import { jakartaFonts } from "./plus-jakarta-font";
+import { bodoniFonts } from "./bodoni-moda-font";
 import { callClaude } from "./anthropic";
 
 const PREVIEW_BASIS = "https://preview.studiobaris.nl/";
@@ -180,6 +181,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const pagina = pdf.addPage([595.28, 841.89]); // A4
   // Plus Jakarta Sans, zelfde als de facturen/offertes (zie lib/plus-jakarta-font.js).
   const { font, vet, italic, merk } = await jakartaFonts(pdf);
+  const { regular: bodoniReg, bold: bodoniBold } = await bodoniFonts(pdf);
 
   // Zelfde huisstijl als facturen/offertes.
   const INKT = rgb(0.102, 0.169, 0.239);
@@ -195,8 +197,8 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const ZIJ_L = 392; // linkerrand zijkolom
 
   const tekst = (s, x, y, o = {}) =>
-    pagina.drawText(schoon(s), { x, y, size: o.size || 10, font: o.merk ? merk : o.italic ? italic : o.vet ? vet : font, color: o.kleur || INKT });
-  const breedte = (s, o = {}) => (o.merk ? merk : o.vet ? vet : o.italic ? italic : font).widthOfTextAtSize(schoon(s), o.size || 10);
+    pagina.drawText(schoon(s), { x, y, size: o.size || 10, font: o.font || (o.merk ? merk : o.italic ? italic : o.vet ? vet : font), color: o.kleur || INKT });
+  const breedte = (s, o = {}) => (o.font || (o.merk ? merk : o.vet ? vet : o.italic ? italic : font)).widthOfTextAtSize(schoon(s), o.size || 10);
   const rechts = (s, xEind, y, o = {}) => tekst(s, xEind - breedte(s, o), y, o);
   const midden = (s, x0, x1, y, o = {}) => tekst(s, x0 + (x1 - x0 - breedte(s, o)) / 2, y, o);
   const vlak = (x, y, w, h, kleur) => pagina.drawRectangle({ x, y, width: w, height: h, color: kleur });
@@ -206,9 +208,13 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   let y = 785;
   vlak(L, y - 28, 32, 32, INKT);
   pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD });
-  tekst("B", L + 10, y - 18, { size: 16, merk: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, merk: true });
-  pagina.drawLine({ start: { x: L + 42, y: y - 14 }, end: { x: L + 42 + breedte(BEDRIJF.naam, { merk: true, size: 17 }), y: y - 14 }, thickness: 1.3, color: GOUD });
+  // "B" en "StudioBaris" in Bodoni Moda — zie toelichting in facturen.js.
+  tekst("B", L + 10.5, y - 17.5, { size: 17, font: bodoniBold, kleur: WIT });
+  tekst("Studio", L + 42, y - 10, { size: 17, font: bodoniReg });
+  const studioBreedte = breedte("Studio", { size: 17, font: bodoniReg });
+  tekst("Baris", L + 42 + studioBreedte, y - 10, { size: 17, font: bodoniBold });
+  const naamBreedte = studioBreedte + breedte("Baris", { size: 17, font: bodoniBold });
+  pagina.drawLine({ start: { x: L + 42, y: y - 14 }, end: { x: L + 42 + naamBreedte, y: y - 14 }, thickness: 1.3, color: GOUD });
   rechts(BEDRIJF.naam, R, y, { size: 9.5, vet: true });
   rechts(BEDRIJF.adres, R, y - 12, { size: 9 });
   rechts(BEDRIJF.postcode, R, y - 24, { size: 9 });
