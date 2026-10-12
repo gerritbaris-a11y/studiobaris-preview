@@ -12,7 +12,7 @@ export default async function VergelijkPagina({ params }) {
 
   if (!klant) {
     return (
-      <main style={{ maxWidth: 600, margin: "12vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center" }}>
+      <main style={{ maxWidth: 600, margin: "12vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "center" }}>
         <h1 style={{ fontSize: 26 }}>Niet gevonden</h1>
         <p style={{ color: "#666" }}>Deze klant bestaat niet (meer).</p>
         <p><a href="/klanten" style={{ color: "#1d6fd1" }}>Terug naar Mijn previews</a></p>
@@ -21,7 +21,7 @@ export default async function VergelijkPagina({ params }) {
   }
 
   return (
-    <main style={{ maxWidth: 1500, margin: "3vh auto", padding: "0 20px 60px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+    <main style={{ maxWidth: 1500, margin: "3vh auto", padding: "0 20px 60px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888", margin: 0 }}>StudioBaris</p>
         {sessie && (

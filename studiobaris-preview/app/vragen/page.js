@@ -5,7 +5,7 @@ import VraagKnop from "./vraag-knop";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 1100, margin: "4vh auto", padding: "0 20px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
+const wrap = { maxWidth: 1100, margin: "4vh auto", padding: "0 20px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" };
 const kaart = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "16px 18px" };
 
 const URG_KLEUR = { hoog: "#b91c1c", normaal: "#6B6258", laag: "#9A9084" };

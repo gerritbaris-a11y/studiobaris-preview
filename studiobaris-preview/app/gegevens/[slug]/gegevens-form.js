@@ -46,7 +46,7 @@ export default function GegevensForm({ slug, bedrijf }) {
 
   if (status === "klaar") {
     return (
-      <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center", color: "#222" }}>
+      <main style={{ maxWidth: 600, margin: "14vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "center", color: "#222" }}>
         <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
         <h1 style={{ fontSize: 30 }}>Dank je wel</h1>
         <p style={{ color: "#555", marginTop: 14, fontSize: 18, lineHeight: 1.6 }}>
@@ -57,7 +57,7 @@ export default function GegevensForm({ slug, bedrijf }) {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+    <main style={{ maxWidth: 640, margin: "5vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris · Stap 2 van 2</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 4px" }}>Nog even je zakelijke gegevens</h1>
       <p style={{ color: "#555", marginBottom: 8, lineHeight: 1.6 }}>

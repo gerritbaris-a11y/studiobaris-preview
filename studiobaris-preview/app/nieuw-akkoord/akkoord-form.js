@@ -21,7 +21,7 @@ const DIENSTEN = [
   "Reviewsysteem (Google)",
 ];
 
-const wrap = { maxWidth: 640, margin: "6vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
+const wrap = { maxWidth: 640, margin: "6vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" };
 const cardBox = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "18px 20px", marginBottom: 16 };
 const label = { display: "block", fontSize: 13, fontWeight: 600, color: "#444", marginBottom: 6 };
 const input = { width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 15, border: "1px solid #d1d5db", borderRadius: 8, fontFamily: "inherit" };

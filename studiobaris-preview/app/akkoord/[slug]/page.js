@@ -24,7 +24,7 @@ function btwSub(excl) {
   return `${euroAltijd(excl)} excl. + ${euroAltijd(btwBedrag(excl))} btw (21%)`;
 }
 
-const wrap = { maxWidth: 620, margin: "8vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
+const wrap = { maxWidth: 620, margin: "8vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" };
 const subStyle = { fontSize: 12.5, color: "#999", marginTop: 2 };
 
 export default async function AkkoordPage({ params, searchParams }) {

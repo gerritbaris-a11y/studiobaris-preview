@@ -3,7 +3,7 @@ import GegevensForm from "./gegevens-form";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 640, margin: "6vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
+const wrap = { maxWidth: 640, margin: "6vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" };
 
 // Statussen waarin iemand akkoord heeft gegeven op de preview.
 const NA_AKKOORD = ["akkoord", "actief"];

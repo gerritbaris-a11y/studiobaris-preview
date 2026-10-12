@@ -15,11 +15,10 @@
 //   A  prijs + deadline, scan/bel/app, P.S.                  (vast)
 // Lukt de Claude-aanroep niet, dan valt elke alinea terug op een nette
 // standaardtekst, zodat de knop altijd een brief oplevert.
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { BEDRIJF } from "./facturen";
-import { BODONI_BOLD_BASE64 } from "./bodoni-moda-font";
+import { jakartaFonts } from "./plus-jakarta-font";
 import { callClaude } from "./anthropic";
 
 const PREVIEW_BASIS = "https://preview.studiobaris.nl/";
@@ -176,14 +175,11 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const TEL = BEDRIJF.telefoon.replace(/ /g, "\u00A0");
 
   const pdf = await PDFDocument.create();
-  pdf.registerFontkit(fontkit);
   pdf.setTitle(`Brief ${bedrijf}`);
   pdf.setAuthor("StudioBaris");
   const pagina = pdf.addPage([595.28, 841.89]); // A4
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
-  const merk = await pdf.embedFont(Buffer.from(BODONI_BOLD_BASE64, "base64"));
+  // Plus Jakarta Sans, zelfde als de facturen/offertes (zie lib/plus-jakarta-font.js).
+  const { font, vet, italic, merk } = await jakartaFonts(pdf);
 
   // Zelfde huisstijl als facturen/offertes.
   const INKT = rgb(0.102, 0.169, 0.239);
@@ -322,7 +318,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const HANDTEKENING = 56; // witruimte voor de handtekening
   let size = 10.5;
   let opmaak;
-  for (; size >= 8.5; size -= 0.25) {
+  for (; size >= 8; size -= 0.25) {
     const lead = size * 1.38;
     const kopRegels = wrap(kop, vet, size + 5, kolB);
     const blokken = alineas.map((a) => wrap(a.t, font, size, kolB));

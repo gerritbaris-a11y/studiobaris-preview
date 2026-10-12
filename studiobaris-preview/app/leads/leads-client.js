@@ -394,7 +394,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                   const kl = sc >= 85 ? "#C05A38" : sc >= 75 ? "#5E8C61" : "#C98A2B";
                   return (
                     <div style={{ flex: "0 0 auto", textAlign: "center", lineHeight: 1 }}>
-                      <div style={{ fontFamily: "'Bricolage Grotesque', system-ui, sans-serif", fontSize: 24, fontWeight: 800, color: kl }}>{sc}</div>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 24, fontWeight: 800, color: kl }}>{sc}</div>
                       <div style={{ fontSize: 10, color: "#B0A697", textTransform: "uppercase", letterSpacing: 0.5 }}>kans</div>
                     </div>
                   );

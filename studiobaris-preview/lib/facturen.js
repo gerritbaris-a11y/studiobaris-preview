@@ -5,10 +5,9 @@
 // een uitgelichte totaalregel. KvK/BTW/e-mail staan alleen in de voettekst
 // (niet nog eens bovenaan) en het klantnummer staat bij de factuurgegevens,
 // net als in het sjabloon.
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb } from "pdf-lib";
 import { periodeInWoorden, periodeKort, datumNL } from "./mollie";
-import { BODONI_BOLD_BASE64 } from "./bodoni-moda-font";
+import { jakartaFonts } from "./plus-jakarta-font";
 
 export const BEDRIJF = {
   naam: "StudioBaris",
@@ -38,11 +37,11 @@ function euro(v) {
 }
 
 // ── PDF ─────────────────────────────────────────────────────────────────────
-// Bewust met de ingebouwde Helvetica voor alle lopende tekst: geen los
-// lettertypebestand nodig, dus niets dat op Vercel kan ontbreken. Alleen de
-// "B" en de "StudioBaris"-naam bovenaan gebruiken het merk-lettertype
-// (Bodoni Moda, zie lib/bodoni-moda-font.js) — dat zit als base64 ingebakken
-// in de code, om dezelfde reden. Eén A4, altijd dezelfde indeling.
+// Alles in Plus Jakarta Sans, het StudioBaris-lettertype (zelfde als de site,
+// de werkplek en de preview-tool). Zit als base64 in lib/plus-jakarta-font.js,
+// dus geen los lettertypebestand dat op Vercel kan ontbreken. De "B" en de
+// "StudioBaris"-naam bovenaan gebruiken ExtraBold (800). Eén A4, altijd
+// dezelfde indeling.
 export async function factuurPdf(f) {
   const snap = f.snapshot || {};
   const klant = snap.klant || {};
@@ -54,15 +53,8 @@ export async function factuurPdf(f) {
   const automatischeIncasso = maandelijks || f.soort === "slottermijn";
 
   const pdf = await PDFDocument.create();
-  pdf.registerFontkit(fontkit);
   const pagina = pdf.addPage([595.28, 841.89]); // A4
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
-  // Merk-lettertype: alleen voor de "B" en de "StudioBaris"-naam bovenaan,
-  // zelfde lettertype als het app-icoon en de favicon. De rest van de tekst
-  // blijft bewust Helvetica (zie de opmerking hierboven bij de import).
-  const merk = await pdf.embedFont(Buffer.from(BODONI_BOLD_BASE64, "base64"));
+  const { font, vet, italic, merk } = await jakartaFonts(pdf);
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy, logo/tabelbalk/koppen (nieuwe huisstijl)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -138,8 +130,11 @@ export async function factuurPdf(f) {
     ["Klantnummer:", klant.klantnummer || "—"],
   ];
   let gy = y;
+  // Labelkolom schuift mee met de breedste waarde (bijv. "12 november 2026"),
+  // zodat label en waarde nooit tegen elkaar aan staan.
+  const labelEind = Math.min(R - 90, R - Math.max(...gegevens.map(([, w]) => breedteVan(w, { vet: true }))) - 10);
   for (const [label, waarde] of gegevens) {
-    rechts(label, R - 90, gy, { kleur: GRIJS });
+    rechts(label, labelEind, gy, { kleur: GRIJS });
     rechts(waarde, R, gy, { vet: true });
     gy -= 14;
   }
@@ -226,7 +221,9 @@ export async function factuurPdf(f) {
   const balkLabel = "Totaal incl. btw", balkWaarde = euro(f.bedrag_incl);
   const balkStart = Math.min(
     xPrijs - 90,
-    xTotaalKol - breedteVan(balkLabel, { size: 12 }) - 10 - breedteVan(balkWaarde, { vet: true, size: 12 }) - 16
+    // Zelfde eindpunt voor het label als totaalregel() gebruikt, zodat het
+    // label nooit links buiten de balk valt.
+    Math.min(xPrijs, xTotaalKol - breedteVan(balkWaarde, { vet: true, size: 12 }) - 10) - breedteVan(balkLabel, { size: 12 }) - 12
   );
   vlak(balkStart, y - balkHoogte + 6, R - balkStart, balkHoogte, INKT);
   totaalregel(balkLabel, balkWaarde, xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });

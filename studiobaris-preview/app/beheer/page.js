@@ -76,7 +76,7 @@ function PluginBadge({ versie, gezien, nieuwste }) {
   );
 }
 
-const wrap = { maxWidth: 1100, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
+const wrap = { maxWidth: 1100, margin: "5vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" };
 const th = { textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, color: "#B0A697", padding: "8px 10px", borderBottom: "2px solid #eee", whiteSpace: "nowrap" };
 const td = { padding: "12px 10px", borderBottom: "1px solid #f0f0f0", fontSize: 13, verticalAlign: "top" };
 const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 12, padding: "14px 18px", minWidth: 150 };
