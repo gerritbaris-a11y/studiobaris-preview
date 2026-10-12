@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default function LeadsImportPage() {
   const sessie = leesSessie();
   return (
-    <main style={{ maxWidth: 760, margin: "5vh auto", padding: "0 20px", fontFamily: "system-ui, sans-serif", color: "#2B2724" }}>
+    <main style={{ maxWidth: 760, margin: "5vh auto", padding: "0 20px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#B0A697" }}>StudioBaris</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 6px" }}>Leads importeren</h1>
       <p style={{ color: "#6B6258", fontSize: 14, lineHeight: 1.6 }}>

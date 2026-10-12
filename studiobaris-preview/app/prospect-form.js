@@ -245,7 +245,7 @@ export default function ProspectForm({
     const s2 = resultaat && resultaat.slug;
     if (intern && s2) {
       return (
-        <main style={{ maxWidth: 640, margin: "12vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+        <main style={{ maxWidth: 640, margin: "12vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
           <h1 style={{ fontSize: 30, margin: 0 }}>De preview staat klaar</h1>
           <p style={{ color: "#555", marginTop: 12, fontSize: 17, lineHeight: 1.6 }}>

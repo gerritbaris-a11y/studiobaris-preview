@@ -71,7 +71,7 @@ export default function WerkplekChrome() {
   };
 
   return (
-    <div style={{ position: "fixed", right: 16, bottom: 16, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, fontFamily: "system-ui, sans-serif" }}>
+    <div style={{ position: "fixed", right: 16, bottom: 16, zIndex: 60, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       {open && (
         <div style={{ width: 300, background: "#fff", border: "1px solid #E7DED2", borderRadius: 14, boxShadow: "0 12px 34px rgba(0,0,0,.22)", padding: 16 }}>
           {status === "klaar" ? (

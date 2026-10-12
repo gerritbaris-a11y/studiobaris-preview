@@ -2,7 +2,7 @@ import { leesSessie } from "../../../lib/auth";
 import { laadVoorAanpassen, magAanpassen, FONTS } from "../../../lib/aanpassen";
 import { getAlleVakfotos } from "../../../lib/vakfotos";
 import { nicheKey } from "../../../lib/preview-assets";
-import { KLEUR, HEAD, BODY, FONT_LINK } from "../../werkplek-stijl";
+import { KLEUR, HEAD, BODY } from "../../werkplek-stijl";
 import AanpassenClient from "./aanpassen-client";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +31,6 @@ export default async function AanpassenPagina({ params }) {
 
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href={FONT_LINK} />
       <AanpassenClient
         slug={rij.slug}
         naam={rij.naam || rij.slug}

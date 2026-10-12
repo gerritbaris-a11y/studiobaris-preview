@@ -43,7 +43,7 @@ export default function InstallPrompt() {
     position: "fixed", left: 12, right: 12, bottom: 12, zIndex: 9999,
     background: "#1A2E40", color: "#fff", borderRadius: 16,
     padding: "14px 14px 14px 16px", boxShadow: "0 12px 34px -10px rgba(0,0,0,.45)",
-    fontFamily: "system-ui, sans-serif", display: "flex", alignItems: "center", gap: 12,
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", display: "flex", alignItems: "center", gap: 12,
     maxWidth: 560, margin: "0 auto",
   };
   const logo = { flex: "0 0 auto", width: 38, height: 38, borderRadius: 10, background: "#F7B05B", color: "#1A2E40", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 16 };

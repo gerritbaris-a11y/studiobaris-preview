@@ -16,8 +16,8 @@ const K = {
   lijn: "#ECE4D7", lijn2: "#E3DACB", klei: "#C05A38", kleiDonker: "#9E3B2E", kleiZacht: "#F5E2D9",
   groen: "#1d7a46",
 };
-const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
-const BODY = "'Hanken Grotesk', system-ui, sans-serif";
+const HEAD = "'Plus Jakarta Sans', system-ui, sans-serif";
+const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
 
 const STIJLEN = [
   { id: "stoer", naam: "Stoer", uitleg: "Donker, krachtig, grote koppen" },

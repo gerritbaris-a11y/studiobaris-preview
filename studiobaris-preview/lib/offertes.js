@@ -12,11 +12,10 @@
 //      Bevat de offerte er maar één soort (bijv. alleen een plugin-afname,
 //      volledig eenmalig), dan verschijnt er gewoon één blok, geen loze
 //      kopjes.
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb } from "pdf-lib";
 import { BEDRIJF } from "./facturen";
 import { datumNL } from "./mollie";
-import { BODONI_BOLD_BASE64 } from "./bodoni-moda-font";
+import { jakartaFonts } from "./plus-jakarta-font";
 
 function euro(v) {
   const n = Number(v) || 0;
@@ -32,14 +31,9 @@ export async function offertePdf(o) {
   const heeftBeide = eenmaligRegels.length > 0 && maandRegels.length > 0;
 
   const pdf = await PDFDocument.create();
-  pdf.registerFontkit(fontkit);
   const pagina = pdf.addPage([595.28, 841.89]); // A4
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const vet = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
-  // Merk-lettertype: alleen voor de "B" en de "StudioBaris"-naam bovenaan,
-  // zelfde lettertype als het app-icoon en de favicon (zie lib/facturen.js).
-  const merk = await pdf.embedFont(Buffer.from(BODONI_BOLD_BASE64, "base64"));
+  // Plus Jakarta Sans, zelfde als de facturen (zie lib/plus-jakarta-font.js).
+  const { font, vet, italic, merk } = await jakartaFonts(pdf);
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy (nieuwe huisstijl, zelfde als facturen.js)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -109,8 +103,11 @@ export async function offertePdf(o) {
     ["Geldig tot:", datumNL(o.geldig_tot)],
   ];
   let gy = y;
+  // Labelkolom schuift mee met de breedste waarde (bijv. "12 november 2026"),
+  // zodat label en waarde nooit tegen elkaar aan staan.
+  const labelEind = Math.min(R - 90, R - Math.max(...gegevens.map(([, w]) => breedteVan(w, { vet: true }))) - 10);
   for (const [label, waarde] of gegevens) {
-    rechts(label, R - 90, gy, { kleur: GRIJS });
+    rechts(label, labelEind, gy, { kleur: GRIJS });
     rechts(waarde, R, gy, { vet: true });
     gy -= 14;
   }
@@ -212,7 +209,9 @@ export async function offertePdf(o) {
     const balkWaarde = euro(incl);
     const balkStart = Math.min(
       xPrijs - 90,
-      xTotaalKol - breedteVan(balkLabel, { size: 12 }) - 10 - breedteVan(balkWaarde, { vet: true, size: 12 }) - 16
+      // Zelfde eindpunt voor het label als totaalregel() gebruikt, zodat het
+      // label nooit links buiten de balk valt.
+      Math.min(xPrijs, xTotaalKol - breedteVan(balkWaarde, { vet: true, size: 12 }) - 10) - breedteVan(balkLabel, { size: 12 }) - 12
     );
     vlak(balkStart, y - balkHoogte + 6, R - balkStart, balkHoogte, INKT);
     totaalregel(balkLabel, balkWaarde, xPrijs, xTotaalKol, y - 8, { size: 12, kleur: WIT });

@@ -13,7 +13,7 @@ domein/website, aansprakelijkheid, en contactgegevens. ]
 
 export default function VoorwaardenPage() {
   return (
-    <main style={{ maxWidth: 760, margin: "6vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222", lineHeight: 1.7 }}>
+    <main style={{ maxWidth: 760, margin: "6vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222", lineHeight: 1.7 }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
       <h1 style={{ fontSize: 30, margin: "6px 0 18px" }}>Algemene voorwaarden</h1>
       <div style={{ whiteSpace: "pre-wrap", fontSize: 15, color: "#333" }}>{VOORWAARDEN.trim()}</div>

@@ -48,7 +48,7 @@ export default function LoginForm({ team = [] }) {
 
   const wrap = {
     minHeight: "100vh", background: "#0f1c29", display: "flex", alignItems: "center",
-    justifyContent: "center", padding: 16, fontFamily: "system-ui, sans-serif",
+    justifyContent: "center", padding: 16, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
   };
   const card = {
     background: "#fff", borderRadius: 18, padding: "26px 22px", width: "100%",

@@ -37,11 +37,13 @@ export function redenKleur(kleur) {
   return KLEUR.grijs;
 }
 
-export const FONT_LINK =
-  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap";
-
-export const HEAD = "'Bricolage Grotesque', system-ui, sans-serif";
-export const BODY = "'Hanken Grotesk', system-ui, sans-serif";
+// Eén lettertype voor alles van StudioBaris: Plus Jakarta Sans (zelfde als
+// studiobaris.nl, de preview-tool en de facturen/offertes/brieven). Zelf gehost
+// via @font-face in app/globals.css — geen losse <link> naar Google meer nodig.
+// Koppen gebruiken gewicht 800, lopende tekst 400–700.
+export const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
+export const HEAD = FONT;
+export const BODY = FONT;
 
 // De schermen van de werkplek. beheer=alles, verkoper=alleen Mijn previews.
 // "Mijn klanten" heet bewust "Mijn previews": dit is de verkooppijplijn van

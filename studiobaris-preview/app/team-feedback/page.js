@@ -42,7 +42,7 @@ export default async function TeamFeedbackPagina() {
   const items = await getFeedback();
 
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: "28px 20px", fontFamily: "system-ui, sans-serif", color: "#2B2724" }}>
+    <main style={{ maxWidth: 820, margin: "0 auto", padding: "28px 20px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Feedback van het team</h1>
         <a href="/dashboard" style={{ color: "#C05A38", fontWeight: 700, fontSize: 14 }}>← Naar dashboard</a>

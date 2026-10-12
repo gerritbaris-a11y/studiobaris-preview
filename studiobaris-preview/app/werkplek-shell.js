@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { KLEUR, HEAD, BODY, FONT_LINK, NAV, NAV_GROEPEN } from "./werkplek-stijl";
+import { KLEUR, HEAD, BODY, NAV, NAV_GROEPEN } from "./werkplek-stijl";
 
 // Eén navigatiegroep (bijv. "Financieel") als knop met een uitklapmenu.
 // Vervangt meerdere losse tabbladen door één, zodat de balk overzichtelijk blijft.
@@ -79,8 +79,6 @@ function NavGroep({ groep, actief }) {
 export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts, children }) {
   return (
     <div style={{ minHeight: "100vh", background: KLEUR.papier, color: KLEUR.inkt, fontFamily: BODY }}>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="stylesheet" href={FONT_LINK} />
 
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.9)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>

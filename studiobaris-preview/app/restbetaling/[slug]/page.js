@@ -4,7 +4,7 @@ import RestKnop from "./rest-knop";
 
 export const dynamic = "force-dynamic";
 
-const wrap = { maxWidth: 640, margin: "8vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" };
+const wrap = { maxWidth: 640, margin: "8vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" };
 
 function euro(n) {
   return "€ " + Number(n || 0).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

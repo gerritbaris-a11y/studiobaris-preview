@@ -10,7 +10,7 @@ function euro(n) {
   return "€ " + v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "system-ui, sans-serif", color: "#2B2724" };
+const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" };
 
 export default async function TeamPage() {
   const sessie = leesSessie();

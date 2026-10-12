@@ -33,7 +33,7 @@ export default function RevisionForm({ slug, type, titel, intro, velden }) {
 
   if (status === "klaar") {
     return (
-      <main style={{ maxWidth: 620, margin: "12vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", textAlign: "center" }}>
+      <main style={{ maxWidth: 620, margin: "12vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "center" }}>
         <h1 style={{ fontSize: 28 }}>Bedankt!</h1>
         <p style={{ color: "#555", marginTop: 12, fontSize: 17 }}>
           We hebben je input ontvangen en werken je website bij. Je krijgt binnenkort de
@@ -44,7 +44,7 @@ export default function RevisionForm({ slug, type, titel, intro, velden }) {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "5vh auto", padding: "0 24px", fontFamily: "system-ui, sans-serif", color: "#222" }}>
+    <main style={{ maxWidth: 640, margin: "5vh auto", padding: "0 24px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#222" }}>
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 4px" }}>{titel}</h1>
       <p style={{ color: "#555", marginBottom: 8 }}>{intro}</p>
