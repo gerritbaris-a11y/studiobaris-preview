@@ -16,6 +16,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import { BEDRIJF } from "./facturen";
 import { datumNL } from "./mollie";
 import { jakartaFonts } from "./plus-jakarta-font";
+import { bodoniFonts } from "./bodoni-moda-font";
 
 function euro(v) {
   const n = Number(v) || 0;
@@ -32,8 +33,11 @@ export async function offertePdf(o) {
 
   const pdf = await PDFDocument.create();
   const pagina = pdf.addPage([595.28, 841.89]); // A4
-  // Plus Jakarta Sans, zelfde als de facturen (zie lib/plus-jakarta-font.js).
+  // Plus Jakarta Sans voor de lopende tekst (zie lib/plus-jakarta-font.js);
+  // Bodoni Moda voor het logo-blokje (zie lib/bodoni-moda-font.js) — zelfde
+  // opzet als facturen.js, zodat het logo overal identiek is.
   const { font, vet, italic, merk } = await jakartaFonts(pdf);
+  const { regular: bodoniReg, bold: bodoniBold } = await bodoniFonts(pdf);
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy (nieuwe huisstijl, zelfde als facturen.js)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -51,11 +55,11 @@ export async function offertePdf(o) {
     pagina.drawText(String(s == null ? "" : s), {
       x, y: yy,
       size: opt.size || 9.5,
-      font: opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font,
+      font: opt.font || (opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font),
       color: opt.kleur || INKT,
     });
   const breedteVan = (s, opt = {}) =>
-    (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
+    (opt.font || (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font)).widthOfTextAtSize(String(s), opt.size || 9.5);
   const rechts = (s, xEind, yy, opt = {}) => tekst(s, xEind - breedteVan(s, opt), yy, opt);
   const midden = (s, x0, x1, yy, opt = {}) => tekst(s, x0 + (x1 - x0 - breedteVan(s, opt)) / 2, yy, opt);
   const lijn = (yy, x0 = L, x1 = R, kleur = LIJN, dikte = 0.75) =>
@@ -75,13 +79,17 @@ export async function offertePdf(o) {
   let y = 780;
 
   // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
+  // "B" en "StudioBaris" in Bodoni Moda — zie toelichting in facturen.js.
   vlak(L, y - 28, 32, 32, INKT);
   pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD }); // gouden accentstip, zelfde motief als het app-icoon
-  tekst("B", L + 10, y - 18, { size: 16, merk: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, merk: true, kleur: INKT });
+  tekst("B", L + 10.5, y - 17.5, { size: 17, font: bodoniBold, kleur: WIT });
+  tekst("Studio", L + 42, y - 10, { size: 17, font: bodoniReg, kleur: INKT });
+  const studioBreedte = breedteVan("Studio", { size: 17, font: bodoniReg });
+  tekst("Baris", L + 42 + studioBreedte, y - 10, { size: 17, font: bodoniBold, kleur: INKT });
+  const naamBreedte = studioBreedte + breedteVan("Baris", { size: 17, font: bodoniBold });
   pagina.drawLine({
     start: { x: L + 42, y: y - 14 },
-    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { merk: true, size: 17 }), y: y - 14 },
+    end: { x: L + 42 + naamBreedte, y: y - 14 },
     thickness: 1.3, color: GOUD,
   });
 

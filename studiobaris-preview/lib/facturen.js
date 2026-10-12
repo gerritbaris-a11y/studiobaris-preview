@@ -8,6 +8,7 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import { periodeInWoorden, periodeKort, datumNL } from "./mollie";
 import { jakartaFonts } from "./plus-jakarta-font";
+import { bodoniFonts } from "./bodoni-moda-font";
 
 export const BEDRIJF = {
   naam: "StudioBaris",
@@ -37,11 +38,14 @@ function euro(v) {
 }
 
 // ── PDF ─────────────────────────────────────────────────────────────────────
-// Alles in Plus Jakarta Sans, het StudioBaris-lettertype (zelfde als de site,
-// de werkplek en de preview-tool). Zit als base64 in lib/plus-jakarta-font.js,
-// dus geen los lettertypebestand dat op Vercel kan ontbreken. De "B" en de
-// "StudioBaris"-naam bovenaan gebruiken ExtraBold (800). Eén A4, altijd
-// dezelfde indeling.
+// Lopende tekst in Plus Jakarta Sans, het StudioBaris-lettertype (zelfde als
+// de site, de werkplek en de preview-tool). Het logo-blokje bovenaan (de "B"
+// en de wordmark "StudioBaris") gebruikt Bodoni Moda — hetzelfde lettertype
+// als het echte beeldmerk (favicon, app-icoon, wordmark-bestanden), zodat het
+// logo op de factuur overal identiek is aan de huisstijl. Beide als base64 in
+// lib/plus-jakarta-font.js / lib/bodoni-moda-font.js, dus geen los
+// lettertypebestand dat op Vercel kan ontbreken. Eén A4, altijd dezelfde
+// indeling.
 export async function factuurPdf(f) {
   const snap = f.snapshot || {};
   const klant = snap.klant || {};
@@ -55,6 +59,7 @@ export async function factuurPdf(f) {
   const pdf = await PDFDocument.create();
   const pagina = pdf.addPage([595.28, 841.89]); // A4
   const { font, vet, italic, merk } = await jakartaFonts(pdf);
+  const { regular: bodoniReg, bold: bodoniBold } = await bodoniFonts(pdf);
 
   const INKT = rgb(0.102, 0.169, 0.239);   // #1A2B3D — navy, logo/tabelbalk/koppen (nieuwe huisstijl)
   const GRIJS = rgb(0.42, 0.38, 0.33);
@@ -72,11 +77,11 @@ export async function factuurPdf(f) {
     pagina.drawText(String(s == null ? "" : s), {
       x, y: yy,
       size: opt.size || 9.5,
-      font: opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font,
+      font: opt.font || (opt.merk ? merk : opt.italic ? italic : opt.vet ? vet : font),
       color: opt.kleur || INKT,
     });
   const breedteVan = (s, opt = {}) =>
-    (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font).widthOfTextAtSize(String(s), opt.size || 9.5);
+    (opt.font || (opt.merk ? merk : opt.vet ? vet : opt.italic ? italic : font)).widthOfTextAtSize(String(s), opt.size || 9.5);
   const rechts = (s, xEind, yy, opt = {}) => tekst(s, xEind - breedteVan(s, opt), yy, opt);
   const midden = (s, x0, x1, yy, opt = {}) => tekst(s, x0 + (x1 - x0 - breedteVan(s, opt)) / 2, yy, opt);
   const lijn = (yy, x0 = L, x1 = R, kleur = LIJN, dikte = 0.75) =>
@@ -99,13 +104,20 @@ export async function factuurPdf(f) {
   let y = 780;
 
   // ── Kop: beeldmerk + wordmark links, StudioBaris-gegevens rechts ──────────
+  // "B" en "StudioBaris" in Bodoni Moda — het lettertype van het echte
+  // beeldmerk (favicon/app-icoon/wordmark), niet Plus Jakarta Sans. "Studio"
+  // in het regular gewicht, "Baris" vet — exact dezelfde wordmark-opbouw als
+  // wordmark-navy.svg.
   vlak(L, y - 28, 32, 32, INKT);
   pagina.drawEllipse({ x: L + 27, y: y - 1, xScale: 3.4, yScale: 3.4, color: GOUD }); // gouden accentstip, zelfde motief als het app-icoon
-  tekst("B", L + 10, y - 18, { size: 16, merk: true, kleur: WIT });
-  tekst(BEDRIJF.naam, L + 42, y - 10, { size: 17, merk: true, kleur: INKT });
+  tekst("B", L + 10.5, y - 17.5, { size: 17, font: bodoniBold, kleur: WIT });
+  tekst("Studio", L + 42, y - 10, { size: 17, font: bodoniReg, kleur: INKT });
+  const studioBreedte = breedteVan("Studio", { size: 17, font: bodoniReg });
+  tekst("Baris", L + 42 + studioBreedte, y - 10, { size: 17, font: bodoniBold, kleur: INKT });
+  const naamBreedte = studioBreedte + breedteVan("Baris", { size: 17, font: bodoniBold });
   pagina.drawLine({
     start: { x: L + 42, y: y - 14 },
-    end: { x: L + 42 + breedteVan(BEDRIJF.naam, { merk: true, size: 17 }), y: y - 14 },
+    end: { x: L + 42 + naamBreedte, y: y - 14 },
     thickness: 1.3, color: GOUD,
   });
 
