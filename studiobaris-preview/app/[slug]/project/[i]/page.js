@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getPreview, googleFontsHref } from "../../../../lib/preview";
 import { getConcept, getFull } from "../../../../lib/server-data";
 import { brandVars } from "../../../../lib/brand";
+import { getProef, metProefProjecten } from "../../../../lib/proef";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,9 @@ async function haalContentOp(slug, searchParams) {
   if (isConcept) return await getConcept(slug);
   if (isReview) return await getFull(slug);
   const row = await getPreview(slug);
-  return row ? row.content : null;
+  if (!row) return null;
+  // Zelfde volgorde als de hoofdpagina: zelf geplaatste proefprojecten eerst.
+  return metProefProjecten(row.content, await getProef(slug));
 }
 
 export async function generateMetadata({ params, searchParams }) {
@@ -63,7 +66,7 @@ export default async function ProjectPage({ params, searchParams }) {
         <a className="logo" href={`/${params.slug}${modeQuery}`}>{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 36, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</a>
         <a className="back" href={`/${params.slug}${modeQuery}`}>← Terug naar de site</a>
       </header>
-      <section className="top"><div className="wrap"><div className="eyebrow">Project</div><h1>{p.titel}</h1>{p.plaats && <div className="meta">{p.plaats}</div>}</div></section>
+      <section className="top"><div className="wrap"><div className="eyebrow">{p.nieuw ? "Net door jou geplaatst" : "Project"}</div><h1>{p.titel}</h1>{p.plaats && <div className="meta">{p.plaats}</div>}</div></section>
       <section className="body"><div className="wrap">
         <div className="img" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>
         {p.omschrijving && <p>{p.omschrijving}</p>}
