@@ -71,9 +71,11 @@ export default function ProefBalk({ url, datum, geplaatst = 0 }) {
         <div className="sbp-in">
           <div className="sbp-rij">
             <div className="sbp-tekst">
-              <div className="sbp-kop">Probeer je eigen app</div>
+              <div className="sbp-kop">{over === 0 ? "Leuk, hè?" : "Probeer je eigen app"}</div>
               <div className="sbp-sub">
-                {teller}.
+                {over === 0
+                  ? <>Je 3 proefprojecten staan op je website. Volgende week kun je al beginnen met je eigen website. Bel of app ons: <a href={`tel:${SB_TEL}`} style={{ color: "#fff", fontWeight: 700 }}>{SB_TEL_TOON}</a>.</>
+                  : <>{teller}.</>}
                 <button type="button" className="sbp-uitleg" onClick={() => setOpen(!open)} aria-expanded={open}>
                   {open ? "Sluit uitleg" : "Zo werkt het"}
                 </button>

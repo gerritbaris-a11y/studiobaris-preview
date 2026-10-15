@@ -11,7 +11,7 @@ begin
   if not workflow.proef_geldt(s) then return new; end if;
   select geplaatst into n from workflow.proef where slug = s;
   if coalesce(n, 0) >= 3 then
-    raise exception 'Je hebt de 3 proefprojecten geplaatst. Bel of app StudioBaris op 06 16 73 21 05 om je eigen app te krijgen.'
+    raise exception 'Leuk, hè? Volgende week kun je al beginnen met je eigen website. Bel of app ons: 06 16 73 21 05.'
       using errcode = 'P0001';
   end if;
   return new;
