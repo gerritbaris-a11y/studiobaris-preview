@@ -417,14 +417,21 @@ export default function ProspectForm({
             <span style={hint}>{revise ? "Alleen invullen als je contactgegevens op de site niet kloppen." : "Worden klikbaar getoond in het contactblok en de footer (e-mail, bel-knop, WhatsApp)."}</span>
           </>
         ) : (
-          /* In de publieke intake vragen we alleen een e-mailadres, en niet voor de
-             site maar om contact op te kunnen nemen: de aanvrager krijgt de
-             previewlink niet te zien. De contactgegevens die op de site komen te
-             staan halen we pas na akkoord op. */
-          <label style={label}>E-mail *
-            <span style={hint}>Hier laten we weten dat je preview klaarstaat. Verder gebruiken we het nergens voor.</span>
-            <input style={veld} name="email" type="email" required defaultValue={v.email || ""} />
-          </label>
+          /* In de publieke intake vragen we een e-mailadres en een telefoonnummer.
+             Het telefoonnummer is verplicht: we gebruiken het om contact op te
+             nemen (komt in lead_phone) en het komt als bel- en WhatsApp-knop op
+             de preview. De overige gegevens voor de site (adres, KvK, btw) halen
+             we pas na akkoord op. */
+          <>
+            <label style={label}>E-mail *
+              <span style={hint}>Hier laten we weten dat je preview klaarstaat. Verder gebruiken we het nergens voor.</span>
+              <input style={veld} name="email" type="email" required defaultValue={v.email || ""} />
+            </label>
+            <label style={label}>Telefoonnummer *
+              <span style={hint}>Zo kunnen we je bellen over je preview. Het nummer komt ook als bel- en WhatsApp-knop op je preview.</span>
+              <input style={veld} name="telefoon" type="tel" inputMode="tel" autoComplete="tel" required defaultValue={v.telefoon || ""} />
+            </label>
+          </>
         )}
         {uitgebreid && (
           <>
