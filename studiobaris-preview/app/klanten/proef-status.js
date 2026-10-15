@@ -1,0 +1,93 @@
+"use client";
+
+// Proefperiode van de demo-app, per preview in "Mijn previews".
+// - Nog niet gestart: knop "Start proefperiode" (druk je in als de brief of de
+//   preview de deur uitgaat). Opent de prospect de app eerder, dan start hij
+//   vanzelf.
+// - Loopt: tot wanneer, hoeveel van de 3 projecten geplaatst, en of er
+//   recent iets geplaatst is. Gerrit en Levi kunnen verlengen.
+
+import { useState } from "react";
+
+const MAX = 3;
+
+function datum(iso, lang = false) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: lang ? "long" : "short", timeZone: "Europe/Amsterdam" });
+}
+
+export default function ProefStatus({ proef, magVerlengen }) {
+  const [bezig, setBezig] = useState("");
+  const [fout, setFout] = useState("");
+  if (!proef || !proef.heeft_demo) return null;
+
+  async function actie(pad) {
+    setBezig(pad); setFout("");
+    try {
+      const res = await fetch(`/api/proef/${pad}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: proef.slug }),
+      });
+      const j = await res.json();
+      if (j.ok) { window.location.reload(); return; }
+      setFout(j.error || "Mislukt.");
+    } catch {
+      setFout("Mislukt.");
+    }
+    setBezig("");
+  }
+
+  const vak = {
+    display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 12px",
+    background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10, padding: "8px 12px", fontSize: 13,
+  };
+  const knop = {
+    fontSize: 12.5, padding: "6px 11px", borderRadius: 8, border: "1px solid #C05A38",
+    background: "#C05A38", color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+  };
+  const knopLicht = { ...knop, background: "#fff", color: "#a35400" };
+
+  if (!proef.gestart_op) {
+    return (
+      <div style={vak}>
+        <span style={{ fontWeight: 700, color: "#2B2724" }}>Proefperiode app</span>
+        <span style={{ color: "#8A7C68" }}>Nog niet gestart. Start hem als je de brief of preview verstuurt; opent de prospect de app eerder, dan start hij vanzelf.</span>
+        <button onClick={() => actie("start")} disabled={!!bezig} style={knop}>
+          {bezig === "start" ? "Starten…" : "Start proefperiode"}
+        </button>
+        {fout && <span style={{ color: "#b91c1c", fontWeight: 600 }}>{fout}</span>}
+      </div>
+    );
+  }
+
+  const verlopen = proef.tot && new Date(proef.tot).getTime() < Date.now();
+  const recent = proef.laatst_geplaatst_op && Date.now() - new Date(proef.laatst_geplaatst_op).getTime() < 7 * 864e5;
+  const geplaatst = Number(proef.geplaatst) || 0;
+
+  return (
+    <div style={vak}>
+      <span style={{ fontWeight: 700, color: "#2B2724" }}>Proefperiode app</span>
+      <span style={{ color: verlopen ? "#b91c1c" : "#524A40", fontWeight: verlopen ? 700 : 400 }}>
+        {verlopen ? `Verlopen op ${datum(proef.tot)}` : `Loopt tot ${datum(proef.tot)}`}
+        {proef.verlengd > 0 ? ` (${proef.verlengd}× verlengd)` : ""}
+      </span>
+      <span style={{ color: geplaatst > 0 ? "#0f6e56" : "#8A7C68", fontWeight: geplaatst > 0 ? 700 : 400 }}>
+        {geplaatst} van {MAX} projecten geplaatst
+      </span>
+      {recent && (
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "#0f6e56", padding: "2px 9px", borderRadius: 999 }}>
+          Proefproject geplaatst op {datum(proef.laatst_geplaatst_op)}
+        </span>
+      )}
+      {magVerlengen && (
+        <button onClick={() => actie("verleng")} disabled={!!bezig} style={knopLicht}>
+          {bezig === "verleng" ? "Verlengen…" : "Verleng 30 dagen"}
+        </button>
+      )}
+      {fout && <span style={{ color: "#b91c1c", fontWeight: 600 }}>{fout}</span>}
+    </div>
+  );
+}

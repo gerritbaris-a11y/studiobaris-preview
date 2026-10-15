@@ -4,6 +4,8 @@ import WerkplekShell from "../werkplek-shell";
 import AiUpdateBlok from "./ai-update-blok";
 import Voorstellen from "./voorstellen";
 import { KLEUR } from "../werkplek-stijl";
+import { getProefOverzicht } from "../../lib/proef";
+import ProefMeldingen from "./proef-meldingen";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +18,17 @@ export default async function VandaagPage() {
   const naam = sessie && sessie.naam ? sessie.naam : "collega";
   const beheer = isBeheer(sessie);
 
-  const [aiUpdate, voorstellen] = await Promise.all([getAiUpdate(), getVoorstellen()]);
+  const [aiUpdate, voorstellen, proefLijst] = await Promise.all([getAiUpdate(), getVoorstellen(), getProefOverzicht()]);
+
+  // Proefperiode demo-app: recent geplaatste proefprojecten en de maandvraag.
+  const nu = Date.now();
+  const lopend = (proefLijst || []).filter((p) => p.gestart_op && !p.is_klant && !p.afgewezen);
+  const geplaatst = lopend
+    .filter((p) => p.laatst_geplaatst_op && nu - new Date(p.laatst_geplaatst_op).getTime() < 7 * 864e5)
+    .sort((a, b) => new Date(b.laatst_geplaatst_op) - new Date(a.laatst_geplaatst_op));
+  const maandvraag = lopend
+    .filter((p) => p.tot && new Date(p.tot).getTime() <= nu)
+    .sort((a, b) => new Date(a.tot) - new Date(b.tot));
 
   return (
     <WerkplekShell
@@ -26,6 +38,7 @@ export default async function VandaagPage() {
       titel="Vandaag"
       sub="Wat er nu speelt."
     >
+      <ProefMeldingen geplaatst={geplaatst} maandvraag={maandvraag} />
       {aiUpdate ? (
         <AiUpdateBlok update={aiUpdate} />
       ) : (

@@ -60,3 +60,46 @@ export function proefDatum(tot) {
   if (isNaN(d.getTime()) || d.getTime() < Date.now()) return "";
   return d.toLocaleDateString("nl-NL", { day: "numeric", month: "long", timeZone: "Europe/Amsterdam" });
 }
+
+// ---- Dashboard -------------------------------------------------------------
+
+async function rpcProef(naam, body) {
+  const k = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!k) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${naam}`, {
+    method: "POST",
+    headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const t = await res.text();
+  try { return t ? JSON.parse(t) : null; } catch { return null; }
+}
+
+// Alle previews waarvoor de proefperiode geldt, met hun status.
+// Faalt dit, dan geven we een lege lijst: het dashboard moet altijd laden.
+export async function getProefOverzicht() {
+  try {
+    const d = await rpcProef("sb_proef_overzicht", {});
+    return Array.isArray(d) ? d : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function startProef(slug) {
+  return rpcProef("sb_proef_start", { p_slug: slug, p_via: "knop" });
+}
+
+export async function verlengProef(slug) {
+  return rpcProef("sb_proef_verleng", { p_slug: slug });
+}
+
+// Korte datum voor het dashboard: "14 nov".
+export function korteDatum(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" });
+}
