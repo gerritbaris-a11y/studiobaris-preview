@@ -69,7 +69,7 @@ export default async function Page({ params, searchParams }) {
   if (proef.actief) content = metProefProjecten(content, proef);
   const balk = proef.actief ? (
     <div style={brandVars((content && content.merk) || {})}>
-      <ProefBalk url={DEMO_BASIS + params.slug} datum={proefDatum(proef.tot)} klaar={proef.geplaatst >= 3} />
+      <ProefBalk url={DEMO_BASIS + params.slug} datum={proefDatum(proef.tot)} geplaatst={proef.geplaatst} />
     </div>
   ) : null;
 
