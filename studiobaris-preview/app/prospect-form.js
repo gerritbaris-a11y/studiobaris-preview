@@ -93,6 +93,8 @@ export default function ProspectForm({
   // het versturen, in plaats van na een mislukte generatie.
   const [logoFout, setLogoFout] = useState("");
   const [fotoFout, setFotoFout] = useState("");
+  // Branche is verplicht bij een nieuwe aanvraag (niet bij aanpassen).
+  const [brancheFout, setBrancheFout] = useState("");
   // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
   const [uploadStand, setUploadStand] = useState("");
 
@@ -153,7 +155,10 @@ export default function ProspectForm({
     return { logoUrl, fotoUrls };
   }
 
-  const toggle = (list, setList, val) => setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
+  const toggle = (list, setList, val) => {
+    if (setList === setBranches) setBrancheFout("");
+    setList(list.includes(val) ? list.filter((x) => x !== val) : [...list, val]);
+  };
   const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
   const setSocial = (i, val) => setSocials(socials.map((s, j) => (j === i ? val : s)));
 
@@ -168,6 +173,15 @@ export default function ProspectForm({
       if (revise && !s) return;
       fd.append(k, s);
     };
+
+    // Branche is verplicht bij een nieuwe aanvraag: aangevinkt of zelf ingevuld.
+    if (!revise && !branches.length && !f.branche_anders.value.trim()) {
+      const melding = "Kies minstens één branche, of vul bij \"Anders, namelijk\" je vak in.";
+      setBrancheFout(melding);
+      setError(melding);
+      setStatus("fout");
+      return;
+    }
 
     if (revise) {
       fd.append("slug", slug);
@@ -232,6 +246,13 @@ export default function ProspectForm({
       const res = await fetch(revise ? "/api/revise" : "/api/intake", { method: "POST", body: fd });
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
+      // Publieke aanvraag: naar een eigen bedanktpagina, zodat Google de
+      // aanvraag als bezoek aan /intake/bedankt kan meten. Interne aanvragen
+      // (ingelogd) en aanpassingen blijven op het eigen klaar-scherm.
+      if (!revise && !intern) {
+        window.location.assign("/intake/bedankt");
+        return;
+      }
       setResultaat(data);
       setStatus("klaar");
     } catch (err) {
@@ -357,7 +378,7 @@ export default function ProspectForm({
           </>
         )}
 
-        <div style={label}>Branche (meerdere mogelijk)</div>
+        <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>
           {BRANCHES.map((b) => (
@@ -366,7 +387,9 @@ export default function ProspectForm({
             </span>
           ))}
         </div>
-        <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder="Anders, namelijk... (optioneel)" />
+        <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder={revise ? "Anders, namelijk... (optioneel)" : "Anders, namelijk..."}
+          onChange={(e) => { if (e.target.value.trim()) setBrancheFout(""); }} />
+        {brancheFout && <span style={foutTekst}>{brancheFout}</span>}
 
         {uitgebreid && (
           <>
