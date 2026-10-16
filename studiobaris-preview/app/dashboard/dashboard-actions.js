@@ -631,8 +631,8 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
   const naam = (contact && contact.trim()) || bedrijf || "";
   const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
   // Persoonlijke demo-app: de app in het jasje van deze klant. Is die er (nog) niet
-  // of is hij leeg, dan de algemene demo.
-  const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "https://demo.studiobaris.nl";
+  // of is hij leeg, dan laten we de app-regel weg (de algemene demo is uitgezet, okt 2026).
+  const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "";
   const groet = afzender || "Gerrit";
   const zin = (persoonlijk && persoonlijk.trim()) || "[PERSOONLIJKE ZIN — vul deze nog in]";
 
@@ -654,7 +654,7 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
     "Ik heb alvast een complete website-opzet voor jouw bedrijf ontworpen, inclusief de app-koppeling. Je kunt 'm hier direct bekijken:",
     "",
     "Jouw website: " + previewLink,
-    "Jouw app: " + demoLink,
+    ...(demoLink ? ["Jouw app: " + demoLink] : []),
     "",
     "Het inrichten doe ik tot eind augustus gratis. Kijk eerst maar even of het ontwerp je bevalt — vind je 'm niks, dan is de prijs toch niet interessant. En bevalt-ie wel, dan vertel ik je precies wat het kost. Geen kleine lettertjes.",
     "",
