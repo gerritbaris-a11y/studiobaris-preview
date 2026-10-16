@@ -7,7 +7,8 @@ import { getWerk } from "../../lib/aanpassen";
 import { brandVars } from "../../lib/brand";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
-import { getProef, metProefProjecten, proefDatum, DEMO_BASIS } from "../../lib/proef";
+import { getProef, metProefProjecten, proefDatum, DEMO_BASIS, telBezoek } from "../../lib/proef";
+import { cookies, headers } from "next/headers";
 import ProefBalk from "./proef-balk";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,12 @@ export default async function Page({ params, searchParams }) {
   // werkversie of de stijlvergelijking (?stijl=). Zelf geplaatste projecten bovenaan.
   const isGewoon = !isWerk && !isConcept && !searchParams?.stijl;
   const proef = isGewoon ? await getProef(params.slug) : { actief: false };
+  if (isGewoon) {
+    await telBezoek(params.slug, {
+      ingelogd: Boolean(cookies().get("sb_sessie") || cookies().get("sb_team")),
+      userAgent: headers().get("user-agent") || "",
+    });
+  }
   if (proef.actief) content = metProefProjecten(content, proef);
   const balk = proef.actief ? (
     <div style={brandVars((content && content.merk) || {})}>

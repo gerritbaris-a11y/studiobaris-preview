@@ -103,3 +103,20 @@ export function korteDatum(iso) {
   if (isNaN(d.getTime())) return "";
   return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" });
 }
+
+// ---- Preview bekeken ---------------------------------------------------------
+// Telt een bezoek aan de preview, voor "Preview bekeken" in Mijn previews.
+// Niet geteld: wie is ingelogd op het teamdashboard (cookie sb_sessie), en
+// bots/linkvoorbeelden (WhatsApp, Facebook, Google, curl enz.). Herladen of
+// terugkeren binnen 30 minuten telt de database niet als nieuw bezoek.
+const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|slack|discord|linkedin|skype|google|bing|yandex|vercel|curl|wget|python|node-fetch|axios|headless|lighthouse|pagespeed/i;
+
+export async function telBezoek(slug, { ingelogd, userAgent }) {
+  if (!slug || ingelogd) return;
+  if (!userAgent || BOT.test(userAgent)) return;
+  try {
+    await rpcProef("sb_preview_bezocht", { p_slug: slug });
+  } catch {
+    // Tellen mag de preview nooit tegenhouden.
+  }
+}

@@ -29,6 +29,40 @@ const REACTIE_LABEL = { intake: "klant-intake", feedback: "feedback" };
 
 const card = { background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 16, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
 
+// Wat de prospect met zijn preview en demo-app heeft gedaan (rechtsboven per preview).
+function wanneer(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const dagen = Math.floor((Date.now() - d.getTime()) / 864e5);
+  if (dagen <= 0) return "vandaag";
+  if (dagen === 1) return "gisteren";
+  if (dagen < 7) return dagen + " dagen geleden";
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" });
+}
+
+function ProspectActiviteit({ p }) {
+  if (!p) return null;
+  const regel = { fontSize: 12.5, color: "#524A40", whiteSpace: "nowrap" };
+  const uit = { ...regel, color: "#B0A697" };
+  const aan = (b) => ({ ...regel, fontWeight: 700, color: b ? "#0f6e56" : "#524A40" });
+  const geplaatst = Number(p.geplaatst) || 0;
+  const appOpen = p.gestart_op && p.gestart_via === "app";
+  return (
+    <div style={{ display: "grid", gap: 3, textAlign: "right", marginTop: 6, padding: "8px 10px", background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10 }}>
+      {p.bekeken_aantal > 0
+        ? <span style={aan(true)}>● Preview bekeken {p.bekeken_aantal}× · laatst {wanneer(p.bekeken_laatst)}</span>
+        : <span style={uit}>○ Preview nog niet bekeken</span>}
+      {appOpen
+        ? <span style={aan(true)}>● App geopend {wanneer(p.gestart_op)}</span>
+        : <span style={uit}>○ App nog niet geopend{p.gestart_op ? " (proef gestart via knop)" : ""}</span>}
+      {geplaatst > 0
+        ? <span style={aan(true)}>● {geplaatst} van 3 projecten geplaatst · laatst {wanneer(p.laatst_geplaatst_op)}</span>
+        : <span style={uit}>○ Nog geen project geplaatst</span>}
+    </div>
+  );
+}
+
 function BetaalBadge({ status }) {
   const map = {
     actief: ["#0f6e56", "Aanbetaling voldaan"],
@@ -162,6 +196,9 @@ export default async function KlantenPage() {
                   </span>
                 )}
                 <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
+                <div style={{ flexBasis: "100%", display: "flex", justifyContent: "flex-end" }}>
+                  <ProspectActiviteit p={proefPerSlug[r.slug]} />
+                </div>
               </div>
             </div>
 
