@@ -14,7 +14,10 @@ async function haalContentOp(slug, searchParams) {
   const isConcept = searchParams?.concept === "1";
   const isReview = searchParams?.review === "1";
   if (isConcept) return await getConcept(slug);
-  if (isReview) return await getFull(slug);
+  if (isReview) {
+    const vol = await getFull(slug);
+    return vol ? metProefProjecten(vol, await getProef(slug)) : null;
+  }
   const row = await getPreview(slug);
   if (!row) return null;
   // Zelfde volgorde als de hoofdpagina: zelf geplaatste proefprojecten eerst.
