@@ -7,6 +7,8 @@ import { getWerk } from "../../lib/aanpassen";
 import { brandVars } from "../../lib/brand";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
+import { getProef, metProefProjecten, proefDatum, DEMO_BASIS } from "../../lib/proef";
+import ProefBalk from "./proef-balk";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +62,17 @@ export default async function Page({ params, searchParams }) {
     content = row.content;
   }
 
+  // Proefperiode demo-app: alleen op de gewone preview-link (niet in concept,
+  // review of werkversie). Zelf geplaatste projecten komen bovenaan.
+  const isGewoon = !isWerk && !isConcept && !isReview;
+  const proef = isGewoon ? await getProef(params.slug) : { actief: false };
+  if (proef.actief) content = metProefProjecten(content, proef);
+  const balk = proef.actief ? (
+    <div style={brandVars((content && content.merk) || {})}>
+      <ProefBalk url={DEMO_BASIS + params.slug} datum={proefDatum(proef.tot)} geplaatst={proef.geplaatst} />
+    </div>
+  ) : null;
+
   // Vul lege velden met duidelijk-neppe voorbeelden, zodat de verkoop-preview
   // nooit kaal oogt. Alleen hier (preview) — de echte klantsite krijgt dit niet.
   const c = vulVoorbeeld(content || {});
@@ -68,8 +81,8 @@ export default async function Page({ params, searchParams }) {
   // query-param zouden ze "niet gevonden" tonen zodra iemand doorklikt.
   const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
   const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
-  if (stijl === "modern") return <ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
-  if (stijl === "persoonlijk") return <PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />;
+  if (stijl === "modern") return <><ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />{balk}</>;
+  if (stijl === "persoonlijk") return <><PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />{balk}</>;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   let sloganAcc = null;
@@ -257,7 +270,7 @@ export default async function Page({ params, searchParams }) {
             ? projecten.map((p, i) => (
                 <a className="pc" key={i} href={`/${params.slug}/project/${i}${modeQuery}`}>
                   <div className="pph" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>
-                  <div className="pb"><h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
+                  <div className="pb">{p.nieuw && <span style={{ display: "inline-block", background: "#111827", color: "#fff", fontSize: ".72rem", fontWeight: 700, padding: ".2rem .55rem", borderRadius: 999, marginBottom: ".35rem" }}>Net door jou geplaatst</span>}<h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
               ))
             : [0, 1, 2].map((i) => (
@@ -324,6 +337,7 @@ export default async function Page({ params, searchParams }) {
         </div>
         <div className="fbottom">&copy; {new Date().getFullYear()} {b.naam} &middot; Website door StudioBaris</div>
       </footer>
+      {balk}
     </div>
   );
 }

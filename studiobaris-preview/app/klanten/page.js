@@ -20,6 +20,8 @@ import DocumentenKaart from "../documenten-kaart";
 import KlantenZoek from "./klanten-zoek";
 import HostingCheck from "./hosting-check";
 import { KLEUR, HEAD } from "../werkplek-stijl";
+import { getProefOverzicht } from "../../lib/proef";
+import ProefStatus from "./proef-status";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +43,9 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads, teamleden] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin()]);
+  const [alles, mijnLeads, teamleden, proefLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht()]);
+  const proefPerSlug = Object.fromEntries((proefLijst || []).map((p) => [p.slug, p]));
+  const magVerlengen = naam === "Gerrit" || naam === "Levi";
   // Welke handleiding hoort bij deze verkoper? Volgt uit zijn vergoedingsmodel.
   const ikzelf = (teamleden || []).find((t) => t.naam === naam);
   const mijnModel = ikzelf ? ikzelf.vergoeding_model : "50pct";
@@ -172,6 +176,7 @@ export default async function KlantenPage() {
             </div>
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
+            <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
