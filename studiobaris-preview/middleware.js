@@ -95,7 +95,15 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  // Merkteken "dit apparaat is van het team", voor alle studiobaris.nl-domeinen.
+  // De previewpagina telt bezoeken met dit merkteken niet als prospectbezoek.
+  // Bevat geen sessie of naam: alleen "1".
+  const res = NextResponse.next();
+  const host = req.headers.get("host") || "";
+  if (host.endsWith("studiobaris.nl") && !req.cookies.get("sb_team")) {
+    res.cookies.set("sb_team", "1", { domain: ".studiobaris.nl", path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax", secure: true });
+  }
+  return res;
 }
 
 export const config = {
@@ -128,6 +136,7 @@ export const config = {
     "/nieuw-akkoord/:path*",
     "/team/:path*",
     "/api/hosting-check",
+    "/api/proef/:path*",
     "/api/klant/delete",
     "/api/klant/update",
     "/api/klant/gegevens",
