@@ -62,9 +62,10 @@ export default async function Page({ params, searchParams }) {
     content = row.content;
   }
 
-  // Proefperiode demo-app: alleen op de gewone preview-link (niet in concept,
-  // review of werkversie). Zelf geplaatste projecten komen bovenaan.
-  const isGewoon = !isWerk && !isConcept && !isReview;
+  // Proefperiode demo-app: op de links die de prospect krijgt (gewoon en
+  // ?review=1, de link uit Mijn previews en het appje). Niet in concept,
+  // werkversie of de stijlvergelijking (?stijl=). Zelf geplaatste projecten bovenaan.
+  const isGewoon = !isWerk && !isConcept && !searchParams?.stijl;
   const proef = isGewoon ? await getProef(params.slug) : { actief: false };
   if (proef.actief) content = metProefProjecten(content, proef);
   const balk = proef.actief ? (
