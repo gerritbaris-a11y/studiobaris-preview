@@ -34,11 +34,11 @@ function wanneer(iso) {
   if (!iso) return "";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
-  const dagen = Math.floor((Date.now() - d.getTime()) / 864e5);
-  if (dagen <= 0) return "vandaag";
-  if (dagen === 1) return "gisteren";
-  if (dagen < 7) return dagen + " dagen geleden";
-  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" });
+  // Altijd de echte datum + tijd (Nederlandse tijd), geen "vandaag"/"gisteren":
+  // die woorden kloppen morgen niet meer.
+  const dag = d.toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" });
+  const tijd = d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" });
+  return dag + ", " + tijd;
 }
 
 function ProspectActiviteit({ p }) {
