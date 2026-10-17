@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie";
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
+import { laadStatistiek, meldPreviewAanvraag } from "../lib/statistiek";
 
 // Huisstijl-tokens, 1-op-1 overgenomen van studiobaris.nl. Gelden voor de
 // vaste chrome (achtergrond, tekst, koppen, font) ongeacht de modus. Het
@@ -95,6 +96,11 @@ export default function ProspectForm({
   const [fotoFout, setFotoFout] = useState("");
   // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
   const [uploadStand, setUploadStand] = useState("");
+
+  // GA4 alleen op de publieke aanvraag (geen collega's, geen workflow 2) en
+  // alleen als de bezoeker op studiobaris.nl statistieken heeft toegestaan.
+  const meten = !intern && !revise;
+  useEffect(() => { if (meten) laadStatistiek(); }, [meten]);
 
   /**
    * Zet de gekozen bestanden rechtstreeks in onze opslag en geef de links terug.
@@ -233,6 +239,7 @@ export default function ProspectForm({
       const data = await res.json();
       if (!data.ok) { setError(data.error || "Er ging iets mis."); setStatus("fout"); return; }
       setResultaat(data);
+      if (meten) meldPreviewAanvraag();
       setStatus("klaar");
     } catch (err) {
       setUploadStand("");
