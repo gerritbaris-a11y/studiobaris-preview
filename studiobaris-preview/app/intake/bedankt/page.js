@@ -2,6 +2,8 @@
 // Een eigen adres, zodat Google een aanvraag kan meten als bezoek aan
 // /intake/bedankt. Publiek: /intake staat niet in de middleware-matcher.
 
+import BedanktMeting from "./meting";
+
 export const metadata = {
   title: "Bedankt voor je aanvraag | StudioBaris",
   robots: { index: false, follow: false },
@@ -20,6 +22,7 @@ export default function IntakeBedanktPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `@import url('${FONT_HREF}');` }} />
+      <BedanktMeting />
       <main style={{ minHeight: "100vh", background: HUISSTIJL.achtergrond, margin: 0, fontFamily: FONT }}>
         <header style={{ background: "#fff", borderBottom: "1px solid #E7EAED" }}>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "16px 24px" }}>

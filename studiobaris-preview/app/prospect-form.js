@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie";
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
-import { laadStatistiek, meldPreviewAanvraag } from "../lib/statistiek";
+import { laadStatistiek } from "../lib/statistiek";
 
 // Huisstijl-tokens, 1-op-1 overgenomen van studiobaris.nl. Gelden voor de
 // vaste chrome (achtergrond, tekst, koppen, font) ongeacht de modus. Het
@@ -260,7 +260,6 @@ export default function ProspectForm({
         return;
       }
       setResultaat(data);
-      if (meten) meldPreviewAanvraag();
       setStatus("klaar");
     } catch (err) {
       setUploadStand("");
