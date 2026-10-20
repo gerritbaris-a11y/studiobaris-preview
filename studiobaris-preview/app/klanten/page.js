@@ -19,6 +19,7 @@ import WerkplekShell from "../werkplek-shell";
 import DocumentenKaart from "../documenten-kaart";
 import KlantenZoek from "./klanten-zoek";
 import HostingCheck from "./hosting-check";
+import DomeinCheck from "./domein-check";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
 import ProefStatus from "./proef-status";
@@ -105,6 +106,7 @@ export default async function KlantenPage() {
       titel={beheer ? "Alle previews" : "Mijn previews"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
+      <DomeinCheck />
       <HostingCheck verkoper={naam} />
       {beheer && (
         <HuisstijlAllesKnop slugs={actief.filter((r) => { try { return !!JSON.parse(r.internal_notes || "{}").website; } catch { return false; } }).map((r) => r.slug)} />
