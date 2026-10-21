@@ -323,6 +323,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   rechts(BEDRIJF.adres, R, y - 12, { size: 9 });
   rechts(BEDRIJF.postcode, R, y - 24, { size: 9 });
   rechts(BEDRIJF.telefoon + " · " + BEDRIJF.web, R, y - 36, { size: 8.5, kleur: GRIJS });
+  rechts(`KvK ${BEDRIJF.kvk}`, R, y - 48, { size: 8.5, kleur: GRIJS });
 
   // ── Geadresseerde + dagtekening ───────────────────────────────────────────
   y = 727;
@@ -425,7 +426,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   // Bewust zonder kop of label, zodat het als een gewone marge oogt als je er
   // niets op schrijft. Loopt van onder de zijkolom tot net boven de voet.
   if (notitieVlak) {
-    for (let ly = zijTop - ZIJ_H - 28; ly >= 80; ly -= 22) {
+    for (let ly = zijTop - ZIJ_H - 28; ly >= 72; ly -= 22) {
       pagina.drawLine({ start: { x: ZIJ_L, y: ly }, end: { x: R, y: ly }, thickness: 0.5, color: LIJN });
     }
   }
@@ -501,7 +502,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   // Hoofdtekst opmaken bij een gegeven lettergrootte. Met teken = false wordt
   // alleen gemeten (niets getekend); de functie geeft de basislijn van de
   // laatste regel (P.S.) terug. Zo meten we exact of alles op de pagina past.
-  const LAAGSTE_REGEL = 68; // laatste regel blijft boven de voetlijn (50)
+  const LAAGSTE_REGEL = 62; // laatste regel blijft boven de voetlijn (44)
   function hoofdtekst(size, teken) {
     const T = teken ? tekst : () => {};
     const V = teken ? vlak : () => {};
@@ -605,9 +606,9 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   // ── Voet ─────────────────────────────────────────────────────────────────
   // Eén regel voor vragen én afmelden: bij direct marketing aan personen
   // (zzp'ers) moet bezwaar maken bij het eerste contact vermeld staan (AVG art. 21).
-  pagina.drawLine({ start: { x: L, y: 50 }, end: { x: R, y: 50 }, thickness: 0.75, color: LIJN });
-  midden(`Vragen, of liever geen post meer? Bel of app ${BEDRIJF.telefoon} of mail ${BEDRIJF.email}`, L, R, 37, { size: 7.5, kleur: GRIJS });
-  midden(`${BEDRIJF.naam} · ${BEDRIJF.web} · KvK ${BEDRIJF.kvk}`, L, R, 26, { size: 7, kleur: GRIJS });
+  // KvK staat rechtsboven bij het adres.
+  pagina.drawLine({ start: { x: L, y: 44 }, end: { x: R, y: 44 }, thickness: 0.75, color: LIJN });
+  midden(`Vragen, of liever geen post meer? Bel of app ${BEDRIJF.telefoon} of mail ${BEDRIJF.email}`, L, R, 30, { size: 7.5, kleur: GRIJS });
 
   return await pdf.save();
 }
