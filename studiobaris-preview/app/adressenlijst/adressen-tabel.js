@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { KLEUR, BODY } from "../werkplek-stijl";
 import { Knop } from "../werkplek-shell";
 import BriefModal from "./brief-modal";
@@ -13,8 +13,10 @@ import BriefModal from "./brief-modal";
 // eerder opgeslagen) brieftekst; daarna wordt een printklare PDF gemaakt met
 // QR-code naar de eigen preview, ondertekend door wie ingelogd is. Onder de
 // knop staat wie er wanneer al een brief voor maakte.
-// "Kaartjes printen": de fotokaartjes van de aangevinkte adressen in één PDF,
-// twee per A4 met snijlijnen (op fotokarton printen).
+// "Printen voor route" (verschijnt zodra er adressen zijn aangevinkt): alle
+// brieven in één PDF en alle kaartjes in één PDF (twee per A4), in dezelfde
+// volgorde (alfabetisch). Alleen adressen met een gecontroleerde brief; de
+// verzenddatum geldt voor de hele stapel.
 
 const th = {
   textAlign: "left", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
@@ -29,6 +31,10 @@ const briefKnop = {
 };
 const vinkje = { width: 18, height: 18, cursor: "pointer", accentColor: KLEUR.klei, margin: 0 };
 
+function vandaagIso() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Amsterdam" });
+}
+
 function datumKort(iso) {
   try { return new Date(iso).toLocaleDateString("nl-NL", { day: "numeric", month: "short", timeZone: "Europe/Amsterdam" }); } catch { return ""; }
 }
@@ -39,6 +45,30 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
   const [zoek, setZoek] = useState("");
   const [gekozen, setGekozen] = useState(() => new Set());
   const [status, setStatus] = useState("idle");
+  const [verzonden, setVerzonden] = useState(vandaagIso);
+  const stapelForm = useRef(null);
+  const stapelData = useRef(null);
+
+  // Stapel voor de route: aangevinkte adressen, alfabetisch (zelfde volgorde
+  // als de PDF's), gesplitst in wel/geen gecontroleerde brief.
+  const stapel = useMemo(() => {
+    const lijst = rijen.filter((r) => gekozen.has(r.slug)).sort((a, b) => a.bedrijf.localeCompare(b.bedrijf, "nl"));
+    const metBrief = lijst.filter((r) => gemaakt[r.slug]);
+    return {
+      metBrief,
+      zonderBrief: lijst.filter((r) => !gemaakt[r.slug]),
+      metKaartje: metBrief.filter((r) => gemaakt[r.slug].kaartje),
+    };
+  }, [rijen, gekozen, gemaakt]);
+
+  function printBrieven() {
+    stapelData.current.value = JSON.stringify({ slugs: stapel.metBrief.map((r) => r.slug), verzonden });
+    stapelForm.current.submit(); // opent de PDF in een nieuw tabblad
+  }
+  function printKaartjes() {
+    const slugs = stapel.metKaartje.map((r) => r.slug).join(",");
+    window.open(`/api/brieven/kaartjes?stapel=1&slugs=${encodeURIComponent(slugs)}`, "_blank");
+  }
 
   const zichtbaar = useMemo(() => {
     const q = zoek.trim().toLowerCase();
@@ -100,15 +130,6 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
         />
         <Knop onClick={kopieer} kind={gekozen.size > 0 ? "primair" : "secondair"}>{knopTekst}</Knop>
         {gekozen.size > 0 && (
-          <Knop
-            onClick={() => window.open(`/api/brieven/kaartjes?slugs=${encodeURIComponent([...gekozen].join(","))}`, "_blank")}
-            kind="secondair"
-            title="Fotokaartjes van de aangevinkte adressen, twee per A4 met snijlijnen"
-          >
-            {`${gekozen.size} kaartje${gekozen.size === 1 ? "" : "s"} printen`}
-          </Knop>
-        )}
-        {gekozen.size > 0 && (
           <button
             type="button"
             onClick={() => setGekozen(new Set())}
@@ -118,6 +139,41 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
           </button>
         )}
       </div>
+
+      {gekozen.size > 0 && (
+        <div style={{ background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "14px 16px", marginBottom: 12, fontFamily: BODY }}>
+          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 10 }}>Printen voor route</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+            <label style={{ fontSize: 14, color: KLEUR.inkt, display: "flex", gap: 8, alignItems: "center" }}>
+              Gaat de deur uit op
+              <input type="date" value={verzonden} onChange={(e) => setVerzonden(e.target.value)}
+                style={{ padding: "8px 10px", fontSize: 14, border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, background: "#fff", fontFamily: BODY }} />
+            </label>
+            <Knop kind="primair" onClick={printBrieven} disabled={!stapel.metBrief.length}>
+              {`Brieven printen (${stapel.metBrief.length})`}
+            </Knop>
+            <Knop onClick={printKaartjes} disabled={!stapel.metKaartje.length} title="Twee per A4 met snijlijnen; op fotokarton printen">
+              {`Kaartjes printen (${stapel.metKaartje.length})`}
+            </Knop>
+          </div>
+          <div style={{ fontSize: 12.5, color: KLEUR.labelDonker, marginTop: 8 }}>
+            Brieven en kaartjes staan in dezelfde volgorde (alfabetisch). De datum komt op elke brief; de actie loopt een maand.
+          </div>
+          {stapel.zonderBrief.length > 0 && (
+            <div style={{ fontSize: 13, color: KLEUR.kleiDonker, marginTop: 8 }}>
+              {stapel.zonderBrief.length === 1 ? "1 adres heeft" : `${stapel.zonderBrief.length} adressen hebben`} nog geen gecontroleerde brief en {stapel.zonderBrief.length === 1 ? "wordt" : "worden"} niet geprint: {stapel.zonderBrief.map((r) => r.bedrijf).join(", ")}. Maak eerst die brief via "Brief maken".
+            </div>
+          )}
+          {stapel.metBrief.length > stapel.metKaartje.length && (
+            <div style={{ fontSize: 13, color: KLEUR.labelDonker, marginTop: 6 }}>
+              Zonder kaartje-vinkje (alleen brief): {stapel.metBrief.filter((r) => !gemaakt[r.slug].kaartje).map((r) => r.bedrijf).join(", ")}.
+            </div>
+          )}
+          <form ref={stapelForm} method="POST" action="/api/brieven/stapel" target="_blank" style={{ display: "none" }}>
+            <input ref={stapelData} type="hidden" name="data" />
+          </form>
+        </div>
+      )}
 
       <div style={{ background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
@@ -177,8 +233,8 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
         <BriefModal
           rij={briefRij}
           onSluiten={() => setBriefRij(null)}
-          onGemaakt={(slug) => {
-            setGemaakt((g) => ({ ...g, [slug]: { slug, afzender: "Net gemaakt", bijgewerkt_op: new Date().toISOString() } }));
+          onGemaakt={(slug, extra = {}) => {
+            setGemaakt((g) => ({ ...g, [slug]: { slug, afzender: "Net gemaakt", bijgewerkt_op: new Date().toISOString(), ...extra } }));
             setBriefRij(null);
           }}
         />

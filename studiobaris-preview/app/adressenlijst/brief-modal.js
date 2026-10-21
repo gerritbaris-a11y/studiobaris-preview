@@ -80,7 +80,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
     dataRef.current.value = JSON.stringify({ slug: rij.slug, teksten: t, notitie_vlak: notitieVlak });
     formRef.current.submit(); // opent de PDF in een nieuw tabblad
     // Pas sluiten nadat het formulier echt de deur uit is.
-    setTimeout(() => onGemaakt && onGemaakt(rij.slug), 400);
+    setTimeout(() => onGemaakt && onGemaakt(rij.slug, { kaartje: t.kaartje === true, verzonden: t.verzonden }), 400);
   }
 
   return (
@@ -156,7 +156,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
               <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
                   <input type="checkbox" checked={t.kaartje === true} onChange={(e) => wijzig("kaartje", e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
-                  Er zit een fotokaartje bij (de brief verwijst ernaar; kaartjes print je per stapel via de Adressenlijst)
+                  Er zit een fotokaartje bij (de brief verwijst ernaar; kaartjes print je per route via "Printen voor route")
                 </label>
                 <a href={`/api/brieven/kaartje?slug=${encodeURIComponent(rij.slug)}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 700, color: KLEUR.kleiDonker }}>
                   Alleen het kaartje openen
