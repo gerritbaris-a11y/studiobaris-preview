@@ -1,9 +1,9 @@
 // Fotokaartje bij de brief (Adressenlijst → bewerkvenster).
 // Server-only.
 //
-// Staat in de brief het vinkje "kaartje" aan, dan komt het kaartje als
-// pagina 2 mee in de brief-PDF: een A4 met het kaartje (A6) en snijlijnen.
-// Los op te vragen via /api/brieven/kaartje.
+// Kaartjes worden per stapel geprint: Adressenlijst → adressen aanvinken →
+// "Kaartjes printen" (/api/brieven/kaartjes), twee per A4 met snijlijnen.
+// Eén los kaartje: /api/brieven/kaartje (knop in het bewerkvenster).
 //
 // Het kaartje, A6 liggend: links een telefoon met de bovenkant van de eigen preview
 // (merkkleuren, hoofdfoto, kop en de balk "Probeer je eigen app"), rechts
@@ -90,8 +90,8 @@ async function haalLogo(url, maxB, maxH) {
   }
 }
 
-// Het kaartje zelf, als losse A6-pagina (bytes). Wordt op een A4 met
-// snijlijnen gezet door kaartjeOpA4.
+// Het kaartje zelf, als losse A6-pagina (bytes). Wordt op A4 met
+// snijlijnen gezet door kaartjesPdf.
 async function kaartjeA6({ rij, content, vorm = "jullie" }) {
   const c = content || {};
   const b = c.bedrijf || {};
@@ -254,36 +254,43 @@ async function kaartjeA6({ rij, content, vorm = "jullie" }) {
   return await pdf.save();
 }
 
-// A4 met het kaartje bovenaan in het midden en snijlijnen in de hoeken.
-// Voegt een pagina toe aan een bestaand PDF-document (bv. de brief).
-export async function kaartjeOpA4(pdf, opties) {
-  const [kaart] = await pdf.embedPdf(await kaartjeA6(opties));
+// Kaartjes op A4: twee per vel (onder elkaar), elk met snijlijnen in de
+// hoeken. Meer past niet met marge: printers printen niet tot de rand.
+// lijst: [{ rij, content, vorm }]. De kaartjes worden tegelijk opgebouwd.
+export async function kaartjesPdf(lijst) {
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(lijst.length === 1 ? `Kaartje ${schoon(lijst[0].rij.company_name || lijst[0].rij.slug)}` : `Kaartjes (${lijst.length})`);
+  pdf.setAuthor("StudioBaris");
+  const losse = await Promise.all(lijst.map((o) => kaartjeA6(o)));
+  const { font } = await jakartaFonts(pdf);
   const A4W = 595.28, A4H = 841.89;
-  const KW = kaart.width, KH = kaart.height;
-  const x = (A4W - KW) / 2;
-  const y = A4H - 70 - KH;
-  const pagina = pdf.addPage([A4W, A4H]);
-  pagina.drawPage(kaart, { x, y, width: KW, height: KH });
-  // Snijlijnen: korte streepjes buiten elke hoek.
   const GAT = 4, LEN = 14, DIK = 0.5;
   const zwart = rgb(0.3, 0.3, 0.3);
-  const lijn = (x1, y1, x2, y2) => pagina.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: DIK, color: zwart });
-  for (const [cx, cy, sx, sy] of [[x, y, -1, -1], [x + KW, y, 1, -1], [x, y + KH, -1, 1], [x + KW, y + KH, 1, 1]]) {
-    lijn(cx + sx * GAT, cy, cx + sx * (GAT + LEN), cy);
-    lijn(cx, cy + sy * GAT, cx, cy + sy * (GAT + LEN));
+  let pagina = null;
+  for (let i = 0; i < losse.length; i++) {
+    const [kaart] = await pdf.embedPdf(losse[i]);
+    const KW = kaart.width, KH = kaart.height;
+    const tussen = 56;
+    const boven = (A4H - 2 * KH - tussen) / 2;
+    if (i % 2 === 0) {
+      pagina = pdf.addPage([A4W, A4H]);
+      const uitleg = "Snijd uit langs de hoekmarkeringen (148 x 105 mm). Print op fotokarton van ca. 250 g/m2.";
+      const ub = font.widthOfTextAtSize(uitleg, 7.5);
+      pagina.drawText(uitleg, { x: (A4W - ub) / 2, y: boven / 2, size: 7.5, font, color: rgb(0.42, 0.38, 0.33) });
+    }
+    const x = (A4W - KW) / 2;
+    const y = i % 2 === 0 ? A4H - boven - KH : boven;
+    pagina.drawPage(kaart, { x, y, width: KW, height: KH });
+    const lijn = (x1, y1, x2, y2) => pagina.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: DIK, color: zwart });
+    for (const [cx, cy, sx, sy] of [[x, y, -1, -1], [x + KW, y, 1, -1], [x, y + KH, -1, 1], [x + KW, y + KH, 1, 1]]) {
+      lijn(cx + sx * GAT, cy, cx + sx * (GAT + LEN), cy);
+      lijn(cx, cy + sy * GAT, cx, cy + sy * (GAT + LEN));
+    }
   }
-  const { font } = await jakartaFonts(pdf);
-  const uitleg = "Snijd uit langs de hoekmarkeringen (148 x 105 mm). Print deze pagina op fotokarton van ca. 250 g/m2.";
-  const ub = font.widthOfTextAtSize(uitleg, 7.5);
-  pagina.drawText(uitleg, { x: (A4W - ub) / 2, y: y - 34, size: 7.5, font, color: rgb(0.42, 0.38, 0.33) });
-  return pagina;
+  return await pdf.save();
 }
 
-// Los kaartje (route /api/brieven/kaartje): één A4 met snijlijnen.
+// Eén los kaartje (op A4, zelfde opmaak).
 export async function kaartjePdf(opties) {
-  const pdf = await PDFDocument.create();
-  pdf.setTitle(`Kaartje ${schoon(opties.rij.company_name || opties.rij.slug)}`);
-  pdf.setAuthor("StudioBaris");
-  await kaartjeOpA4(pdf, opties);
-  return await pdf.save();
+  return kaartjesPdf([opties]);
 }

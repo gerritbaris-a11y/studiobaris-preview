@@ -13,6 +13,8 @@ import BriefModal from "./brief-modal";
 // eerder opgeslagen) brieftekst; daarna wordt een printklare PDF gemaakt met
 // QR-code naar de eigen preview, ondertekend door wie ingelogd is. Onder de
 // knop staat wie er wanneer al een brief voor maakte.
+// "Kaartjes printen": de fotokaartjes van de aangevinkte adressen in één PDF,
+// twee per A4 met snijlijnen (op fotokarton printen).
 
 const th = {
   textAlign: "left", fontSize: 11, letterSpacing: 1, textTransform: "uppercase",
@@ -97,6 +99,15 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
           style={{ flex: "1 1 260px", minWidth: 0, padding: "10px 12px", fontSize: 14, border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, background: "#fff", fontFamily: BODY }}
         />
         <Knop onClick={kopieer} kind={gekozen.size > 0 ? "primair" : "secondair"}>{knopTekst}</Knop>
+        {gekozen.size > 0 && (
+          <Knop
+            onClick={() => window.open(`/api/brieven/kaartjes?slugs=${encodeURIComponent([...gekozen].join(","))}`, "_blank")}
+            kind="secondair"
+            title="Fotokaartjes van de aangevinkte adressen, twee per A4 met snijlijnen"
+          >
+            {`${gekozen.size} kaartje${gekozen.size === 1 ? "" : "s"} printen`}
+          </Knop>
+        )}
         {gekozen.size > 0 && (
           <button
             type="button"
