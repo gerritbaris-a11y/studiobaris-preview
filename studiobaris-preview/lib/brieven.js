@@ -1,18 +1,25 @@
 // Brieven voor het offline marketingmodel (Adressenlijst → knop "Brief").
 // Server-only.
 //
-// Per online preview één printklare A4-brief: persoonlijke opening en een
-// app-alinea met een beeld uit het eigen vak (door Claude geschreven op basis
-// van de preview-inhoud), een QR-code naar de eigen preview, de brief-actie
-// (€ 399 i.p.v. € 599) die 3 weken na de dagtekening afloopt, en een witregel-
-// blok waar degene die de brief maakt met de hand ondertekent.
+// Per online preview één printklare A4-brief, geschreven vanuit "wij"
+// (StudioBaris), ondertekend door degene die de brief maakt.
 //
-// Opbouw van de tekst: Boron-stijl (persoonlijk, één-op-één, korte zinnen,
-// P.S.) in een AIDA-volgorde:
-//   A  kop "Hij is al gemaakt." + persoonlijke opening       (Claude)
-//   I  de website staat klaar, scan de QR-code              (vast)
-//   D  de app + reviewtool in een beeld uit hun vak          (Claude)
-//   A  prijs + deadline, scan/bel/app, P.S.                  (vast)
+// Opbouw hoofdtekst (Boron-stijl: persoonlijk, korte zinnen, P.S.):
+//   1  kop "Een website voor X. Hij is al gemaakt."            (vast)
+//   2  aanhef + persoonlijke opening                         (Claude)
+//   3  eigen regel, optioneel                                (met de hand)
+//   4  de website staat klaar, gratis kijken                 (vast)
+//   5  probeer de app zelf (demo-app, 3 proefprojecten)      (vast)
+//   6  beeld uit hun vak: projecten + reviews, betrouwbaar
+//      tegenover beunhazen                                    (Claude)
+//   7  kernzin "Je zet je projecten online vanaf je telefoon.
+//      Wij doen de rest." + wat wij regelen                   (vast)
+//   8  wat nu: kijken, proberen, bel/app, of weggooien        (vast)
+//   P.S. prijsvariant: actie + deadline; zonder prijs: proefapp een maand
+//
+// De prijs staat alleen in de zijkolom (brief-actie € 399 i.p.v. € 599, 3
+// weken na de dagtekening). Voor de A/B-test kan de prijs per brief uit
+// (teksten.prijs = false): dan vervalt het actieblok en wordt de P.S. anders.
 // Lukt de Claude-aanroep niet, dan valt elke alinea terug op een nette
 // standaardtekst, zodat de knop altijd een brief oplevert.
 import { PDFDocument, rgb } from "pdf-lib";
@@ -50,8 +57,8 @@ function schoon(s) {
     .replace(/[“”„]/g, '"')
     .replace(/[–—]/g, "-")
     .replace(/…/g, "...")
-    .replace(/[   ]/g, " ")
-    .replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ€]/g, "")
+    .replace(/[   ]/g, " ")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ€]/g, "")
     .trim();
 }
 
@@ -68,18 +75,22 @@ function notities(rij) {
   try { return JSON.parse(n); } catch { return {}; }
 }
 
-const SYSTEEM = `Je schrijft twee alinea's voor een persoonlijke papieren brief van StudioBaris aan een Nederlandse vakman/vakvrouw. De brief wordt aan de deur afgegeven of in de bus gedaan. StudioBaris heeft al een complete voorbeeldwebsite voor dit bedrijf gemaakt (via een QR-code te bekijken).
+const SYSTEEM = `Je schrijft twee alinea's voor een persoonlijke papieren brief van StudioBaris aan een Nederlandse vakman/vakvrouw. De brief wordt aan de deur afgegeven of in de bus gedaan. StudioBaris heeft al een complete voorbeeldwebsite voor dit bedrijf gemaakt (via een QR-code te bekijken). De rest van de brief (website staat klaar, app uitproberen, prijs, contact) staat er al; jij schrijft alleen de opening en de vak-alinea.
 
-Propositie: een website kan iedereen maken; StudioBaris geeft vakmensen een APP waarmee ze hun website volledig zelf beheren vanaf hun telefoon. Klus af: foto's maken, kort inspreken wat je deed, StudioBaris schrijft de tekst en het project staat binnen een minuut op de site. Reviewtool: de klant krijgt met een tik via WhatsApp een reviewverzoek; goede reviews komen online, kritiek blijft privé. Doel: betrouwbaar overkomen bij wie hen opzoekt, zonder laptop of webbouwer.
+Wat StudioBaris levert: een website plus een APP waarmee de vakman zijn website zelf bijhoudt vanaf zijn telefoon. Klus af: foto's maken, kort inspreken of typen wat hij deed, StudioBaris schrijft de tekst en het project staat binnen enkele minuten op de site (nooit "direct" of "binnen een minuut"). Reviews: de VAKMAN stuurt zijn klant met één tik via WhatsApp een reviewverzoek (de klant vraagt daar niet zelf om). Goede reviews komen op de website, kritiek blijft privé bij de vakman.
 
-Stijl: als een persoonlijke brief van mens tot mens (Boron-letter-stijl). Korte zinnen, nuchter, warm, geen marketingtaal, geen superlatieven, geen uitroeptekens, geen emoji. Nooit iets negatiefs over het bedrijf noemen (geen matige reviews, ontbrekende gegevens). Gebruik ALLEEN feiten die in de aangeleverde gegevens staan; verzin geen jaartallen, scores, namen of diensten. Schrijf in de ik-vorm namens de afzender.
+Waarom dit ertoe doet (de invalshoek): vakmensen hebben werk genoeg. Het gaat er niet om meer werk te krijgen, maar om betrouwbaar over te komen bij wie hen opzoekt. De markt zit vol beunhazen; echte projecten en echte reviews van echte klanten laten zien wie wél vakwerk levert.
+
+Stijl: persoonlijke brief van mens tot mens (Boron-letter-stijl). Korte zinnen, nuchter, warm, geen marketingtaal, geen superlatieven, geen uitroeptekens, geen emoji. Schrijf in de wij-vorm namens StudioBaris ("wij", "we"), nooit "ik". Nooit iets negatiefs over het bedrijf noemen. Beweer niets over hun huidige website of hoe zichtbaar ze online zijn: dat weten we niet. Gebruik ALLEEN feiten die in de aangeleverde gegevens staan; verzin geen jaartallen, scores, namen, plaatsen of diensten.
+
+Aanspreekvorm: kies "je" of "jullie" en houd die in ALLE zinnen consequent aan (bij "jullie" ook "jullie website", "jullie telefoon", nooit "je" ertussen).
 
 Lever uitsluitend JSON, zonder uitleg:
 {
   "vorm": "je" of "jullie"   (je als er een contactpersoon bekend is of het duidelijk een eenpitter is, anders jullie),
   "aanhef": "Beste Jan," of "Beste team van <bedrijfsnaam>,"  (voornaam alleen als die echt in de gegevens staat),
-  "opening": "2-3 zinnen: iets concreets en positiefs over dit bedrijf dat laat zien dat je echt gekeken hebt (vakgebied, werkgebied, ervaring, wat klanten zeggen), eindigend met waarom het zonde is dat dit online niet goed te zien is. Max 55 woorden.",
-  "app": "3-4 zinnen, beginnend NA de zin 'Het echte verschil zit in de app die erbij hoort.' (die zin staat er al): een concreet beeld uit HUN vak (bv. de net opgeleverde tuin, boven op het dak, de afgemonteerde groepenkast), foto + inspreken, staat online; dan de reviewtool in hetzelfde beeld incl. 'goede reviews komen online, kritiek blijft privé' in eigen woorden; eindig met wat het oplevert. Max 75 woorden. Gebruik de gekozen vorm (je/jullie)."
+  "opening": "2 zinnen: iets concreets en positiefs over dit bedrijf dat laat zien dat we echt gekeken hebben (vakgebied, werkgebied, waar ze goed in zijn, wat klanten zeggen). Geen oordeel over hun online aanwezigheid. Max 45 woorden.",
+  "app": "3-4 zinnen, een op zichzelf staande alinea. Hoe de app werkt (foto, inspreken, binnen enkele minuten online) staat al in de alinea ervoor: herhaal dat NIET. Begin met een concreet beeld uit HUN vak (bv. de net opgeleverde tuin, boven op het dak, de afgemonteerde groepenkast) en hoe dat werk straks als project op hun site te zien is; dan de reviewtool in hetzelfde beeld, met de vakman die het verzoek via WhatsApp stuurt en 'goede reviews online, kritiek blijft privé' in eigen woorden; eindig met wat het oplevert: wie hen opzoekt ziet echt werk en echte reviews, en dat onderscheidt hen van de beunhazen. Max 65 woorden."
 }`;
 
 function standaardTeksten(bedrijf, vorm) {
@@ -87,10 +98,10 @@ function standaardTeksten(bedrijf, vorm) {
   return {
     vorm,
     aanhef: je ? "Beste vakman," : `Beste team van ${bedrijf},`,
-    opening: `Ik kwam ${bedrijf} tegen en zag mooi vakwerk. Alleen: wie ${je ? "je" : "jullie"} opzoekt, ziet daar online nog weinig van terug. Dat is zonde.`,
+    opening: `We kwamen ${bedrijf} tegen en hebben eens goed gekeken naar wat ${je ? "je" : "jullie"} doen. Goed vakwerk verdient een plek waar klanten het kunnen zien.`,
     app: je
-      ? "Klus af? Je maakt een paar foto's, spreekt kort in wat je gedaan hebt, en een minuut later staat het als project op je site. Je klant krijgt met één tik via WhatsApp een reviewverzoek. Goede reviews komen online, kritiek blijft tussen jullie. Zo ziet iedereen die je opzoekt meteen je nieuwste werk en wat klanten ervan vinden."
-      : "Klus af? Jullie maken een paar foto's, spreken kort in wat er gedaan is, en een minuut later staat het als project op jullie site. De klant krijgt met één tik via WhatsApp een reviewverzoek. Goede reviews komen online, kritiek blijft privé. Zo ziet iedereen die jullie opzoekt meteen het nieuwste werk en wat klanten ervan vinden.",
+      ? "Zo komt elke klus die je afrondt als project op je website te staan. Na afloop stuur je je klant met één tik via WhatsApp een reviewverzoek. Goede reviews komen online, kritiek blijft tussen jullie. Wie je opzoekt, ziet zo echt werk en echte reviews. Dat is precies wat je onderscheidt van de beunhazen."
+      : "Zo komt elke klus die jullie afronden als project op jullie website te staan. Na afloop sturen jullie de klant met één tik via WhatsApp een reviewverzoek. Goede reviews komen online, kritiek blijft bij jullie. Wie jullie opzoekt, ziet zo echt werk en echte reviews. Dat is precies wat jullie onderscheidt van de beunhazen.",
   };
 }
 
@@ -147,18 +158,34 @@ function wrap(tekst, font, size, maxBreedte) {
   return regels;
 }
 
+// URL over regels verdelen: breekpunten na "/" en "-".
+function urlRegels(u, font, size, maxBreedte) {
+  const stukken = u.match(/[^/-]*[/-]|[^/-]+$/g) || [u];
+  const regels = [];
+  let regel = "";
+  for (const st of stukken) {
+    if (regel && font.widthOfTextAtSize(regel + st, size) > maxBreedte) {
+      regels.push(regel);
+      regel = st;
+    } else regel += st;
+  }
+  if (regel) regels.push(regel);
+  return regels;
+}
+
 // Teksten die in het bewerkvenster zijn aangepast: schoonmaken, lengte
 // begrenzen (alles moet op één A4 passen) en de vorm controleren.
-const MAX = { aanhef: 80, opening: 600, eigen: 400, app: 700 };
+// prijs: true = brief met brief-actie (standaard), false = zonder prijs (A/B).
+const MAX = { aanhef: 80, opening: 500, eigen: 400, app: 700 };
 export function normaliseerTeksten(t) {
   const x = t || {};
-  const uit = { vorm: x.vorm === "je" ? "je" : "jullie" };
+  const uit = { vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false };
   for (const veld of Object.keys(MAX)) uit[veld] = schoon(x[veld] || "").slice(0, MAX[veld]);
   return uit;
 }
 
 // opties: { rij, content, teksten, afzender, dagtekening (Date), notitieVlak }
-// teksten: { vorm, aanhef, opening, eigen (optioneel), app }
+// teksten: { vorm, prijs, aanhef, opening, eigen (optioneel), app }
 // notitieVlak: lege lijntjes in de rechterkolom voor een handgeschreven notitie.
 export async function briefPdf({ rij, content, teksten, afzender, dagtekening, notitieVlak = true }) {
   const c = content || {};
@@ -166,6 +193,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const bedrijf = schoon(rij.company_name || b.naam || rij.slug);
   const adres = schoon(rij.b_adres || b.adres || "");
   const je = teksten.vorm === "je";
+  const metPrijs = teksten.prijs !== false;
   const v = (jeTekst, jullieTekst) => (je ? jeTekst : jullieTekst);
   const datum = dagtekening || vandaagNL();
   const einde = plusDagen(datum, ACTIE_DAGEN);
@@ -173,7 +201,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const url = PREVIEW_BASIS + rij.slug;
   const naamAfzender = schoon(afzender || "Gerrit & Levi");
   // Telefoonnummer niet over twee regels laten breken (harde spaties).
-  const TEL = BEDRIJF.telefoon.replace(/ /g, "\u00A0");
+  const TEL = BEDRIJF.telefoon.replace(/ /g, " ");
 
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Brief ${bedrijf}`);
@@ -229,68 +257,118 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const plaatsSB = BEDRIJF.postcode.replace(/^\d{4}\s?[A-Z]{2}\s*/i, "");
   rechts(`${plaatsSB}, ${datumLang(datum)}`, R, y, { size: 9.5, kleur: GRIJS });
 
-  // ── Zijkolom: QR-code + actieblok ─────────────────────────────────────────
+  // ── Zijkolom: QR-code, stappen en (optioneel) actieblok ───────────────────
+  // Eerst droog uitrekenen hoe hoog de kolom wordt, dan pas tekenen: de
+  // achtergrond moet vóór de inhoud getekend worden.
   const zijTop = 640;
-  const ZIJ_H = 360;
   const zijB = R - ZIJ_L;
-  vlak(ZIJ_L, zijTop - ZIJ_H, zijB, ZIJ_H, VLAK);
-  vlak(ZIJ_L, zijTop - ZIJ_H, zijB, 3, GOUD);
-  tekst(v("SCAN: JOUW WEBSITE", "SCAN: JULLIE WEBSITE"), ZIJ_L + 12, zijTop - 20, { size: 7.5, vet: true, kleur: GRIJS });
+  const zijTekstB = zijB - 24;
+  const zx = ZIJ_L + 12;
   const qr = QRCode.create(url, { errorCorrectionLevel: "M" });
   const n = qr.modules.size;
-  const qrMaat = zijB - 24;
-  const cel = qrMaat / (n + 2); // 1 module stille zone rondom
-  const qrX = ZIJ_L + 12;
-  const qrY = zijTop - 32 - qrMaat;
-  vlak(qrX, qrY, qrMaat, qrMaat, WIT);
-  for (let r = 0; r < n; r++) {
-    for (let k = 0; k < n; k++) {
-      if (qr.modules.get(r, k)) vlak(qrX + (k + 1) * cel, qrY + qrMaat - (r + 2) * cel, cel + 0.05, cel + 0.05, INKT);
+  const qrMaat = zijTekstB;
+  const BALK_H = 30;
+
+  function zijkolom(teken) {
+    const t = teken ? tekst : () => {};
+    const lijn = (yy) => teken && pagina.drawLine({ start: { x: zx, y: yy }, end: { x: R - 12, y: yy }, thickness: 0.75, color: LIJN });
+    let uy = zijTop - 20;
+    for (const regel of wrap(v("BEKIJK HOE JOUW WEBSITE ERUITZIET", "BEKIJK HOE JULLIE WEBSITE ERUITZIET"), vet, 7.5, zijTekstB)) {
+      t(regel, zx, uy, { size: 7.5, vet: true, kleur: GRIJS });
+      uy -= 10;
     }
-  }
-  // Onder de QR: het adres voluit, zodat niemand hoeft te scannen. Mensen
-  // zijn (terecht) voorzichtig met QR-codes op post; een leesbaar adres op
-  // ons eigen domein, plus "geen inlog of betaalgegevens", neemt dat weg.
-  let uy = qrY - 13;
-  for (const regel of wrap(v("Liever niet scannen? Typ dan dit adres in je browser:", "Liever niet scannen? Typ dan dit adres in jullie browser:"), font, 7.5, zijB - 24)) {
-    tekst(regel, qrX, uy, { size: 7.5, kleur: GRIJS });
+    // QR-code
+    const qrY = uy - 2 - qrMaat;
+    if (teken) {
+      const cel = qrMaat / (n + 2); // 1 module stille zone rondom
+      vlak(zx, qrY, qrMaat, qrMaat, WIT);
+      for (let r = 0; r < n; r++) {
+        for (let k = 0; k < n; k++) {
+          if (qr.modules.get(r, k)) vlak(zx + (k + 1) * cel, qrY + qrMaat - (r + 2) * cel, cel + 0.05, cel + 0.05, INKT);
+        }
+      }
+    }
+    // Onder de QR: het adres voluit, zodat niemand hoeft te scannen. Mensen
+    // zijn (terecht) voorzichtig met QR-codes op post; een leesbaar adres op
+    // ons eigen domein, plus "geen inlog of betaalgegevens", neemt dat weg.
+    uy = qrY - 13;
+    for (const regel of wrap(v("Liever niet scannen? Typ dan dit adres in je browser:", "Liever niet scannen? Typ dan dit adres in jullie browser:"), font, 7.5, zijTekstB)) {
+      t(regel, zx, uy, { size: 7.5, kleur: GRIJS });
+      uy -= 10;
+    }
+    uy -= 3;
+    // Een URL heeft geen spaties: afbreken na "/" of "-", zodat ook een
+    // lange slug binnen de kolom blijft.
+    for (const regel of urlRegels(url.replace("https://", ""), vet, 9, zijTekstB)) {
+      t(regel, zx, uy, { size: 9, vet: true });
+      uy -= 12;
+    }
+    uy -= 2;
+    for (const regel of wrap("Gratis kijken: geen inlog, geen betaalgegevens.", italic, 7.5, zijTekstB)) {
+      t(regel, zx, uy, { size: 7.5, italic: true, kleur: GRIJS });
+      uy -= 10;
+    }
+
+    // Drie stappen
+    uy -= 4;
+    lijn(uy + 4);
     uy -= 10;
+    t("ZO WERKT HET", zx, uy, { size: 7.5, vet: true, kleur: GRIJS });
+    uy -= 13;
+    const stappen = [
+      v("Bekijk je website.", "Bekijk jullie website."),
+      v("Tik onderaan op 'Open je app' en zet er zelf een project op.", "Tik onderaan op 'Open je app' en zet er zelf een project op."),
+      v(`Bevalt het? Bel of app ons: ${TEL}`, `Bevalt het? Bel of app ons: ${TEL}`),
+    ];
+    stappen.forEach((s, i) => {
+      t(`${i + 1}.`, zx, uy, { size: 8.5, vet: true });
+      for (const regel of wrap(s, font, 8.5, zijTekstB - 12)) {
+        t(regel, zx + 12, uy, { size: 8.5 });
+        uy -= 11;
+      }
+      uy -= 3;
+    });
+
+    // Actieblok (alleen in de prijsvariant)
+    if (metPrijs) {
+      uy -= 2;
+      lijn(uy + 4);
+      uy -= 10;
+      t("BRIEF-ACTIE", zx, uy, { size: 7.5, vet: true, kleur: GRIJS });
+      uy -= 14;
+      t("Website + app, eenmalig", zx, uy, { size: 9 });
+      uy -= 24;
+      const oud = "€ 599";
+      t(oud, zx, uy, { size: 14, kleur: GRIJS });
+      const oudB = breedte(oud, { size: 14 });
+      if (teken) pagina.drawLine({ start: { x: zx - 1, y: uy + 5 }, end: { x: zx + 1 + oudB, y: uy + 5 }, thickness: 1.2, color: GRIJS });
+      t("€ 399", zx + 10 + oudB, uy - 1, { size: 21, vet: true });
+      uy -= 15;
+      t("daarna € 29,95 per maand", zx, uy, { size: 8.5 });
+      uy -= 11;
+      t("alle bedragen excl. btw", zx, uy, { size: 8, italic: true, kleur: GRIJS });
+      uy -= 11;
+      for (const regel of wrap("Eerste jaar vast, daarna per maand opzegbaar.", italic, 8, zijTekstB)) {
+        t(regel, zx, uy, { size: 8, italic: true, kleur: GRIJS });
+        uy -= 10;
+      }
+    }
+    // Ruimte voor de onderbalk
+    return zijTop - (uy - 8 - BALK_H);
   }
-  uy -= 3;
-  // Op de "/" afbreken: een URL heeft geen spaties om op te wrappen.
-  for (const regel of wrap(url.replace("https://", "").replace("/", "/ "), vet, 9, zijB - 24).map((r) => r.replace("/ ", "/"))) {
-    tekst(regel, qrX, uy, { size: 9, vet: true });
-    uy -= 12;
-  }
-  uy -= 2;
-  for (const regel of wrap("Gewoon kijken: geen inlog, geen betaalgegevens.", italic, 7.5, zijB - 24)) {
-    tekst(regel, qrX, uy, { size: 7.5, italic: true, kleur: GRIJS });
-    uy -= 10;
-  }
-  uy -= 8;
-  pagina.drawLine({ start: { x: ZIJ_L + 12, y: uy + 4 }, end: { x: R - 12, y: uy + 4 }, thickness: 0.75, color: LIJN });
-  uy -= 10;
-  tekst("BRIEF-ACTIE", ZIJ_L + 12, uy, { size: 7.5, vet: true, kleur: GRIJS });
-  uy -= 14;
-  tekst("Website + app, eenmalig", ZIJ_L + 12, uy, { size: 9 });
-  uy -= 24;
-  const oud = "€\u00A0599";
-  tekst(oud, ZIJ_L + 12, uy, { size: 14, kleur: GRIJS });
-  const oudB = breedte(oud, { size: 14 });
-  pagina.drawLine({ start: { x: ZIJ_L + 11, y: uy + 5 }, end: { x: ZIJ_L + 13 + oudB, y: uy + 5 }, thickness: 1.2, color: GRIJS });
-  tekst("€\u00A0399", ZIJ_L + 22 + oudB, uy - 1, { size: 21, vet: true });
-  uy -= 15;
-  tekst("daarna €\u00A029,95 per maand", ZIJ_L + 12, uy, { size: 8.5 });
-  uy -= 11;
-  tekst("alle bedragen excl. btw", ZIJ_L + 12, uy, { size: 8, italic: true, kleur: GRIJS });
-  // Deadlinebalk onderaan het blok
+
+  const ZIJ_H = zijkolom(false);
+  vlak(ZIJ_L, zijTop - ZIJ_H, zijB, ZIJ_H, VLAK);
+  vlak(ZIJ_L, zijTop - ZIJ_H, zijB, 3, GOUD);
+  zijkolom(true);
+  // Balk onderaan het blok: deadline (prijsvariant) of telefoonnummer.
   const balkY = zijTop - ZIJ_H + 3;
-  vlak(ZIJ_L, balkY, zijB, 30, INKT);
-  midden(`Reageer t/m ${datumLang(einde)}`, ZIJ_L, R, balkY + 11, { size: 8.5, vet: true, kleur: WIT });
+  vlak(ZIJ_L, balkY, zijB, BALK_H, INKT);
+  midden(metPrijs ? `Reageer t/m ${datumLang(einde)}` : `Bel of app: ${BEDRIJF.telefoon}`, ZIJ_L, R, balkY + 11, { size: 8.5, vet: true, kleur: WIT });
 
   // ── Notitievlak: lege lijnen voor een handgeschreven persoonlijke noot ────
   // Bewust zonder kop of label, zodat het als een gewone marge oogt als je er
-  // niets op schrijft. Loopt van onder het actieblok tot net boven de voet.
+  // niets op schrijft. Loopt van onder de zijkolom tot net boven de voet.
   if (notitieVlak) {
     for (let ly = zijTop - ZIJ_H - 26; ly >= 96; ly -= 22) {
       pagina.drawLine({ start: { x: ZIJ_L, y: ly }, end: { x: R, y: ly }, thickness: 0.5, color: LIJN });
@@ -303,25 +381,34 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const alineas = [
     { t: teksten.aanhef },
     { t: teksten.opening },
-    // Eigen regel uit het bewerkvenster (bv. "Ik kwam vandaag even langs").
+    // Eigen regel uit het bewerkvenster (bv. "We kwamen vandaag even langs").
     ...(teksten.eigen && teksten.eigen.trim() ? [{ t: teksten.eigen.trim() }] : []),
     { t: v(
-        "Je bent vakman, geen websitebouwer. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor je klaar, met je naam en je diensten erop. Scan de QR-code hiernaast of typ het adres eronder in je browser, en je ziet hem meteen. Je hoeft nergens in te loggen of iets in te vullen.",
-        "Jullie zijn vakmensen, geen websitebouwers. Daarom heb ik het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast of typ het adres eronder in jullie browser, en jullie zien hem meteen. Jullie hoeven nergens in te loggen of iets in te vullen.") },
-    { t: "Het echte verschil zit in de app die erbij hoort. " + teksten.app },
+        "Je bent vakman, geen websitebouwer. Daarom hebben wij het werk alvast gedaan. Er staat een complete website voor je klaar, met je naam en je diensten erop. Scan de QR-code hiernaast of typ het adres eronder in je browser. Kijken kost niets en je hoeft nergens in te loggen.",
+        "Jullie zijn vakmensen, geen websitebouwers. Daarom hebben wij het werk alvast gedaan. Er staat een complete website voor jullie klaar, met jullie naam en diensten erop. Scan de QR-code hiernaast of typ het adres eronder in jullie browser. Kijken kost niets en jullie hoeven nergens in te loggen.") },
     { t: v(
-        `Wat kost het? Normaal €\u00A0599 eenmalig, en daarna €\u00A029,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat je deze brief van ons hebt gekregen, betaal je geen €\u00A0599 maar €\u00A0399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`,
-        `Wat kost het? Normaal €\u00A0599 eenmalig, en daarna €\u00A029,95 per maand. Allebei excl. btw. Geen kleine lettertjes. Omdat jullie deze brief van ons hebben gekregen, betalen jullie geen €\u00A0599 maar €\u00A0399. Die actie geldt alleen voor wie deze brief ontvangt, tot en met ${eindeTekst}.`) },
+        "Bij die website hoort een app, en die kun je nu al uitproberen. Tik onderaan de website op 'Open je app'. Maak een foto van een klus, typ in een paar woorden wat je gedaan hebt, en binnen enkele minuten staat het als project op je eigen website. Drie projecten mag je zelf plaatsen.",
+        "Bij die website hoort een app, en die kunnen jullie nu al uitproberen. Tik onderaan de website op 'Open je app'. Maak een foto van een klus, typ in een paar woorden wat er gedaan is, en binnen enkele minuten staat het als project op jullie eigen website. Drie projecten mogen jullie zelf plaatsen.") },
+    { t: teksten.app },
     { t: v(
-        `Wat je nu doet: scan de QR-code of typ het adres in, en bekijk je website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vind je hem niks? Dan gooi je deze brief gewoon weg.`,
-        `Wat jullie nu doen: scan de QR-code of typ het adres in, en bekijk jullie website. Bevalt hij? Bel of app me op ${TEL}, dan regelen wij de rest. Vinden jullie hem niks? Dan gooien jullie deze brief gewoon weg.`) },
+        "Kort gezegd: je zet je projecten online vanaf je telefoon. Wij doen de rest. Domeinnaam, hosting, e-mail, updates en onderhoud regelen wij.",
+        "Kort gezegd: jullie zetten jullie projecten online vanaf de telefoon. Wij doen de rest. Domeinnaam, hosting, e-mail, updates en onderhoud regelen wij.") },
+    { t: v(
+        `Wat je nu doet: bekijk je website en probeer de app. Bevalt het? Bel of app ons op ${TEL}, dan kun je volgende week al beginnen. Vind je het niks? Dan gooi je deze brief gewoon weg.`,
+        `Wat jullie nu doen: bekijk jullie website en probeer de app. Bevalt het? Bel of app ons op ${TEL}, dan kunnen jullie volgende week al beginnen. Vinden jullie het niks? Dan gooien jullie deze brief gewoon weg.`) },
   ];
-  const ps = `P.S. De €\u00A0399 geldt tot en met ${eindeTekst}. Daarna is het weer €\u00A0599. Eén appje naar ${TEL} is genoeg.`;
+  const ps = metPrijs
+    ? v(
+        `P.S. Omdat je deze brief van ons hebt gekregen, betaal je € 399 in plaats van € 599 eenmalig. Dat geldt tot en met ${eindeTekst}. Eén appje naar ${TEL} is genoeg.`,
+        `P.S. Omdat jullie deze brief van ons hebben gekregen, betalen jullie € 399 in plaats van € 599 eenmalig. Dat geldt tot en met ${eindeTekst}. Eén appje naar ${TEL} is genoeg.`)
+    : v(
+        `P.S. De proefapp blijft een maand actief vanaf het moment dat je hem voor het eerst opent. Eén appje naar ${TEL} is genoeg om te beginnen.`,
+        `P.S. De proefapp blijft een maand actief vanaf het moment dat jullie hem voor het eerst openen. Eén appje naar ${TEL} is genoeg om te beginnen.`);
 
   // Past alles op één pagina? Zo niet: lettergrootte stapsgewijs omlaag.
   const kolB = KOL_R - L;
   const ONDERGRENS = 92; // ruimte voor voetregels
-  const HANDTEKENING = 56; // witruimte voor de handtekening
+  const HANDTEKENING = 50; // witruimte voor de handtekening
   let size = 10.5;
   let opmaak;
   for (; size >= 8; size -= 0.25) {
@@ -344,7 +431,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
     y -= (size + 5) * 1.2;
   }
   y -= 14 + size;
-  opmaak.blokken.forEach((regels, i) => {
+  opmaak.blokken.forEach((regels) => {
     regels.forEach((r) => {
       tekst(r, L, y, { size });
       y -= opmaak.lead;

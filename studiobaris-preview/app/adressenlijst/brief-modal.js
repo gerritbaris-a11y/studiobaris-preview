@@ -43,7 +43,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
       });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Ophalen mislukt.");
-      setT({ vorm: d.teksten.vorm || "jullie", aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
+      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
       setNotitieVlak(d.notitie_vlak !== false);
       setOpgeslagen(d.opgeslagen || null);
     } catch (e) {
@@ -61,7 +61,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
   function maakPdf() {
     if (!t) return;
     if (!t.aanhef.trim() || !t.opening.trim() || !t.app.trim()) {
-      return setFout("Aanhef, opening en app-alinea mogen niet leeg zijn.");
+      return setFout("Aanhef, opening en vak-alinea mogen niet leeg zijn.");
     }
     dataRef.current.value = JSON.stringify({ slug: rij.slug, teksten: t, notitie_vlak: notitieVlak });
     formRef.current.submit(); // opent de PDF in een nieuw tabblad
@@ -120,16 +120,21 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
                   value={t.eigen}
                   onChange={(e) => wijzig("eigen", e.target.value)}
                   maxLength={400}
-                  placeholder="Bijv. Ik kwam vandaag even langs, maar je was aan het werk. Daarom laat ik deze brief achter."
+                  placeholder="Bijv. We kwamen vandaag even langs, maar je was aan het werk. Daarom laten we deze brief achter."
                 />
                 <div style={hulp}>Komt direct na de opening.</div>
               </div>
 
               <div>
-                <span style={label}>App-alinea</span>
+                <span style={label}>Vak-alinea (app en reviews)</span>
                 <textarea style={{ ...veld, minHeight: 110 }} value={t.app} onChange={(e) => wijzig("app", e.target.value)} maxLength={700} />
-                <div style={hulp}>Staat in de brief achter de vaste zin "Het echte verschil zit in de app die erbij hoort."</div>
+                <div style={hulp}>Staat na de vaste alinea's over de website en het uitproberen van de app.</div>
               </div>
+
+              <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
+                <input type="checkbox" checked={t.prijs !== false} onChange={(e) => wijzig("prijs", e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
+                Met prijs (brief-actie € 399, rechts in de zijkolom). Uit = brief zonder prijs, voor de A/B-test
+              </label>
 
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
                 <input type="checkbox" checked={notitieVlak} onChange={(e) => setNotitieVlak(e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
@@ -137,7 +142,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
               </label>
 
               <div style={hulp}>
-                De rest (prijs, deadline 3 weken na vandaag, QR-code, ondertekening met jouw naam) wordt er automatisch bij gezet.
+                De rest (website klaar, app uitproberen, "wij doen de rest", QR-code, prijs en deadline 3 weken na vandaag, ondertekening met jouw naam) wordt er automatisch bij gezet.
               </div>
             </>
           )}
