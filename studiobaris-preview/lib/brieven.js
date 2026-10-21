@@ -425,7 +425,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   // Bewust zonder kop of label, zodat het als een gewone marge oogt als je er
   // niets op schrijft. Loopt van onder de zijkolom tot net boven de voet.
   if (notitieVlak) {
-    for (let ly = zijTop - ZIJ_H - 28; ly >= 96; ly -= 22) {
+    for (let ly = zijTop - ZIJ_H - 28; ly >= 80; ly -= 22) {
       pagina.drawLine({ start: { x: ZIJ_L, y: ly }, end: { x: R, y: ly }, thickness: 0.5, color: LIJN });
     }
   }
@@ -501,7 +501,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   // Hoofdtekst opmaken bij een gegeven lettergrootte. Met teken = false wordt
   // alleen gemeten (niets getekend); de functie geeft de basislijn van de
   // laatste regel (P.S.) terug. Zo meten we exact of alles op de pagina past.
-  const LAAGSTE_REGEL = 80; // laatste regel blijft boven de voetlijn (62)
+  const LAAGSTE_REGEL = 68; // laatste regel blijft boven de voetlijn (50)
   function hoofdtekst(size, teken) {
     const T = teken ? tekst : () => {};
     const V = teken ? vlak : () => {};
@@ -519,6 +519,8 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
       if (bl.review) {
         const regels = reviewRegels(size);
         const hoogte = 12 + regels.length * lead + lead;
+        const LUCHT = 8; // extra witruimte boven en onder de review
+        y -= LUCHT;
         const top = y + size;
         V(L, top - hoogte + 2, 2, hoogte - 2, GOUD);
         const aantal = Math.max(0, Math.min(5, Number(review.sterren) || 0));
@@ -536,7 +538,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
         let ry = top - 12 - size + 1;
         for (const r of regels) { T(r, L + REV_IN, ry, { italic: true, size: size - 0.5 }); ry -= lead; }
         T(`- ${reviewWie()}`, L + REV_IN, ry, { size: size - 1.5, kleur: GRIJS });
-        y = ry - lead * 1.6;
+        y = ry - lead * 1.6 - LUCHT;
         return;
       }
       if (bl.app) {
@@ -601,10 +603,11 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   hoofdtekst(size, true);
 
   // ── Voet ─────────────────────────────────────────────────────────────────
-  pagina.drawLine({ start: { x: L, y: 62 }, end: { x: R, y: 62 }, thickness: 0.75, color: LIJN });
-  midden(`Vragen of opmerkingen? Bel of app ons: ${BEDRIJF.telefoon} · ${BEDRIJF.web}`, L, R, 48, { size: 8, kleur: GRIJS });
-  midden(`Liever geen post van ons? Laat het weten via ${BEDRIJF.telefoon} of ${BEDRIJF.email}, dan sturen we niets meer.`, L, R, 36, { size: 7.5, kleur: GRIJS });
-  midden(`${BEDRIJF.naam} · KvK ${BEDRIJF.kvk}`, L, R, 24, { size: 7, kleur: GRIJS });
+  // Eén regel voor vragen én afmelden: bij direct marketing aan personen
+  // (zzp'ers) moet bezwaar maken bij het eerste contact vermeld staan (AVG art. 21).
+  pagina.drawLine({ start: { x: L, y: 50 }, end: { x: R, y: 50 }, thickness: 0.75, color: LIJN });
+  midden(`Vragen, of liever geen post meer? Bel of app ${BEDRIJF.telefoon} of mail ${BEDRIJF.email}`, L, R, 37, { size: 7.5, kleur: GRIJS });
+  midden(`${BEDRIJF.naam} · ${BEDRIJF.web} · KvK ${BEDRIJF.kvk}`, L, R, 26, { size: 7, kleur: GRIJS });
 
   return await pdf.save();
 }
