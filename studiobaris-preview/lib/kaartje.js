@@ -1,7 +1,11 @@
-// Fotokaartje bij de brief (Adressenlijst → bewerkvenster → "Kaartje").
+// Fotokaartje bij de brief (Adressenlijst → bewerkvenster).
 // Server-only.
 //
-// A6 liggend: links een telefoon met de bovenkant van de eigen preview
+// Staat in de brief het vinkje "kaartje" aan, dan komt het kaartje als
+// pagina 2 mee in de brief-PDF: een A4 met het kaartje (A6) en snijlijnen.
+// Los op te vragen via /api/brieven/kaartje.
+//
+// Het kaartje, A6 liggend: links een telefoon met de bovenkant van de eigen preview
 // (merkkleuren, hoofdfoto, kop en de balk "Probeer je eigen app"), rechts
 // "Zo ziet jullie website eruit" met QR-code en adres. Het kaartje gaat met
 // een paperclip op de brief; de brief verwijst ernaar als teksten.kaartje aan
@@ -86,8 +90,9 @@ async function haalLogo(url, maxB, maxH) {
   }
 }
 
-// opties: { rij, content, vorm ("je" | "jullie") }
-export async function kaartjePdf({ rij, content, vorm = "jullie" }) {
+// Het kaartje zelf, als losse A6-pagina (bytes). Wordt op een A4 met
+// snijlijnen gezet door kaartjeOpA4.
+async function kaartjeA6({ rij, content, vorm = "jullie" }) {
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -246,5 +251,39 @@ export async function kaartjePdf({ rij, content, vorm = "jullie" }) {
   tekst("Baris", RX + sb, by2, { size: 10, font: bodoniBold });
   tekst("06 16 73 21 05", RX + sb + bodoniBold.widthOfTextAtSize("Baris", 10) + 10, by2 + 1, { size: 7, kleur: GRIJS });
 
+  return await pdf.save();
+}
+
+// A4 met het kaartje bovenaan in het midden en snijlijnen in de hoeken.
+// Voegt een pagina toe aan een bestaand PDF-document (bv. de brief).
+export async function kaartjeOpA4(pdf, opties) {
+  const [kaart] = await pdf.embedPdf(await kaartjeA6(opties));
+  const A4W = 595.28, A4H = 841.89;
+  const KW = kaart.width, KH = kaart.height;
+  const x = (A4W - KW) / 2;
+  const y = A4H - 70 - KH;
+  const pagina = pdf.addPage([A4W, A4H]);
+  pagina.drawPage(kaart, { x, y, width: KW, height: KH });
+  // Snijlijnen: korte streepjes buiten elke hoek.
+  const GAT = 4, LEN = 14, DIK = 0.5;
+  const zwart = rgb(0.3, 0.3, 0.3);
+  const lijn = (x1, y1, x2, y2) => pagina.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: DIK, color: zwart });
+  for (const [cx, cy, sx, sy] of [[x, y, -1, -1], [x + KW, y, 1, -1], [x, y + KH, -1, 1], [x + KW, y + KH, 1, 1]]) {
+    lijn(cx + sx * GAT, cy, cx + sx * (GAT + LEN), cy);
+    lijn(cx, cy + sy * GAT, cx, cy + sy * (GAT + LEN));
+  }
+  const { font } = await jakartaFonts(pdf);
+  const uitleg = "Snijd uit langs de hoekmarkeringen (148 x 105 mm). Print deze pagina op fotokarton van ca. 250 g/m2.";
+  const ub = font.widthOfTextAtSize(uitleg, 7.5);
+  pagina.drawText(uitleg, { x: (A4W - ub) / 2, y: y - 34, size: 7.5, font, color: rgb(0.42, 0.38, 0.33) });
+  return pagina;
+}
+
+// Los kaartje (route /api/brieven/kaartje): één A4 met snijlijnen.
+export async function kaartjePdf(opties) {
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(`Kaartje ${schoon(opties.rij.company_name || opties.rij.slug)}`);
+  pdf.setAuthor("StudioBaris");
+  await kaartjeOpA4(pdf, opties);
   return await pdf.save();
 }

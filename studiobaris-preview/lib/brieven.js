@@ -28,6 +28,7 @@ import { jakartaFonts } from "./plus-jakarta-font";
 import { bodoniFonts } from "./bodoni-moda-font";
 import { callClaude } from "./anthropic";
 import { AFZENDER_FOTOS, BRIEF_REVIEW } from "./brief-instellingen";
+import { kaartjeOpA4 } from "./kaartje";
 
 const PREVIEW_BASIS = "https://preview.studiobaris.nl/";
 
@@ -593,6 +594,17 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   midden(`Vragen of opmerkingen? Bel of app ons: ${BEDRIJF.telefoon} · ${BEDRIJF.web}`, L, R, 48, { size: 8, kleur: GRIJS });
   midden(`Liever geen post van ons? Laat het weten via ${BEDRIJF.telefoon} of ${BEDRIJF.email}, dan sturen we niets meer.`, L, R, 36, { size: 7.5, kleur: GRIJS });
   midden(`${BEDRIJF.naam} · KvK ${BEDRIJF.kvk}`, L, R, 24, { size: 7, kleur: GRIJS });
+
+  // Pagina 2: het fotokaartje op A4 met snijlijnen (als het vinkje aan staat).
+  // Lukt dat niet (bv. hoofdfoto niet op te halen en ook geen terugval), dan
+  // blijft de brief gewoon één pagina.
+  if (metKaartje) {
+    try {
+      await kaartjeOpA4(pdf, { rij, content, vorm: teksten.vorm });
+    } catch (e) {
+      console.error("brief: kaartje toevoegen mislukt:", e && e.message);
+    }
+  }
 
   return await pdf.save();
 }
