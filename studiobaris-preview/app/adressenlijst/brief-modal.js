@@ -57,7 +57,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
       });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Ophalen mislukt.");
-      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, verzonden: d.teksten.verzonden || vandaagIso(), aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
+      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, kaartje: d.teksten.kaartje === true, verzonden: d.teksten.verzonden || vandaagIso(), aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
       setNotitieVlak(d.notitie_vlak !== false);
       setOpgeslagen(d.opgeslagen || null);
     } catch (e) {
@@ -151,6 +151,16 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
                 <div style={hulp}>
                   Dit is de datum op de brief.{t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand).` : ""}
                 </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
+                  <input type="checkbox" checked={t.kaartje === true} onChange={(e) => wijzig("kaartje", e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
+                  Er zit een fotokaartje bij (met paperclip op de brief)
+                </label>
+                <a href={`/api/brieven/kaartje?slug=${encodeURIComponent(rij.slug)}`} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 700, color: KLEUR.kleiDonker }}>
+                  Kaartje (PDF) openen
+                </a>
               </div>
 
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>

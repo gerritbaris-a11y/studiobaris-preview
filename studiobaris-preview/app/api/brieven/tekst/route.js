@@ -38,7 +38,7 @@ export async function POST(req) {
   const t = await briefTeksten(rij, content);
   return NextResponse.json({
     ok: true,
-    teksten: { vorm: t.vorm, prijs: true, verzonden: null, aanhef: t.aanhef, opening: t.opening, eigen: "", app: t.app },
+    teksten: { vorm: t.vorm, prijs: true, kaartje: true, verzonden: null, aanhef: t.aanhef, opening: t.opening, eigen: "", app: t.app },
     notitie_vlak: true,
     bron: t.bron,
     opgeslagen: null,

@@ -27,6 +27,7 @@ import { BEDRIJF } from "./facturen";
 import { jakartaFonts } from "./plus-jakarta-font";
 import { bodoniFonts } from "./bodoni-moda-font";
 import { callClaude } from "./anthropic";
+import { AFZENDER_FOTOS, BRIEF_REVIEW } from "./brief-instellingen";
 
 const PREVIEW_BASIS = "https://preview.studiobaris.nl/";
 
@@ -187,6 +188,43 @@ function urlRegels(u, font, size, maxBreedte) {
   return regels;
 }
 
+// Tekst met **vet** erin over regels verdelen. Elke regel is een lijst
+// woorden { w, vet }. Twee sterretjes aan weerszijden maken een stuk vet.
+function rijkeRegels(tekst, size, maxBreedte, basis, vetFont) {
+  const woorden = [];
+  // plak: woord hoort zonder spatie aan het vorige vast (bv. de punt na **vet**).
+  let vorigeEindigdeMetSpatie = true;
+  String(tekst).split(/(\*\*[^*]+\*\*)/).forEach((deel) => {
+    if (!deel) return;
+    const isVet = /^\*\*[^*]+\*\*$/.test(deel);
+    const t = isVet ? deel.slice(2, -2) : deel;
+    const begintMetSpatie = /^\s/.test(t);
+    t.split(/ +/).filter(Boolean).forEach((w, i) => {
+      const plak = i === 0 && woorden.length > 0 && !begintMetSpatie && !vorigeEindigdeMetSpatie;
+      woorden.push({ w, vet: isVet, plak });
+    });
+    vorigeEindigdeMetSpatie = /\s$/.test(t);
+  });
+  const spatie = basis.widthOfTextAtSize(" ", size);
+  const b = (wd) => (wd.vet ? vetFont : basis).widthOfTextAtSize(wd.w, size);
+  const regels = [];
+  let regel = [];
+  let breed = 0;
+  for (const wd of woorden) {
+    const extra = (regel.length && !wd.plak ? spatie : 0) + b(wd);
+    if (regel.length && breed + extra > maxBreedte && !wd.plak) {
+      regels.push(regel);
+      regel = [wd];
+      breed = b(wd);
+    } else {
+      regel.push(wd);
+      breed += extra;
+    }
+  }
+  regels.push(regel);
+  return regels;
+}
+
 // Teksten die in het bewerkvenster zijn aangepast: schoonmaken, lengte
 // begrenzen (alles moet op één A4 passen) en de vorm controleren.
 // prijs: true = brief met brief-actie (standaard), false = zonder prijs (A/B).
@@ -196,13 +234,15 @@ const MAX = { aanhef: 80, opening: 400, eigen: 300, app: 450 };
 export function normaliseerTeksten(t) {
   const x = t || {};
   const verzonden = leesDatum(x.verzonden);
-  const uit = { vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, verzonden: datumIso(verzonden || vandaagNL()) };
+  const uit = { vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, kaartje: x.kaartje === true, verzonden: datumIso(verzonden || vandaagNL()) };
   for (const veld of Object.keys(MAX)) uit[veld] = schoon(x[veld] || "").slice(0, MAX[veld]);
   return uit;
 }
 
 // opties: { rij, content, teksten, afzender, dagtekening (Date), notitieVlak }
-// teksten: { vorm, prijs, verzonden, aanhef, opening, eigen (optioneel), app }
+// teksten: { vorm, prijs, kaartje, verzonden, aanhef, opening, eigen (optioneel), app }
+// kaartje: true = er zit een fotokaartje van de website bij (paperclip); de
+//   website-alinea verwijst er dan naar.
 // dagtekening: valt terug op teksten.verzonden, dan op vandaag.
 // notitieVlak: lege lijntjes in de rechterkolom voor een handgeschreven notitie.
 export async function briefPdf({ rij, content, teksten, afzender, dagtekening, notitieVlak = true }) {
@@ -212,6 +252,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const adres = schoon(rij.b_adres || b.adres || "");
   const je = teksten.vorm === "je";
   const metPrijs = teksten.prijs !== false;
+  const metKaartje = teksten.kaartje === true;
   const v = (jeTekst, jullieTekst) => (je ? jeTekst : jullieTekst);
   const datum = leesDatum(teksten.verzonden) || dagtekening || vandaagNL();
   const einde = plusMaand(datum);
@@ -248,6 +289,16 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const rechts = (s, xEind, y, o = {}) => tekst(s, xEind - breedte(s, o), y, o);
   const midden = (s, x0, x1, y, o = {}) => tekst(s, x0 + (x1 - x0 - breedte(s, o)) / 2, y, o);
   const vlak = (x, y, w, h, kleur) => pagina.drawRectangle({ x, y, width: w, height: h, color: kleur });
+  // Eén regel uit rijkeRegels tekenen.
+  const rijkeRegel = (regel, x, y, size, basis = font, kleur = INKT) => {
+    const spatie = basis.widthOfTextAtSize(" ", size);
+    regel.forEach((wd, i) => {
+      if (i > 0 && wd.plak) x -= spatie;
+      const f = wd.vet ? vet : basis;
+      pagina.drawText(schoon(wd.w), { x, y, size, font: f, color: kleur });
+      x += f.widthOfTextAtSize(schoon(wd.w), size) + spatie;
+    });
+  };
 
   // ── Gouden topbalk + kop (zelfde als offertes) ────────────────────────────
   vlak(0, 838.89, 595.28, 3, GOUD);
@@ -327,6 +378,27 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
       uy -= 10;
     }
 
+    // Review van een bestaande klant (alleen als die is ingesteld)
+    if (BRIEF_REVIEW && BRIEF_REVIEW.tekst) {
+      uy -= 2;
+      lijn(uy + 4);
+      uy -= 10;
+      t("WAT KLANTEN ZEGGEN", zx, uy, { size: 7.5, vet: true, kleur: GRIJS });
+      uy -= 12;
+      for (const regel of wrap(`"${BRIEF_REVIEW.tekst}"`, italic, 8.5, zijTekstB)) {
+        t(regel, zx, uy, { size: 8.5, italic: true });
+        uy -= 11;
+      }
+      const wie = [BRIEF_REVIEW.naam, BRIEF_REVIEW.plaats].filter(Boolean).join(", ");
+      if (wie) {
+        for (const regel of wrap(`- ${wie}`, font, 7.5, zijTekstB)) {
+          t(regel, zx, uy, { size: 7.5, kleur: GRIJS });
+          uy -= 10;
+        }
+      }
+      uy -= 2;
+    }
+
     // Actieblok (alleen in de prijsvariant)
     if (metPrijs) {
       uy -= 2;
@@ -384,14 +456,18 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
     { t: teksten.opening },
     // Eigen regel uit het bewerkvenster (bv. "We kwamen vandaag even langs").
     ...(teksten.eigen && teksten.eigen.trim() ? [{ t: teksten.eigen.trim() }] : []),
-    { t: v(
-        "Je bent vakman, geen websitebouwer. Daarom hebben wij je website alvast gemaakt. Scan de QR-code hiernaast en je ziet hem meteen. Gratis, zonder inloggen.",
-        "Jullie zijn vakmensen, geen websitebouwers. Daarom hebben wij jullie website alvast gemaakt. Scan de QR-code hiernaast en jullie zien hem meteen. Gratis, zonder inloggen.") },
+    { t: metKaartje
+        ? v(
+          "Je bent vakman, geen websitebouwer. Daarom hebben wij je website alvast gemaakt. Op het kaartje bij deze brief zie je hoe hij eruitziet op je telefoon. Scan de QR-code hiernaast en je bekijkt hem echt. **Gratis, zonder inloggen.**",
+          "Jullie zijn vakmensen, geen websitebouwers. Daarom hebben wij jullie website alvast gemaakt. Op het kaartje bij deze brief zien jullie hoe hij eruitziet op de telefoon. Scan de QR-code hiernaast en jullie bekijken hem echt. **Gratis, zonder inloggen.**")
+        : v(
+          "Je bent vakman, geen websitebouwer. Daarom hebben wij je website alvast gemaakt. Scan de QR-code hiernaast en je ziet hem meteen. **Gratis, zonder inloggen.**",
+          "Jullie zijn vakmensen, geen websitebouwers. Daarom hebben wij jullie website alvast gemaakt. Scan de QR-code hiernaast en jullie zien hem meteen. **Gratis, zonder inloggen.**") },
     { app: true },
     { t: teksten.app },
     { t: v(
-        `Bevalt het? Bel of app ons op ${TEL}. Dan kun je volgende week al beginnen. Domeinnaam, hosting, e-mail en onderhoud regelen wij. Vind je het niks? Dan gooi je deze brief gewoon weg.`,
-        `Bevalt het? Bel of app ons op ${TEL}. Dan kunnen jullie volgende week al beginnen. Domeinnaam, hosting, e-mail en onderhoud regelen wij. Vinden jullie het niks? Dan gooien jullie deze brief gewoon weg.`) },
+        `Bevalt het? Bel of app ons op **${TEL}**. Dan kun je volgende week al beginnen. Domeinnaam, hosting, e-mail en onderhoud regelen wij. Vind je het niks? Dan gooi je deze brief gewoon weg.`,
+        `Bevalt het? Bel of app ons op **${TEL}**. Dan kunnen jullie volgende week al beginnen. Domeinnaam, hosting, e-mail en onderhoud regelen wij. Vinden jullie het niks? Dan gooien jullie deze brief gewoon weg.`) },
   ];
   // App-blok: titel, kernzin en drie stappen om de eigen demo-app te proberen.
   const APP = {
@@ -407,17 +483,24 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const APP_PAD = 11; // binnenmarge van het app-blok
   const ps = metPrijs
     ? v(
-        `P.S. Omdat je deze brief van ons kreeg, betaal je € 399 in plaats van € 599 eenmalig. Dat geldt tot en met ${eindeTekst}.`,
-        `P.S. Omdat jullie deze brief van ons kregen, betalen jullie € 399 in plaats van € 599 eenmalig. Dat geldt tot en met ${eindeTekst}.`)
+        `P.S. Omdat je deze brief van ons kreeg, betaal je € 399 in plaats van € 599 eenmalig. Dat geldt **tot en met ${eindeTekst}**.`,
+        `P.S. Omdat jullie deze brief van ons kregen, betalen jullie € 399 in plaats van € 599 eenmalig. Dat geldt **tot en met ${eindeTekst}**.`)
     : v(
-        "P.S. Je proefapp blijft een maand actief vanaf de eerste keer dat je hem opent.",
-        "P.S. Jullie proefapp blijft een maand actief vanaf de eerste keer dat jullie hem openen.");
+        "P.S. Je proefapp blijft **een maand actief** vanaf de eerste keer dat je hem opent.",
+        "P.S. Jullie proefapp blijft **een maand actief** vanaf de eerste keer dat jullie hem openen.");
 
   // Past alles op één pagina? Zo niet: lettergrootte stapsgewijs omlaag.
   const kolB = KOL_R - L;
   const appB = kolB - 2 * APP_PAD - 4; // tekstbreedte in het app-blok (4 = gouden rand)
   const ONDERGRENS = 92; // ruimte voor voetregels
   const HANDTEKENING = 50; // witruimte voor de handtekening
+  // Portretfoto van de afzender: sleutel = voornaam in kleine letters.
+  const FOTO = 36;
+  const fotoSleutel = naamAfzender.split(/[\s&]+/)[0].toLowerCase();
+  let fotoAfzender = null;
+  if (AFZENDER_FOTOS[fotoSleutel]) {
+    try { fotoAfzender = await pdf.embedPng(Buffer.from(AFZENDER_FOTOS[fotoSleutel], "base64")); } catch {}
+  }
   function appOpmaak(size) {
     const lead = size * 1.38;
     const titel = wrap(APP.titel, vet, size + 2, appB);
@@ -434,12 +517,12 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
     const lead = size * 1.38;
     const kopRegels = wrap(kop, vet, size + 5, kolB);
     const app = appOpmaak(size);
-    const regels = blokken.map((bl) => (bl.app ? null : wrap(bl.t, font, size, kolB)));
-    const psRegels = wrap(ps, italic, size, kolB);
+    const regels = blokken.map((bl) => (bl.app ? null : rijkeRegels(bl.t, size, kolB, font, vet)));
+    const psRegels = rijkeRegels(ps, size, kolB, italic, vet);
     const hoogte =
       kopRegels.length * (size + 5) * 1.2 + 14 +
       blokken.reduce((h, bl, i) => h + (bl.app ? app.hoogte + lead * 0.8 + size : regels[i].length * lead + lead * 0.6), 0) +
-      lead * 2 + HANDTEKENING + lead * 2 + 10 +
+      lead * 2 + HANDTEKENING + lead * 2 + 10 + (fotoAfzender ? FOTO - 2 * lead + 4 : 0) +
       psRegels.length * lead;
     opmaak = { lead, kopRegels, app, regels, psRegels };
     if (640 - hoogte >= ONDERGRENS) break;
@@ -475,7 +558,7 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
       return;
     }
     opmaak.regels[i].forEach((r) => {
-      tekst(r, L, y, { size });
+      rijkeRegel(r, L, y, size);
       y -= opmaak.lead;
     });
     y -= opmaak.lead * 0.6;
@@ -486,13 +569,22 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   y -= HANDTEKENING; // bewust leeg: hier zet de afzender zijn handtekening
   pagina.drawLine({ start: { x: L, y: y + 8 }, end: { x: L + 150, y: y + 8 }, thickness: 0.5, color: LIJN });
   y -= opmaak.lead * 0.4;
-  tekst(naamAfzender, L, y, { size, vet: true });
+  // Kleine ronde portretfoto van de afzender (als die is ingesteld), met naam
+  // en "StudioBaris" ernaast.
+  let nx = L;
+  if (fotoAfzender) {
+    const top = y + size + 2;
+    pagina.drawImage(fotoAfzender, { x: L, y: top - FOTO, width: FOTO, height: FOTO });
+    nx = L + FOTO + 9;
+    y = top - FOTO / 2 + 1;
+  }
+  tekst(naamAfzender, nx, y, { size, vet: true });
   y -= opmaak.lead;
-  tekst("StudioBaris", L, y, { size, kleur: GRIJS });
-  y -= opmaak.lead + 10;
+  tekst("StudioBaris", nx, y, { size, kleur: GRIJS });
+  y -= opmaak.lead + 10 + (fotoAfzender ? FOTO / 2 - opmaak.lead : 0);
 
   for (const r of opmaak.psRegels) {
-    tekst(r, L, y, { size, italic: true });
+    rijkeRegel(r, L, y, size, italic);
     y -= opmaak.lead;
   }
 
