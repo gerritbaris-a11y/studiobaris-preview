@@ -4,6 +4,12 @@ import { getLead } from "../../lib/server-data";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Gratis preview aanvragen | StudioBaris",
+  description:
+    "StudioBaris bouwt websites voor vakmannen. Vraag een gratis preview aan en zie hoe jouw website eruitziet.",
+};
+
 // Deze pagina is bewust PUBLIEK: hij staat op studiobaris.nl achter de knop
 // "Gratis preview". Vult een collega hem in vanuit de leadlijst (?lead=...),
 // dan vullen we de bekende gegevens alvast in en koppelen we de preview aan hem.
