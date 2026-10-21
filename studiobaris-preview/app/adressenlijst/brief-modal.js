@@ -16,6 +16,20 @@ const veld = {
 };
 const hulp = { fontSize: 12, color: KLEUR.labelDonker, marginTop: 4 };
 
+// Vandaag als "YYYY-MM-DD" in Nederlandse tijd.
+function vandaagIso() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Amsterdam" });
+}
+// Zelfde dag een maand later, voluit (zelfde regel als lib/brieven.js).
+function actieTot(iso) {
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return "";
+  const j = +m[1], mnd = +m[2], d = +m[3];
+  const laatste = new Date(Date.UTC(j, mnd + 1, 0)).getUTCDate();
+  const tot = new Date(Date.UTC(j, mnd, Math.min(d, laatste)));
+  return tot.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 function datumKort(iso) {
   if (!iso) return "";
   try {
@@ -43,7 +57,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
       });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Ophalen mislukt.");
-      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
+      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, verzonden: d.teksten.verzonden || vandaagIso(), aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
       setNotitieVlak(d.notitie_vlak !== false);
       setOpgeslagen(d.opgeslagen || null);
     } catch (e) {
@@ -128,7 +142,15 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
               <div>
                 <span style={label}>Vak-alinea (app en reviews)</span>
                 <textarea style={{ ...veld, minHeight: 110 }} value={t.app} onChange={(e) => wijzig("app", e.target.value)} maxLength={700} />
-                <div style={hulp}>Staat na de vaste alinea's over de website en het uitproberen van de app.</div>
+                <div style={hulp}>Staat direct onder het app-blok. Kort houden: 2-3 zinnen.</div>
+              </div>
+
+              <div>
+                <span style={label}>Brief gaat de deur uit op</span>
+                <input type="date" style={{ ...veld, width: "auto" }} value={t.verzonden} onChange={(e) => wijzig("verzonden", e.target.value)} />
+                <div style={hulp}>
+                  Dit is de datum op de brief.{t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand).` : ""}
+                </div>
               </div>
 
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
@@ -138,11 +160,11 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
 
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
                 <input type="checkbox" checked={notitieVlak} onChange={(e) => setNotitieVlak(e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
-                Lijntjes voor een handgeschreven notitie (rechts, onder het actieblok)
+                Lijntjes voor een handgeschreven persoonlijke boodschap (rechts, onder de QR-code en de prijs)
               </label>
 
               <div style={hulp}>
-                De rest (website klaar, app uitproberen, "wij doen de rest", QR-code, prijs en deadline 3 weken na vandaag, ondertekening met jouw naam) wordt er automatisch bij gezet.
+                De rest (website klaar, het app-blok, wat nu, QR-code, prijs en deadline, ondertekening met jouw naam) wordt er automatisch bij gezet.
               </div>
             </>
           )}
