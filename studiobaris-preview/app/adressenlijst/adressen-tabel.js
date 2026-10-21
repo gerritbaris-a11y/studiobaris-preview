@@ -219,6 +219,26 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
                           {gemaakt[r.slug].afzender || "Gemaakt"}{gemaakt[r.slug].bijgewerkt_op ? ` · ${datumKort(gemaakt[r.slug].bijgewerkt_op)}` : ""}
                         </div>
                       )}
+                      {/* Kaartje en verzenddatum (alleen bij brieven in de huidige versie). */}
+                      {gemaakt[r.slug] && Number(gemaakt[r.slug].versie) === 2 && (
+                        <div style={{ fontSize: 11.5, color: KLEUR.labelDonker, marginTop: 2 }}>
+                          {gemaakt[r.slug].kaartje ? (
+                            <>
+                              met kaartje ·{" "}
+                              <a
+                                href={`/api/brieven/kaartje?slug=${encodeURIComponent(r.slug)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ color: KLEUR.kleiDonker, fontWeight: 700 }}
+                              >
+                                Kaartje bekijken
+                              </a>
+                            </>
+                          ) : "zonder kaartje"}
+                          {gemaakt[r.slug].verzonden ? <div>datum op brief: {datumKort(gemaakt[r.slug].verzonden)}</div> : null}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
