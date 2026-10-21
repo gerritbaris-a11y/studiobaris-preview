@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { PDFDocument } from "pdf-lib";
 import { leesSessie } from "../../../../lib/auth";
 import { getOverview, getFull, getBrief, slaBriefOp } from "../../../../lib/server-data";
-import { briefPdf, normaliseerTeksten, leesDatum, datumIso, vandaagNL } from "../../../../lib/brieven";
+import { briefPdf, normaliseerTeksten, leesDatum, datumIso, vandaagNL, isActueleBrief } from "../../../../lib/brieven";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ export async function POST(req) {
     const rij = perSlug.get(slug);
     if (!rij || !rij.gepubliceerd) return null;
     const brief = await getBrief(slug);
-    if (!brief || !brief.teksten) return null; // nog niet gecontroleerd: overslaan
+    if (!brief || !isActueleBrief(brief.teksten)) return null; // nog niet (opnieuw) gecontroleerd: overslaan
     const content = (await getFull(slug)) || {};
     const teksten = normaliseerTeksten({ ...brief.teksten, verzonden });
     const notitieVlak = brief.notitie_vlak !== false;

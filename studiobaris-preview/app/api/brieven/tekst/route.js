@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOverview, getFull, getBrief } from "../../../../lib/server-data";
-import { briefTeksten } from "../../../../lib/brieven";
+import { briefTeksten, isActueleBrief } from "../../../../lib/brieven";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,9 @@ export async function POST(req) {
 
   if (!body.opnieuw) {
     const opgeslagen = await getBrief(slug);
-    if (opgeslagen && opgeslagen.teksten) {
+    // Een brief uit de oude versie (ik-vorm, oude opbouw) gebruiken we niet:
+    // dan schrijft Claude hieronder een nieuwe tekst.
+    if (opgeslagen && isActueleBrief(opgeslagen.teksten)) {
       return NextResponse.json({
         ok: true,
         teksten: opgeslagen.teksten,

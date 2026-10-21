@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOverview, getFull, getBrief } from "../../../../lib/server-data";
 import { kaartjesPdf } from "../../../../lib/kaartje";
+import { isActueleBrief } from "../../../../lib/brieven";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ export async function GET(req) {
     const rij = perSlug.get(slug);
     if (!rij || !rij.gepubliceerd) return null;
     const [content, brief] = await Promise.all([getFull(slug), getBrief(slug)]);
-    if (alleenStapel && !(brief && brief.teksten && brief.teksten.kaartje === true)) return null;
+    if (alleenStapel && !(brief && isActueleBrief(brief.teksten) && brief.teksten.kaartje === true)) return null;
     const vorm = brief && brief.teksten && brief.teksten.vorm === "je" ? "je" : "jullie";
     return { rij, content: content || {}, vorm };
   }))).filter(Boolean);

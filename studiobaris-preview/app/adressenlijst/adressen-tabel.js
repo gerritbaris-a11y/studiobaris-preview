@@ -53,10 +53,11 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
   // als de PDF's), gesplitst in wel/geen gecontroleerde brief.
   const stapel = useMemo(() => {
     const lijst = rijen.filter((r) => gekozen.has(r.slug)).sort((a, b) => a.bedrijf.localeCompare(b.bedrijf, "nl"));
-    const metBrief = lijst.filter((r) => gemaakt[r.slug]);
+    // Alleen brieven die in de huidige versie zijn gecontroleerd (versie 2).
+    const metBrief = lijst.filter((r) => gemaakt[r.slug] && Number(gemaakt[r.slug].versie) === 2);
     return {
       metBrief,
-      zonderBrief: lijst.filter((r) => !gemaakt[r.slug]),
+      zonderBrief: lijst.filter((r) => !(gemaakt[r.slug] && Number(gemaakt[r.slug].versie) === 2)),
       metKaartje: metBrief.filter((r) => gemaakt[r.slug].kaartje),
     };
   }, [rijen, gekozen, gemaakt]);
@@ -211,7 +212,7 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
                         style={{ ...briefKnop, cursor: "pointer" }}
                         title="Tekst bekijken en aanpassen, daarna een printklare PDF maken"
                       >
-                        {gemaakt[r.slug] ? "Brief bekijken" : "Brief maken"}
+                        {gemaakt[r.slug] && Number(gemaakt[r.slug].versie) === 2 ? "Brief bekijken" : gemaakt[r.slug] ? "Opnieuw maken" : "Brief maken"}
                       </button>
                       {gemaakt[r.slug] && (
                         <div style={{ fontSize: 11.5, color: KLEUR.labelDonker, marginTop: 4 }}>
@@ -234,7 +235,7 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
           rij={briefRij}
           onSluiten={() => setBriefRij(null)}
           onGemaakt={(slug, extra = {}) => {
-            setGemaakt((g) => ({ ...g, [slug]: { slug, afzender: "Net gemaakt", bijgewerkt_op: new Date().toISOString(), ...extra } }));
+            setGemaakt((g) => ({ ...g, [slug]: { slug, afzender: "Net gemaakt", bijgewerkt_op: new Date().toISOString(), versie: 2, ...extra } }));
             setBriefRij(null);
           }}
         />

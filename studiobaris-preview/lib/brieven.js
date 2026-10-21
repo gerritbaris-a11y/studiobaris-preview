@@ -231,10 +231,18 @@ function rijkeRegels(tekst, size, maxBreedte, basis, vetFont) {
 // verzonden: dag dat de brief de deur uit gaat ("YYYY-MM-DD"); de actie
 // loopt tot en met dezelfde dag een maand later. Ontbreekt hij: vandaag.
 const MAX = { aanhef: 80, opening: 400, eigen: 300, app: 450 };
+// Versie van de brieftekst. Brieven opgeslagen vóór de nieuwe brief (okt 2026,
+// ik-vorm en oude opbouw) hebben geen versie en tellen niet als gecontroleerd:
+// bij openen schrijft Claude een nieuwe tekst, en de stapel slaat ze over.
+export const BRIEF_VERSIE = 2;
+export function isActueleBrief(teksten) {
+  return !!teksten && Number(teksten.versie) === BRIEF_VERSIE;
+}
+
 export function normaliseerTeksten(t) {
   const x = t || {};
   const verzonden = leesDatum(x.verzonden);
-  const uit = { vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, kaartje: x.kaartje === true, verzonden: datumIso(verzonden || vandaagNL()) };
+  const uit = { versie: BRIEF_VERSIE, vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, kaartje: x.kaartje === true, verzonden: datumIso(verzonden || vandaagNL()) };
   for (const veld of Object.keys(MAX)) uit[veld] = schoon(x[veld] || "").slice(0, MAX[veld]);
   return uit;
 }
