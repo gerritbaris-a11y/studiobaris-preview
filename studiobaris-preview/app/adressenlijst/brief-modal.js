@@ -174,7 +174,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
               </label>
 
               <div style={hulp}>
-                De rest (website klaar, het app-blok, wat nu, QR-code, prijs en deadline, ondertekening met jouw naam) wordt er automatisch bij gezet.
+                De rest (website klaar, het app-blok, wat nu, QR-code, prijs en deadline, ondertekening door Gerrit met foto) wordt er automatisch bij gezet.
               </div>
             </>
           )}

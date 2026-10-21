@@ -27,7 +27,7 @@ import { BEDRIJF } from "./facturen";
 import { jakartaFonts } from "./plus-jakarta-font";
 import { bodoniFonts } from "./bodoni-moda-font";
 import { callClaude } from "./anthropic";
-import { AFZENDER_FOTOS, BRIEF_REVIEW } from "./brief-instellingen";
+import { AFZENDER_FOTOS, BRIEF_REVIEW, BRIEF_ONDERTEKENAAR } from "./brief-instellingen";
 
 const PREVIEW_BASIS = "https://preview.studiobaris.nl/";
 
@@ -259,7 +259,8 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
   const einde = plusMaand(datum);
   const eindeTekst = datumLang(einde, true);
   const url = PREVIEW_BASIS + rij.slug;
-  const naamAfzender = schoon(afzender || "Gerrit & Levi");
+  // Ondertekenaar: vaste naam uit brief-instellingen, anders wie ingelogd is.
+  const naamAfzender = schoon(BRIEF_ONDERTEKENAAR || afzender || "Gerrit & Levi");
   // Telefoonnummer niet over twee regels laten breken (harde spaties).
   const TEL = BEDRIJF.telefoon.replace(/ /g, " ");
 
