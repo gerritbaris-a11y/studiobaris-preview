@@ -6,9 +6,9 @@
 // Waarde: PNG als base64 (al rond uitgesneden, transparante hoeken,
 // ca. 300×300 px). Staat er voor een afzender niets, dan komt er geen foto.
 //
-// BRIEF_REVIEW: één echte review van een bestaande klant, met toestemming,
-// in de zijkolom onder de QR-code. null = geen review op de brief.
-//   { tekst: "…", naam: "Voornaam Achternaam", plaats: "Plaats" }
+// BRIEF_REVIEWS: echte reviews van bestaande klanten, met toestemming. Eén
+// per brief, in de hoofdtekst onder de vak-alinea. Lege lijst = geen review.
+//   { tekst: "…", naam: "Voornaam Achternaam", bedrijf: "Bedrijfsnaam", sterren: 5 }
 
 // BRIEF_ONDERTEKENAAR: naam onder elke brief, ongeacht wie hem maakt.
 // Voorlopig ondertekent Gerrit alles (Levi werkt op de achtergrond). Wie de
@@ -22,4 +22,20 @@ export const AFZENDER_FOTOS = {
   // levi: "iVBORw0KGgo…",
 };
 
-export const BRIEF_REVIEW = null;
+// Google-reviews (okt 2026), met toestemming van beide klanten. Elke brief
+// krijgt er één, vast per preview (om en om op basis van de slug). Tekst
+// letterlijk overgenomen; "(...)" = weggelaten stuk, eerste letter hoofdletter.
+export const BRIEF_REVIEWS = [
+  {
+    tekst: "Zeker aan te bevelen! Denkt mee om een zo goed mogelijk en gebruiksvriendelijke website neer te zetten. De app waarmee je foto's op de website kan zetten is een groot pluspunt!",
+    naam: "Willem van Vliet",
+    bedrijf: "Van Vliet en Kalee Tuinen",
+    sterren: 5,
+  },
+  {
+    tekst: "Wij zijn erg tevreden over Studio Baris en hoe het hele proces is verlopen. (...) Vooral het gemak waarmee we zelf foto's van onze projecten kunnen toevoegen, vinden we een groot pluspunt.",
+    naam: "Stephan Oudshoorn",
+    bedrijf: "Oudshoorn Hovenier",
+    sterren: 5,
+  },
+];
