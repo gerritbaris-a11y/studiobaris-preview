@@ -23,6 +23,8 @@ import DomeinCheck from "./domein-check";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
 import ProefStatus from "./proef-status";
+import BenaderdKnop from "./benaderd-knop";
+import { getBenaderdLijst } from "../../lib/benaderd";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +80,8 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads, teamleden, proefLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht()]);
+  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst()]);
+  const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const proefPerSlug = Object.fromEntries((proefLijst || []).map((p) => [p.slug, p]));
   const magVerlengen = naam === "Gerrit" || naam === "Levi";
   // Welke handleiding hoort bij deze verkoper? Volgt uit zijn vergoedingsmodel.
@@ -197,6 +200,7 @@ export default async function KlantenPage() {
                     {r.gepubliceerd ? "Online" : "Offline"}
                   </span>
                 )}
+                <BenaderdKnop slug={r.slug} benaderdOp={benaderdPerSlug[r.slug] || null} />
                 <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
                 <div style={{ flexBasis: "100%", display: "flex", justifyContent: "flex-end" }}>
                   <ProspectActiviteit p={proefPerSlug[r.slug]} />
