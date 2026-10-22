@@ -1,33 +1,20 @@
 import { KLEUR, HEAD } from "./werkplek-stijl";
 
-// Welke handleiding hoort bij welk vergoedingsmodel.
-const HANDLEIDING = {
-  "50pct": ["handleiding-50procent.pdf", "50% van het verkoopbedrag"],
-  "50pct_abo": ["verdienoverzicht-50procent-abo.pdf", "50% van het verkoopbedrag + 1/3 van het maandbedrag"],
-  "100eur": ["handleiding-100euro.pdf", "€100 per verkochte website"],
-};
-
-// Beheer ziet alle versies, een verkoper alleen die van hemzelf.
-export default function DocumentenKaart({ beheer, model }) {
-  const eigen = HANDLEIDING[model] || HANDLEIDING["50pct"];
-  const docs = beheer
-    ? [
-        ["handleiding-50procent.pdf", "Verkoophandleiding — 50%", "Nick, Maurits en Kevin"],
-        ["verdienoverzicht-50procent-abo.pdf", "Verkoophandleiding — 50% + 1/3 abo", "Brent en Benne"],
-        ["handleiding-100euro.pdf", "Verkoophandleiding — €100 per klant", "reservemodel"],
-      ]
-    : [[eigen[0], "Jouw verkoophandleiding", eigen[1]]];
-  docs.push(["belscript.pdf", "Belscript", "zo bel je een prospect over zijn preview en app"]);
-  docs.push(["dienstverlening.pdf", "Wat de klant van ons mag verwachten", "stuur dit mee met elke offerte"]);
-  docs.push(["algemene-voorwaarden.pdf", "Algemene voorwaarden", "wat de klant tekent bij akkoord"]);
+// Documenten op Mijn previews. Sinds 22 okt 2026 alleen nog het belscript
+// (op verzoek van Gerrit); de handleidingen, dienstverlening en voorwaarden
+// staan niet meer in deze lijst. De pdf's zelf staan nog in public/documenten.
+// beheer en model worden niet meer gebruikt, maar blijven als props bestaan
+// zodat de aanroep in app/klanten/page.js niet hoeft te veranderen.
+export default function DocumentenKaart() {
+  const docs = [
+    ["belscript.pdf", "Belscript", "zo bel je een prospect over zijn preview en app"],
+  ];
 
   return (
     <div style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 16, padding: "16px 18px", marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Documenten</h2>
-        <span style={{ fontSize: 13, color: "#9A9084" }}>
-          {beheer ? "alle versies" : "altijd bij de hand"}
-        </span>
+        <span style={{ fontSize: 13, color: "#9A9084" }}>altijd bij de hand</span>
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         {docs.map(([bestand, titel, sub]) => (

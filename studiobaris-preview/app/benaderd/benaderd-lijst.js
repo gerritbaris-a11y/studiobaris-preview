@@ -70,7 +70,7 @@ function uniek(lijst) {
   return [...new Set(lijst.filter(Boolean))].sort((a, b) => a.localeCompare(b, "nl"));
 }
 
-export default function BenaderdLijst({ rijen, beheer }) {
+export default function BenaderdLijst({ rijen, beheer, totaal = 0 }) {
   const [zoek, setZoek] = useState("");
   const [bekeken, setBekeken] = useState("");
   const [app, setApp] = useState("");
@@ -106,35 +106,43 @@ export default function BenaderdLijst({ rijen, beheer }) {
     setZoek(""); setBekeken(""); setApp(""); setProject(""); setBranche(""); setPlaats(""); setVerkoper("");
   }
 
-  if (rijen.length === 0) {
-    return (
-      <div style={{ background: KLEUR.amber.bg, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "16px 18px", color: KLEUR.amber.tekst }}>
-        Nog niets benaderd. Zet op <a href="/klanten" style={{ color: KLEUR.amber.tekst, fontWeight: 700 }}>Mijn previews</a> het vinkje Benaderd aan bij een preview die je hebt benaderd.
-      </div>
-    );
-  }
-
   const regel = { fontSize: 12.5, color: "#524A40", whiteSpace: "nowrap" };
   const uit = { ...regel, color: "#B0A697" };
   const aan = { ...regel, fontWeight: 700, color: "#0f6e56" };
 
   return (
     <div>
-      {/* Telling bovenaan: hoeveel van de benaderde bedrijven kwamen in actie. */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 14 }}>
+      {/* Percentages bovenaan. "Benaderd" is t.o.v. al je previews; de rest
+          t.o.v. het aantal benaderde bedrijven. Telt altijd de hele lijst,
+          los van de filters hieronder. */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 14 }}>
         {[
-          ["Benaderd", rijen.length],
-          ["Preview bekeken", tel.bekeken],
-          ["App geopend", tel.app],
-          ["Project geplaatst", tel.project],
-        ].map(([l, n]) => (
-          <div key={l} style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
-            <div style={{ fontSize: 12, color: KLEUR.gedempt, fontWeight: 700 }}>{l}</div>
-            <div style={{ fontFamily: HEAD, fontSize: 24, fontWeight: 800 }}>{n}</div>
-          </div>
-        ))}
+          ["Benaderd", rijen.length, totaal, "van je previews"],
+          ["Preview geopend", tel.bekeken, rijen.length, "van benaderd"],
+          ["App geopend", tel.app, rijen.length, "van benaderd"],
+          ["Project geplaatst", tel.project, rijen.length, "van benaderd"],
+        ].map(([l, n, van, uitleg]) => {
+          const pct = van > 0 ? Math.round((n / van) * 100) : 0;
+          return (
+            <div key={l} style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, color: KLEUR.gedempt, fontWeight: 700 }}>{l}</div>
+              <div style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, lineHeight: 1.2 }}>{pct}%</div>
+              <div style={{ fontSize: 12, color: "#6B6258" }}>{n} {uitleg === "van je previews" ? `van ${van} previews` : `van ${van} benaderd`}</div>
+              <div style={{ height: 6, background: KLEUR.papier, borderRadius: 999, marginTop: 8, overflow: "hidden" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: KLEUR.klei, borderRadius: 999 }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {rijen.length === 0 && (
+        <div style={{ background: KLEUR.amber.bg, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "16px 18px", color: KLEUR.amber.tekst }}>
+          Nog niets benaderd. Zet op <a href="/klanten" style={{ color: KLEUR.amber.tekst, fontWeight: 700 }}>Mijn previews</a> het vinkje Benaderd aan bij een preview die je hebt benaderd.
+        </div>
+      )}
+
+      {rijen.length > 0 && (<>
       <div style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "14px 16px", display: "grid", gap: 10, marginBottom: 14 }}>
         <input
           value={zoek}
@@ -193,6 +201,7 @@ export default function BenaderdLijst({ rijen, beheer }) {
           <div style={{ padding: "14px 16px", color: KLEUR.gedempt, fontSize: 14 }}>Geen bedrijven met deze filters.</div>
         )}
       </div>
+      </>)}
     </div>
   );
 }
