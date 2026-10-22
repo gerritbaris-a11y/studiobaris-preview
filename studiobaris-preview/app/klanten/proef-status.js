@@ -1,9 +1,9 @@
 "use client";
 
 // Proefperiode van de demo-app, per preview in "Mijn previews".
-// - Nog niet gestart: knop "Start proefperiode" (druk je in als de brief of de
-//   preview de deur uitgaat). Opent de prospect de app eerder, dan start hij
-//   vanzelf.
+// - Nog niet gestart: start vanzelf bij het vinkje "Benaderd" of bij de eerste
+//   keer dat de prospect de app opent. De knop "Start proefperiode" is sinds
+//   22 okt 2026 weg.
 // - Loopt: tot wanneer, hoeveel van de 3 projecten geplaatst, en of er
 //   recent iets geplaatst is. Gerrit en Levi kunnen verlengen.
 
@@ -50,15 +50,13 @@ export default function ProefStatus({ proef, magVerlengen }) {
   };
   const knopLicht = { ...knop, background: "#fff", color: "#a35400" };
 
+  // Nog niet gestart: de proef start vanzelf bij het vinkje "Benaderd" of
+  // bij de eerste keer dat de prospect de app opent (sinds 22 okt geen knop meer).
   if (!proef.gestart_op) {
     return (
       <div style={vak}>
         <span style={{ fontWeight: 700, color: "#2B2724" }}>Proefperiode app</span>
-        <span style={{ color: "#8A7C68" }}>Nog niet gestart. Start hem als je de brief of preview verstuurt; opent de prospect de app eerder, dan start hij vanzelf.</span>
-        <button onClick={() => actie("start")} disabled={!!bezig} style={knop}>
-          {bezig === "start" ? "Starten…" : "Start proefperiode"}
-        </button>
-        {fout && <span style={{ color: "#b91c1c", fontWeight: 600 }}>{fout}</span>}
+        <span style={{ color: "#8A7C68" }}>Nog niet gestart. Start vanzelf zodra je Benaderd aanvinkt, of als de prospect de app eerder opent.</span>
       </div>
     );
   }

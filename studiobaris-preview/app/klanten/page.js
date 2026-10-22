@@ -50,15 +50,17 @@ function ProspectActiviteit({ p }) {
   const uit = { ...regel, color: "#B0A697" };
   const aan = (b) => ({ ...regel, fontWeight: 700, color: b ? "#0f6e56" : "#524A40" });
   const geplaatst = Number(p.geplaatst) || 0;
-  const appOpen = p.gestart_op && p.gestart_via === "app";
+  // Eerste keer dat de demo-app geopend werd (sinds 22 okt een eigen kolom,
+  // omdat de proef nu al bij "Benaderd" start, vóór het openen).
+  const appOpenOp = p.app_geopend_op || (p.gestart_via === "app" ? p.gestart_op : null);
   return (
     <div style={{ display: "grid", gap: 3, textAlign: "right", marginTop: 6, padding: "8px 10px", background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10 }}>
       {p.bekeken_aantal > 0
         ? <span style={aan(true)}>● Preview bekeken {p.bekeken_aantal}× · laatst {wanneer(p.bekeken_laatst)}</span>
         : <span style={uit}>○ Preview nog niet bekeken</span>}
-      {appOpen
-        ? <span style={aan(true)}>● App geopend {wanneer(p.gestart_op)}</span>
-        : <span style={uit}>○ App nog niet geopend{p.gestart_op ? " (proef gestart via knop)" : ""}</span>}
+      {appOpenOp
+        ? <span style={aan(true)}>● App geopend {wanneer(appOpenOp)}</span>
+        : <span style={uit}>○ App nog niet geopend</span>}
       {geplaatst > 0
         ? <span style={aan(true)}>● {geplaatst} van 3 projecten geplaatst · laatst {wanneer(p.laatst_geplaatst_op)}</span>
         : <span style={uit}>○ Nog geen project geplaatst</span>}

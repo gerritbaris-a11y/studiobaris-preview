@@ -19,7 +19,11 @@ export default function BenaderdKnop({ slug, benaderdOp }) {
         body: JSON.stringify({ slug, aan }),
       });
       const d = await res.json().catch(() => null);
-      if (d && d.ok) setOp(d.benaderd_op || null);
+      if (d && d.ok) {
+        setOp(d.benaderd_op || null);
+        // Proef is meteen gestart: pagina verversen zodat de proefstatus klopt.
+        if (d.proef_gestart) location.reload();
+      }
       else alert((d && d.error) || "Mislukt, probeer opnieuw.");
     } finally {
       setBezig(false);
@@ -35,7 +39,7 @@ export default function BenaderdKnop({ slug, benaderdOp }) {
       type="button"
       onClick={wissel}
       disabled={bezig}
-      title={op ? "Benaderd. Klik om het vinkje weg te halen." : "Markeer als benaderd: hij komt dan op de pagina Benaderd."}
+      title={op ? "Benaderd. Klik om het vinkje weg te halen." : "Markeer als benaderd: hij komt op de pagina Benaderd en de proefperiode van de app start."}
       style={{
         display: "inline-flex", alignItems: "center", gap: 6,
         background: op ? "#e7f3ea" : "#fff",
