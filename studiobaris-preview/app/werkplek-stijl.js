@@ -62,6 +62,8 @@ export const NAV = [
   { href: "/klanten", label: "Mijn previews" },
   // Benaderd: welke prospects je hebt benaderd en wat ze daarna deden (okt 2026).
   { href: "/benaderd", label: "Benaderd" },
+  // Financieel overzicht: eigen commissie per klant (verkoper), iedereen (beheer).
+  { href: "/verdiensten", label: "Financieel overzicht" },
   // Leads: voor iedereen met een login (verkopers én beheer).
   { href: "/leads", label: "Leads" },
   { href: "/overzicht", label: "Overzicht", beheer: true },
