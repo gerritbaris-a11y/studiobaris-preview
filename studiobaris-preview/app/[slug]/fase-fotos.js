@@ -25,7 +25,7 @@ const LABEL = {
 // hoogte, afronding en achtergrond van de stijl gelijk blijven.
 export default function FaseFotos({ fases, className, style }) {
   return (
-    <div className={className} style={{ ...style, display: "flex", gap: 2, padding: 0, overflow: "hidden" }}>
+    <div className={className} style={{ ...style, display: "flex", alignItems: "stretch", placeItems: "stretch", gap: 2, padding: 0, overflow: "hidden" }}>
       {fases.map((f, i) => (
         <div
           key={i}
@@ -33,6 +33,8 @@ export default function FaseFotos({ fases, className, style }) {
             position: "relative",
             flex: 1,
             minWidth: 0,
+            alignSelf: "stretch",
+            minHeight: "100%",
             backgroundImage: `url(${f.url})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
