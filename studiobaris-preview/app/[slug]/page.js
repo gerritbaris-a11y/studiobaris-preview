@@ -10,6 +10,7 @@ import PersoonlijkSite from "../styles/persoonlijk";
 import { getProef, metProefProjecten, proefDatum, DEMO_BASIS, telBezoek } from "../../lib/proef";
 import { cookies, headers } from "next/headers";
 import ProefBalk from "./proef-balk";
+import FaseFotos, { heeftFases } from "./fase-fotos";
 
 export const dynamic = "force-dynamic";
 
@@ -277,7 +278,7 @@ export default async function Page({ params, searchParams }) {
           {projecten.length > 0
             ? projecten.map((p, i) => (
                 <a className="pc" key={i} href={`/${params.slug}/project/${i}${modeQuery}`}>
-                  <div className="pph" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>
+                  {heeftFases(p) ? <FaseFotos fases={p.fases} className="pph" /> : <div className="pph" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>}
                   <div className="pb">{p.nieuw && <span style={{ display: "inline-block", background: "#111827", color: "#fff", fontSize: ".72rem", fontWeight: 700, padding: ".2rem .55rem", borderRadius: 999, marginBottom: ".35rem" }}>Net door jou geplaatst</span>}<h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
               ))

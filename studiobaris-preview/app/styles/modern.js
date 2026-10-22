@@ -1,5 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
+import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, voordeelIcon, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
 function waLink(n) {
@@ -186,7 +187,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
           {projecten.length > 0
             ? projecten.map((p, i) => (
                 <a className="pcard" key={i} href={`/${slug}/project/${i}${modeQuery}`}>
-                  <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
+                  {heeftFases(p) ? <FaseFotos fases={p.fases} className="pimg" /> : <div className="pimg" style={{ backgroundImage: `url(${p.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>}
                   <div className="pb">{p.nieuw && <span style={{ display: "inline-block", background: "#111827", color: "#fff", fontSize: ".72rem", fontWeight: 700, padding: ".2rem .55rem", borderRadius: 999, marginBottom: ".35rem" }}>Net door jou geplaatst</span>}<h3>{p.titel}</h3>{p.plaats && <div className="pm">{p.plaats}</div>}</div>
                 </a>
               ))

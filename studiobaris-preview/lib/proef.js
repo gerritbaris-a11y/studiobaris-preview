@@ -37,6 +37,10 @@ export async function getProef(slug) {
         plaats: p.plaats || "",
         omschrijving: p.omschrijving || "",
         beeld_url: p.beeld_url || "",
+        // Voor / Tijdens / Na (eerste foto van elk), zoals op een echte site.
+        fases: (Array.isArray(p.fases) ? p.fases : [])
+          .filter((f) => f && f.url)
+          .map((f) => ({ label: String(f.label || ""), url: String(f.url) })),
         nieuw: true,
       })),
     };
