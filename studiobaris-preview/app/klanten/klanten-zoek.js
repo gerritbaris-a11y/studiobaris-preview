@@ -37,6 +37,25 @@ function pastFilter(el, f) {
 export default function KlantenZoek() {
   const [zoek, setZoek] = useState("");
   const [filter, setFilter] = useState("");
+  const [aantallen, setAantallen] = useState({});
+
+  // Tellers achter de filterknoppen: hoeveel klanten onder elke knop vallen,
+  // los van de zoekterm. Opnieuw geteld zodra de lijst verandert (bijv. na
+  // archiveren of een fasewissel), zodat de getallen altijd kloppen.
+  useEffect(() => {
+    const tel = () => {
+      const kaarten = Array.from(document.querySelectorAll("[data-klant]"));
+      const nieuw = {};
+      FILTERS.forEach((f) => {
+        nieuw[f.key] = kaarten.filter((el) => pastFilter(el, f.key)).length;
+      });
+      setAantallen((oud) => (FILTERS.every((f) => oud[f.key] === nieuw[f.key]) ? oud : nieuw));
+    };
+    tel();
+    const obs = new MutationObserver(tel);
+    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-fase"] });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     const q = zoek.trim().toLowerCase();
@@ -92,7 +111,7 @@ export default function KlantenZoek() {
                 background: aan ? KLEUR.klei : "#fff", color: aan ? "#fff" : "#7A7168",
               }}
             >
-              {f.label}
+              {f.label}{aantallen[f.key] !== undefined ? ` (${aantallen[f.key]})` : ""}
             </button>
           );
         })}
