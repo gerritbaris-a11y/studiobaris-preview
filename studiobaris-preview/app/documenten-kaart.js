@@ -1,13 +1,16 @@
 import { KLEUR, HEAD } from "./werkplek-stijl";
 
-// Documenten op Mijn previews. Sinds 22 okt 2026 alleen nog het belscript
-// (op verzoek van Gerrit); de handleidingen, dienstverlening en voorwaarden
-// staan niet meer in deze lijst. De pdf's zelf staan nog in public/documenten.
+// Documenten op Mijn previews (22 okt 2026): stappenplan, belscript en de
+// algemene voorwaarden. De oude handleidingen en dienstverlening staan niet
+// meer in deze lijst. De voorwaarden-pdf komt uit lib/voorwaarden-tekst.mjs
+// (scripts/voorwaarden-pdf.mjs). De pdf's zelf staan nog in public/documenten.
 // beheer en model worden niet meer gebruikt, maar blijven als props bestaan
 // zodat de aanroep in app/klanten/page.js niet hoeft te veranderen.
 export default function DocumentenKaart() {
   const docs = [
+    ["stappenplan-verkopers.pdf", "Stappenplan verkopers", "van preview tot klant, stap voor stap"],
     ["belscript.pdf", "Belscript", "zo bel je een prospect over zijn preview en app"],
+    ["algemene-voorwaarden.pdf", "Algemene voorwaarden", "waar de klant akkoord op geeft, met verwerkersovereenkomst"],
   ];
 
   return (
