@@ -62,7 +62,7 @@ export default function StijlKiezer({ slug, bedrijf, huidige }) {
               <div className="sb-scherm">
                 <iframe
                   className="sb-frame"
-                  src={`/${slug}?review=1&stijl=${s.id}`}
+                  src={`/${slug}?stijl=${s.id}`}
                   title={s.naam}
                   loading="lazy"
                 />
@@ -82,7 +82,7 @@ export default function StijlKiezer({ slug, bedrijf, huidige }) {
                   {bezig === s.id ? "Bezig…" : actief ? "Dit is de stijl" : "Kies deze stijl"}
                 </button>
                 <a
-                  href={`/${slug}?review=1&stijl=${s.id}`}
+                  href={`/${slug}?stijl=${s.id}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{

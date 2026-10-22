@@ -16,7 +16,7 @@ async function haalContentOp(slug, searchParams) {
   if (isConcept) return await getConcept(slug);
   if (isReview) return await getFull(slug);
   const row = await getPreview(slug);
-  return row ? row.content : null;
+  return row ? row.content : await getFull(slug);
 }
 
 export async function generateMetadata({ params, searchParams }) {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params, searchParams }) {
 export default async function DienstPage({ params, searchParams }) {
   const isConcept = searchParams?.concept === "1";
   const isReview = searchParams?.review === "1";
-  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
+  const modeQuery = isConcept ? "?concept=1" : "";
   const content = await haalContentOp(params.slug, searchParams);
   if (!content) notFound();
   const c = vulVoorbeeld(content || {});

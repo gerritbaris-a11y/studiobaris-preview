@@ -21,9 +21,10 @@ async function haalContentOp(slug, searchParams) {
     return vol ? metProefProjecten(vol, await getProef(slug)) : null;
   }
   const row = await getPreview(slug);
-  if (!row) return null;
+  const inhoud = row ? row.content : await getFull(slug);
+  if (!inhoud) return null;
   // Zelfde volgorde als de hoofdpagina: zelf geplaatste proefprojecten eerst.
-  return metProefProjecten(row.content, await getProef(slug));
+  return metProefProjecten(inhoud, await getProef(slug));
 }
 
 export async function generateMetadata({ params, searchParams }) {
@@ -35,7 +36,7 @@ export async function generateMetadata({ params, searchParams }) {
 export default async function ProjectPage({ params, searchParams }) {
   const isConcept = searchParams?.concept === "1";
   const isReview = searchParams?.review === "1";
-  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
+  const modeQuery = isConcept ? "?concept=1" : "";
   const content = await haalContentOp(params.slug, searchParams);
   if (!content) notFound();
   const c = content || {};

@@ -280,7 +280,7 @@ export default function ProspectForm({
             Je vindt hem terug bij <strong>Mijn previews</strong>, met het verkoopbericht er kant-en-klaar naast.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
-            <a href={"https://preview.studiobaris.nl/" + s2 + "?review=1"} target="_blank" rel="noreferrer"
+            <a href={"https://preview.studiobaris.nl/" + s2} target="_blank" rel="noreferrer"
               style={{ background: "#1A2E40", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 700, textDecoration: "none" }}>
               Bekijk de preview
             </a>

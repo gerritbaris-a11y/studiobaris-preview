@@ -629,7 +629,7 @@ function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {
 // Het verkoop-appje, kant-en-klaar met naam en de juiste links erin.
 function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }) {
   const naam = (contact && contact.trim()) || bedrijf || "";
-  const previewLink = "https://preview.studiobaris.nl/" + slug + "?review=1";
+  const previewLink = "https://preview.studiobaris.nl/" + slug;
   // Persoonlijke demo-app: de app in het jasje van deze klant. Is die er (nog) niet
   // of is hij leeg, dan laten we de app-regel weg (de algemene demo is uitgezet, okt 2026).
   const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "";
@@ -973,7 +973,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
   const PREVIEW = "https://preview.studiobaris.nl";
   const DEMO = "https://demo.studiobaris.nl";
 
-  const linkPreview = { key: "p", naam: "Preview", url: PREVIEW + "/" + slug + "?review=1", hint: "Stuur dit naar de klant" };
+  const linkPreview = { key: "p", naam: "Preview", url: PREVIEW + "/" + slug, hint: "Stuur dit naar de klant" };
   const linkDemo = { key: "d", naam: "Demo-app", url: DEMO + "/" + slug, uit: !heeftDemo, leeg: heeftDemo && !demoGevuld, hint: !heeftDemo ? "Nog niet gemaakt" : demoGevuld ? "De app in zijn eigen jasje" : "Let op: leeg (geen foto's in de preview)" };
   const linkBetaal = { key: "b", naam: "Betaallink", url: betaallinkUrl(slug), hint: "Helft vooraf + maandelijkse incasso" };
   // Huidige website van de prospect: om de huisstijl van de preview er snel

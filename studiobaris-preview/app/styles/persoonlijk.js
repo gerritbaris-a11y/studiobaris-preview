@@ -16,7 +16,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
   // en projectpagina's kijken daar wél naar (via getPreview), dus zonder
   // deze query-param zouden ze "niet gevonden" tonen zodra iemand vanaf een
   // concept- of review-link doorklikt.
-  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
+  const modeQuery = isConcept ? "?concept=1" : "";
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};

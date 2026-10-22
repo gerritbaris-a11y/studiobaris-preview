@@ -60,12 +60,17 @@ export default async function Page({ params, searchParams }) {
     if (!content) notFound();
   } else {
     const row = await getPreview(params.slug);
-    if (!row) notFound();
-    content = row.content;
+    content = row ? row.content : await getFull(params.slug);
+    if (!content) notFound();
   }
 
+  // De voorproef-balk ("Dit is een eerste voorproefje…") staat op elke link die
+  // een prospect krijgt: de gewone preview.studiobaris.nl/<slug> én oude links
+  // met ?review=1. Niet in concept- of werkversie.
+  const isVoorproef = isReview || (!isConcept && !isWerk);
+
   // Proefperiode demo-app: op de links die de prospect krijgt (gewoon en
-  // ?review=1, de link uit Mijn previews en het appje). Niet in concept,
+  // oude links met ?review=1). Niet in concept,
   // werkversie of de stijlvergelijking (?stijl=). Zelf geplaatste projecten bovenaan.
   const isGewoon = !isWerk && !isConcept && !searchParams?.stijl;
   const proef = isGewoon ? await getProef(params.slug) : { actief: false };
@@ -88,10 +93,10 @@ export default async function Page({ params, searchParams }) {
   // Concept/review-previews staan nog niet op "gepubliceerd" — dienst- en
   // projectpagina's kijken daar wél naar (via getPreview), dus zonder deze
   // query-param zouden ze "niet gevonden" tonen zodra iemand doorklikt.
-  const modeQuery = isConcept ? "?concept=1" : isReview ? "?review=1" : "";
+  const modeQuery = isConcept ? "?concept=1" : "";
   const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
-  if (stijl === "modern") return <><ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />{balk}</>;
-  if (stijl === "persoonlijk") return <><PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isReview} />{balk}</>;
+  if (stijl === "modern") return <><ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isVoorproef} />{balk}</>;
+  if (stijl === "persoonlijk") return <><PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isVoorproef} />{balk}</>;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   let sloganAcc = null;
@@ -210,7 +215,7 @@ export default async function Page({ params, searchParams }) {
     <div className="vp" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {(isConcept || isReview) && (
+      {(isConcept || isVoorproef) && (
         <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
           {isConcept
             ? "Conceptversie — nog niet gepubliceerd. Controleer en publiceer via het dashboard."
