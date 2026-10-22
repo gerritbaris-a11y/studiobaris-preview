@@ -60,3 +60,9 @@ end $$;
 -- Eenmalig toegepast: de eigen controle bij Haasnoot Metselwerken (12:21, vóór benaderd 12:22).
 update workflow.preview_bezoek set aantal = 0
  where slug = 'haasnoot-metselwerken' and laatste_op < '2026-10-22 10:22:31+00';
+
+-- Aanvulling (22 okt 2026): bij het eerste vinkje Benaderd ook "App geopend"
+-- terugzetten (verkoper die zijn eigen demo-app controleert). De proef zelf
+-- loopt door; er wordt niets gewist.
+-- In sb_benaderd_zet, binnen "if p_aan and not coalesce(was_benaderd, false)":
+--   update workflow.proef set app_geopend_op = null where slug = p_slug;
