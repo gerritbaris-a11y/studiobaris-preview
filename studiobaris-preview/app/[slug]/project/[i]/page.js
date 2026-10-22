@@ -3,7 +3,8 @@ import { getPreview, googleFontsHref } from "../../../../lib/preview";
 import { getConcept, getFull } from "../../../../lib/server-data";
 import { brandVars } from "../../../../lib/brand";
 import { getProef, metProefProjecten } from "../../../../lib/proef";
-import FaseFotos, { heeftFases } from "../../fase-fotos";
+import { heeftFases } from "../../fase-fotos";
+import FaseFotosGroot from "../../fase-fotos-groot";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,7 @@ export default async function ProjectPage({ params, searchParams }) {
       </header>
       <section className="top"><div className="wrap"><div className="eyebrow">{p.nieuw ? "Net door jou geplaatst" : "Project"}</div><h1>{p.titel}</h1>{p.plaats && <div className="meta">{p.plaats}</div>}</div></section>
       <section className="body"><div className="wrap">
-        {heeftFases(p) ? <FaseFotos fases={p.fases} className="img" /> : <div className="img" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>}
+        {heeftFases(p) ? <FaseFotosGroot fases={p.fases} className="img" /> : <div className="img" style={p.beeld_url ? { backgroundImage: `url(${p.beeld_url})`, color: "transparent" } : undefined}>{p.beeld_url ? "" : "📷 Projectfoto"}</div>}
         {p.omschrijving && <p>{p.omschrijving}</p>}
         <a className="cta" href={b.telefoon ? `tel:${b.telefoon}` : `/${params.slug}${modeQuery}`}>Vraag naar de mogelijkheden</a>
       </div></section>
