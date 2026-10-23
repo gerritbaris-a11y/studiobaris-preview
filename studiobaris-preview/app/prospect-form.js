@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie";
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
@@ -41,6 +41,46 @@ const STIJLEN = [
   { id: "persoonlijk", naam: "Warm & Persoonlijk", uitleg: "De vakman centraal, met een persoonlijk verhaal en stappen." },
 ];
 
+// Stappen van de publieke intake (alleen voor bezoekers van studiobaris.nl;
+// collega's en het aanpasformulier zien alles op één pagina). Per stap een
+// korte uitleg wat we vragen, en onderaan een duwtje richting de preview.
+// De eerste vraag is of iemand al een website heeft. Zo ja, dan halen we
+// logo, kleuren en de tekst van de homepage (diensten, omschrijving) zelf op
+// in /api/intake, en slaan we de stap "huisstijl en werk" over.
+const STAP_TEKST = {
+  site: {
+    titel: "Heb je al een website?",
+    intro: "Dan nemen wij je logo, kleuren en teksten daarvan over. Scheelt jou een hoop invullen.",
+  },
+  wie: {
+    titel: "Wie ben je?",
+    introMetSite: "Top, de rest halen we van je website. Vertel ons alleen nog wie je bent en waar je werkt.",
+    intro: "We beginnen met de basis: je bedrijfsnaam, je vak en waar je werkt. Daar bouwen we je hele website omheen.",
+  },
+  stijl: {
+    titel: "Je huisstijl en je werk",
+    intro: "Heb je een logo? Dan maken we je preview meteen in jouw kleuren. Niets bij de hand? Sla het gerust over.",
+  },
+  online: {
+    titel: "Waar vinden klanten je nu?",
+    intro: "Sta je al op Facebook, Instagram of Google? Dan zetten we dat op je website. Heb je het niet, dan laat je het leeg.",
+  },
+  contact: {
+    titel: "Waar sturen we je preview naartoe?",
+    intro: "Laat je e-mail en telefoonnummer achter. Zodra je preview klaarstaat, hoor je van ons.",
+  },
+};
+const stappenVoor = (heeftSite) => (heeftSite
+  ? ["site", "wie", "online", "contact"]
+  : ["site", "wie", "stijl", "online", "contact"]);
+function duwTekst(i, aantal) {
+  const rest = aantal - 1 - i;
+  if (i === 0) return "Een paar korte stappen, dan maken wij je gratis preview.";
+  if (rest === 0) return "Je preview is gratis. Je zit nergens aan vast.";
+  if (rest === 1) return "Bijna klaar: nog één stap tot je gratis preview.";
+  return "Goed bezig! Nog " + rest + " stappen tot je gratis preview.";
+}
+
 // Gedeeld formulier voor Workflow 1 (nieuwe prospect) en Workflow 2 (klant past aan).
 // mode="create"  -> genereert een nieuwe previewsite via /api/intake
 // mode="revise"  -> past een bestaande site aan via /api/revise (concept v2.0)
@@ -65,6 +105,15 @@ export default function ProspectForm({
   // leadlijst. Zelfde korte lijst, zodat we niet twee formulieren onderhouden.
   // Het interesseblok blijft wel intern; dat is geen invoer voor de preview.
   const uitgebreid = revise;
+  // Alleen de publieke aanvraag gaat in stappen.
+  const wizard = !revise && !intern;
+  // null = nog niet gekozen, true = heeft een website, false = nog niet.
+  const [heeftSite, setHeeftSite] = useState(null);
+  const actief = stappenVoor(heeftSite === true);
+  const laatsteStap = actief.length - 1;
+  const [stap, setStap] = useState(0);
+  const [keuzeFout, setKeuzeFout] = useState("");
+  const formRef = useRef(null);
   const v = prefill || {};
   const A = (thema && thema.accent) || HUISSTIJL.accent;
   const Atint = hexNaarRgba(A, 0.12);
@@ -168,8 +217,54 @@ export default function ProspectForm({
   const setRegio = (i, val) => setRegios(regios.map((r, j) => (j === i ? val : r)));
   const setSocial = (i, val) => setSocials(socials.map((s, j) => (j === i ? val : s)));
 
+  // Controleert de velden van één stap. Met tonen=true krijgt de bezoeker de
+  // melding van de browser of onze eigen foutmelding te zien.
+  function stapGeldig(i, tonen) {
+    const form = formRef.current;
+    if (!form) return true;
+    const id = actief[i];
+    if (id === "site" && heeftSite === null) {
+      if (tonen) setKeuzeFout("Kies of je al een website hebt.");
+      return false;
+    }
+    const sel = '[data-stap="' + id + '"] ';
+    for (const el of form.querySelectorAll(sel + "input, " + sel + "textarea, " + sel + "select")) {
+      if (!el.checkValidity()) {
+        if (tonen) el.reportValidity();
+        return false;
+      }
+    }
+    if (id === "wie" && !branches.length && !(form.branche_anders && form.branche_anders.value.trim())) {
+      if (tonen) setBrancheFout("Kies minstens één branche, of vul bij \"Anders, namelijk\" je vak in.");
+      return false;
+    }
+    if (id === "stijl" && logoFout) return false;
+    return true;
+  }
+
+  function naarStap(i) {
+    setError("");
+    setStap(i);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function volgende() {
+    if (stapGeldig(stap, true)) naarStap(Math.min(stap + 1, laatsteStap));
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
+    // Stappenformulier: Enter of de knop vóór de laatste stap = volgende stap.
+    if (wizard) {
+      if (stap < laatsteStap) { volgende(); return; }
+      for (let i = 0; i <= laatsteStap; i++) {
+        if (!stapGeldig(i, false)) {
+          naarStap(i);
+          setTimeout(() => stapGeldig(i, true), 50);
+          return;
+        }
+      }
+    }
     setStatus("bezig"); setError("");
     const f = e.target;
     const fd = new FormData();
@@ -225,7 +320,9 @@ export default function ProspectForm({
     put("tone_of_voice", val("tone_of_voice"));
     put("kleurvoorkeur", val("kleurvoorkeur"));
     put("notities", val("notities"));
-    put("oude_website", val("oude_website"));
+    // Koos een bezoeker eerst "Ja" en daarna "Nee", dan sturen we het eerder
+    // getypte adres niet mee.
+    put("oude_website", wizard && heeftSite === false ? "" : val("oude_website"));
     // Laatste controle vlak voor verzenden: het formulier kan ook zonder
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
     const foutLogo = controleerBestanden(f.logo ? f.logo.files : null, "logo");
@@ -315,6 +412,20 @@ export default function ProspectForm({
   }
 
   const labelTekst = (verplicht, basis, reviseTekst) => (revise ? reviseTekst : basis) + (verplicht && !revise ? " *" : "");
+  // In het stappenformulier staat elk blok in een eigen stap; verborgen stappen
+  // blijven in de pagina staan, zodat ingevulde velden en gekozen bestanden
+  // bewaard blijven bij vorige/volgende. Zonder stappen verandert er niets.
+  const stapBlok = (i, kids) => (wizard
+    ? <div data-stap={i} style={{ display: actief[stap] === i ? "block" : "none" }}>{kids}</div>
+    : kids);
+  const stapId = actief[stap];
+  const S = {
+    titel: STAP_TEKST[stapId].titel,
+    intro: (heeftSite && STAP_TEKST[stapId].introMetSite) || STAP_TEKST[stapId].intro,
+    duw: duwTekst(stap, actief.length),
+  };
+  const keuzeKaart = (aan) => ({ textAlign: "left", cursor: "pointer", border: "1.5px solid " + (aan ? A : "#DADFE3"), background: aan ? Atint : "#fff", borderRadius: 14, padding: "14px 16px", fontFamily: FONT, color: HUISSTIJL.donker, width: "100%" });
+  const kiesSite = (ja) => { setHeeftSite(ja); setKeuzeFout(""); };
 
   return (
     <>
@@ -340,6 +451,17 @@ export default function ProspectForm({
               {thema.bedrijf && <div style={{ fontSize: 24, fontWeight: 800, marginTop: 2 }}>{thema.bedrijf}</div>}
               <div style={{ fontSize: 14, opacity: 0.92, marginTop: 4 }}>Vul hieronder aan - alles in de stijl die we voor je gekozen hebben.</div>
             </div>
+          ) : wizard ? (
+            <>
+              <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: HUISSTIJL.body, fontWeight: 700, margin: 0 }}>
+                Gratis preview · Stap {stap + 1} van {actief.length}
+              </p>
+              <div style={{ display: "flex", gap: 6, marginTop: 10 }} aria-hidden="true">
+                {actief.map((_, i) => (
+                  <span key={i} style={{ flex: 1, height: 6, borderRadius: 999, background: i <= stap ? A : "#DADFE3", transition: "background .25s" }} />
+                ))}
+              </div>
+            </>
           ) : (
             <>
               <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: HUISSTIJL.body, fontWeight: 700, margin: 0 }}>
@@ -347,10 +469,10 @@ export default function ProspectForm({
               </p>
             </>
           )}
-          <h1 style={{ fontSize: 30, margin: "6px 0 4px", fontWeight: 800, color: HUISSTIJL.donker }}>{titel}</h1>
-          <p style={{ color: HUISSTIJL.body, marginBottom: 8 }}>{intro}</p>
+          <h1 style={{ fontSize: 30, margin: wizard ? "18px 0 4px" : "6px 0 4px", fontWeight: 800, color: HUISSTIJL.donker }}>{wizard ? S.titel : titel}</h1>
+          <p style={{ color: HUISSTIJL.body, marginBottom: 8 }}>{wizard ? S.intro : intro}</p>
 
-          <form onSubmit={onSubmit}>
+          <form ref={formRef} onSubmit={onSubmit} noValidate={wizard}>
         {revise && (
           <div style={{ background: Atint, border: "1.5px solid " + A, borderRadius: 12, padding: "14px 16px", marginTop: 10 }}>
             <label style={{ ...label, marginTop: 0 }}>
@@ -361,7 +483,7 @@ export default function ProspectForm({
           </div>
         )}
 
-        <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>
+        {stapBlok("wie", <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>)}
 
         {/* Stijl vragen we niet aan de aanvrager: alle drie de stijlen staan in het
             dashboard en zijn daar met een klik te wisselen. Zonder keuze valt
@@ -384,6 +506,7 @@ export default function ProspectForm({
           </>
         )}
 
+        {stapBlok("wie", <>
         <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>
@@ -396,6 +519,7 @@ export default function ProspectForm({
         <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder={revise ? "Anders, namelijk... (optioneel)" : "Anders, namelijk..."}
           onChange={(e) => { if (e.target.value.trim()) setBrancheFout(""); }} />
         {brancheFout && <span style={foutTekst}>{brancheFout}</span>}
+        </>)}
 
         {uitgebreid && (
           <>
@@ -423,6 +547,7 @@ export default function ProspectForm({
           </>
         )}
 
+        {stapBlok("wie", <>
         <div style={label}>Regio('s) actief</div>
         <span style={hint}>{revise ? "Vul in als het werkgebied op de site aangepast moet worden. Voeg elke plaats apart toe met \"+\"." : "Voeg elke plaats apart toe met \"+\". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid."}</span>
         {regios.map((r, i) => (
@@ -436,6 +561,7 @@ export default function ProspectForm({
           </div>
         ))}
         <button type="button" onClick={() => setRegios([...regios, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: HUISSTIJL.donker, borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: FONT }}>+ Regio toevoegen</button>
+        </>)}
 
         {uitgebreid ? (
           <>
@@ -450,8 +576,8 @@ export default function ProspectForm({
              Het telefoonnummer is verplicht: we gebruiken het om contact op te
              nemen (komt in lead_phone) en het komt als bel- en WhatsApp-knop op
              de preview. De overige gegevens voor de site (adres, KvK, btw) halen
-             we pas na akkoord op. */
-          <>
+             we pas na akkoord op. In het stappenformulier is dit de laatste stap. */
+          stapBlok("contact", <>
             <label style={label}>E-mail *
               <span style={hint}>Hier laten we weten dat je preview klaarstaat. Verder gebruiken we het nergens voor.</span>
               <input style={veld} name="email" type="email" required defaultValue={v.email || ""} />
@@ -460,7 +586,7 @@ export default function ProspectForm({
               <span style={hint}>Zo kunnen we je bellen over je preview. Het nummer komt ook als bel- en WhatsApp-knop op je preview.</span>
               <input style={veld} name="telefoon" type="tel" inputMode="tel" autoComplete="tel" required defaultValue={v.telefoon || ""} />
             </label>
-          </>
+          </>)
         )}
         {uitgebreid && (
           <>
@@ -514,10 +640,29 @@ export default function ProspectForm({
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
           </>
         )}
-        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
+        {stapBlok("site", wizard ? <>
+          <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+            <button type="button" onClick={() => kiesSite(true)} style={keuzeKaart(heeftSite === true)}>
+              <strong style={{ fontSize: 16 }}>Ja, ik heb een website</strong>
+              <span style={{ display: "block", fontSize: 13.5, color: HUISSTIJL.body, marginTop: 3 }}>Wij halen er je logo, kleuren en teksten uit.</span>
+            </button>
+            <button type="button" onClick={() => kiesSite(false)} style={keuzeKaart(heeftSite === false)}>
+              <strong style={{ fontSize: 16 }}>Nee, nog niet</strong>
+              <span style={{ display: "block", fontSize: 13.5, color: HUISSTIJL.body, marginTop: 3 }}>Geen probleem. We stellen je een paar extra vragen.</span>
+            </button>
+          </div>
+          {keuzeFout && <span style={foutTekst}>{keuzeFout}</span>}
+          <div style={{ display: heeftSite === true ? "block" : "none" }}>
+            <label style={label}>Adres van je website *<span style={hint}>Bijvoorbeeld www.jouwbedrijf.nl. Alleen een Facebook- of Instagrampagina? Kies dan "Nee"; die vragen we verderop.</span>
+              <input style={veld} name="oude_website" inputMode="url" autoComplete="url" placeholder="www.jouwbedrijf.nl" required={heeftSite === true} disabled={heeftSite !== true} defaultValue={v.website || ""} />
+            </label>
+          </div>
+        </> : <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>)}
+        {stapBlok("stijl", <>
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
             onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
+        </>)}
         {uitgebreid && (
           <label style={label}>Foto's (optioneel, meerdere mogelijk)<span style={hint}>{revise ? "Upload je echte projectfoto's - die vervangen de tijdelijke beelden en maken de site veel overtuigender. JPG of PNG, tot 12 stuks." : "Echte projectfoto's vullen het portfolio en de dienstblokken - dat maakt de site veel overtuigender. JPG of PNG, tot 12 stuks."}</span><input style={{ ...veld, padding: 8 }} name="fotos" type="file" accept={ACCEPT_ATTRIBUUT} multiple
             onChange={(e) => setFotoFout(controleerBestanden(e.target.files, "foto") || "")} />
@@ -529,8 +674,11 @@ export default function ProspectForm({
             beelden worden opgevangen door de branchefoto's uit preview-assets.js. */}
         {!uitgebreid && (
           <>
+        {stapBlok("stijl", <>
         <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
         <label style={label}>Diensten<span style={hint}>Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok én een eigen pagina - meer en specifieker geeft een vollere site.</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
+        </>)}
+        {stapBlok("online", <>
         <div style={label}>Sociale media (links)</div>
         <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
         {socials.map((s, i) => (
@@ -548,6 +696,7 @@ export default function ProspectForm({
         </label>
         {heeftGoogle && <input style={veld} name="google_url" placeholder="Link naar Google-profiel (optioneel)" />}
         <span style={hint}>Met een Google-profiel tonen we een "Bekijk onze Google-reviews"-knop in plaats van een leeg reviewblok.</span>
+        </>)}
           </>
         )}
 
@@ -555,7 +704,7 @@ export default function ProspectForm({
           <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
         )}
 
-        <p style={avgTekst}>
+        {stapBlok("contact", <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
           te maken en om contact op te nemen over dat voorstel. Het logo en de foto's worden op onze beveiligde opslag
           gezet en verwerkt door onze tekst- en beeldleverancier; ze worden niet gebruikt om modellen te trainen en niet
@@ -563,11 +712,35 @@ export default function ProspectForm({
           binnen zes maanden weg. Wil je eerder dat we alles verwijderen, of wil je weten wat we van je hebben?
           Mail <a href="mailto:info@studiobaris.nl" style={{ color: A }}>info@studiobaris.nl</a> en we regelen het.
           Lever geen foto's aan waar herkenbare personen op staan zonder dat zij daarvan weten.
-        </p>
+        </p>)}
 
+        {wizard ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
+              {stap > 0 && (
+                <button type="button" onClick={() => naarStap(stap - 1)} disabled={status === "bezig"}
+                  style={{ background: "#fff", color: HUISSTIJL.donker, border: "1.5px solid #DADFE3", padding: "12px 22px", borderRadius: 999, fontFamily: FONT, fontSize: 16, fontWeight: 600, cursor: "pointer" }}>
+                  Vorige
+                </button>
+              )}
+              {stap < laatsteStap ? (
+                <button type="submit"
+                  style={{ background: A, color: ATekst, border: "none", padding: "13px 26px", borderRadius: 999, fontFamily: FONT, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+                  Volgende
+                </button>
+              ) : (
+                <button type="submit" disabled={status === "bezig"} style={{ background: A, color: ATekst, border: "none", padding: "13px 26px", borderRadius: 999, fontFamily: FONT, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+                  {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}
+                </button>
+              )}
+            </div>
+            <p style={{ marginTop: 14, fontSize: 14, color: HUISSTIJL.body }}>{S.duw}</p>
+          </>
+        ) : (
         <button type="submit" disabled={status === "bezig"} style={{ marginTop: 24, background: A, color: ATekst, border: "none", padding: "13px 26px", borderRadius: 999, fontFamily: FONT, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
           {status === "bezig" ? (uploadStand || busyLabel || "Bezig...") : (submitLabel || "Versturen")}
         </button>
+        )}
         {error && <p style={{ color: "#c0392b", marginTop: 14 }}>{error}</p>}
           </form>
         </div>
