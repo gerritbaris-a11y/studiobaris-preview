@@ -70,9 +70,6 @@ const STAP_TEKST = {
 const stappenVoor = (heeftSite) => (heeftSite
   ? ["site", "wie", "contact"]
   : ["site", "wie", "stijl", "contact"]);
-// Branches in de publieke intake: alleen de doelbranches van StudioBaris.
-// Collega's en het aanpasformulier houden de volledige lijst (BRANCHES).
-const BRANCHES_PUBLIEK = ["Schilder", "Hovenier", "Metselaar", "Dakdekker", "Badkamerspecialist", "Elektricien", "Stoffeerder"];
 function duwTekst(i, aantal) {
   const rest = aantal - 1 - i;
   if (i === 0) return "Een paar korte stappen, dan maken wij je gratis preview.";
@@ -510,7 +507,7 @@ export default function ProspectForm({
         <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>
-          {(wizard ? BRANCHES_PUBLIEK : BRANCHES).map((b) => (
+          {BRANCHES.map((b) => (
             <span key={b} style={chip(branches.includes(b))} onClick={() => toggle(branches, setBranches, b)}>
               <input type="checkbox" readOnly checked={branches.includes(b)} style={{ pointerEvents: "none" }} />{b}
             </span>
