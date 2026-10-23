@@ -44,28 +44,42 @@ const STIJLEN = [
 // Stappen van de publieke intake (alleen voor bezoekers van studiobaris.nl;
 // collega's en het aanpasformulier zien alles op één pagina). Per stap een
 // korte uitleg wat we vragen, en onderaan een duwtje richting de preview.
-const STAPPEN = [
-  {
+// De eerste vraag is of iemand al een website heeft. Zo ja, dan halen we
+// logo, kleuren en de tekst van de homepage (diensten, omschrijving) zelf op
+// in /api/intake, en slaan we de stap "huisstijl en werk" over.
+const STAP_TEKST = {
+  site: {
+    titel: "Heb je al een website?",
+    intro: "Dan nemen wij je logo, kleuren en teksten daarvan over. Scheelt jou een hoop invullen.",
+  },
+  wie: {
     titel: "Wie ben je?",
+    introMetSite: "Top, de rest halen we van je website. Vertel ons alleen nog wie je bent en waar je werkt.",
     intro: "We beginnen met de basis: je bedrijfsnaam, je vak en waar je werkt. Daar bouwen we je hele website omheen.",
-    duw: "Vier korte stappen, dan maken wij je gratis preview.",
   },
-  {
+  stijl: {
     titel: "Je huisstijl en je werk",
-    intro: "Heb je een logo of een website? Dan maken we je preview meteen in jouw kleuren. Niets bij de hand? Sla het gerust over.",
-    duw: "Goed bezig! Nog twee stappen tot je gratis preview.",
+    intro: "Heb je een logo? Dan maken we je preview meteen in jouw kleuren. Niets bij de hand? Sla het gerust over.",
   },
-  {
+  online: {
     titel: "Waar vinden klanten je nu?",
     intro: "Sta je al op Facebook, Instagram of Google? Dan zetten we dat op je website. Heb je het niet, dan laat je het leeg.",
-    duw: "Bijna klaar: nog één stap tot je gratis preview.",
   },
-  {
+  contact: {
     titel: "Waar sturen we je preview naartoe?",
     intro: "Laat je e-mail en telefoonnummer achter. Zodra je preview klaarstaat, hoor je van ons.",
-    duw: "Je preview is gratis. Je zit nergens aan vast.",
   },
-];
+};
+const stappenVoor = (heeftSite) => (heeftSite
+  ? ["site", "wie", "online", "contact"]
+  : ["site", "wie", "stijl", "online", "contact"]);
+function duwTekst(i, aantal) {
+  const rest = aantal - 1 - i;
+  if (i === 0) return "Een paar korte stappen, dan maken wij je gratis preview.";
+  if (rest === 0) return "Je preview is gratis. Je zit nergens aan vast.";
+  if (rest === 1) return "Bijna klaar: nog één stap tot je gratis preview.";
+  return "Goed bezig! Nog " + rest + " stappen tot je gratis preview.";
+}
 
 // Gedeeld formulier voor Workflow 1 (nieuwe prospect) en Workflow 2 (klant past aan).
 // mode="create"  -> genereert een nieuwe previewsite via /api/intake
@@ -93,8 +107,12 @@ export default function ProspectForm({
   const uitgebreid = revise;
   // Alleen de publieke aanvraag gaat in stappen.
   const wizard = !revise && !intern;
-  const laatsteStap = STAPPEN.length - 1;
+  // null = nog niet gekozen, true = heeft een website, false = nog niet.
+  const [heeftSite, setHeeftSite] = useState(null);
+  const actief = stappenVoor(heeftSite === true);
+  const laatsteStap = actief.length - 1;
   const [stap, setStap] = useState(0);
+  const [keuzeFout, setKeuzeFout] = useState("");
   const formRef = useRef(null);
   const v = prefill || {};
   const A = (thema && thema.accent) || HUISSTIJL.accent;
@@ -204,17 +222,23 @@ export default function ProspectForm({
   function stapGeldig(i, tonen) {
     const form = formRef.current;
     if (!form) return true;
-    for (const el of form.querySelectorAll('[data-stap="' + i + '"] input, [data-stap="' + i + '"] textarea, [data-stap="' + i + '"] select')) {
+    const id = actief[i];
+    if (id === "site" && heeftSite === null) {
+      if (tonen) setKeuzeFout("Kies of je al een website hebt.");
+      return false;
+    }
+    const sel = '[data-stap="' + id + '"] ';
+    for (const el of form.querySelectorAll(sel + "input, " + sel + "textarea, " + sel + "select")) {
       if (!el.checkValidity()) {
         if (tonen) el.reportValidity();
         return false;
       }
     }
-    if (i === 0 && !branches.length && !(form.branche_anders && form.branche_anders.value.trim())) {
+    if (id === "wie" && !branches.length && !(form.branche_anders && form.branche_anders.value.trim())) {
       if (tonen) setBrancheFout("Kies minstens één branche, of vul bij \"Anders, namelijk\" je vak in.");
       return false;
     }
-    if (i === 1 && logoFout) return false;
+    if (id === "stijl" && logoFout) return false;
     return true;
   }
 
@@ -296,7 +320,9 @@ export default function ProspectForm({
     put("tone_of_voice", val("tone_of_voice"));
     put("kleurvoorkeur", val("kleurvoorkeur"));
     put("notities", val("notities"));
-    put("oude_website", val("oude_website"));
+    // Koos een bezoeker eerst "Ja" en daarna "Nee", dan sturen we het eerder
+    // getypte adres niet mee.
+    put("oude_website", wizard && heeftSite === false ? "" : val("oude_website"));
     // Laatste controle vlak voor verzenden: het formulier kan ook zonder
     // "wijzigen" van het veld worden ingediend (bijv. slepen of autofill).
     const foutLogo = controleerBestanden(f.logo ? f.logo.files : null, "logo");
@@ -390,9 +416,16 @@ export default function ProspectForm({
   // blijven in de pagina staan, zodat ingevulde velden en gekozen bestanden
   // bewaard blijven bij vorige/volgende. Zonder stappen verandert er niets.
   const stapBlok = (i, kids) => (wizard
-    ? <div data-stap={i} style={{ display: stap === i ? "block" : "none" }}>{kids}</div>
+    ? <div data-stap={i} style={{ display: actief[stap] === i ? "block" : "none" }}>{kids}</div>
     : kids);
-  const S = STAPPEN[stap];
+  const stapId = actief[stap];
+  const S = {
+    titel: STAP_TEKST[stapId].titel,
+    intro: (heeftSite && STAP_TEKST[stapId].introMetSite) || STAP_TEKST[stapId].intro,
+    duw: duwTekst(stap, actief.length),
+  };
+  const keuzeKaart = (aan) => ({ textAlign: "left", cursor: "pointer", border: "1.5px solid " + (aan ? A : "#DADFE3"), background: aan ? Atint : "#fff", borderRadius: 14, padding: "14px 16px", fontFamily: FONT, color: HUISSTIJL.donker, width: "100%" });
+  const kiesSite = (ja) => { setHeeftSite(ja); setKeuzeFout(""); };
 
   return (
     <>
@@ -421,10 +454,10 @@ export default function ProspectForm({
           ) : wizard ? (
             <>
               <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: HUISSTIJL.body, fontWeight: 700, margin: 0 }}>
-                Gratis preview · Stap {stap + 1} van {STAPPEN.length}
+                Gratis preview · Stap {stap + 1} van {actief.length}
               </p>
               <div style={{ display: "flex", gap: 6, marginTop: 10 }} aria-hidden="true">
-                {STAPPEN.map((_, i) => (
+                {actief.map((_, i) => (
                   <span key={i} style={{ flex: 1, height: 6, borderRadius: 999, background: i <= stap ? A : "#DADFE3", transition: "background .25s" }} />
                 ))}
               </div>
@@ -450,7 +483,7 @@ export default function ProspectForm({
           </div>
         )}
 
-        {stapBlok(0, <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>)}
+        {stapBlok("wie", <label style={label}>{labelTekst(true, "Bedrijfsnaam", "Bedrijfsnaam")}<span style={hint}>{revise ? "Alleen invullen als de naam op de site niet klopt." : "Zoals het bedrijf zich noemt - dit komt in de header, de hero en de footer."}</span><input style={veld} name="naam" required={!revise} defaultValue={v.bedrijfsnaam || ""} /></label>)}
 
         {/* Stijl vragen we niet aan de aanvrager: alle drie de stijlen staan in het
             dashboard en zijn daar met een klik te wisselen. Zonder keuze valt
@@ -473,7 +506,7 @@ export default function ProspectForm({
           </>
         )}
 
-        {stapBlok(0, <>
+        {stapBlok("wie", <>
         <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>
@@ -514,7 +547,7 @@ export default function ProspectForm({
           </>
         )}
 
-        {stapBlok(0, <>
+        {stapBlok("wie", <>
         <div style={label}>Regio('s) actief</div>
         <span style={hint}>{revise ? "Vul in als het werkgebied op de site aangepast moet worden. Voeg elke plaats apart toe met \"+\"." : "Voeg elke plaats apart toe met \"+\". Alle plaatsen komen terug in de teksten, het werkgebied en de vindbaarheid."}</span>
         {regios.map((r, i) => (
@@ -544,7 +577,7 @@ export default function ProspectForm({
              nemen (komt in lead_phone) en het komt als bel- en WhatsApp-knop op
              de preview. De overige gegevens voor de site (adres, KvK, btw) halen
              we pas na akkoord op. In het stappenformulier is dit de laatste stap. */
-          stapBlok(3, <>
+          stapBlok("contact", <>
             <label style={label}>E-mail *
               <span style={hint}>Hier laten we weten dat je preview klaarstaat. Verder gebruiken we het nergens voor.</span>
               <input style={veld} name="email" type="email" required defaultValue={v.email || ""} />
@@ -607,8 +640,25 @@ export default function ProspectForm({
         <label style={label}>Kleurvoorkeur (optioneel)<span style={hint}>{revise ? "Vul in als de kleuren anders moeten." : "Geef kleuren op, of laat leeg - dan leiden we het kleurenpalet af uit het logo."}</span><input style={veld} name="kleurvoorkeur" placeholder="Anders afgeleid uit het logo" /></label>
           </>
         )}
-        {stapBlok(1, <>
-        <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>
+        {stapBlok("site", wizard ? <>
+          <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+            <button type="button" onClick={() => kiesSite(true)} style={keuzeKaart(heeftSite === true)}>
+              <strong style={{ fontSize: 16 }}>Ja, ik heb een website</strong>
+              <span style={{ display: "block", fontSize: 13.5, color: HUISSTIJL.body, marginTop: 3 }}>Wij halen er je logo, kleuren en teksten uit.</span>
+            </button>
+            <button type="button" onClick={() => kiesSite(false)} style={keuzeKaart(heeftSite === false)}>
+              <strong style={{ fontSize: 16 }}>Nee, nog niet</strong>
+              <span style={{ display: "block", fontSize: 13.5, color: HUISSTIJL.body, marginTop: 3 }}>Geen probleem. We stellen je een paar extra vragen.</span>
+            </button>
+          </div>
+          {keuzeFout && <span style={foutTekst}>{keuzeFout}</span>}
+          <div style={{ display: heeftSite === true ? "block" : "none" }}>
+            <label style={label}>Adres van je website *<span style={hint}>Bijvoorbeeld www.jouwbedrijf.nl. Alleen een Facebook- of Instagrampagina? Kies dan "Nee"; die vragen we verderop.</span>
+              <input style={veld} name="oude_website" inputMode="url" autoComplete="url" placeholder="www.jouwbedrijf.nl" required={heeftSite === true} disabled={heeftSite !== true} defaultValue={v.website || ""} />
+            </label>
+          </div>
+        </> : <label style={label}>Huidige / oude website (optioneel)<span style={hint}>Heb je al een (oude) website? Plak de link - wij halen er automatisch bruikbare info uit (diensten, teksten, regio).</span><input style={veld} name="oude_website" placeholder="https://..." defaultValue={v.website || ""} /></label>)}
+        {stapBlok("stijl", <>
         <label style={label}>Logo (optioneel)<span style={hint}>{revise ? "Upload alleen als het logo vervangen moet worden." : "Bron voor het kleurenpalet en de header. Lever 'm aan als dat kan. JPG of PNG, geen SVG."}</span><input style={{ ...veld, padding: 8 }} name="logo" type="file" accept={ACCEPT_ATTRIBUUT}
             onChange={(e) => setLogoFout(controleerBestanden(e.target.files, "logo") || "")} />
           {logoFout && <span style={foutTekst}>{logoFout}</span>}</label>
@@ -624,11 +674,11 @@ export default function ProspectForm({
             beelden worden opgevangen door de branchefoto's uit preview-assets.js. */}
         {!uitgebreid && (
           <>
-        {stapBlok(1, <>
+        {stapBlok("stijl", <>
         <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
         <label style={label}>Diensten<span style={hint}>Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok én een eigen pagina - meer en specifieker geeft een vollere site.</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
         </>)}
-        {stapBlok(2, <>
+        {stapBlok("online", <>
         <div style={label}>Sociale media (links)</div>
         <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
         {socials.map((s, i) => (
@@ -654,7 +704,7 @@ export default function ProspectForm({
           <label style={label}>Extra toelichting / research<span style={hint}>Alle losse opmerkingen die helpen bij het aanpassen.</span><textarea style={{ ...veld, minHeight: 100 }} name="notities" placeholder="Plak hier losse research, opmerkingen, reviews, enz." /></label>
         )}
 
-        {stapBlok(3, <p style={avgTekst}>
+        {stapBlok("contact", <p style={avgTekst}>
           <strong>Wat we met deze gegevens doen.</strong> We gebruiken wat je hier invult alleen om de voorbeeldwebsite
           te maken en om contact op te nemen over dat voorstel. Het logo en de foto's worden op onze beveiligde opslag
           gezet en verwerkt door onze tekst- en beeldleverancier; ze worden niet gebruikt om modellen te trainen en niet
