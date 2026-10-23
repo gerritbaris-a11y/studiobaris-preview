@@ -12,6 +12,7 @@ export default function GegevensForm({ slug, bedrijf }) {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [logoToestemming, setLogoToestemming] = useState(false);
+  const [socials, setSocials] = useState([""]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -28,6 +29,8 @@ export default function GegevensForm({ slug, bedrijf }) {
           adres: f.adres.value,
           kvk: f.kvk.value,
           btw: f.btw.value,
+          socials: socials.filter((x) => x.trim()),
+          google_url: f.google_url.value,
           logo_toestemming: logoToestemming,
         }),
       });
@@ -61,7 +64,7 @@ export default function GegevensForm({ slug, bedrijf }) {
       <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#888" }}>StudioBaris · Stap 2 van 2</p>
       <h1 style={{ fontSize: 28, margin: "6px 0 4px" }}>Nog even je zakelijke gegevens</h1>
       <p style={{ color: "#555", marginBottom: 8, lineHeight: 1.6 }}>
-        Voor <strong>{bedrijf}</strong>. Deze komen in de footer van je website en op je facturen.
+        Voor <strong>{bedrijf}</strong>. Adres, KvK en btw komen in de footer van je website en op je facturen.
         Weet je iets niet uit je hoofd? Laat het leeg en mail het later na.
       </p>
 
@@ -83,6 +86,24 @@ export default function GegevensForm({ slug, bedrijf }) {
           </label>
         </div>
         <span style={hint}>Allebei verplicht op je facturen en in de footer van je website.</span>
+
+        <div style={label}>Sociale media (optioneel)</div>
+        <span style={hint}>Sta je op Facebook, Instagram of LinkedIn? Plak de link; we zetten hem als icoon in de footer van je website.</span>
+        {socials.map((s, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <input style={{ ...veld, marginTop: 0 }} value={s} inputMode="url" onChange={(e) => setSocials(socials.map((x, j) => (j === i ? e.target.value : x)))} placeholder={"Link " + (i + 1) + " (Facebook, Instagram, LinkedIn...)"} />
+            {socials.length > 1 && (
+              <button type="button" onClick={() => setSocials(socials.filter((_, j) => j !== i))} style={{ border: "1px solid #d8dde3", background: "#fff", borderRadius: 8, padding: "0 12px", cursor: "pointer", fontSize: 18 }}>-</button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => setSocials([...socials, ""])} style={{ marginTop: 8, border: "1.5px solid " + A, background: "#fff", color: "#222", borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: "inherit" }}>+ Link toevoegen</button>
+
+        <label style={label}>
+          Google-bedrijfsprofiel (optioneel)
+          <span style={hint}>Heb je een Google-profiel? Plak de link, dan komt er een knop naar je Google-reviews op je website.</span>
+          <input style={veld} name="google_url" inputMode="url" placeholder="Link naar je Google-profiel" />
+        </label>
 
         <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 22, padding: "12px 14px", border: "1px solid #E3DACB", background: "#FBF8F2", borderRadius: 10 }}>
           <input type="checkbox" checked={logoToestemming} onChange={(e) => setLogoToestemming(e.target.checked)} style={{ marginTop: 3, width: 18, height: 18, flex: "0 0 auto" }} />

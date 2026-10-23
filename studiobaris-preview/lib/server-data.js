@@ -324,6 +324,11 @@ export async function setBedrijfsgegevens(slug, { adres = null, kvk = null, btw 
   });
 }
 
+// Sociale media en Google-profiel, na akkoord op de gegevenspagina.
+export async function setOnline(slug, { socials = null, googleUrl = null } = {}) {
+  return await rpc("sb_set_online", { p_slug: slug, p_socials: socials, p_google_url: googleUrl });
+}
+
 export async function setBetaling(slug, fields = {}) {
   return await rpc("set_betaling", {
     p_slug: slug,
