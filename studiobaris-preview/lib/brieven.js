@@ -374,10 +374,19 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
         }
       }
     }
-    // Onder de QR: het adres voluit, zodat niemand hoeft te scannen. Mensen
+    // Direct onder de QR: groot "GRATIS"-blok, zodat de code niet als
+    // betaallink oogt. Goud vlak, donkere letters, over de volle kolombreedte.
+    const GRATIS_H = 36;
+    const gratisY = qrY - 8 - GRATIS_H;
+    if (teken) {
+      vlak(zx, gratisY, zijTekstB, GRATIS_H, GOUD);
+      midden("GRATIS", zx, zx + zijTekstB, gratisY + 17, { size: 15, vet: true });
+      midden("geen betaling · geen inlog", zx, zx + zijTekstB, gratisY + 6, { size: 7.5, vet: true });
+    }
+    // Daaronder het adres voluit, zodat niemand hoeft te scannen. Mensen
     // zijn (terecht) voorzichtig met QR-codes op post; een leesbaar adres op
-    // ons eigen domein, plus "geen inlog of betaalgegevens", neemt dat weg.
-    uy = qrY - 13;
+    // ons eigen domein neemt dat weg.
+    uy = gratisY - 13;
     for (const regel of wrap("Liever niet scannen? Typ dan:", font, 7.5, zijTekstB)) {
       t(regel, zx, uy, { size: 7.5, kleur: GRIJS });
       uy -= 10;
@@ -389,7 +398,6 @@ export async function briefPdf({ rij, content, teksten, afzender, dagtekening, n
       t(regel, zx, uy, { size: 9, vet: true });
       uy -= 12;
     }
-    // "Gratis, zonder inloggen" staat vet in de hoofdtekst; hier niet herhaald.
 
     // Actieblok (alleen in de prijsvariant)
     if (metPrijs) {
