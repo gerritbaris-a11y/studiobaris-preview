@@ -58,21 +58,21 @@ const STAP_TEKST = {
     intro: "We beginnen met de basis: je bedrijfsnaam, je vak en waar je werkt. Daar bouwen we je hele website omheen.",
   },
   stijl: {
-    titel: "Je huisstijl en je werk",
-    intro: "Heb je een logo? Dan maken we je preview meteen in jouw kleuren. Niets bij de hand? Sla het gerust over.",
-  },
-  online: {
-    titel: "Waar vinden klanten je nu?",
-    intro: "Sta je al op Facebook, Instagram of Google? Dan zetten we dat op je website. Heb je het niet, dan laat je het leeg.",
+    titel: "Je logo en je werk",
+    intro: "Heb je een logo? Dan maken we je preview meteen in jouw kleuren. En vertel welk werk je doet: elke dienst wordt een eigen blok op je site.",
   },
   contact: {
     titel: "Waar sturen we je preview naartoe?",
     intro: "Laat je e-mail en telefoonnummer achter. Zodra je preview klaarstaat, hoor je van ons.",
   },
 };
+// Sociale media en het Google-profiel vragen we pas na akkoord (gegevenspagina).
 const stappenVoor = (heeftSite) => (heeftSite
-  ? ["site", "wie", "online", "contact"]
-  : ["site", "wie", "stijl", "online", "contact"]);
+  ? ["site", "wie", "contact"]
+  : ["site", "wie", "stijl", "contact"]);
+// Branches in de publieke intake: alleen de doelbranches van StudioBaris.
+// Collega's en het aanpasformulier houden de volledige lijst (BRANCHES).
+const BRANCHES_PUBLIEK = ["Schilder", "Hovenier", "Metselaar", "Dakdekker", "Badkamerspecialist", "Elektricien", "Stoffeerder"];
 function duwTekst(i, aantal) {
   const rest = aantal - 1 - i;
   if (i === 0) return "Een paar korte stappen, dan maken wij je gratis preview.";
@@ -292,13 +292,13 @@ export default function ProspectForm({
 
     put("naam", f.naam.value);
     put("branche", [...branches, f.branche_anders.value].filter(Boolean).join(", "));
-    put("diensten", f.diensten.value);
-    put("slogan", f.slogan.value);
+    // Velden die niet in elke versie van het formulier staan (bijv. slogan
+    // niet in de publieke intake), dus eerst kijken of ze er zijn.
+    const val = (naam) => (f[naam] ? f[naam].value : "");
+    put("diensten", val("diensten"));
+    put("slogan", val("slogan"));
     put("kernwaarden", waarden.join(", "));
     put("regio", regios.filter((r) => r.trim()).join(", "));
-    // Velden die alleen in de uitgebreide versie van het formulier staan. In de
-    // publieke intake bestaan ze niet, dus eerst kijken of ze er zijn.
-    const val = (naam) => (f[naam] ? f[naam].value : "");
     put("email", val("email"));
     put("telefoon", val("telefoon"));
     put("adres", val("adres"));
@@ -510,7 +510,7 @@ export default function ProspectForm({
         <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>
-          {BRANCHES.map((b) => (
+          {(wizard ? BRANCHES_PUBLIEK : BRANCHES).map((b) => (
             <span key={b} style={chip(branches.includes(b))} onClick={() => toggle(branches, setBranches, b)}>
               <input type="checkbox" readOnly checked={branches.includes(b)} style={{ pointerEvents: "none" }} />{b}
             </span>
@@ -675,10 +675,10 @@ export default function ProspectForm({
         {!uitgebreid && (
           <>
         {stapBlok("stijl", <>
-        <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>
+        {!wizard && <label style={label}>Slogan (optioneel)<span style={hint}>Een korte, pakkende zin. Verschijnt onder de bedrijfsnaam en in de hero.</span><input style={veld} name="slogan" placeholder="Bijv. Vakwerk dat blijft" /></label>}
         <label style={label}>Diensten<span style={hint}>Noem er liever meerdere en zo concreet mogelijk. Elke dienst wordt een apart blok én een eigen pagina - meer en specifieker geeft een vollere site.</span><textarea style={{ ...veld, minHeight: 70 }} name="diensten" placeholder="Bijv. binnenschilderwerk, buitenschilderwerk, houtrot, kozijnen" /></label>
         </>)}
-        {stapBlok("online", <>
+        {!wizard && stapBlok("online", <>
         <div style={label}>Sociale media (links)</div>
         <span style={hint}>{revise ? "Vul in als je social-links toegevoegd of aangepast moeten worden. Voeg elke link apart toe met \"+\"." : "Voeg elke link apart toe met \"+\". Ze worden als icoon-links in de footer geplaatst."}</span>
         {socials.map((s, i) => (

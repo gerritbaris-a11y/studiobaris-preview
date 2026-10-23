@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { setBedrijfsgegevens, getBetaalinfo, log } from "../../../lib/server-data";
+import { setBedrijfsgegevens, setOnline, getBetaalinfo, log } from "../../../lib/server-data";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 const NA_AKKOORD = ["akkoord", "actief"];
 
 /**
- * Stap 2 van de intake: adres, KvK, BTW en de logo-toestemming.
+ * Stap 2 van de intake: adres, KvK, BTW, sociale media, Google-profiel en de
+ * logo-toestemming.
  * Deze gegevens vragen we pas nadat iemand akkoord heeft gegeven op de
  * preview - vóór dat moment hoort niemand zijn KvK-nummer in te tikken.
  * De statuscontrole hieronder handhaaft dat ook echt: zonder akkoord
@@ -46,6 +47,19 @@ export async function POST(req) {
 
     if (!res) {
       return NextResponse.json({ ok: false, error: "Opslaan mislukt. Probeer het zo nog eens." }, { status: 500 });
+    }
+
+    // Sociale media en Google-profiel (sinds okt 2026 niet meer in de publieke
+    // intake, maar hier na akkoord).
+    const socials = Array.isArray(body.socials)
+      ? body.socials.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()).join(", ")
+      : tekst("socials");
+    const googleUrl = tekst("google_url");
+    if (socials || googleUrl) {
+      const online = await setOnline(slug, { socials: socials || null, googleUrl: googleUrl || null });
+      if (!online) {
+        return NextResponse.json({ ok: false, error: "Opslaan mislukt. Probeer het zo nog eens." }, { status: 500 });
+      }
     }
 
     try {

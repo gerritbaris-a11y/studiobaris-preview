@@ -194,6 +194,19 @@ export default async function KlantenPage() {
                     ✓ Logo mag op onze site
                   </div>
                 )}
+                {/* Wat de klant na akkoord op de gegevenspagina invulde. */}
+                {beheer && review.gegevens_aangevuld_op && (
+                  <div style={{ fontSize: 12, color: "#6B6258", marginTop: 6, lineHeight: 1.5, wordBreak: "break-word" }}>
+                    <strong>Gegevens na akkoord:</strong>{" "}
+                    {[
+                      review.adres && "Adres: " + review.adres,
+                      review.kvk && "KvK " + review.kvk,
+                      review.btw && "BTW " + review.btw,
+                      review.socials && "Socials: " + review.socials,
+                      review.google_url && "Google: " + review.google_url,
+                    ].filter(Boolean).join(" · ") || "niets ingevuld"}
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {beheer ? (
