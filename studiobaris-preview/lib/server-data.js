@@ -83,8 +83,9 @@ export async function verwijderLead(id) {
 }
 
 // Provincies, vakgebieden en tellingen voor de filters.
-export async function getLeadFacetten(naam, lijst = null) {
-  const data = await rpc("sb_lead_facetten_v2", { p_naam: naam || "", p_lijst: lijst || null });
+// provincie: alleen gezet voor een verkoper met een vaste regio (lib/regio.js).
+export async function getLeadFacetten(naam, lijst = null, provincie = null) {
+  const data = await rpc("sb_lead_facetten_v3", { p_naam: naam || "", p_lijst: lijst || null, p_provincie: provincie || null });
   return data || { provincies: [], vakgebieden: [], sites: [], werk: 0, afgerond: 0, socials: 0, totaal: 0 };
 }
 

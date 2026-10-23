@@ -64,7 +64,7 @@ const PER_KEER = 10;
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
-export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer }) {
+export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer, vasteProvincie }) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -324,10 +324,16 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           <option value="mij">Mijn leads</option>
           <option value="vrij">Nog vrij</option>
         </select>
-        <select value={filters.provincie || ""} onChange={(e) => zet({ provincie: e.target.value })} style={sel}>
-          <option value="">Alle provincies</option>
-          {f.provincies.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
+        {vasteProvincie ? (
+          <select value={vasteProvincie} disabled style={{ ...sel, opacity: 0.8 }} title="Jouw regio">
+            <option value={vasteProvincie}>{vasteProvincie}</option>
+          </select>
+        ) : (
+          <select value={filters.provincie || ""} onChange={(e) => zet({ provincie: e.target.value })} style={sel}>
+            <option value="">Alle provincies</option>
+            {f.provincies.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        )}
         <select value={filters.vakgebied || ""} onChange={(e) => zet({ vakgebied: e.target.value })} style={sel}>
           <option value="">Alle vakgebieden</option>
           {f.vakgebieden.map((v) => <option key={v} value={v}>{v}</option>)}

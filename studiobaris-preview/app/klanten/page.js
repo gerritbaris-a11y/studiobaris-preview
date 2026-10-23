@@ -9,6 +9,7 @@ import {
   // daarmee de hele betaalflow - onbereikbaar worden.
   KlantNaam, VerwijderKnop,
   HuisstijlKnop, HuisstijlAllesKnop,
+  ProvincieKeuze,
 } from "../dashboard/dashboard-actions";
 // normFase() komt uit een apart, niet-"use client"-bestand: importeer je 'm
 // vanuit dashboard-actions.js (wel "use client"), dan is het op de server
@@ -25,6 +26,7 @@ import { getProefOverzicht } from "../../lib/proef";
 import ProefStatus from "./proef-status";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
+import { getRegio, magPreview } from "../../lib/regio";
 
 export const dynamic = "force-dynamic";
 
@@ -82,21 +84,18 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst()]);
+  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst, regio] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam)]);
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
+  const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
   const proefPerSlug = Object.fromEntries((proefLijst || []).map((p) => [p.slug, p]));
   const magVerlengen = naam === "Gerrit" || naam === "Levi";
   // Welke handleiding hoort bij deze verkoper? Volgt uit zijn vergoedingsmodel.
   const ikzelf = (teamleden || []).find((t) => t.naam === naam);
   const mijnModel = ikzelf ? ikzelf.vergoeding_model : "50pct";
 
-  const rows = beheer
-    ? alles
-    : alles.filter((r) => {
-        let review = {};
-        try { review = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
-        return r.verzamelaar === naam || review.bron === naam;
-      });
+  // Verkoper: eigen previews + alle previews uit zijn regio (lib/regio.js).
+  // Beheer ziet alles.
+  const rows = beheer ? alles : alles.filter((r) => magPreview(r, naam, false, regio));
 
   // Klanten op "Geen interesse" (Afgewezen) apart houden: uit de actieve lijst,
   // maar wel terug te vinden en terug te zetten in een eigen sectie onderaan.
@@ -108,9 +107,14 @@ export default async function KlantenPage() {
       naam={naam || "collega"}
       beheer={beheer}
       actief="/klanten"
-      titel={beheer ? "Alle previews" : "Mijn previews"}
+      titel={beheer ? "Alle previews" : regio ? `Mijn previews · ${regio}` : "Mijn previews"}
       sub="Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."
     >
+      {regio && (
+        <div style={{ background: KLEUR.kleiZacht, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: KLEUR.kleiDonker }}>
+          Je ziet alle previews uit <strong>{regio}</strong>, ook die door collega's zijn gemaakt. Druk op <strong>Benaderd</strong> zodra je een bedrijf hebt benaderd, zodat het team ziet wat er loopt. Op <strong>Klaar</strong> zetten doen Gerrit of Levi.
+        </div>
+      )}
       <DomeinCheck />
       <HostingCheck verkoper={naam} />
       {beheer && (
@@ -163,7 +167,7 @@ export default async function KlantenPage() {
           const reactieOp = r.laatste_feedback_op
             ? new Date(r.laatste_feedback_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
             : null;
-          const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.b_adres, r.verzamelaar, review.bron]
+          const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.b_adres, r.verzamelaar, review.bron, r.provincie]
             .filter(Boolean).join(" ").toLowerCase();
           const fase = normFase(r.pipeline_status);
           return (
@@ -174,6 +178,8 @@ export default async function KlantenPage() {
                 <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#6B6258", marginTop: 1 }}>{r.b_adres.trim()}</div>}
                 {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
+                {!beheer && r.verzamelaar && r.verzamelaar !== naam && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Gemaakt door {r.verzamelaar}</div>}
+                {benaderdDoor[r.slug] && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Benaderd door {benaderdDoor[r.slug]}</div>}
                 {review.kleur_bron && (
                   <div
                     title={review.kleur_bron === "gegokt" ? "Geen logo of website gevonden: kleuren zijn afgeleid uit de branche. Even nakijken." : "Kleuren overgenomen uit: " + review.kleur_bron}
@@ -210,7 +216,7 @@ export default async function KlantenPage() {
               </div>
             </div>
 
-            <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} />
+            <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} magKlaar={beheer} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", alignItems: "center" }}>
               <BetaalBadge status={r.betaal_status} />
               {reactieOp && (
@@ -233,6 +239,7 @@ export default async function KlantenPage() {
                   Beheer
                 </div>
                 <KlantNaam slug={r.slug} value={r.verzamelaar} team={teamleden} />
+                <ProvincieKeuze slug={r.slug} value={r.provincie} handmatig={r.provincie_handmatig} />
                 {!r.verzamelaar && r.source_doc === "website" && (
                   <span
                     title="Deze preview is aangevraagd via het formulier op studiobaris.nl, niet gemaakt door iemand van het team"

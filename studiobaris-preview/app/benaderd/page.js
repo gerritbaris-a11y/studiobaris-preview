@@ -1,27 +1,24 @@
 import { leesSessie, isBeheer } from "../../lib/auth";
 import { getBenaderdLijst, magZien } from "../../lib/benaderd";
 import { getOverview } from "../../lib/server-data";
+import { getRegio } from "../../lib/regio";
 import WerkplekShell from "../werkplek-shell";
 import BenaderdLijst from "./benaderd-lijst";
 
 export const dynamic = "force-dynamic";
 
 // Benaderd (okt 2026): de bedrijven die je hebt benaderd (vinkje "Benaderd"
-// op Mijn previews) en wat ze daarna deden. Verkoper ziet alleen zijn eigen
-// previews, beheer (Gerrit, Levi) alles.
+// op Mijn previews) en wat ze daarna deden. Verkoper ziet zijn eigen previews
+// en die uit zijn regio (lib/regio.js), beheer (Gerrit, Levi) alles.
 export default async function BenaderdPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [lijst, alles] = await Promise.all([getBenaderdLijst(), getOverview()]);
-  const rijen = lijst.filter((r) => magZien(r, naam, beheer));
+  const [lijst, alles, regio] = await Promise.all([getBenaderdLijst(), getOverview(), beheer ? null : getRegio(naam)]);
+  const rijen = lijst.filter((r) => magZien(r, naam, beheer, regio));
   // Totaal aantal previews dat deze persoon ziet (zelfde regel als Mijn
   // previews), voor het percentage "benaderd".
-  const totaal = (alles || []).filter((r) => {
-    let bron = null;
-    try { bron = r.internal_notes ? JSON.parse(r.internal_notes).bron : null; } catch {}
-    return magZien({ verzamelaar: r.verzamelaar, bron }, naam, beheer);
-  }).length;
+  const totaal = (alles || []).filter((r) => magZien(r, naam, beheer, regio)).length;
 
   return (
     <WerkplekShell

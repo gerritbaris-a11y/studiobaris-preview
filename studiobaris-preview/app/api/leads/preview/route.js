@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { leesSessie, isBeheer } from "../../../../lib/auth";
 import { getLeadVoorPreview, claimLead } from "../../../../lib/server-data";
 import { POST as intakePost } from "../../intake/route";
+import { getRegio } from "../../../../lib/regio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,14 @@ export async function POST(req) {
 
   const lead = await getLeadVoorPreview(id);
   if (!lead) return NextResponse.json({ ok: false, error: "Lead niet gevonden." }, { status: 404 });
+
+  // Verkoper met een regio: alleen leads uit zijn eigen provincie.
+  if (!isBeheer(sessie)) {
+    const regio = await getRegio(naam);
+    if (regio && lead.provincie !== regio) {
+      return NextResponse.json({ ok: false, error: "Deze lead valt buiten jouw regio." }, { status: 403 });
+    }
+  }
 
   // Er is al een preview: geen tweede maken, gewoon de bestaande teruggeven.
   if (lead.preview_slug) {

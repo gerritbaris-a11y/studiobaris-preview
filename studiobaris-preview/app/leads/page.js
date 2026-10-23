@@ -3,6 +3,7 @@ import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import LeadsClient from "./leads-client";
 import { KLEUR } from "../werkplek-stijl";
+import { getRegio } from "../../lib/regio";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,9 @@ export default async function LeadsPage({ searchParams }) {
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
   const sp = (await searchParams) || {};
+  // Verkoper met een vaste regio (Benne: Noord-Holland, Kevin: Zuid-Holland)
+  // ziet alleen leads uit die provincie. Beheer ziet alles.
+  const regio = beheer ? null : await getRegio(naam);
 
   // Alleen de actuele (gescande) lijst is zichtbaar. De oude import van 7.900
   // leads blijft op de achtergrond in de database staan, maar niet op het dashboard.
@@ -20,7 +24,7 @@ export default async function LeadsPage({ searchParams }) {
     lijst,
     tab: sp.tab === "afgerond" ? "afgerond" : sp.tab === "archief" ? "archief" : "werk",
     zoek: sp.zoek || "",
-    provincie: sp.provincie || "",
+    provincie: regio || sp.provincie || "",
     vakgebied: sp.vakgebied || "",
     potentie: lijst === "oud" ? sp.potentie || "" : "",
     site: lijst === "actueel" ? sp.site || "" : "",
@@ -31,7 +35,7 @@ export default async function LeadsPage({ searchParams }) {
 
   const [resultaat, facetten] = await Promise.all([
     zoekLeads({ naam, ...filters }),
-    getLeadFacetten(naam, lijst),
+    getLeadFacetten(naam, lijst, regio),
   ]);
 
   const onbekeken = Math.max(Number(resultaat.totaal || 0), 0);
@@ -42,7 +46,9 @@ export default async function LeadsPage({ searchParams }) {
       beheer={beheer}
       actief="/leads"
       titel="Leads"
-      sub="Pak een lead op, zoek info op en vraag een preview aan. Alles wat je doet zien je collega's live."
+      sub={regio
+        ? `Jouw leads in ${regio}. Pak een lead op, zoek info op en vraag een preview aan. Alles wat je doet zien je collega's live.`
+        : "Pak een lead op, zoek info op en vraag een preview aan. Alles wat je doet zien je collega's live."}
     >
       {lijst === "oud" && naam === "Gerrit" && facetten.socials > 0 && (
         <div style={{ background: KLEUR.kleiZacht, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: KLEUR.kleiDonker }}>
@@ -57,6 +63,7 @@ export default async function LeadsPage({ searchParams }) {
         mij={naam}
         filters={filters}
         beheer={beheer}
+        vasteProvincie={regio}
       />
     </WerkplekShell>
   );

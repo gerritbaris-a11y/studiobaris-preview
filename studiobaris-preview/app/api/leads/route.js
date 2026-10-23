@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateLead, getLead, claimLead, log } from "../../../lib/server-data";
-import { leesSessie } from "../../../lib/auth";
+import { leesSessie, isBeheer } from "../../../lib/auth";
+import { getRegio } from "../../../lib/regio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,20 @@ export async function POST(req) {
     const body = await req.json();
     const id = String(body.id || "");
     if (!id) return NextResponse.json({ ok: false, error: "id ontbreekt." }, { status: 400 });
+
+    // Alleen ingelogd, en een verkoper met een regio alleen bij leads uit
+    // zijn eigen provincie (lib/regio.js).
+    const ik = leesSessie();
+    if (!ik) return NextResponse.json({ ok: false, error: "Niet ingelogd." }, { status: 401 });
+    if (!isBeheer(ik)) {
+      const regio = await getRegio(ik.naam);
+      if (regio) {
+        const l = await getLead(id);
+        if (!l || l.provincie !== regio) {
+          return NextResponse.json({ ok: false, error: "Deze lead valt buiten jouw regio." }, { status: 403 });
+        }
+      }
+    }
 
     // Claim-met-slot: oppakken gebeurt op naam van de ingelogde verkoper en
     // lukt alleen als de lead nog vrij is. Zo belt niemand een lead die een
