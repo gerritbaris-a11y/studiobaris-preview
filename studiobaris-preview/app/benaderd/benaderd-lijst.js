@@ -177,7 +177,7 @@ export default function BenaderdLijst({ rijen, beheer, totaal = 0 }) {
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{r.bedrijf}</div>
                 <div style={{ fontSize: 12.5, color: "#6B6258" }}>{[r.branche, r.plaats].filter(Boolean).join(" · ") || "—"}</div>
                 <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>
-                  Benaderd {wanneer(r.benaderd_op)}{beheer && r.benaderd_door ? ` door ${r.benaderd_door}` : ""}
+                  Benaderd {wanneer(r.benaderd_op)}{r.benaderd_door ? ` door ${r.benaderd_door}` : ""}
                 </div>
                 {r.telefoon && (
                   <a href={`tel:${String(r.telefoon).replace(/\s/g, "")}`} style={{ display: "inline-block", marginTop: 4, fontSize: 13, fontWeight: 600, color: KLEUR.inkt, textDecoration: "none" }}>{r.telefoon}</a>

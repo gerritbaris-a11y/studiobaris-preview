@@ -35,9 +35,6 @@ export async function zetBenaderd(slug, aan, door) {
 }
 
 // Zelfde regel als Mijn previews: een verkoper ziet een preview als hij de
-// verzamelaar is of als hij in de notities als bron staat. Beheer ziet alles.
-export function magZien(rij, naam, beheer) {
-  if (beheer) return true;
-  if (!rij || !naam) return false;
-  return rij.verzamelaar === naam || rij.bron === naam;
-}
+// verzamelaar is, als hij in de notities als bron staat, of als de preview in
+// zijn regio ligt (zie lib/regio.js). Beheer ziet alles.
+export { magPreview as magZien } from "./regio";

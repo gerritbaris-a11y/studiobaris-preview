@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { leesSessie, isBeheer } from "../../../lib/auth";
 import { getOverview } from "../../../lib/server-data";
 import { zetBenaderd, magZien } from "../../../lib/benaderd";
+import { getRegio } from "../../../lib/regio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Vinkje "Benaderd" aan of uit zetten (Mijn previews en de pagina Benaderd).
-// Een verkoper mag dit alleen bij zijn eigen previews; beheer bij alle.
+// Een verkoper mag dit bij zijn eigen previews en die uit zijn regio; beheer bij alle.
 export async function POST(req) {
   const sessie = leesSessie();
   if (!sessie) return NextResponse.json({ ok: false, error: "Niet ingelogd." }, { status: 401 });
@@ -16,10 +17,9 @@ export async function POST(req) {
     if (!slug) return NextResponse.json({ ok: false, error: "slug ontbreekt." }, { status: 400 });
     const beheer = isBeheer(sessie);
     if (!beheer) {
-      const rij = (await getOverview()).find((r) => r.slug === String(slug));
-      let bron = null;
-      try { bron = rij && rij.internal_notes ? JSON.parse(rij.internal_notes).bron : null; } catch {}
-      if (!rij || !magZien({ verzamelaar: rij.verzamelaar, bron }, sessie.naam, false)) {
+      const [alles, regio] = await Promise.all([getOverview(), getRegio(sessie.naam)]);
+      const rij = alles.find((r) => r.slug === String(slug));
+      if (!rij || !magZien(rij, sessie.naam, false, regio)) {
         return NextResponse.json({ ok: false, error: "Geen toegang tot deze preview." }, { status: 403 });
       }
     }

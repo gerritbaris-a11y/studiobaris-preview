@@ -56,7 +56,7 @@ const BEHEER_ONLY = ["/dashboard", "/beheer", "/nieuw-akkoord", "/team", "/leads
 // Interne API-routes die een geldige sessie vereisen. Deze checkten zelf niets
 // en waren daardoor publiek aanroepbaar. Destructieve/gevoelige acties eisen de
 // beheer-rol; de rest een geldige sessie (zodat verkopers blijven werken).
-const API_BEHEER = ["/api/klant/delete", "/api/proef/verleng", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/abonnement/slottermijn", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/facturen/status", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand", "/api/financieel/instellingen", "/api/taken/aanmaken", "/api/taken/bijwerken", "/api/taken/verplaatsen", "/api/taken/verwijderen", "/api/kosten/toevoegen", "/api/kosten/bijwerken", "/api/kosten/verwijderen", "/api/kosten/factuur-upload-url", "/api/kosten/factuur-bevestigen", "/api/kosten/factuur-downloaden", "/api/kosten/factuur-verwijderen", "/api/uren/toevoegen", "/api/uren/bijwerken", "/api/uren/verwijderen", "/api/voorstellen/goedkeuren", "/api/voorstellen/afwijzen", "/api/vakfotos/upload-url", "/api/vakfotos/verwijderen", "/api/brieven"];
+const API_BEHEER = ["/api/klant/delete", "/api/klant/provincie", "/api/proef/verleng", "/api/beheer/login", "/api/beheer/instellen", "/api/abonnement/instellen", "/api/abonnement/opzeggen", "/api/abonnement/slottermijn", "/api/facturen/opnieuw", "/api/facturen/pdf", "/api/facturen/nieuw", "/api/facturen/loggen", "/api/facturen/bestand", "/api/facturen/status", "/api/offertes/status", "/api/offertes/loggen", "/api/offertes/bestand", "/api/financieel/instellingen", "/api/taken/aanmaken", "/api/taken/bijwerken", "/api/taken/verplaatsen", "/api/taken/verwijderen", "/api/kosten/toevoegen", "/api/kosten/bijwerken", "/api/kosten/verwijderen", "/api/kosten/factuur-upload-url", "/api/kosten/factuur-bevestigen", "/api/kosten/factuur-downloaden", "/api/kosten/factuur-verwijderen", "/api/uren/toevoegen", "/api/uren/bijwerken", "/api/uren/verwijderen", "/api/voorstellen/goedkeuren", "/api/voorstellen/afwijzen", "/api/vakfotos/upload-url", "/api/vakfotos/verwijderen", "/api/brieven"];
 const API_INGELOGD = ["/api/benaderd", "/api/hosting-check", "/api/domein-check", "/api/proef/start", "/api/klant/update", "/api/klant/gegevens", "/api/klant/verkoopbedrag", "/api/publish", "/api/publish-site"];
 
 function raakt(path, lijst) {
@@ -142,6 +142,7 @@ export const config = {
     "/api/domein-check",
     "/api/proef/:path*",
     "/api/klant/delete",
+    "/api/klant/provincie",
     "/api/klant/update",
     "/api/klant/gegevens",
     "/api/klant/verkoopbedrag",

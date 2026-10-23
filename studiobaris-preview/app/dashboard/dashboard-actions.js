@@ -431,33 +431,82 @@ export function HeractiveerKlantKnop({ slug, bedrijf }) {
   );
 }
 
-export function FaseStepper({ slug, huidige, bedrijf }) {
+// magKlaar: verkopers mogen Preview en Akkoord zetten, maar "Klaar" (de
+// afwikkeling) doen alleen Gerrit en Levi. Staat een klant al op Klaar, dan
+// kan een verkoper de fase niet meer wijzigen. De server controleert dit ook.
+export function FaseStepper({ slug, huidige, bedrijf, magKlaar = true }) {
   const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
   const norm = normFase(huidige);
   const idx = FASES.indexOf(norm);
+  const vergrendeld = !magKlaar && norm === "Klaar";
   async function zet(f) {
-    if (f === norm || bezig) return;
+    if (f === norm || bezig || vergrendeld) return;
+    if (!magKlaar && f === "Klaar") return;
     setBezig(true);
+    setFout("");
     // van + bedrijf meesturen, zodat het logboek weet wat er precies veranderde.
     const d = await bewaarKlant(slug, { pipeline_status: f, van: norm, bedrijf: bedrijf || slug });
     if (d && d.ok) location.reload();
-    else setBezig(false);
+    else { setBezig(false); setFout((d && d.error) || "Opslaan mislukt."); }
   }
   return (
-    <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 2 }}>
-      {FASES.map((f, i) => {
-        const done = i < idx;
-        const cur = i === idx;
-        const bg = cur ? "#2B2724" : done ? "#e1f5ee" : "#F4EEE3";
-        const col = cur ? "#fff" : done ? "#0f6e56" : "#9A9084";
-        return (
-          <button key={f} onClick={() => zet(f)} disabled={bezig} title={"Zet fase op " + f}
-            style={{ flex: "0 0 auto", fontSize: 11.5, fontWeight: cur ? 700 : 600, padding: "6px 10px", borderRadius: 8, border: "none", cursor: "pointer", background: bg, color: col, whiteSpace: "nowrap" }}>
-            {f}
-          </button>
-        );
-      })}
+    <div>
+      <div style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 2 }}>
+        {FASES.map((f, i) => {
+          const done = i < idx;
+          const cur = i === idx;
+          const dicht = vergrendeld || (!magKlaar && f === "Klaar");
+          const bg = cur ? "#2B2724" : done ? "#e1f5ee" : "#F4EEE3";
+          const col = cur ? "#fff" : done ? "#0f6e56" : "#9A9084";
+          return (
+            <button key={f} onClick={() => zet(f)} disabled={bezig || dicht}
+              title={dicht ? (f === "Klaar" && !cur ? "Op Klaar zetten doen Gerrit of Levi" : "Afgerond door Gerrit of Levi") : "Zet fase op " + f}
+              style={{ flex: "0 0 auto", fontSize: 11.5, fontWeight: cur ? 700 : 600, padding: "6px 10px", borderRadius: 8, border: "none", cursor: dicht ? "not-allowed" : "pointer", background: bg, color: col, whiteSpace: "nowrap", opacity: dicht && !cur ? 0.55 : 1 }}>
+              {f}{dicht && !cur && f === "Klaar" ? " 🔒" : ""}
+            </button>
+          );
+        })}
+      </div>
+      {fout && <div style={{ fontSize: 12, color: "#b91c1c", marginTop: 4 }}>{fout}</div>}
     </div>
+  );
+}
+
+// Provincie van een preview (alleen beheer). Bepaalt welke verkoper met een
+// regio de preview ziet. "Automatisch" = laat de database hem bepalen.
+const PROVINCIE_OPTIES = [
+  "Drenthe", "Flevoland", "Friesland", "Gelderland", "Groningen", "Limburg",
+  "Noord-Brabant", "Noord-Holland", "Overijssel", "Utrecht", "Zeeland", "Zuid-Holland",
+];
+export function ProvincieKeuze({ slug, value, handmatig }) {
+  const [v, setV] = useState(handmatig ? value || "" : "");
+  const [huidig, setHuidig] = useState(value || "");
+  const [bezig, setBezig] = useState(false);
+  async function change(e) {
+    const nv = e.target.value;
+    setV(nv); setBezig(true);
+    try {
+      const res = await fetch("/api/klant/provincie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, provincie: nv }),
+      });
+      const d = await res.json();
+      if (d && d.ok) setHuidig(d.provincie || "");
+    } catch {}
+    setBezig(false);
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#6B6258" }}>
+      Regio
+      <select value={v} onChange={change} disabled={bezig}
+        style={{ padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 190 }}>
+        <option value="">{"Automatisch" + (huidig && !v ? ` (${huidig})` : !huidig ? " (onbekend)" : "")}</option>
+        {PROVINCIE_OPTIES.map((p) => <option key={p} value={p}>{p}</option>)}
+      </select>
+      {bezig && <span style={{ fontSize: 11, color: "#9A9084" }}>bezig…</span>}
+    </span>
   );
 }
 
