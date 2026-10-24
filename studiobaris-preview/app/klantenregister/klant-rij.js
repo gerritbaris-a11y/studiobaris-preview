@@ -8,6 +8,7 @@ import {
   BetaallinkKnop,
 } from "../dashboard/dashboard-actions";
 import AfspraakForm from "../abonnementen/afspraak-form";
+import StandaardMails from "./standaard-mails";
 
 // Eén rij op het Klantenregister — klap open voor het volledige plaatje
 // (adres, KvK, BTW, WhatsApp) plus bewerken en de minder alledaagse acties
@@ -390,6 +391,15 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
                       Let op: "Vastleggen" geeft meteen een klantnummer — hij verschijnt hierna bij "Klanten".
                     </div>
                   )}
+                </div>
+              )}
+
+              {(variant === "klant" || variant === "toekomstig") && (
+                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+                    Standaardmails
+                  </div>
+                  <StandaardMails r={r} />
                 </div>
               )}
 
