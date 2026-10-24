@@ -53,7 +53,11 @@ function maakMails(r) {
   const afsluiting = ["Met vriendelijke groet,", "StudioBaris"];
   const mails = [];
 
-  const betaalAlinea = (url) => ({ voor: "Betaal ", linkTekst: "hier", na: ".", url });
+  // De hele regel "Betaal hier →" is de link: vet, blauw en onderstreept, zodat
+  // meteen duidelijk is dat je erop klikt. Bewust geen knop met achtergrond:
+  // sommige mailprogramma's laten die achtergrond weg bij plakken, en dan
+  // valt witte tekst weg.
+  const betaalAlinea = (url) => ({ voor: "", linkTekst: "Betaal hier →", na: "", url });
 
   if (aanb > 0 && rest <= 0) {
     mails.push({
@@ -132,7 +136,7 @@ function alsHtml(mail) {
       .map((a) => {
         if (Array.isArray(a)) return `<p style="${stijl}">${a.map(escapeHtml).join("<br>")}</p>`;
         if (typeof a === "object") {
-          return `<p style="${stijl}">${escapeHtml(a.voor)}<a href="${escapeHtml(a.url)}">${escapeHtml(a.linkTekst)}</a>${escapeHtml(a.na)}</p>`;
+          return `<p style="margin:20px 0;">${escapeHtml(a.voor)}<a href="${escapeHtml(a.url)}" style="color:#1155CC;font-weight:bold;font-size:17px;text-decoration:underline;">${escapeHtml(a.linkTekst)}</a>${escapeHtml(a.na)}</p>`;
         }
         return `<p style="${stijl}">${escapeHtml(a)}</p>`;
       })
@@ -224,7 +228,7 @@ function MailKaart({ mail, geblokkeerd }) {
         dangerouslySetInnerHTML={{ __html: alsHtml(mail) }}
       />
       <div style={{ fontSize: 11.5, color: KLEUR.label, wordBreak: "break-all" }}>
-        Link achter "hier": {mail.url}
+        Link achter "Betaal hier →": {mail.url}
       </div>
     </div>
   );
@@ -261,7 +265,7 @@ export default function StandaardMails({ r }) {
         <MailKaart key={m.key} mail={m} geblokkeerd={blokkade(m)} />
       ))}
       <div style={{ fontSize: 11.5, color: KLEUR.label }}>
-        Plak met Ctrl/Cmd + V in je mail; "hier" blijft dan een klikbare link. De aanhef gebruikt de voornaam van de contactpersoon.
+        Plak met Ctrl/Cmd + V in je mail; "Betaal hier →" blijft dan een klikbare link. De aanhef gebruikt de voornaam van de contactpersoon.
       </div>
     </div>
   );
