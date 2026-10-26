@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import MobielMenu from "./mobiel-menu";
 import { getPreview, googleFontsHref } from "../../lib/preview";
 import { getConcept, getFull } from "../../lib/server-data";
 import { nicheFoto, voordeelIcon, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
@@ -254,7 +255,7 @@ export default async function Page({ params, searchParams }) {
           <a href="#over">Over</a>
           <a href="#contact">Contact</a>
         </nav>
-        <a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a>
+        <div className="sbm-rij" style={{ display: "flex", alignItems: "center", gap: 8 }}><a className="cta" href="#contact">{hero.cta_tekst || "Offerte"}</a><MobielMenu tot={639} /></div>
       </div></header>
 
       <section className="hero" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}>

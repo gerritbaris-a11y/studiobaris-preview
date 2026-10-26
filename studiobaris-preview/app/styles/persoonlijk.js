@@ -1,4 +1,5 @@
 import { googleFontsHref } from "../../lib/preview";
+import MobielMenu from "../[slug]/mobiel-menu";
 import { brandVars } from "../../lib/brand";
 import VoorproefLabel from "../[slug]/voorproef-label";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
@@ -112,7 +113,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
         <nav className="nav"><a href="#home">Home</a><a href="#diensten">Diensten</a><a href="#werk">Projecten</a><a href="#over">Over</a><a href="#contact">Contact</a></nav>
-        <a className="cta" href="#contact">{hero.cta_tekst || "Contact"}</a>
+        <div className="sbm-rij" style={{ display: "flex", alignItems: "center", gap: 8 }}><a className="cta" href="#contact">{hero.cta_tekst || "Contact"}</a><MobielMenu tot={700} /></div>
       </div></header>
 
       <section className="hero metfoto" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}><div className="wrap">

@@ -1,4 +1,5 @@
 import { googleFontsHref } from "../../lib/preview";
+import MobielMenu from "../[slug]/mobiel-menu";
 import { brandVars } from "../../lib/brand";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, heroFoto } from "../../lib/preview-assets";
@@ -120,7 +121,7 @@ export default function StrakSite({ content, slug = "", isConcept, isReview }) {
             <a href="#over">Over</a>
             <a href="#contact">Contact</a>
           </nav>
-          <a className="cta" href="#contact">{hero.cta_tekst || "Offerte aanvragen"}</a>
+          <div className="sbm-rij" style={{ display: "flex", alignItems: "center", gap: 8 }}><a className="cta" href="#contact">{hero.cta_tekst || "Offerte aanvragen"}</a><MobielMenu tot={760} donker /></div>
         </div></header>
 
         <section className="hero" id="home" style={{ backgroundImage: `url(${JSON.stringify(heroBeeld)})` }}><div className="wrap">
