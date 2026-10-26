@@ -1,5 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
+import VoorproefLabel from "../[slug]/voorproef-label";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
@@ -61,7 +62,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz{scroll-behavior:smooth}.pz section[id]{scroll-margin-top:80px}
     .pz .nav{display:flex;gap:1.2rem;font-size:.9rem;color:#6b5d4d}
     .pz .nav a:hover{color:var(--orange)}
-    @media(max-width:700px){.pz .nav{order:3;width:100%;justify-content:center;gap:1rem;font-size:.86rem}}
+    @media(max-width:700px){.pz .nav{display:none}}
     .pz .cta{background:var(--orange);color:var(--on-orange);padding:.55rem 1.1rem;border-radius:999px;font-weight:700;font-size:.88rem}
     .pz .hero{background:#fdf3e7;padding:3.4rem 0 3.6rem;text-align:center}
     .pz .pf{width:120px;height:120px;border-radius:50%;margin:0 auto 1.2rem;background:#e7d2b8 center/cover no-repeat;display:grid;place-items:center;color:#9a6b3a;font-size:.85rem;border:4px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.1);overflow:hidden}
@@ -74,6 +75,8 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
     .pz .trust span{display:flex;gap:.4rem;align-items:center}.pz .tick{color:var(--orange);font-weight:800}
     .pz .hero.metfoto{padding:4.4rem 0 4.6rem}
     .pz .hero.metfoto h1,.pz .hero.metfoto .trust{color:#fff}
+    .pz .hero.metfoto h1{text-shadow:0 2px 18px rgba(0,0,0,.25)}
+    .pz .hero.metfoto .eyebrow,.pz .hero.metfoto .ac,.pz .hero.metfoto .tick{color:var(--orange-hero)}
     .pz .hero.metfoto p{color:rgba(255,255,255,.9)}
     .pz .sec{padding:3.4rem 0}
     .pz .sec h2{font-size:clamp(1.5rem,3vw,2rem);text-align:center;margin-bottom:.4rem}
@@ -104,11 +107,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
   return (
     <div className="pz" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {(isConcept || isReview) && (
-        <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
-          {isConcept ? "Conceptversie — nog niet gepubliceerd." : "Dit is een eerste voorproefje van jouw website. Het geeft een goed beeld, maar teksten, foto's en details zijn nog voorbeeld en sommige knoppen werken nog niet — bij de definitieve site maken we alles samen met jou op maat, werkend en netjes af."}
-        </div>
-      )}
+      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} />}
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
@@ -120,7 +119,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
         {/* Portretfoto alleen tonen als er echt een foto van de vakman is. */}
         {persoonFoto && <div className="pf" style={{ backgroundImage: `url(${persoonFoto})`, color: "transparent" }} />}
         <div className="eyebrow">{b.branche || b.naam}</div>
-        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : b.naam}</h1>
+        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span className="ac">{sloganAcc[1]}</span> : null}</> : b.naam}</h1>
         <p>{hero.subkop || c.over_ons || ""}</p>
         <a className="bp" href="#contact">{hero.cta_tekst || "Vraag een offerte aan"}</a>
         {usps.length > 0 && (

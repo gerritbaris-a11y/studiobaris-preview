@@ -13,7 +13,7 @@ Je krijgt (A) de huidige website-JSON en (B) de opdracht.
 GEEF UITSLUITEND DE VOLLEDIGE BIJGEWERKTE JSON TERUG (geen tekst eromheen, geen markdown), in hetzelfde schema:
 ${CONTENT_SCHEMA}
 
-Plus deze velden die je ongewijzigd laat tenzij de opdracht erom vraagt: merk.stijl ("stoer", "modern" of "persoonlijk"), merk.persoon_foto, hero.achtergrond, en beeld_url bij diensten en projecten.
+Plus deze velden die je ongewijzigd laat tenzij de opdracht erom vraagt: merk.stijl ("stoer", "modern", "persoonlijk", "ambacht" of "strak"), merk.persoon_foto, hero.achtergrond, en beeld_url bij diensten en projecten.
 
 HARDE KADERS:
 1. Voer ALLEEN de opdracht uit. Laat al het andere exact zoals het is, inclusief volgorde.

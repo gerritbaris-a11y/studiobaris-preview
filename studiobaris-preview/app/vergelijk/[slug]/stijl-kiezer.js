@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const STIJLEN = [
-  { id: "stoer", naam: "Direct & Stoer", uitleg: "Donkere hero, krachtig, grote bel-knoppen. Voor wie snel gebeld wil worden." },
-  { id: "modern", naam: "Strak & Modern", uitleg: "Licht, rustig en typografisch, met uitklapbare diensten." },
-  { id: "persoonlijk", naam: "Warm & Persoonlijk", uitleg: "De vakman centraal, met een persoonlijk verhaal en stappen." },
-];
+import { STIJLEN } from "../../../lib/stijlen";
 
 export default function StijlKiezer({ slug, bedrijf, huidige }) {
   const [gekozen, setGekozen] = useState(huidige);
@@ -34,7 +29,8 @@ export default function StijlKiezer({ slug, bedrijf, huidige }) {
     <>
       <style>{`
         .sb-stijlen { display: grid; grid-template-columns: 1fr; gap: 18px; }
-        @media (min-width: 1000px) { .sb-stijlen { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1000px) { .sb-stijlen { grid-template-columns: repeat(3, 1fr); }
+        @media (min-width: 1400px) { .sb-stijlen { grid-template-columns: repeat(5, 1fr); } } }
         .sb-frame { width: 100%; height: 560px; border: none; }
         .sb-scherm { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
       `}</style>

@@ -7,6 +7,11 @@ import { getWerk } from "../../lib/aanpassen";
 import { brandVars } from "../../lib/brand";
 import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
+import AmbachtSite from "../styles/ambacht";
+import StrakSite from "../styles/strak";
+import VoorproefLabel from "./voorproef-label";
+import StijlWissel from "./stijl-wissel";
+import { geldigeStijl } from "../../lib/stijlen";
 import { getProef, metProefProjecten, proefDatum, DEMO_BASIS, telBezoek } from "../../lib/proef";
 import { cookies, headers } from "next/headers";
 import ProefBalk from "./proef-balk";
@@ -94,9 +99,19 @@ export default async function Page({ params, searchParams }) {
   // projectpagina's kijken daar wél naar (via getPreview), dus zonder deze
   // query-param zouden ze "niet gevonden" tonen zodra iemand doorklikt.
   const modeQuery = isConcept ? "?concept=1" : "";
-  const stijl = searchParams?.stijl || (c.merk && c.merk.stijl) || "stoer";
-  if (stijl === "modern") return <><ModernSite content={c} slug={params.slug} isConcept={isConcept} isReview={isVoorproef} />{balk}</>;
-  if (stijl === "persoonlijk") return <><PersoonlijkSite content={c} slug={params.slug} isConcept={isConcept} isReview={isVoorproef} />{balk}</>;
+  // Welke stijl tonen we? 1) ?stijl= (team: Stijl kiezen-vergelijking),
+  // 2) de stijl waar de klant zelf naar aan het kijken is (stijlwisselaar,
+  // cookie voor deze sessie), 3) de stijl van de preview (merk.stijl).
+  const onzeStijl = geldigeStijl(c.merk && c.merk.stijl) || "stoer";
+  const magWisselen = isGewoon && isVoorproef;
+  const kijkStijl = magWisselen ? geldigeStijl(cookies().get("sbk_" + params.slug)?.value) : null;
+  const stijl = geldigeStijl(searchParams?.stijl) || kijkStijl || onzeStijl;
+  const wissel = magWisselen ? <StijlWissel slug={params.slug} huidige={stijl} onze={onzeStijl} merk={c.merk || {}} metBalk={proef.actief} /> : null;
+  const props = { content: c, slug: params.slug, isConcept, isReview: isVoorproef };
+  if (stijl === "modern") return <><ModernSite {...props} />{balk}{wissel}</>;
+  if (stijl === "persoonlijk") return <><PersoonlijkSite {...props} />{balk}{wissel}</>;
+  if (stijl === "ambacht") return <><AmbachtSite {...props} />{balk}{wissel}</>;
+  if (stijl === "strak") return <><StrakSite {...props} />{balk}{wissel}</>;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   let sloganAcc = null;
@@ -150,7 +165,9 @@ export default async function Page({ params, searchParams }) {
     .vp .hero{position:relative;background:var(--black);color:#fff;padding:3.4rem 1.3rem 3.8rem;text-align:center}
     .vp .eyebrow{display:inline-block;color:var(--orange);font-weight:700;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.9rem}
     .vp .hero h1{color:#fff;font-size:2rem;margin-bottom:.9rem}
-    .vp .hero h1 .ac{color:var(--orange)}
+    .vp .hero h1 .ac{color:var(--orange-hero)}
+    .vp .hero h1{text-shadow:0 2px 18px rgba(0,0,0,.25)}
+    .vp .hero .eyebrow,.vp .hero .tick{color:var(--orange-hero)}
     .vp .hero p{color:rgba(255,255,255,.82);max-width:620px;margin:0 auto 1.6rem;font-size:1.02rem}
     .vp .hbtns{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center;margin-bottom:1.8rem}
     .vp .bp{background:var(--orange);color:var(--on-orange);padding:.85rem 1.3rem;border-radius:10px;font-weight:700}
@@ -207,21 +224,26 @@ export default async function Page({ params, searchParams }) {
     .vp .sb2:hover{background:var(--orange);color:var(--black)}
     .vp .sb2.wa2:hover{background:#25D366;color:#fff}
     .vp .fbottom{max-width:1100px;margin:1.4rem auto 0;padding-top:1rem;border-top:1px solid rgba(255,255,255,.12);text-align:center;font-size:.82rem;color:rgba(255,255,255,.55)}
+    @media(max-width:639px){
+      .vp .nav{display:none}
+      .vp .grid2{gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+      .vp .grid2 .dc{display:flex;align-items:center;border:0;border-bottom:1px solid var(--line);border-radius:0}
+      .vp .grid2 .dc:last-child{border-bottom:0}
+      .vp .grid2 .dph{flex:none;width:76px;height:76px;margin:12px 0 12px 12px;border-radius:10px}
+      .vp .grid2 .db{padding:.8rem 1rem}
+      .vp .grid2 .db h3{font-size:1.02rem;margin-bottom:.15rem}
+      .vp .grid2 .db p{font-size:.88rem;margin-bottom:.2rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .vp .grid2 .dl{font-size:.84rem}
+    }
     @media(min-width:640px){.vp .grid2{grid-template-columns:1fr 1fr}.vp .nav{order:0;width:auto}.vp .ft-grid{grid-template-columns:1.4fr 1fr 1fr;text-align:left}.vp .fsoc{justify-content:flex-start}}
     @media(min-width:860px){.vp .grid3{grid-template-columns:1fr 1fr 1fr}.vp .hero h1{font-size:2.6rem}}
   `;
 
-  return (
+  return (<>
     <div className="vp" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {(isConcept || isVoorproef) && (
-        <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
-          {isConcept
-            ? "Conceptversie — nog niet gepubliceerd. Controleer en publiceer via het dashboard."
-            : "Dit is een eerste voorproefje van jouw website. Het geeft een goed beeld, maar teksten, foto's en details zijn nog voorbeeld en sommige knoppen werken nog niet — bij de definitieve site maken we alles samen met jou op maat, werkend en netjes af."}
-        </div>
-      )}
+      {(isConcept || isVoorproef) && <VoorproefLabel isConcept={isConcept} />}
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 42, width: "auto", display: "block" }} /> : <>{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span></>}</div>
@@ -237,7 +259,7 @@ export default async function Page({ params, searchParams }) {
 
       <section className="hero" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}>
         <span className="eyebrow">{b.branche || b.naam}</span>
-        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
+        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span className="ac">{sloganAcc[1]}</span> : null}</> : <>{heroKopBase}{heroAcc ? <> <span className="ac">{heroAcc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="hbtns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"} &rarr;</a>
@@ -258,7 +280,7 @@ export default async function Page({ params, searchParams }) {
           <div className="grid2">
             {diensten.map((d, i) => (
               <a className="dc" key={i} href={`/${params.slug}/dienst/${i}${modeQuery}`}>
-                <div className="dph" style={{ backgroundImage: `url(${d.beeld_url || nicheFoto(b.branche, i)})`, color: "transparent" }}></div>
+                <div className="dph" style={{ backgroundImage: `url(${d.beeld_url || nicheFoto(b.branche, i + 1)})`, color: "transparent" }}></div>
                 <div className="db"><h3>{d.titel}</h3><p>{d.omschrijving}</p><span className="dl">Lees meer &rarr;</span></div>
               </a>
             ))}
@@ -351,7 +373,7 @@ export default async function Page({ params, searchParams }) {
         </div>
         <div className="fbottom">&copy; {new Date().getFullYear()} {b.naam} &middot; Website door StudioBaris</div>
       </footer>
-      {balk}
     </div>
-  );
+    {balk}{wissel}
+  </>);
 }

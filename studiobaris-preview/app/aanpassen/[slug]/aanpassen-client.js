@@ -19,11 +19,8 @@ const K = {
 const HEAD = "'Plus Jakarta Sans', system-ui, sans-serif";
 const BODY = "'Plus Jakarta Sans', system-ui, sans-serif";
 
-const STIJLEN = [
-  { id: "stoer", naam: "Stoer", uitleg: "Donker, krachtig, grote koppen" },
-  { id: "modern", naam: "Modern", uitleg: "Licht, strak en zakelijk" },
-  { id: "persoonlijk", naam: "Persoonlijk", uitleg: "Warm, met portretfoto" },
-];
+import { STIJLEN as ALLE_STIJLEN } from "../../../lib/stijlen";
+const STIJLEN = ALLE_STIJLEN.map((s) => ({ id: s.id, naam: s.kort, uitleg: s.kortUitleg }));
 
 const PALETTEN = [
   { naam: "Antraciet & oranje", p: "#1F2328", s: "#F07B1D", a: "#F6F4F1", t: "#2E3338" },
@@ -480,7 +477,7 @@ export default function AanpassenClient({ slug, naam, live: liveStart, werk, wer
             <>
               <div style={blok}>
                 <h3 style={blokKop}>Stijl</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
                   {STIJLEN.map((s) => {
                     const aan = (m.stijl || "stoer") === s.id;
                     return (

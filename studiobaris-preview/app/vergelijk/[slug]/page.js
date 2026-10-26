@@ -36,9 +36,9 @@ export default async function VergelijkPagina({ params }) {
         <a href="/klanten" style={{ color: "#1d6fd1", fontSize: 14 }}>Terug naar Mijn previews</a>
       </div>
       <p style={{ color: "#777", fontSize: 14, marginBottom: 18, maxWidth: 780, lineHeight: 1.6 }}>
-        Dezelfde inhoud, drie jassen. Er wordt niets opnieuw gemaakt — je kiest alleen hoe het eruitziet.
+        Dezelfde inhoud, vijf jassen. Er wordt niets opnieuw gemaakt — je kiest alleen hoe het eruitziet.
         De stijl die je kiest is wat de klant te zien krijgt in zijn preview, zijn intakeformulier en uiteindelijk
-        op zijn website.
+        op zijn website. De klant kan op zijn preview ook zelf wisselen en een stijl kiezen; dat zie je dan als badge bij Mijn previews.
       </p>
 
       <StijlKiezer slug={p.slug} bedrijf={klant.company_name} huidige={klant.stijl || "stoer"} />

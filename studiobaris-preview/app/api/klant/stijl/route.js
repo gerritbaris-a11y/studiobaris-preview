@@ -5,7 +5,7 @@ import { setStijl, log } from "../../../../lib/server-data";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const STIJLEN = ["stoer", "modern", "persoonlijk"];
+import { STIJL_IDS as STIJLEN } from "../../../../lib/stijlen";
 
 // Kiest de stijl waarmee we verder gaan. Er wordt niets opnieuw gegenereerd:
 // het is dezelfde inhoud in een andere jas.
