@@ -1,5 +1,6 @@
 import { googleFontsHref } from "../../lib/preview";
 import { brandVars } from "../../lib/brand";
+import VoorproefLabel from "../[slug]/voorproef-label";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, voordeelIcon, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
@@ -64,14 +65,16 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
     .md{scroll-behavior:smooth}.md section[id]{scroll-margin-top:80px}
     .md .nav{display:flex;gap:1.3rem;font-size:.9rem;color:#55606e}
     .md .nav a:hover{color:var(--orange)}
-    @media(max-width:700px){.md .nav{order:3;width:100%;justify-content:center;gap:1rem;font-size:.86rem}}
+    @media(max-width:700px){.md .nav{display:none}}
     .md .cta{background:var(--orange);color:var(--on-orange);padding:.55rem 1.1rem;border-radius:8px;font-weight:700;font-size:.88rem}
     .md .hero{padding:4.5rem 0 4rem;background:linear-gradient(180deg,#ffffff,var(--bg))}
     .md .hero .wrap{max-width:820px}
-    .md .hero .eyebrow{color:var(--orange)}
+    .md .hero .eyebrow{color:var(--orange-hero)}
     .md .eyebrow{color:var(--orange-ink);font-weight:700;font-size:.78rem;letter-spacing:2px;text-transform:uppercase}
     .md .hero h1{font-size:clamp(2.1rem,6vw,3.4rem);margin:.7rem 0}
-    .md .hero h1 .ac{color:var(--orange)}
+    .md .hero h1 .ac{color:var(--orange-hero)}
+    .md .hero .tick{color:var(--orange-hero)}
+    .md .hero.metfoto h1{text-shadow:0 2px 18px rgba(0,0,0,.25)}
     .md .hero p{font-size:1.12rem;color:#55606e;max-width:58ch;margin-bottom:1.6rem}
     .md .btns{display:flex;gap:.8rem;flex-wrap:wrap}
     .md .bp{background:var(--orange);color:var(--on-orange);font-weight:700;padding:.9rem 1.4rem;border-radius:10px}
@@ -125,11 +128,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
   return (
     <div className="md" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {(isConcept || isReview) && (
-        <div style={{ background: "#b45309", color: "#fff", textAlign: "center", padding: "8px 12px", fontSize: 14, fontFamily: "system-ui, sans-serif" }}>
-          {isConcept ? "Conceptversie — nog niet gepubliceerd." : "Dit is een eerste voorproefje van jouw website. Het geeft een goed beeld, maar teksten, foto's en details zijn nog voorbeeld en sommige knoppen werken nog niet — bij de definitieve site maken we alles samen met jou op maat, werkend en netjes af."}
-        </div>
-      )}
+      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} />}
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
@@ -145,7 +144,7 @@ export default function ModernSite({ content, slug = "", isConcept, isReview }) 
 
       <section className="hero metfoto" id="home" style={heroAchtergrond(hero.achtergrond || heroFoto(b.branche), MERK_OVERLAY)}><div className="wrap">
         <div className="eyebrow">{b.branche || b.naam}</div>
-        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span style={{ color: "var(--orange)" }}>{sloganAcc[1]}</span> : null}</> : <>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</>}</h1>
+        <h1>{sloganAcc ? <>{sloganAcc[0]}{sloganAcc[1] ? <span className="ac">{sloganAcc[1]}</span> : null}</> : <>{kopBase}{acc ? <> <span className="ac">{acc}</span></> : null}</>}</h1>
         {hero.subkop && <p>{hero.subkop}</p>}
         <div className="btns">
           <a className="bp" href="#contact">{hero.cta_tekst || "Offerte aanvragen"}</a>

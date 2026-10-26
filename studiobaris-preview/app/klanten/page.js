@@ -1,4 +1,5 @@
 import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
+import { stijlKort } from "../../lib/stijlen";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
   FaseStepper, Contactpersoon, LinkChips,
@@ -232,6 +233,15 @@ export default async function KlantenPage() {
             <FaseStepper slug={r.slug} huidige={r.pipeline_status} bedrijf={r.company_name} magKlaar={beheer} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", alignItems: "center" }}>
               <BetaalBadge status={r.betaal_status} />
+              {r.klant_stijl && (
+                <span
+                  title="De klant heeft op zijn preview zelf deze stijl gekozen. Hij mag nog wisselen."
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: "#5B3A9E", background: "#F1ECFB", padding: "2px 10px", borderRadius: 999 }}
+                >
+                  ★ Klant koos stijl: {stijlKort(r.klant_stijl)}
+                  {r.klant_stijl_op && <span style={{ fontWeight: 500 }}>({new Date(r.klant_stijl_op).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })})</span>}
+                </span>
+              )}
               {reactieOp && (
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "#9E3B2E" }}>
                   ● Klant reageerde ({REACTIE_LABEL[r.laatste_feedback_type] || r.laatste_feedback_type || "reactie"}) op {reactieOp}

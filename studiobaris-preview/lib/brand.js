@@ -18,6 +18,18 @@ function inkt(hex) {
   return rgbNaarHex(rgb);
 }
 
+// Accentkleur als tekst op een DONKERE achtergrond (het accentwoord in de kop
+// over de hero-foto, labels op donker): lichter maken tot hij duidelijk afsteekt
+// tegen de basiskleur. Een donkergroen accent op een donkere foto viel weg.
+// Lukt dat niet (bijv. lichte basiskleur), dan gewoon wit.
+function opDonker(hex, achter) {
+  let rgb = hexNaarRgb(hex);
+  const bg = hexNaarRgb(achter) || [15, 15, 15];
+  if (!rgb) return "#fff";
+  for (let i = 0; i < 25 && contrast(rgb, bg) < 6; i++) rgb = rgb.map((v) => v + (255 - v) * 0.12);
+  return contrast(rgb, bg) >= 6 ? rgbNaarHex(rgb) : "#fff";
+}
+
 // Gedeelde huisstijl-variabelen uit het merk-blok (voor alle stijlen en detailpagina's).
 export function brandVars(m = {}) {
   const sec = m.secundaire_kleur || "#FF8300";
@@ -27,6 +39,8 @@ export function brandVars(m = {}) {
     "--orange": sec,
     "--orange-d": "color-mix(in srgb, " + sec + " 85%, black)",
     "--orange-ink": inkt(sec),
+    "--orange-hero": opDonker(sec, m.primaire_kleur || "#0F0F0F"),
+    "--orange-zwart": opDonker(sec, "#0F1214"), // stijl Strak: accent op bijna-zwart
     "--on-orange": opAccent(sec),
     "--bg": m.accent_kleur || "#F8F9FA",
     "--line": "#E5E7EB",

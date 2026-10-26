@@ -6,7 +6,7 @@ import { POST as intakePost } from "../../intake/route";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const STIJLEN = ["stoer", "modern", "persoonlijk"];
+import { STIJL_IDS as STIJLEN } from "../../../../lib/stijlen";
 
 function tekst(x) {
   if (Array.isArray(x)) return x.filter(Boolean).join(", ");

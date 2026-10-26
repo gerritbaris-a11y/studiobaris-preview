@@ -49,7 +49,8 @@ export const FONTS = [
   "Work Sans", "DM Sans", "Open Sans", "Roboto", "Roboto Slab", "Playfair Display",
   "Bitter", "Nunito", "Raleway", "Rubik",
 ];
-export const STIJLEN = ["stoer", "modern", "persoonlijk"];
+export { STIJL_IDS as STIJLEN } from "./stijlen";
+import { STIJL_IDS as STIJLEN } from "./stijlen";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const MAX_TEKST = 4000;

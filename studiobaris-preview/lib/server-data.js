@@ -351,6 +351,11 @@ export async function setStijl(slug, stijl) {
   return await rpc("sb_set_stijl", { p_slug: slug, p_stijl: stijl });
 }
 
+// Klant kiest zelf een stijl op zijn preview. Geeft true als de preview bestaat.
+export async function klantKiestStijl(slug, stijl) {
+  return await rpc("sb_klant_kiest_stijl", { p_slug: slug, p_stijl: stijl });
+}
+
 export async function deleteKlant(slug) {
   return await rpc("delete_klant", { p_slug: slug });
 }

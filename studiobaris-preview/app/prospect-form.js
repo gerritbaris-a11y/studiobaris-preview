@@ -35,11 +35,7 @@ function hexNaarRgba(hex, a) {
 const BRANCHES = ["Schilder", "Timmerman", "Glazenzetter", "Loodgieter", "Installateur / sanitair", "Aannemer", "Tegelzetter", "Stukadoor", "Hovenier", "Elektricien", "Dakdekker", "Metselaar", "Schoonmaak"];
 const KERNWAARDEN = ["Vakmanschap", "Betrouwbaar", "Eerlijk", "Transparant", "Verantwoordelijk", "Klantgericht", "Goed bereikbaar", "Netjes werken", "Persoonlijk", "Afspraak = afspraak", "Duurzaam", "Passie voor het vak"];
 const INTERESSE = ["Website", "Plugins", "Hosting", "Domeinnaam"];
-const STIJLEN = [
-  { id: "stoer", naam: "Direct & Stoer", uitleg: "Donkere hero, krachtig, grote bel-knoppen. Voor wie snel gebeld wil worden." },
-  { id: "modern", naam: "Strak & Modern", uitleg: "Licht, rustig en typografisch, met uitklapbare diensten." },
-  { id: "persoonlijk", naam: "Warm & Persoonlijk", uitleg: "De vakman centraal, met een persoonlijk verhaal en stappen." },
-];
+import { STIJLEN } from "../lib/stijlen";
 
 // Stappen van de publieke intake (alleen voor bezoekers van studiobaris.nl;
 // collega's en het aanpasformulier zien alles op één pagina). Per stap een
