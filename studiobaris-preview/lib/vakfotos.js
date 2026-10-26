@@ -41,6 +41,7 @@ export const VAKGEBIEDEN = [
   { key: "stukadoor", label: "Stukadoor" },
   { key: "tegelzetter", label: "Tegelzetter" },
   { key: "aannemer", label: "Aannemer / klusbedrijf" },
+  { key: "stoffeerder", label: "Stoffeerder / meubelmaker" },
 ];
 
 export function isVakgebied(key) {
