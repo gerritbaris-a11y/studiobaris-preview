@@ -27,6 +27,7 @@ export function nicheKey(branche) {
   if (b.includes("schilder") || b.includes("behang")) return "schilder";
   if (b.includes("hovenier") || b.includes("tuin")) return "hovenier";
   if (b.includes("loodgiet") || b.includes("sanitair") || b.includes("installat")) return "loodgieter";
+  if (b.includes("stoffeer") || b.includes("meubel")) return "stoffeerder";
   if (b.includes("timmer")) return "timmerman";
   if (b.includes("stukad")) return "stukadoor";
   if (b.includes("tegel")) return "tegelzetter";
