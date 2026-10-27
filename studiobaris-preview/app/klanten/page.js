@@ -49,15 +49,15 @@ function wanneer(iso) {
 
 function ProspectActiviteit({ p }) {
   if (!p) return null;
-  const regel = { fontSize: 12.5, color: "#524A40", whiteSpace: "nowrap" };
-  const uit = { ...regel, color: "#B0A697" };
-  const aan = (b) => ({ ...regel, fontWeight: 700, color: b ? "#0f6e56" : "#524A40" });
+  const regel = { fontSize: 12.5, color: "#4A5560", whiteSpace: "nowrap" };
+  const uit = { ...regel, color: "#6F7A85" };
+  const aan = (b) => ({ ...regel, fontWeight: 700, color: b ? "#0f6e56" : "#4A5560" });
   const geplaatst = Number(p.geplaatst) || 0;
   // Eerste keer dat de demo-app geopend werd (sinds 22 okt een eigen kolom,
   // omdat de proef nu al bij "Benaderd" start, vóór het openen).
   const appOpenOp = p.app_geopend_op || (p.gestart_via === "app" ? p.gestart_op : null);
   return (
-    <div style={{ display: "grid", gap: 3, textAlign: "right", marginTop: 6, padding: "8px 10px", background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10 }}>
+    <div style={{ display: "grid", gap: 3, textAlign: "right", marginTop: 6, padding: "8px 10px", background: "#F7F4EE", border: "1px solid #ECE8DF", borderRadius: 10 }}>
       {p.bekeken_aantal > 0
         ? <span style={aan(true)}>● Preview bekeken {p.bekeken_aantal}× · laatst {wanneer(p.bekeken_laatst)}</span>
         : <span style={uit}>○ Preview nog niet bekeken</span>}
@@ -77,7 +77,7 @@ function BetaalBadge({ status }) {
     akkoord: ["#854f0b", "Akkoord - aanbetaling nog niet binnen"],
     mislukt: ["#b91c1c", "Betaling mislukt"],
   };
-  const [kleur, label] = map[status] || ["#9A9084", "Nog geen akkoord"];
+  const [kleur, label] = map[status] || ["#6F7A85", "Nog geen akkoord"];
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
 }
 
@@ -127,7 +127,7 @@ export default async function KlantenPage() {
         <div style={{ ...card, marginBottom: 16, background: KLEUR.papier }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
             <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Opgepakt, nog geen preview</h2>
-            <span style={{ fontSize: 13, color: "#9A9084" }}>{mijnLeads.length} {mijnLeads.length === 1 ? "lead staat" : "leads staan"} op jouw naam</span>
+            <span style={{ fontSize: 13, color: "#6F7A85" }}>{mijnLeads.length} {mijnLeads.length === 1 ? "lead staat" : "leads staan"} op jouw naam</span>
             <a href="/leads?wie=mij" style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.klei }}>Naar de leadlijst</a>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
@@ -135,13 +135,13 @@ export default async function KlantenPage() {
               <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px" }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{l.bedrijfsnaam}</div>
-                  <div style={{ fontSize: 12.5, color: "#6B6258" }}>
+                  <div style={{ fontSize: 12.5, color: "#4A5560" }}>
                     {[l.vakgebied, l.plaats].filter(Boolean).join(" · ")}
                     {l.status === "benaderd" && <span style={{ color: "#9E3B2E", fontWeight: 600 }}> · benaderd</span>}
                     {l.alleen_socials && <span style={{ color: "#9E3B2E", fontWeight: 600 }}> · geen website</span>}
                   </div>
                 </div>
-                {l.telefoon && <a href={`tel:${String(l.telefoon).replace(/\s/g, "")}`} style={{ fontSize: 13, fontWeight: 600, color: "#2B2724", textDecoration: "none" }}>{l.telefoon}</a>}
+                {l.telefoon && <a href={`tel:${String(l.telefoon).replace(/\s/g, "")}`} style={{ fontSize: 13, fontWeight: 600, color: "#1A2B3D", textDecoration: "none" }}>{l.telefoon}</a>}
                 <a href={`/intake?lead=${l.id}`} target="_blank" rel="noreferrer"
                   style={{ background: KLEUR.klei, color: "#fff", padding: "8px 13px", borderRadius: 9, fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
                   Preview maken
@@ -176,11 +176,11 @@ export default async function KlantenPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
-                <div style={{ fontSize: 13, color: "#6B6258" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
-                {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#6B6258", marginTop: 1 }}>{r.b_adres.trim()}</div>}
-                {beheer && review.bron && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Via: {review.bron}</div>}
-                {!beheer && r.verzamelaar && r.verzamelaar !== naam && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Gemaakt door {r.verzamelaar}</div>}
-                {benaderdDoor[r.slug] && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>Benaderd door {benaderdDoor[r.slug]}</div>}
+                <div style={{ fontSize: 13, color: "#4A5560" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
+                {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#4A5560", marginTop: 1 }}>{r.b_adres.trim()}</div>}
+                {beheer && review.bron && <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 2 }}>Via: {review.bron}</div>}
+                {!beheer && r.verzamelaar && r.verzamelaar !== naam && <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 2 }}>Gemaakt door {r.verzamelaar}</div>}
+                {benaderdDoor[r.slug] && <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 2 }}>Benaderd door {benaderdDoor[r.slug]}</div>}
                 {review.kleur_bron && (
                   <div
                     title={review.kleur_bron === "gegokt" ? "Geen logo of website gevonden: kleuren zijn afgeleid uit de branche. Even nakijken." : "Kleuren overgenomen uit: " + review.kleur_bron}
@@ -197,7 +197,7 @@ export default async function KlantenPage() {
                 )}
                 {/* Wat de klant na akkoord op de gegevenspagina invulde. */}
                 {beheer && review.gegevens_aangevuld_op && (
-                  <div style={{ fontSize: 12, color: "#6B6258", marginTop: 6, lineHeight: 1.5, wordBreak: "break-word" }}>
+                  <div style={{ fontSize: 12, color: "#4A5560", marginTop: 6, lineHeight: 1.5, wordBreak: "break-word" }}>
                     <strong>Gegevens na akkoord:</strong>{" "}
                     {[
                       review.adres && "Adres: " + review.adres,
@@ -212,13 +212,13 @@ export default async function KlantenPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {beheer ? (
                   <>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#6F7A85", whiteSpace: "nowrap" }}>
                       {r.gepubliceerd ? "● Online" : "○ Offline"}
                     </span>
                     <PublishToggle slug={r.slug} gepubliceerd={r.gepubliceerd} />
                   </>
                 ) : (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#9A9084", whiteSpace: "nowrap" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#6F7A85", whiteSpace: "nowrap" }}>
                     {r.gepubliceerd ? "Online" : "Offline"}
                   </span>
                 )}
@@ -268,7 +268,7 @@ export default async function KlantenPage() {
                     title="Deze preview is aangevraagd via het formulier op studiobaris.nl, niet gemaakt door iemand van het team"
                     style={{
                       fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 999,
-                      background: "#FBF8F2", border: "1px solid #E3DACB", color: "#8A7C68", whiteSpace: "nowrap",
+                      background: "#FBF8F2", border: "1px solid #E3DED3", color: "#4A5560", whiteSpace: "nowrap",
                     }}
                   >
                     Via website
@@ -287,8 +287,8 @@ export default async function KlantenPage() {
       {afgewezen.length > 0 && (
         <div style={{ marginTop: 28 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-            <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800, color: "#9A9084" }}>Geen interesse</h2>
-            <span style={{ fontSize: 13, color: "#9A9084" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
+            <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800, color: "#6F7A85" }}>Geen interesse</h2>
+            <span style={{ fontSize: 13, color: "#6F7A85" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             {afgewezen.map((r) => {
@@ -298,7 +298,7 @@ export default async function KlantenPage() {
               <div key={r.slug} data-klant={zoektekst} data-fase="archief" style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px", opacity: 0.9 }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{r.company_name || r.slug}</div>
-                  <div style={{ fontSize: 12.5, color: "#9A9084" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
+                  <div style={{ fontSize: 12.5, color: "#6F7A85" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 </div>
                 <TerugNaarActiefKnop slug={r.slug} bedrijf={r.company_name} />
               </div>

@@ -10,7 +10,7 @@ function euro(n) {
   return "€ " + v.toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#2B2724" };
+const wrap = { maxWidth: 1040, margin: "4vh auto", padding: "0 18px", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: "#1A2B3D" };
 
 export default async function TeamPage() {
   const sessie = leesSessie();
@@ -71,14 +71,14 @@ export default async function TeamPage() {
 
   const cel = (label, waarde, kleur) => (
     <div style={{ flex: "1 1 90px", minWidth: 90 }}>
-      <div style={{ fontSize: 11, color: "#9A9084" }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: kleur || "#2B2724" }}>{waarde}</div>
+      <div style={{ fontSize: 11, color: "#6F7A85" }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: kleur || "#1A2B3D" }}>{waarde}</div>
     </div>
   );
 
   const persoonHeader = (t) => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-      <span style={{ width: 34, height: 34, borderRadius: 10, background: t.rol === "beheer" ? "#2B2724" : "#C05A38", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>
+      <span style={{ width: 34, height: 34, borderRadius: 10, background: t.rol === "beheer" ? "#1A2B3D" : "#1A2B3D", color: "#fff", display: "grid", placeItems: "center", fontWeight: 800 }}>
         {t.naam.charAt(0).toUpperCase()}
       </span>
       <div style={{ fontSize: 16, fontWeight: 700 }}>{t.naam}</div>
@@ -99,7 +99,7 @@ export default async function TeamPage() {
   const verkoperCard = (t) => {
     const o = omzetVan(t.naam);
     return (
-      <div key={t.id} style={{ background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div key={t.id} style={{ background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
         {persoonHeader(t)}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
           {cel("Klanten", o.aantal)}
@@ -120,7 +120,7 @@ export default async function TeamPage() {
   const beheerMiniCard = (t) => {
     const o = omzetVan(t.naam);
     return (
-      <div key={t.id} style={{ background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div key={t.id} style={{ background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
         {persoonHeader(t)}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
           {cel("Klanten", o.aantal)}
@@ -138,7 +138,7 @@ export default async function TeamPage() {
       titel="Team & omzet"
       sub="Wie verkocht wat, en wat staat er nog open."
     >
-      <div style={{ background: "linear-gradient(135deg,#2B2724,#2B2724)", color: "#fff", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
+      <div style={{ background: "linear-gradient(135deg,#1A2B3D,#1A2B3D)", color: "#fff", borderRadius: 16, padding: "16px 20px", marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Totaal — verkoopteam</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           {totVak("Verkocht", euro(totaal.verkoopbedrag))}
@@ -151,24 +151,24 @@ export default async function TeamPage() {
 
       {verkopers.length > 0 && (
         <>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#9A9084", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Verkoop</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#6F7A85", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Verkoop</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 20 }}>
             {verkopers.map(verkoperCard)}
           </div>
         </>
       )}
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#9A9084", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Beheer</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#6F7A85", textTransform: "uppercase", letterSpacing: 1, margin: "4px 0 10px" }}>Beheer</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
         {beheer.map(beheerMiniCard)}
       </div>
 
       {beheer.length > 0 && (
-        <div style={{ background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "14px 16px" }}>
+        <div style={{ background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px" }}>
           <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>
             Omzet — {beheer.map((t) => t.naam).join(" & ")} samen
           </div>
-          <div style={{ fontSize: 12, color: "#9A9084", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: "#6F7A85", marginBottom: 10 }}>
             50/50, ongeacht wie de verkoop deed — het komt toch op één rekening samen.
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>

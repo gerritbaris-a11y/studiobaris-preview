@@ -17,7 +17,7 @@ export default function DocumentenKaart() {
     <div style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 16, padding: "16px 18px", marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Documenten</h2>
-        <span style={{ fontSize: 13, color: "#9A9084" }}>altijd bij de hand</span>
+        <span style={{ fontSize: 13, color: "#6F7A85" }}>altijd bij de hand</span>
       </div>
       <div style={{ display: "grid", gap: 8 }}>
         {docs.map(([bestand, titel, sub]) => (
@@ -29,13 +29,13 @@ export default function DocumentenKaart() {
             style={{
               display: "flex", alignItems: "center", gap: 12, textDecoration: "none",
               background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 10,
-              padding: "11px 13px", color: "#2B2724",
+              padding: "11px 13px", color: "#1A2B3D",
             }}
           >
             <span style={{ fontSize: 18, lineHeight: 1 }}>📄</span>
             <span style={{ flex: "1 1 auto", minWidth: 0 }}>
               <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>{titel}</span>
-              <span style={{ display: "block", fontSize: 12.5, color: "#6B6258" }}>{sub}</span>
+              <span style={{ display: "block", fontSize: 12.5, color: "#4A5560" }}>{sub}</span>
             </span>
             <span style={{ fontSize: 13, fontWeight: 700, color: KLEUR.klei, whiteSpace: "nowrap" }}>Openen ↗</span>
           </a>

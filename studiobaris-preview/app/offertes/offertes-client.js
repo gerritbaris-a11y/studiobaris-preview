@@ -419,7 +419,7 @@ function NieuweOfferteModal({ klanten, onSluiten, onOpgeslagen }) {
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(43,39,36,.35)",
+        position: "fixed", inset: 0, background: "rgba(26,43,61,.35)",
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         padding: "40px 16px", overflowY: "auto", zIndex: 50,
       }}
@@ -539,7 +539,7 @@ function LogOfferteModal({ klanten, onSluiten, onOpgeslagen }) {
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(43,39,36,.35)",
+        position: "fixed", inset: 0, background: "rgba(26,43,61,.35)",
         display: "flex", alignItems: "flex-start", justifyContent: "center",
         padding: "40px 16px", overflowY: "auto", zIndex: 50,
       }}

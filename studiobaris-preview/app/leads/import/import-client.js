@@ -120,7 +120,7 @@ export default function ImportClient() {
         onClick={start}
         disabled={!bestand || bezig}
         style={{
-          background: !bestand || bezig ? "#B0A697" : "#C05A38",
+          background: !bestand || bezig ? "#6F7A85" : "#1A2B3D",
           color: "#fff", border: "none", padding: "12px 22px", borderRadius: 10,
           fontWeight: 700, fontSize: 15, cursor: !bestand || bezig ? "default" : "pointer",
         }}
@@ -130,11 +130,11 @@ export default function ImportClient() {
 
       {bezig && (
         <div style={{ marginTop: 14, background: "#eef2f6", borderRadius: 999, height: 10, overflow: "hidden" }}>
-          <div style={{ width: pct + "%", height: "100%", background: "#C05A38", transition: "width .2s" }} />
+          <div style={{ width: pct + "%", height: "100%", background: "#1A2B3D", transition: "width .2s" }} />
         </div>
       )}
       {bezig && (
-        <p style={{ fontSize: 13, color: "#6B6258", marginTop: 8 }}>
+        <p style={{ fontSize: 13, color: "#4A5560", marginTop: 8 }}>
           {gedaan.toLocaleString("nl-NL")} van {totaal.toLocaleString("nl-NL")} rijen verwerkt…
         </p>
       )}

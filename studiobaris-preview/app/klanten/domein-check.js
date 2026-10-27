@@ -46,7 +46,7 @@ export default function DomeinCheck() {
     <div style={card}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Nog geen domein?</h2>
-        <span style={{ fontSize: 13, color: "#9A9084" }}>kijk of de gewenste naam nog vrij is</span>
+        <span style={{ fontSize: 13, color: "#6F7A85" }}>kijk of de gewenste naam nog vrij is</span>
       </div>
 
       <form onSubmit={check} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -59,7 +59,7 @@ export default function DomeinCheck() {
           {bezig ? "Bezig met zoeken…" : "Check"}
         </button>
       </form>
-      <div style={{ fontSize: 12, color: "#9A9084", marginTop: 6 }}>Zonder extensie kijken we naar .nl.</div>
+      <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 6 }}>Zonder extensie kijken we naar .nl.</div>
 
       {fout && <div style={{ marginTop: 10, fontSize: 13.5, color: KLEUR.rust.tekst }}>{fout}</div>}
 

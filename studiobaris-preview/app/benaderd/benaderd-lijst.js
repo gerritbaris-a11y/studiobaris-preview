@@ -33,7 +33,7 @@ function Schakel({ titel, waarde, zet }) {
             onClick={() => zet(o.key)}
             style={{
               padding: "6px 12px", borderRadius: 999, fontSize: 13, fontWeight: aan ? 700 : 600,
-              color: aan ? "#fff" : "#7A7168", background: aan ? KLEUR.klei : "#fff",
+              color: aan ? "#fff" : "#4A5560", background: aan ? KLEUR.klei : "#fff",
               border: `1px solid ${aan ? KLEUR.klei : KLEUR.lijn}`, cursor: "pointer", fontFamily: "inherit",
             }}
           >
@@ -106,8 +106,8 @@ export default function BenaderdLijst({ rijen, beheer, totaal = 0 }) {
     setZoek(""); setBekeken(""); setApp(""); setProject(""); setBranche(""); setPlaats(""); setVerkoper("");
   }
 
-  const regel = { fontSize: 12.5, color: "#524A40", whiteSpace: "nowrap" };
-  const uit = { ...regel, color: "#B0A697" };
+  const regel = { fontSize: 12.5, color: "#4A5560", whiteSpace: "nowrap" };
+  const uit = { ...regel, color: "#6F7A85" };
   const aan = { ...regel, fontWeight: 700, color: "#0f6e56" };
 
   return (
@@ -127,7 +127,7 @@ export default function BenaderdLijst({ rijen, beheer, totaal = 0 }) {
             <div key={l} style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ fontSize: 12, color: KLEUR.gedempt, fontWeight: 700 }}>{l}</div>
               <div style={{ fontFamily: HEAD, fontSize: 26, fontWeight: 800, lineHeight: 1.2 }}>{pct}%</div>
-              <div style={{ fontSize: 12, color: "#6B6258" }}>{n} {uitleg === "van je previews" ? `van ${van} previews` : `van ${van} benaderd`}</div>
+              <div style={{ fontSize: 12, color: "#4A5560" }}>{n} {uitleg === "van je previews" ? `van ${van} previews` : `van ${van} benaderd`}</div>
               <div style={{ height: 6, background: KLEUR.papier, borderRadius: 999, marginTop: 8, overflow: "hidden" }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: KLEUR.klei, borderRadius: 999 }} />
               </div>
@@ -175,8 +175,8 @@ export default function BenaderdLijst({ rijen, beheer, totaal = 0 }) {
             <div key={r.slug} style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{r.bedrijf}</div>
-                <div style={{ fontSize: 12.5, color: "#6B6258" }}>{[r.branche, r.plaats].filter(Boolean).join(" · ") || "—"}</div>
-                <div style={{ fontSize: 12, color: "#9A9084", marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: "#4A5560" }}>{[r.branche, r.plaats].filter(Boolean).join(" · ") || "—"}</div>
+                <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 2 }}>
                   Benaderd {wanneer(r.benaderd_op)}{r.benaderd_door ? ` door ${r.benaderd_door}` : ""}
                 </div>
                 {r.telefoon && (

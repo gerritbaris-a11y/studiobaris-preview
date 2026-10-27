@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { KLEUR, HEAD, BODY, NAV, NAV_GROEPEN } from "./werkplek-stijl";
+import { KLEUR, HEAD, BODY, NAV_BEHEER, NAV_VERKOPER } from "./werkplek-stijl";
+import WerkplekIcoon from "./werkplek-icoon";
 
 // Eén navigatiegroep (bijv. "Financieel") als knop met een uitklapmenu.
 // Vervangt meerdere losse tabbladen door één, zodat de balk overzichtelijk blijft.
@@ -12,8 +13,7 @@ function NavGroep({ groep, actief }) {
   const aan = groep.items.some((n) => n.href === actief);
 
   // Uitklapmenu positioneren t.o.v. de knop en met position:fixed tonen, zodat
-  // het niet wordt afgesneden door de horizontaal scrollende navigatiebalk
-  // (overflow-x:auto op de ouder knipt anders ook de verticale overloop af).
+  // het altijd boven de rest van de pagina ligt.
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
@@ -32,8 +32,8 @@ function NavGroep({ groep, actief }) {
         style={{
           padding: "9px 14px", borderRadius: 999, fontSize: 14,
           fontWeight: aan ? 700 : 600,
-          color: aan ? "#fff" : "#7A7168",
-          background: aan ? KLEUR.klei : "transparent",
+          color: aan ? "#fff" : KLEUR.gedempt,
+          background: aan ? KLEUR.navy : "transparent",
           border: "none", cursor: "pointer", whiteSpace: "nowrap",
           fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 5,
         }}
@@ -73,63 +73,71 @@ function NavGroep({ groep, actief }) {
   );
 }
 
-// De gedeelde schil voor alle werkplek-schermen: warme kop, navigatie, papier-achtergrond
+// Eén losse knop in de navigatie.
+function NavLink({ n, aan }) {
+  return (
+    <a
+      href={n.href}
+      style={{
+        padding: "9px 14px", borderRadius: 999, fontSize: 14,
+        fontWeight: aan ? 700 : 600,
+        color: aan ? "#fff" : KLEUR.gedempt,
+        background: aan ? KLEUR.navy : "transparent",
+        textDecoration: "none", whiteSpace: "nowrap", flex: "0 0 auto",
+      }}
+    >
+      {n.label}
+    </a>
+  );
+}
+
+// De gedeelde schil voor alle werkplek-schermen: kop met logo, navigatie, crème achtergrond
 // en de juiste fonts. Zo voelt elk scherm als één product. De inhoud van het scherm
 // geef je mee als children.
 export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts, children }) {
   return (
     <div style={{ minHeight: "100vh", background: KLEUR.papier, color: KLEUR.inkt, fontFamily: BODY }}>
 
-      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,247,240,.9)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn}` }}>
+      <WerkplekIcoon />
+      {/* Op een telefoon is er geen ruimte voor "werkplek" en "Ingelogd als …" naast het logo. */}
+      <style>{`@media (max-width: 600px) { .wp-smal-weg { display: none !important; } }`}</style>
+      <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(247,244,238,.92)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${KLEUR.lijn2}` }}>
         <div style={{ maxWidth: 1120, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Zelfde beeldmerk als het app-icoon en de facturen/offertes: navy met goud "SB". */}
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: KLEUR.navy, color: KLEUR.goud, display: "grid", placeItems: "center", fontFamily: HEAD, fontWeight: 800, fontSize: 13, letterSpacing: 0.5 }}>SB</div>
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontFamily: HEAD, fontWeight: 800, fontSize: 15 }}>StudioBaris</div>
-            <div style={{ fontSize: 11, color: KLEUR.label, textTransform: "uppercase", letterSpacing: 1 }}>werkplek</div>
-          </div>
+          {/* Logo uit de huisstijl (Drive: Logo's / studiobaris-alle-logos / wordmark-navy.svg). */}
+          <a href={beheer ? "/vandaag" : "/klanten"} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }} aria-label="StudioBaris werkplek">
+            <img src="/werkplek/wordmark-navy.svg" alt="StudioBaris" width={124} height={40} style={{ display: "block", height: 40, width: "auto" }} />
+            <span className="wp-smal-weg" style={{ fontSize: 11, fontWeight: 700, color: KLEUR.goudTekst, textTransform: "uppercase", letterSpacing: 1, paddingTop: 4 }}>werkplek</span>
+          </a>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 13, color: KLEUR.gedempt, whiteSpace: "nowrap" }}>
+            <span className="wp-smal-weg" style={{ fontSize: 13, color: KLEUR.gedempt, whiteSpace: "nowrap" }}>
               Ingelogd als <strong style={{ color: KLEUR.inkt }}>{naam}</strong>
             </span>
             <Knop href="/api/auth/logout" kind="secondair" klein>Uitloggen</Knop>
           </div>
         </div>
-        {/* Navigatie: het actieve scherm is een gevulde pil, dus je ziet in één oogopslag waar je bent. */}
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px 8px", display: "flex", gap: 6, overflowX: "auto" }}>
-          {/* Altijd bij de hand: een nieuwe preview beginnen, vanaf elk scherm. */}
+        {/* Navigatie: het actieve scherm is een gevulde navy pil. Past de rij niet
+            (smal scherm), dan loopt hij door naar een tweede regel i.p.v. te scrollen. */}
+        <nav style={{ maxWidth: 1120, margin: "0 auto", padding: "0 20px 10px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {/* De ene gouden hoofdknop: een nieuwe preview beginnen, vanaf elk scherm. */}
           <a
             href="/intake"
             style={{
-              padding: "9px 14px", borderRadius: 999, fontSize: 14, fontWeight: 700,
-              color: "#fff", background: KLEUR.klei, textDecoration: "none", whiteSpace: "nowrap",
+              padding: "9px 16px", borderRadius: 999, fontSize: 14, fontWeight: 700,
+              color: KLEUR.navy, background: KLEUR.goud, textDecoration: "none", whiteSpace: "nowrap",
               flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6,
+              boxShadow: "0 4px 12px rgba(199,154,86,.30)",
             }}
           >
             + Nieuwe preview
           </a>
-          {NAV.filter((n) => beheer || !n.beheer).map((n) => {
-            const aan = n.href === actief;
-            return (
-              <a
-                key={n.href}
-                href={n.href}
-                style={{
-                  padding: "9px 14px", borderRadius: 999, fontSize: 14,
-                  fontWeight: aan ? 700 : 600,
-                  color: aan ? "#fff" : "#7A7168",
-                  background: aan ? KLEUR.klei : "transparent",
-                  textDecoration: "none", whiteSpace: "nowrap",
-                }}
-              >
-                {n.label}
-              </a>
-            );
-          })}
-          {NAV_GROEPEN.filter((g) => beheer || !g.beheer).map((g) => (
-            <NavGroep key={g.label} groep={g} actief={actief} />
-          ))}
-        </div>
+          {(beheer ? NAV_BEHEER : NAV_VERKOPER).map((n) =>
+            n.items ? (
+              <NavGroep key={n.label} groep={n} actief={actief} />
+            ) : (
+              <NavLink key={n.href} n={n} aan={n.href === actief} />
+            )
+          )}
+        </nav>
       </header>
 
       <main style={{ maxWidth: 1120, margin: "0 auto", padding: "24px 20px 90px" }}>
@@ -149,17 +157,18 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
 }
 
 // Eén knop voor de hele werkplek, zodat knoppen overal hetzelfde ogen en goed opvallen.
-// kind: "primair" (oranje, de hoofdactie) | "secondair" (wit met rand) | "stil" (alleen tekst)
+// kind: "primair" (navy, de hoofdactie) | "goud" (alleen de ene hoofdknop per scherm) | "secondair" (wit met rand) | "stil" (alleen tekst)
 export function Knop({ href, onClick, kind = "secondair", klein, children, style, ...rest }) {
   const soorten = {
-    primair: { background: KLEUR.klei, color: "#fff", border: `1px solid ${KLEUR.klei}` },
+    primair: { background: KLEUR.navy, color: "#fff", border: `1px solid ${KLEUR.navy}` },
+    goud: { background: KLEUR.goud, color: KLEUR.navy, border: `1px solid ${KLEUR.goud}` },
     secondair: { background: "#fff", color: KLEUR.inkt, border: `1px solid ${KLEUR.lijn2}` },
     stil: { background: "transparent", color: KLEUR.gedempt, border: "1px solid transparent" },
   };
   const basis = {
     display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
     fontFamily: "inherit", fontWeight: 700, textDecoration: "none", cursor: "pointer",
-    whiteSpace: "nowrap", borderRadius: 10,
+    whiteSpace: "nowrap", borderRadius: 999,
     fontSize: klein ? 13 : 14,
     padding: klein ? "7px 12px" : "10px 16px",
     ...(soorten[kind] || soorten.secondair),

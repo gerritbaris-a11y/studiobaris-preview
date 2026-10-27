@@ -21,7 +21,7 @@ function status(r) {
   const com = Number(r.commissie) || 0;
   if (com > 0 && uit >= com) return ["Volledig uitbetaald", "#0f6e56", "#e7f3ea"];
   if (uit > 0) return ["Deels uitbetaald", "#854f0b", "#fdf1dc"];
-  return ["Wacht op betaling", "#7A7168", "#F3EEE6"];
+  return ["Wacht op betaling", "#4A5560", "#F3EEE6"];
 }
 
 export default async function VerdienstenPage({ searchParams }) {

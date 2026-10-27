@@ -42,11 +42,11 @@ export default function ProefStatus({ proef, magVerlengen }) {
 
   const vak = {
     display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 12px",
-    background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10, padding: "8px 12px", fontSize: 13,
+    background: "#F7F4EE", border: "1px solid #ECE8DF", borderRadius: 10, padding: "8px 12px", fontSize: 13,
   };
   const knop = {
-    fontSize: 12.5, padding: "6px 11px", borderRadius: 8, border: "1px solid #C05A38",
-    background: "#C05A38", color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+    fontSize: 12.5, padding: "6px 11px", borderRadius: 8, border: "1px solid #1A2B3D",
+    background: "#1A2B3D", color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
   };
   const knopLicht = { ...knop, background: "#fff", color: "#a35400" };
 
@@ -55,8 +55,8 @@ export default function ProefStatus({ proef, magVerlengen }) {
   if (!proef.gestart_op) {
     return (
       <div style={vak}>
-        <span style={{ fontWeight: 700, color: "#2B2724" }}>Proefperiode app</span>
-        <span style={{ color: "#8A7C68" }}>Nog niet gestart. Start vanzelf zodra je Benaderd aanvinkt, of als de prospect de app eerder opent.</span>
+        <span style={{ fontWeight: 700, color: "#1A2B3D" }}>Proefperiode app</span>
+        <span style={{ color: "#4A5560" }}>Nog niet gestart. Start vanzelf zodra je Benaderd aanvinkt, of als de prospect de app eerder opent.</span>
       </div>
     );
   }
@@ -67,12 +67,12 @@ export default function ProefStatus({ proef, magVerlengen }) {
 
   return (
     <div style={vak}>
-      <span style={{ fontWeight: 700, color: "#2B2724" }}>Proefperiode app</span>
-      <span style={{ color: verlopen ? "#b91c1c" : "#524A40", fontWeight: verlopen ? 700 : 400 }}>
+      <span style={{ fontWeight: 700, color: "#1A2B3D" }}>Proefperiode app</span>
+      <span style={{ color: verlopen ? "#b91c1c" : "#4A5560", fontWeight: verlopen ? 700 : 400 }}>
         {verlopen ? `Verlopen op ${datum(proef.tot)}` : `Loopt tot ${datum(proef.tot)}`}
         {proef.verlengd > 0 ? ` (${proef.verlengd}× verlengd)` : ""}
       </span>
-      <span style={{ color: geplaatst > 0 ? "#0f6e56" : "#8A7C68", fontWeight: geplaatst > 0 ? 700 : 400 }}>
+      <span style={{ color: geplaatst > 0 ? "#0f6e56" : "#4A5560", fontWeight: geplaatst > 0 ? 700 : 400 }}>
         {geplaatst} van {MAX} projecten geplaatst
       </span>
       {recent && (

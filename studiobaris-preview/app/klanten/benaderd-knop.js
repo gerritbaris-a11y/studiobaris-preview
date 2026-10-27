@@ -43,8 +43,8 @@ export default function BenaderdKnop({ slug, benaderdOp }) {
       style={{
         display: "inline-flex", alignItems: "center", gap: 6,
         background: op ? "#e7f3ea" : "#fff",
-        color: op ? "#0f6e56" : "#524A40",
-        border: `1.5px solid ${op ? "#9fd0b3" : "#E3DACB"}`,
+        color: op ? "#0f6e56" : "#4A5560",
+        border: `1.5px solid ${op ? "#9fd0b3" : "#E3DED3"}`,
         padding: "7px 13px", borderRadius: 9, fontSize: 13, fontWeight: 700,
         cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
       }}

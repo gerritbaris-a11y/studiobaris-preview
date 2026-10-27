@@ -52,7 +52,7 @@ export function PublishToggle({ slug, gepubliceerd }) {
   }
   return (
     <button onClick={go} disabled={s === "bezig"}
-      style={{ background: gepubliceerd ? "#fff" : "#1d7a46", color: gepubliceerd ? "#b45309" : "#fff", border: gepubliceerd ? "1px solid #E3DACB" : "none", padding: "6px 12px", borderRadius: 7, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+      style={{ background: gepubliceerd ? "#fff" : "#1d7a46", color: gepubliceerd ? "#b45309" : "#fff", border: gepubliceerd ? "1px solid #E3DED3" : "none", padding: "6px 12px", borderRadius: 7, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
       {s === "bezig" ? "Bezig…" : gepubliceerd ? "Offline halen" : "Online zetten"}
     </button>
   );
@@ -106,7 +106,7 @@ export function TerugNaarActiefKnop({ slug, bedrijf }) {
   }
   return (
     <button onClick={go} disabled={s === "bezig"}
-      style={{ background: "#fff", color: "#524A40", border: "1px solid #E3DACB", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+      style={{ background: "#fff", color: "#4A5560", border: "1px solid #E3DED3", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
       {s === "bezig" ? "Bezig…" : "Terugzetten"}
     </button>
   );
@@ -189,22 +189,22 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
     }
   }
 
-  const inp = { width: "100%", padding: "7px 9px", border: "1px solid #E3DACB", borderRadius: 7, fontSize: 13.5, fontFamily: "inherit" };
-  const lab = { fontSize: 12, color: "#6B6258", fontWeight: 700, display: "block", marginBottom: 3 };
+  const inp = { width: "100%", padding: "7px 9px", border: "1px solid #E3DED3", borderRadius: 7, fontSize: 13.5, fontFamily: "inherit" };
+  const lab = { fontSize: 12, color: "#4A5560", fontWeight: 700, display: "block", marginBottom: 3 };
   const rij = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 };
   const tab = (actief) => ({
     flex: 1, padding: "8px 10px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-    border: actief ? "1.5px solid #1d7a46" : "1px solid #E3DACB",
-    background: actief ? "#e7f3ea" : "#fff", color: actief ? "#0f6e56" : "#524A40",
+    border: actief ? "1.5px solid #1d7a46" : "1px solid #E3DED3",
+    background: actief ? "#e7f3ea" : "#fff", color: actief ? "#0f6e56" : "#4A5560",
   });
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, background: "rgba(43,39,36,.35)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 16px", overflowY: "auto", zIndex: 50 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(26,43,61,.35)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 16px", overflowY: "auto", zIndex: 50 }}
       onClick={onSluiten}
     >
       <div style={{ background: "#fff", borderRadius: 14, maxWidth: 520, width: "100%", overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ background: "#C05A38", color: "#fff", padding: "16px 20px", fontWeight: 800, fontSize: 16 }}>
+        <div style={{ background: "#1A2B3D", color: "#fff", padding: "16px 20px", fontWeight: 800, fontSize: 16 }}>
           Klant toevoegen aan het register
         </div>
         <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -215,13 +215,13 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
 
           {modus === "bestaand" ? (
             <>
-              <div style={{ background: "#FBF7EF", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#6B6258" }}>
+              <div style={{ background: "#FBF7EF", border: "1px solid #ECE8DF", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#4A5560" }}>
                 Kies een lead die al in "Mijn previews" staat. Zijn gegevens
                 blijven ongewijzigd en er komt geen klantnummer bij — dat doe
                 je zelf later met "Markeer als klant".
               </div>
               {kandidaten.length === 0 ? (
-                <div style={{ fontSize: 13, color: "#9A9084" }}>Geen leads meer over om te kiezen.</div>
+                <div style={{ fontSize: 13, color: "#6F7A85" }}>Geen leads meer over om te kiezen.</div>
               ) : (
                 <label style={lab}>Lead
                   <select style={inp} value={kandidaatSlug} onChange={(e) => setKandidaatSlug(e.target.value)}>
@@ -236,7 +236,7 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
               )}
               {fout && <div style={{ color: "#b91c1c", fontSize: 13, fontWeight: 600 }}>{fout}</div>}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
-                <button type="button" onClick={onSluiten} style={{ background: "#fff", border: "1px solid #E3DACB", padding: "9px 15px", borderRadius: 8, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>Annuleren</button>
+                <button type="button" onClick={onSluiten} style={{ background: "#fff", border: "1px solid #E3DED3", padding: "9px 15px", borderRadius: 8, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>Annuleren</button>
                 <button type="button" onClick={toevoegenBestaand} disabled={bezig || kandidaten.length === 0}
                   style={{ background: "#1d7a46", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
                   {bezig ? "Bezig…" : "Toevoegen aan register"}
@@ -245,7 +245,7 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
             </>
           ) : (
             <>
-              <div style={{ background: "#FBF7EF", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#6B6258" }}>
+              <div style={{ background: "#FBF7EF", border: "1px solid #ECE8DF", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#4A5560" }}>
                 Voor iemand die nog nergens in de previews-pijplijn staat. Deze
                 klant komt los te staan, zonder klantnummer en zonder
                 abonnement — dat volgt pas via "Markeer als klant".
@@ -299,7 +299,7 @@ function NieuweKlantModal({ kandidaten, onSluiten }) {
               </label>
               {fout && <div style={{ color: "#b91c1c", fontSize: 13, fontWeight: 600 }}>{fout}</div>}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
-                <button type="button" onClick={onSluiten} style={{ background: "#fff", border: "1px solid #E3DACB", padding: "9px 15px", borderRadius: 8, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>Annuleren</button>
+                <button type="button" onClick={onSluiten} style={{ background: "#fff", border: "1px solid #E3DED3", padding: "9px 15px", borderRadius: 8, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>Annuleren</button>
                 <button type="button" onClick={aanmakenNieuw} disabled={bezig}
                   style={{ background: "#1d7a46", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer", fontFamily: "inherit" }}>
                   {bezig ? "Bezig…" : "Klant aanmaken"}
@@ -343,7 +343,7 @@ export function MarkeerAlsKlantKnop({ slug, bedrijf, data = {} }) {
     } catch (e) { alert(String(e)); setBezig(false); }
   }
 
-  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, marginTop: 2 };
+  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DED3", borderRadius: 6, fontSize: 13, marginTop: 2 };
   const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
   const knop = { background: "#fff", color: "#0f6e56", border: "1px solid #bfe0cf", padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" };
 
@@ -353,7 +353,7 @@ export function MarkeerAlsKlantKnop({ slug, bedrijf, data = {} }) {
         {open ? "Sluiten" : "Markeer als klant"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 220 }}>
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE8DF", borderRadius: 8, padding: "10px 12px", width: 220 }}>
           <label style={lab}>Pakket
             <select style={inp} value={pakket} onChange={(e) => setPakket(e.target.value)}>
               <option value="">— nog kiezen —</option>
@@ -457,8 +457,8 @@ export function FaseStepper({ slug, huidige, bedrijf, magKlaar = true }) {
           const done = i < idx;
           const cur = i === idx;
           const dicht = vergrendeld || (!magKlaar && f === "Klaar");
-          const bg = cur ? "#2B2724" : done ? "#e1f5ee" : "#F4EEE3";
-          const col = cur ? "#fff" : done ? "#0f6e56" : "#9A9084";
+          const bg = cur ? "#1A2B3D" : done ? "#e1f5ee" : "#EFEAE0";
+          const col = cur ? "#fff" : done ? "#0f6e56" : "#6F7A85";
           return (
             <button key={f} onClick={() => zet(f)} disabled={bezig || dicht}
               title={dicht ? (f === "Klaar" && !cur ? "Op Klaar zetten doen Gerrit of Levi" : "Afgerond door Gerrit of Levi") : "Zet fase op " + f}
@@ -498,14 +498,14 @@ export function ProvincieKeuze({ slug, value, handmatig }) {
     setBezig(false);
   }
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#6B6258" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#4A5560" }}>
       Regio
       <select value={v} onChange={change} disabled={bezig}
-        style={{ padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 190 }}>
+        style={{ padding: "5px 7px", border: "1px solid #E3DED3", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 190 }}>
         <option value="">{"Automatisch" + (huidig && !v ? ` (${huidig})` : !huidig ? " (onbekend)" : "")}</option>
         {PROVINCIE_OPTIES.map((p) => <option key={p} value={p}>{p}</option>)}
       </select>
-      {bezig && <span style={{ fontSize: 11, color: "#9A9084" }}>bezig…</span>}
+      {bezig && <span style={{ fontSize: 11, color: "#6F7A85" }}>bezig…</span>}
     </span>
   );
 }
@@ -536,24 +536,24 @@ export function InzendingenKnop({ slug }) {
   return (
     <div style={{ width: "100%" }}>
       <button onClick={toggle}
-        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#2B2724", padding: "6px 11px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+        style={{ background: "#fff", border: "1px solid #E3DED3", color: "#1A2B3D", padding: "6px 11px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
         {open ? "Verberg inzendingen" : "Bekijk wat de klant invulde"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px" }}>
-          {laden && <div style={{ color: "#B0A697", fontSize: 13 }}>Laden...</div>}
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE8DF", borderRadius: 10, padding: "10px 12px" }}>
+          {laden && <div style={{ color: "#6F7A85", fontSize: 13 }}>Laden...</div>}
           {!laden && data && data.length === 0 && (
-            <div style={{ color: "#B0A697", fontSize: 13 }}>De klant heeft nog niets ingevuld.</div>
+            <div style={{ color: "#6F7A85", fontSize: 13 }}>De klant heeft nog niets ingevuld.</div>
           )}
           {!laden && data && data.map((s, i) => (
             <div key={i} style={{ borderTop: i === 0 ? "none" : "1px solid #eef1f4", paddingTop: i === 0 ? 0 : 9, marginTop: i === 0 ? 0 : 9 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#2B2724" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: "#1A2B3D" }}>
                 {INZENDING_LABEL[s.type] || s.type}
-                <span style={{ color: "#9A9084", fontWeight: 500 }}> - {new Date(s.created_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}</span>
+                <span style={{ color: "#6F7A85", fontWeight: 500 }}> - {new Date(s.created_at).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })}</span>
               </div>
               {Object.entries(s.antwoorden || {}).map(([k, v]) => (
                 <div key={k} style={{ fontSize: 13, marginTop: 3, lineHeight: 1.35 }}>
-                  <span style={{ color: "#B0A697" }}>{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                  <span style={{ color: "#6F7A85" }}>{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}
                 </div>
               ))}
             </div>
@@ -587,13 +587,13 @@ export function Contactpersoon({ slug, value }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
       title="Voornaam van de klant - wordt de aanhef in het appje">
-      <span style={{ color: "#B0A697", fontSize: 12 }}>Contact</span>
+      <span style={{ color: "#6F7A85", fontSize: 12 }}>Contact</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="voornaam"
-        style={{ width: 100, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 100, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#E3DED3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
@@ -627,18 +627,18 @@ export function FactuurEmail({ slug, value, standaard }) {
     <span style={{ display: "inline-flex", flexDirection: "column", gap: 3 }}>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
         title="Facturen gaan naar dit adres. Leeg = naar het standaard e-mailadres.">
-        <span style={{ color: "#B0A697", fontSize: 12 }}>Factuur-e-mail</span>
+        <span style={{ color: "#6F7A85", fontSize: 12 }}>Factuur-e-mail</span>
         <input
           type="email"
           value={v}
           onChange={(e) => setV(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
           placeholder={standaard || "leeg = standaardadres"}
-          style={{ width: 220, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+          style={{ width: 220, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#E3DED3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
         />
         <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
       </span>
-      <span style={{ fontSize: 11.5, color: fout ? "#B03A2E" : "#9A9084" }}>
+      <span style={{ fontSize: 11.5, color: fout ? "#B03A2E" : "#6F7A85" }}>
         {fout || (opgeslagen.trim()
           ? "Facturen gaan naar dit adres."
           : `Leeg: facturen gaan naar ${standaard || "het standaardadres"}.`)}
@@ -663,9 +663,9 @@ function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {
       disabled={!gewijzigd || bezig}
       style={{
         fontSize: 12.5, fontWeight: 700, padding: "6px 11px", borderRadius: 8, whiteSpace: "nowrap",
-        border: "1px solid " + (gewijzigd ? "#2B2724" : "#ECE4D7"),
-        background: gewijzigd ? "#2B2724" : "#fff",
-        color: gewijzigd ? "#fff" : "#B0A697",
+        border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#ECE8DF"),
+        background: gewijzigd ? "#1A2B3D" : "#fff",
+        color: gewijzigd ? "#fff" : "#6F7A85",
         cursor: gewijzigd && !bezig ? "pointer" : "default",
         fontFamily: "inherit",
       }}
@@ -738,10 +738,10 @@ export function PersoonlijkeZin({ slug, value }) {
   return (
     <div style={{ width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#2B2724" }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: leeg ? "#b45309" : "#1A2B3D" }}>
           Persoonlijke zin
         </span>
-        <span style={{ fontSize: 11.5, color: "#9A9084" }}>
+        <span style={{ fontSize: 11.5, color: "#6F7A85" }}>
           Waar je ze mee raakt. Iets wat je op hun socials of site zag.
         </span>
       </div>
@@ -753,7 +753,7 @@ export function PersoonlijkeZin({ slug, value }) {
           placeholder="Bijv: kwam die badkamer in Voorburg tegen op je Facebook. Strak werk."
           style={{
             flex: 1, minWidth: 0, boxSizing: "border-box", padding: "8px 10px", fontSize: 13.5,
-            border: "1px solid " + (gewijzigd ? "#C05A38" : leeg ? "#fcd9a8" : "#E3DACB"),
+            border: "1px solid " + (gewijzigd ? "#1A2B3D" : leeg ? "#fcd9a8" : "#E3DED3"),
             background: leeg && !gewijzigd ? "#fffbf5" : "#fff",
             borderRadius: 8, fontFamily: "inherit", resize: "vertical", lineHeight: 1.5,
           }}
@@ -798,13 +798,13 @@ export function AppjeKnop({ slug, bedrijf, contact, afzender, telefoon, demoGevu
   const knop = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
     borderRadius: 8,
-    border: "1px solid " + (klaar ? "#25D366" : "#ECE4D7"),
-    background: klaar ? "#25D366" : "#ECE4D7",
-    color: klaar ? "#fff" : "#9A9084",
+    border: "1px solid " + (klaar ? "#25D366" : "#ECE8DF"),
+    background: klaar ? "#25D366" : "#ECE8DF",
+    color: klaar ? "#fff" : "#6F7A85",
     cursor: klaar ? "pointer" : "not-allowed",
     fontWeight: 700, fontFamily: "inherit", whiteSpace: "nowrap",
   };
-  const knop2 = { ...knop, background: "#fff", color: klaar ? "#0f6e56" : "#9A9084", border: "1px solid " + (klaar ? "#25D366" : "#ECE4D7") };
+  const knop2 = { ...knop, background: "#fff", color: klaar ? "#0f6e56" : "#6F7A85", border: "1px solid " + (klaar ? "#25D366" : "#ECE8DF") };
 
   return (
     <span style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -872,7 +872,7 @@ export function KlantNaam({ slug, value, team = [] }) {
         value={v}
         onChange={(e) => bewaar(e.target.value)}
         disabled={bezig}
-        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit", background: "#fff" }}
+        style={{ width: 120, padding: "5px 8px", border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#E3DED3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit", background: "#fff" }}
       >
         <option value="">— kies —</option>
         {onbekendeHuidigeWaarde && <option value={onbekendeHuidigeWaarde}>{onbekendeHuidigeWaarde} (niet meer in team)</option>}
@@ -880,7 +880,7 @@ export function KlantNaam({ slug, value, team = [] }) {
           <option key={n} value={n}>{n}</option>
         ))}
       </select>
-      {bezig && <span style={{ fontSize: 11, color: "#9A9084" }}>bezig…</span>}
+      {bezig && <span style={{ fontSize: 11, color: "#6F7A85" }}>bezig…</span>}
     </span>
   );
 }
@@ -893,7 +893,7 @@ export function KlantStatus({ slug, value }) {
   }
   return (
     <select value={v} onChange={change}
-      style={{ padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 150 }}>
+      style={{ padding: "5px 7px", border: "1px solid #E3DED3", borderRadius: 6, fontSize: 13, background: "#fff", maxWidth: 150 }}>
       {STATUS_OPTIES.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
   );
@@ -915,15 +915,15 @@ export function KlantBedrag({ slug, value }) {
 
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-      <span style={{ color: "#B0A697", fontSize: 12 }}>€</span>
+      <span style={{ color: "#6F7A85", fontSize: 12 }}>€</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="0" inputMode="decimal"
-        style={{ width: 60, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 60, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#E3DED3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
-      <span style={{ color: "#B0A697", fontSize: 12 }}>/mnd</span>
+      <span style={{ color: "#6F7A85", fontSize: 12 }}>/mnd</span>
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
   );
@@ -956,13 +956,13 @@ export function VerkoopBedrag({ slug, value }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
       title="Eenmalig verkoopbedrag (excl. btw). De helft wordt de aanbetaling, de helft het restbedrag.">
-      <span style={{ color: "#B0A697", fontSize: 12 }}>Verkoop €</span>
+      <span style={{ color: "#6F7A85", fontSize: 12 }}>Verkoop €</span>
       <input
         value={v}
         onChange={(e) => setV(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") bewaar(); }}
         placeholder="0" inputMode="decimal"
-        style={{ width: 70, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#C05A38" : "#E3DACB"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
+        style={{ width: 70, padding: "5px 7px", border: "1px solid " + (gewijzigd ? "#1A2B3D" : "#E3DED3"), borderRadius: 6, fontSize: 13, fontFamily: "inherit" }}
       />
       <OpslaanKnop gewijzigd={gewijzigd} opgeslagen={Boolean(opgeslagen)} bezig={bezig} onClick={bewaar} />
     </span>
@@ -979,7 +979,7 @@ export function AkkoordLink({ slug }) {
   }
   return (
     <button onClick={copy}
-      style={{ background: "#fff", border: "1px solid #E3DACB", color: "#C05A38", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+      style={{ background: "#fff", border: "1px solid #E3DED3", color: "#1A2B3D", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
       {copied ? "Gekopieerd!" : "Akkoord-link"}
     </button>
   );
@@ -1058,17 +1058,17 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
 
   const chip = {
     display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, padding: "7px 11px",
-    borderRadius: 8, border: "1px solid #E3DACB", background: "#fff", color: "#524A40",
+    borderRadius: 8, border: "1px solid #E3DED3", background: "#fff", color: "#4A5560",
     cursor: "pointer", textDecoration: "none", whiteSpace: "nowrap", fontFamily: "inherit",
   };
 
   return (
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-        <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#2B2724", color: "#2B2724", fontWeight: 700 }}>
+        <button onClick={() => setOpen(!open)} style={{ ...chip, borderColor: "#1A2B3D", color: "#1A2B3D", fontWeight: 700 }}>
           {open ? "Links verbergen" : "Alle links"}
         </button>
-        <a href={`/aanpassen/${slug}`} style={{ ...chip, borderColor: "#C05A38", color: "#fff", background: "#C05A38", fontWeight: 700 }}>
+        <a href={`/aanpassen/${slug}`} style={{ ...chip, borderColor: "#1A2B3D", color: "#fff", background: "#1A2B3D", fontWeight: 700 }}>
           Aanpassen
         </a>
         <a href={`/vergelijk/${slug}`} style={{ ...chip, borderColor: "#7c3aed", color: "#6d28d9", background: "#faf5ff" }}>
@@ -1083,8 +1083,8 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
             title={l.hint + (l.uit ? "" : "\n" + l.url)}
             style={{
               ...chip,
-              borderColor: l.uit ? "#ECE4D7" : l.key === "d" ? (l.leeg ? "#E3DACB" : "#C05A38") : "#E3DACB",
-              color: l.uit ? "#B0A697" : l.key === "d" && !l.leeg ? "#a35400" : "#524A40",
+              borderColor: l.uit ? "#ECE8DF" : l.key === "d" ? (l.leeg ? "#E3DED3" : "#1A2B3D") : "#E3DED3",
+              color: l.uit ? "#6F7A85" : l.key === "d" && !l.leeg ? "#a35400" : "#4A5560",
               background: copied === l.key ? "#ecfdf5" : l.key === "d" && !l.leeg && !l.uit ? "#fff7ed" : "#fff",
               cursor: l.uit ? "not-allowed" : "pointer",
             }}
@@ -1094,7 +1094,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         ))}
 
         {!heeftDemo && magMaken && (
-          <button onClick={maakDemo} disabled={demoBezig} style={{ ...chip, borderColor: "#C05A38", color: "#a35400" }}>
+          <button onClick={maakDemo} disabled={demoBezig} style={{ ...chip, borderColor: "#1A2B3D", color: "#a35400" }}>
             {demoBezig ? "Demo-app maken…" : "+ Demo-app maken"}
           </button>
         )}
@@ -1102,7 +1102,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
         <button
           onClick={() => copy(linkBetaal.url, linkBetaal.key)}
           title={linkBetaal.hint + "\n" + linkBetaal.url}
-          style={{ ...chip, borderColor: "#E3DACB", color: "#524A40", background: copied === linkBetaal.key ? "#ecfdf5" : "#fff" }}
+          style={{ ...chip, borderColor: "#E3DED3", color: "#4A5560", background: copied === linkBetaal.key ? "#ecfdf5" : "#fff" }}
         >
           {copied === linkBetaal.key ? "Gekopieerd ✓" : linkBetaal.naam}
         </button>
@@ -1110,15 +1110,15 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
 
       {/* Uitgeklapt: de volledige links, zichtbaar en los te kopiëren. */}
       {open && (
-        <div style={{ marginTop: 10, background: "#FBF7F0", border: "1px solid #ECE4D7", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
+        <div style={{ marginTop: 10, background: "#F7F4EE", border: "1px solid #ECE8DF", borderRadius: 10, padding: "10px 12px", display: "grid", gap: 8 }}>
           {links.map((l) => (
             <div key={l.key} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#2B2724", minWidth: 116 }}>{l.naam}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#1A2B3D", minWidth: 116 }}>{l.naam}</span>
               <input
                 readOnly
                 value={l.uit ? "—" : l.url}
                 onFocus={(e) => e.target.select()}
-                style={{ flex: "1 1 260px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #E3DACB", borderRadius: 7, background: "#fff", color: l.uit ? "#B0A697" : "#524A40", fontFamily: "inherit" }}
+                style={{ flex: "1 1 260px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: "1px solid #E3DED3", borderRadius: 7, background: "#fff", color: l.uit ? "#6F7A85" : "#4A5560", fontFamily: "inherit" }}
               />
               <button onClick={() => !l.uit && copy(l.url, "x" + l.key)} disabled={l.uit} style={{ ...chip, padding: "6px 10px", cursor: l.uit ? "not-allowed" : "pointer" }}>
                 {copied === "x" + l.key ? "✓" : "Kopieer"}
@@ -1186,18 +1186,18 @@ export function GegevensEditor({ slug, data = {}, defaultOpen = false }) {
     } catch (e) { alert(String(e)); setS("idle"); }
   }
 
-  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DACB", borderRadius: 6, fontSize: 13, marginTop: 2 };
+  const inp = { width: "100%", padding: "5px 7px", border: "1px solid #E3DED3", borderRadius: 6, fontSize: 13, marginTop: 2 };
   const lab = { fontSize: 11, color: "#666", fontWeight: 600, display: "block", marginTop: 7 };
   const velden = [["telefoon", "Telefoon"], ["whatsapp", "WhatsApp (intl. nr.)"], ["email", "E-mail"], ["adres", "Adres"], ["kvk", "KvK"], ["btw", "BTW"]];
 
   return (
     <div>
       <button onClick={() => setOpen(!open)}
-        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#C05A38", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
+        style={{ background: "#fff", border: "1px solid #E3DED3", color: "#1A2B3D", padding: "5px 9px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>
         {open ? "Sluiten" : "Gegevens bewerken"}
       </button>
       {open && (
-        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE4D7", borderRadius: 8, padding: "10px 12px", width: 440, maxWidth: "100%", boxSizing: "border-box" }}>
+        <div style={{ marginTop: 8, background: "#fafbfc", border: "1px solid #ECE8DF", borderRadius: 8, padding: "10px 12px", width: 440, maxWidth: "100%", boxSizing: "border-box" }}>
           {velden.map(([k, label]) => (
             <label key={k} style={lab}>{label}
               <input style={inp} value={v[k]} onChange={(e) => set(k, e.target.value)} />
@@ -1230,7 +1230,7 @@ export function HuisstijlKnop({ slug, compact }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
       <button onClick={go} disabled={s === "bezig"} title="Logo en kleuren opnieuw overnemen van de huidige website"
-        style={{ background: "#fff", border: "1px solid #E3DACB", color: "#524A40", padding: compact ? "2px 8px" : "5px 10px", borderRadius: 999, fontSize: 12, cursor: "pointer", marginTop: compact ? 6 : 0 }}>
+        style={{ background: "#fff", border: "1px solid #E3DED3", color: "#4A5560", padding: compact ? "2px 8px" : "5px 10px", borderRadius: 999, fontSize: 12, cursor: "pointer", marginTop: compact ? 6 : 0 }}>
         {s === "bezig" ? "Huisstijl ophalen…" : "↻ Huisstijl van site"}
       </button>
       {msg && <span style={{ fontSize: 12, color: s === "fout" ? "#b91c1c" : "#0f6e56", marginTop: compact ? 6 : 0 }}>{msg}</span>}
@@ -1262,13 +1262,13 @@ export function HuisstijlAllesKnop({ slugs = [] }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
       <button onClick={go} disabled={bezig}
-        style={{ background: "#fff", border: "1px solid #C05A38", color: "#a35400", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+        style={{ background: "#fff", border: "1px solid #1A2B3D", color: "#a35400", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
         {bezig ? "Bezig…" : `↻ Huisstijl ophalen voor alle ${slugs.length} previews met website`}
       </button>
       {stand && (
-        <span style={{ fontSize: 13, color: "#524A40" }}>
+        <span style={{ fontSize: 13, color: "#4A5560" }}>
           {stand.klaar ? `Klaar: ${stand.gelukt} bijgewerkt, ${stand.mislukt} niet gelukt (site plat of geen logo/kleuren).` : `${stand.i} van ${stand.n}…`}
-          {stand.klaar && <> <a href="" onClick={(e) => { e.preventDefault(); location.reload(); }} style={{ color: "#C05A38" }}>Vernieuwen</a></>}
+          {stand.klaar && <> <a href="" onClick={(e) => { e.preventDefault(); location.reload(); }} style={{ color: "#1A2B3D" }}>Vernieuwen</a></>}
         </span>
       )}
     </div>
