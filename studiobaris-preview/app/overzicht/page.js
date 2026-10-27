@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 
 const kaart = { background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "18px 20px" };
 const kopje = { fontSize: 16, margin: "0 0 4px", color: KLEUR.inkt };
-const uitleg = { fontSize: 12.5, color: "#9A9084", margin: "0 0 16px", lineHeight: 1.45 };
-const labelStijl = { fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#9A9084", fontWeight: 700, marginBottom: 6 };
+const uitleg = { fontSize: 12.5, color: "#6F7A85", margin: "0 0 16px", lineHeight: 1.45 };
+const labelStijl = { fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#6F7A85", fontWeight: 700, marginBottom: 6 };
 
 function euro(n, dec = 2) {
   return "€ " + Number(n || 0).toLocaleString("nl-NL", { minimumFractionDigits: dec, maximumFractionDigits: dec });
@@ -35,12 +35,12 @@ function Meter({ label, waarde, doel, toon, sub }) {
       <div style={labelStijl}>{label}</div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
         <span style={{ fontSize: 34, fontWeight: 800, color: KLEUR.inkt, lineHeight: 1 }}>{toon(waarde)}</span>
-        <span style={{ fontSize: 14, color: "#6B6258" }}>van {toon(doel)}</span>
+        <span style={{ fontSize: 14, color: "#4A5560" }}>van {toon(doel)}</span>
       </div>
       <div style={{ background: KLEUR.baan, borderRadius: 999, height: 8, marginTop: 10, overflow: "hidden" }}>
         <div style={{ width: Math.max(pct, waarde > 0 ? 2 : 0) + "%", height: "100%", background: KLEUR.klei, borderRadius: 999 }} />
       </div>
-      {sub && <div style={{ fontSize: 12.5, color: "#6B6258", marginTop: 8 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 12.5, color: "#4A5560", marginTop: 8 }}>{sub}</div>}
     </div>
   );
 }
@@ -122,10 +122,10 @@ function Outreach({ weken }) {
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
         <span style={{ fontSize: 34, fontWeight: 800, color: KLEUR.inkt, lineHeight: 1 }}>{nu.aantal}</span>
-        <span style={{ fontSize: 14, color: "#6B6258" }}>van {doel} deze week · vorige week {vorige.aantal}</span>
+        <span style={{ fontSize: 14, color: "#4A5560" }}>van {doel} deze week · vorige week {vorige.aantal}</span>
       </div>
       {personen.length > 0 && (
-        <div style={{ fontSize: 13, color: "#6B6258", marginBottom: 18 }}>
+        <div style={{ fontSize: 13, color: "#4A5560", marginBottom: 18 }}>
           {personen.map(([p, n], i) => (
             <span key={p}>
               {i > 0 && " · "}
@@ -151,9 +151,9 @@ function Outreach({ weken }) {
             const huidig = i === weken.length - 1;
             return (
               <div key={w.week} title={`Week van ${weekLabel(w.week)}: ${w.aantal} benaderd`} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: huidig ? KLEUR.inkt : "#6B6258", marginBottom: 3 }}>{w.aantal || ""}</span>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: huidig ? KLEUR.inkt : "#4A5560", marginBottom: 3 }}>{w.aantal || ""}</span>
                 <div style={{ width: "100%", maxWidth: 34, height: Math.max(h, w.aantal > 0 ? 3 : 1), background: huidig ? KLEUR.klei : "#E3B7A5", borderRadius: "4px 4px 0 0" }} />
-                <span style={{ fontSize: 10.5, color: "#9A9084", marginTop: 6, whiteSpace: "nowrap" }}>{weekLabel(w.week)}</span>
+                <span style={{ fontSize: 10.5, color: "#6F7A85", marginTop: 6, whiteSpace: "nowrap" }}>{weekLabel(w.week)}</span>
               </div>
             );
           })}
@@ -173,7 +173,7 @@ function tekstVoor(a) {
         <>
           {n === 1 ? "preview gemaakt voor " : `${n} previews gemaakt: `}
           <B>{getoond}</B>
-          {n > 3 && <span style={{ color: "#9A9084" }}> en {n - 3} meer</span>}
+          {n > 3 && <span style={{ color: "#6F7A85" }}> en {n - 3} meer</span>}
         </>
       );
     }
@@ -202,7 +202,7 @@ function Activiteit({ items }) {
       <h2 style={kopje}>Activiteit</h2>
       <p style={uitleg}>Wat er de afgelopen 7 dagen gebeurd is.</p>
       {items.length === 0 ? (
-        <p style={{ fontSize: 13.5, color: "#9A9084", margin: 0 }}>Deze week nog niets vastgelegd.</p>
+        <p style={{ fontSize: 13.5, color: "#6F7A85", margin: 0 }}>Deze week nog niets vastgelegd.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column" }}>
           {items.map((a, i) => (
@@ -210,7 +210,7 @@ function Activiteit({ items }) {
               key={i}
               style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "9px 0", borderTop: i ? `1px solid ${KLEUR.baan}` : "none", fontSize: 13.5, flexWrap: "wrap" }}
             >
-              <span style={{ color: "#9A9084", fontSize: 12, whiteSpace: "nowrap", minWidth: 96 }}>
+              <span style={{ color: "#6F7A85", fontSize: 12, whiteSpace: "nowrap", minWidth: 96 }}>
                 {new Date(a.moment).toLocaleString("nl-NL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" })}
               </span>
               <span style={{ fontWeight: 700, color: KLEUR.inkt, minWidth: 60 }}>{a.persoon || "—"}</span>

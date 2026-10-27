@@ -13,12 +13,12 @@ const KOLOMMEN = [
 
 const PRIORITEIT = {
   laag: { label: "Laag", kleur: "#5E8C61", bg: "#E7EFE3" },
-  normaal: { label: "Normaal", kleur: "#6B6258", bg: "#EFEAE0" },
+  normaal: { label: "Normaal", kleur: "#4A5560", bg: "#EFEAE0" },
   hoog: { label: "Hoog", kleur: "#9E3B2E", bg: "#F5E2D9" },
 };
 
 const STATUS_KLEUR = {
-  te_doen: { kleur: "#6B6258", bg: "#EFEAE0" },
+  te_doen: { kleur: "#4A5560", bg: "#EFEAE0" },
   mee_bezig: { kleur: "#1D4E89", bg: "#E1ECF7" },
   klaar: { kleur: "#3F6B43", bg: "#E7EFE3" },
 };
@@ -161,7 +161,7 @@ function TaakModal({ taak, kolom, team, onSluit, onOpgeslagen }) {
   return (
     <div
       onClick={onSluit}
-      style={{ position: "fixed", inset: 0, background: "rgba(43,39,36,.35)", display: "grid", placeItems: "center", zIndex: 50, padding: 16 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(26,43,61,.35)", display: "grid", placeItems: "center", zIndex: 50, padding: 16 }}
     >
       <div onClick={(e) => e.stopPropagation()} style={{ ...kaart, width: "100%", maxWidth: 460, padding: "20px 22px" }}>
         <h2 style={{ fontSize: 16, margin: "0 0 14px" }}>{taak ? "Taak bewerken" : "Nieuwe taak"}</h2>
@@ -282,7 +282,7 @@ function TaakKaart({ taak, onKlik, onSlepen, onVerplaats, onStatus, isEerste, is
         borderLeft: taak.prioriteit === "hoog" ? `4px solid ${p.kleur}` : `1px solid ${KLEUR.lijn2}`,
         borderRadius: 10, padding: "11px 12px",
         marginBottom: 8, cursor: "grab",
-        boxShadow: taak.prioriteit === "hoog" ? `0 1px 4px rgba(158,59,46,.18)` : "0 1px 2px rgba(43,39,36,.05)",
+        boxShadow: taak.prioriteit === "hoog" ? `0 1px 4px rgba(158,59,46,.18)` : "0 1px 2px rgba(26,43,61,.05)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>

@@ -12,8 +12,8 @@ import { verkleinFoto } from "../../../lib/verklein-foto";
 // ---------------------------------------------------------------------------
 
 const K = {
-  papier: "#FBF7F0", inkt: "#2B2724", gedempt: "#6B6258", label: "#9A9084",
-  lijn: "#ECE4D7", lijn2: "#E3DACB", klei: "#C05A38", kleiDonker: "#9E3B2E", kleiZacht: "#F5E2D9",
+  papier: "#F7F4EE", inkt: "#1A2B3D", gedempt: "#4A5560", label: "#6F7A85",
+  lijn: "#ECE8DF", lijn2: "#E3DED3", klei: "#1A2B3D", kleiDonker: "#2A3D52", kleiZacht: "#EFEAE0",
   groen: "#1d7a46",
 };
 const HEAD = "'Plus Jakarta Sans', system-ui, sans-serif";
@@ -30,7 +30,7 @@ const PALETTEN = [
   { naam: "Leisteen & koper", p: "#2F3A45", s: "#B8733F", a: "#F3F4F5", t: "#2B333B" },
   { naam: "Zwart & limoen", p: "#111111", s: "#8DBB25", a: "#F5F5F2", t: "#222222" },
   { naam: "Petrol & koraal", p: "#0E3B43", s: "#F26B5B", a: "#F1F6F6", t: "#1F3337" },
-  { naam: "Aarde & terracotta", p: "#3B2A20", s: "#C05A38", a: "#FBF7F0", t: "#3A2E27" },
+  { naam: "Aarde & terracotta", p: "#3B2A20", s: "#1A2B3D", a: "#F7F4EE", t: "#3A2E27" },
 ];
 
 const AI_VOORBEELDEN = [
@@ -187,7 +187,7 @@ function VakfotoKiezer({ vakfotos, eigenVak, onKies, onSluit }) {
   const [vak, setVak] = useState(start);
   const huidig = vakfotos.find((v) => v.key === vak);
   return (
-    <div onClick={onSluit} style={{ position: "fixed", inset: 0, background: "rgba(43,39,36,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+    <div onClick={onSluit} style={{ position: "fixed", inset: 0, background: "rgba(26,43,61,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: 18, width: "min(860px, 100%)", maxHeight: "85vh", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
           <strong style={{ fontFamily: HEAD, fontSize: 17 }}>Kies uit de vakfoto's</strong>
@@ -760,7 +760,7 @@ export default function AanpassenClient({ slug, naam, live: liveStart, werk, wer
 
       {/* Live zetten: korte notitie voor in de versiegeschiedenis */}
       {publiceren && (
-        <div onClick={() => setPubliceren(false)} style={{ position: "fixed", inset: 0, background: "rgba(43,39,36,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+        <div onClick={() => setPubliceren(false)} style={{ position: "fixed", inset: 0, background: "rgba(26,43,61,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: 20, width: "min(460px, 100%)" }}>
             <h3 style={{ ...blokKop, fontSize: 18 }}>Live zetten</h3>
             <p style={{ fontSize: 13.5, color: K.gedempt, lineHeight: 1.5 }}>

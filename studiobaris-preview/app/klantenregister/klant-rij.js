@@ -250,7 +250,7 @@ function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
             readOnly
             value={app.url}
             onFocus={(e) => e.target.select()}
-            style={{ flex: "1 1 320px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 7, fontFamily: "inherit", color: KLEUR.labelDonker || "#524A40", background: "#fff" }}
+            style={{ flex: "1 1 320px", minWidth: 0, fontSize: 12.5, padding: "6px 8px", border: `1px solid ${KLEUR.lijn2}`, borderRadius: 7, fontFamily: "inherit", color: KLEUR.labelDonker || "#4A5560", background: "#fff" }}
           />
           <button
             onClick={async () => { if (await kopieer(app.url)) { setKlaar(true); setTimeout(() => setKlaar(false), 1600); } }}

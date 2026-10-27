@@ -108,7 +108,7 @@ export default function KlantenZoek() {
                 padding: "7px 12px", borderRadius: 999, fontSize: 13, fontWeight: aan ? 700 : 600,
                 fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
                 border: `1px solid ${aan ? KLEUR.klei : KLEUR.lijn}`,
-                background: aan ? KLEUR.klei : "#fff", color: aan ? "#fff" : "#7A7168",
+                background: aan ? KLEUR.klei : "#fff", color: aan ? "#fff" : "#4A5560",
               }}
             >
               {f.label}{aantallen[f.key] !== undefined ? ` (${aantallen[f.key]})` : ""}

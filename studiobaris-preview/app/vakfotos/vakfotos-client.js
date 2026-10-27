@@ -122,7 +122,7 @@ function FotoBlok({ vak, soort, fotos: alle }) {
                 onClick={() => verwijder(f.naam)}
                 title="Foto verwijderen"
                 aria-label="Foto verwijderen"
-                style={{ position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: 999, border: "none", background: "rgba(43,39,36,.75)", color: "#fff", cursor: "pointer", fontSize: 14, lineHeight: "26px", padding: 0 }}
+                style={{ position: "absolute", top: 6, right: 6, width: 26, height: 26, borderRadius: 999, border: "none", background: "rgba(26,43,61,.75)", color: "#fff", cursor: "pointer", fontSize: 14, lineHeight: "26px", padding: 0 }}
               >
                 ×
               </button>

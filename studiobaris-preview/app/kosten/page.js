@@ -4,7 +4,7 @@ import WerkplekShell from "../werkplek-shell";
 
 export const dynamic = "force-dynamic";
 
-const kaart = { background: "#fff", border: "1px solid #ECE4D7", borderRadius: 14, padding: "16px 18px" };
+const kaart = { background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "16px 18px" };
 
 // Alle rekentarieven op één plek. Alles is aan te passen via de adresbalk,
 // bijvoorbeeld: /kosten?hosting=2.5&supabase1000=150&gratis=studiobaris
@@ -47,19 +47,19 @@ function euro(n, d = 2) {
 function Cijfer({ label, waarde, kleur, sub }) {
   return (
     <div style={{ ...kaart, flex: "1 1 160px", minWidth: 160 }}>
-      <div style={{ fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#9A9084", fontWeight: 700, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: kleur || "#2B2724", lineHeight: 1.15 }}>{waarde}</div>
-      {sub && <div style={{ fontSize: 12, color: "#9A9084", marginTop: 3 }}>{sub}</div>}
+      <div style={{ fontSize: 11.5, letterSpacing: 0.6, textTransform: "uppercase", color: "#6F7A85", fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: kleur || "#1A2B3D", lineHeight: 1.15 }}>{waarde}</div>
+      {sub && <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 3 }}>{sub}</div>}
     </div>
   );
 }
 
 function Regel({ label, waarde, sub, dik }) {
   return (
-    <tr style={{ borderTop: "1px solid #F4EEE3" }}>
-      <td style={{ padding: "8px 8px 8px 0", fontWeight: dik ? 800 : 500, color: "#2B2724" }}>
+    <tr style={{ borderTop: "1px solid #EFEAE0" }}>
+      <td style={{ padding: "8px 8px 8px 0", fontWeight: dik ? 800 : 500, color: "#1A2B3D" }}>
         {label}
-        {sub && <span style={{ display: "block", fontSize: 11.5, color: "#9A9084", fontWeight: 400 }}>{sub}</span>}
+        {sub && <span style={{ display: "block", fontSize: 11.5, color: "#6F7A85", fontWeight: 400 }}>{sub}</span>}
       </td>
       <td style={{ padding: "8px 0", textAlign: "right", fontWeight: dik ? 800 : 600, whiteSpace: "nowrap" }}>{waarde}</td>
     </tr>
@@ -160,14 +160,14 @@ export default async function KostenPage({ searchParams }) {
         <h2 style={{ fontSize: 15, margin: "0 0 12px" }}>Waar de kosten zitten</h2>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
           <tbody>
-            <tr><td colSpan={2} style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5, color: "#9A9084", fontWeight: 700, padding: "0 0 2px" }}>Vast — loopt door, ongeacht het aantal klanten</td></tr>
+            <tr><td colSpan={2} style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5, color: "#6F7A85", fontWeight: 700, padding: "0 0 2px" }}>Vast — loopt door, ongeacht het aantal klanten</td></tr>
             <Regel label="Supabase (database + opslag)" sub="Pro-abonnement. De kleinste rekenkracht zit in het tegoed." waarde={euro(t.supabase_nu)} />
             <Regel label="Vercel (app draaien)" sub="Pro-abonnement, jaarbetaling" waarde={euro(t.vercel_nu)} />
             <Regel label="GitHub (code bewaren)" sub="gratis voor privé-code" waarde={euro(t.github)} />
             <Regel label="Eigen domein studiobaris.nl" sub="€11 per jaar" waarde={euro(t.eigen_domein)} />
             <Regel label="Vast totaal" waarde={euro(vastNu)} dik />
 
-            <tr><td colSpan={2} style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5, color: "#9A9084", fontWeight: 700, padding: "14px 0 2px" }}>Per klant — schaalt mee met het aantal klanten</td></tr>
+            <tr><td colSpan={2} style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5, color: "#6F7A85", fontWeight: 700, padding: "14px 0 2px" }}>Per klant — schaalt mee met het aantal klanten</td></tr>
             <Regel label="Klant-domeinnaam" sub="€11 per jaar per klant" waarde={euro(t.klant_domein)} />
             <Regel label="Hosting klantwebsite" sub="WordPress-hosting per klant — aanname, controleer" waarde={euro(t.klant_hosting)} />
             <Regel label="AI-teksten" sub={t.projecten_dag + " projecten + " + t.reviews_dag + " reviews per dag, bij vol gebruik"} waarde={euro(aiPerKlant)} />
@@ -180,7 +180,7 @@ export default async function KostenPage({ searchParams }) {
       {/* Supabase-compute uitleg */}
       <div style={{ ...kaart, marginBottom: 16, background: "#F7F5F0" }}>
         <h2 style={{ fontSize: 14.5, margin: "0 0 6px" }}>Even over die Supabase-computekosten</h2>
-        <p style={{ fontSize: 13, color: "#524A40", lineHeight: 1.65, margin: 0 }}>
+        <p style={{ fontSize: 13, color: "#4A5560", lineHeight: 1.65, margin: 0 }}>
           Supabase rekent twee dingen: opslag (die groeit met je foto's, een paar cent per klant) én <strong>compute</strong> —
           de rekenkracht van de database-server die altijd aan staat. Bij het Pro-abonnement van $25 zit een tegoed van $10,
           precies genoeg voor de kleinste server (Micro). Zolang we klein zijn kost compute ons dus niets extra.
@@ -194,49 +194,49 @@ export default async function KostenPage({ searchParams }) {
       {/* Projectie */}
       <div style={{ ...kaart, marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, margin: "0 0 4px" }}>Nu vs. bij 1000 klanten</h2>
-        <p style={{ fontSize: 12.5, color: "#9A9084", margin: "0 0 12px" }}>Dezelfde som, maar dan met 1000 betalende klanten. Zie hoe de kost per klant instort.</p>
+        <p style={{ fontSize: 12.5, color: "#6F7A85", margin: "0 0 12px" }}>Dezelfde som, maar dan met 1000 betalende klanten. Zie hoe de kost per klant instort.</p>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
-            <tr style={{ textAlign: "left", color: "#9A9084", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <tr style={{ textAlign: "left", color: "#6F7A85", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
               <th style={{ padding: "0 8px 8px 0" }}></th>
               <th style={{ padding: "0 8px 8px", textAlign: "right" }}>Nu ({aantal} klanten)</th>
               <th style={{ padding: "0 0 8px 8px", textAlign: "right" }}>Bij 1000 klanten</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderTop: "1px solid #F4EEE3" }}>
+            <tr style={{ borderTop: "1px solid #EFEAE0" }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Vaste platformkosten</td>
               <td style={{ padding: "9px 8px", textAlign: "right" }}>{euro(vastNu)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right" }}>{euro(vast1000)}</td>
             </tr>
-            <tr style={{ borderTop: "1px solid #F4EEE3" }}>
+            <tr style={{ borderTop: "1px solid #EFEAE0" }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Klantkosten samen</td>
               <td style={{ padding: "9px 8px", textAlign: "right" }}>{euro(variabelTotaal)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right" }}>{euro(N * varPerKlant1000)}</td>
             </tr>
-            <tr style={{ borderTop: "1px solid #F4EEE3", fontWeight: 700 }}>
+            <tr style={{ borderTop: "1px solid #EFEAE0", fontWeight: 700 }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Totale kosten</td>
               <td style={{ padding: "9px 8px", textAlign: "right" }}>{euro(totaleKosten)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right" }}>{euro(totaal1000)}</td>
             </tr>
-            <tr style={{ borderTop: "1px solid #F4EEE3", fontWeight: 800 }}>
+            <tr style={{ borderTop: "1px solid #EFEAE0", fontWeight: 800 }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Kost per klant</td>
               <td style={{ padding: "9px 8px", textAlign: "right", color: "#b45309" }}>{euro(kostPerKlant)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right", color: "#0f6e56" }}>{euro(kostPerKlant1000)}</td>
             </tr>
-            <tr style={{ borderTop: "1px solid #F4EEE3" }}>
+            <tr style={{ borderTop: "1px solid #EFEAE0" }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Omzet</td>
               <td style={{ padding: "9px 8px", textAlign: "right" }}>{euro(omzet)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right" }}>{euro(omzet1000)}</td>
             </tr>
-            <tr style={{ borderTop: "2px solid #E7DFD1", fontWeight: 800 }}>
+            <tr style={{ borderTop: "2px solid #E3DED3", fontWeight: 800 }}>
               <td style={{ padding: "9px 8px 9px 0" }}>Resultaat p/m</td>
               <td style={{ padding: "9px 8px", textAlign: "right", color: resultaat >= 0 ? "#0f6e56" : "#b91c1c" }}>{euro(resultaat)}</td>
               <td style={{ padding: "9px 0 9px 8px", textAlign: "right", color: resultaat1000 >= 0 ? "#0f6e56" : "#b91c1c" }}>{euro(resultaat1000)}</td>
             </tr>
           </tbody>
         </table>
-        <p style={{ fontSize: 12, color: "#9A9084", marginTop: 12, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: "#6F7A85", marginTop: 12, lineHeight: 1.6 }}>
           De projectie gaat ervan uit dat alle 1000 klanten betalen. De kost per klant zakt van {euro(kostPerKlant)} naar
           {" "}{euro(kostPerKlant1000)}, omdat de vaste kosten dan over 1000 schouders worden verdeeld in plaats van {aantal}.
           Dát is de reden om klussen en klanten te blijven werven: elke klant erbij maakt de rest goedkoper.
@@ -249,7 +249,7 @@ export default async function KostenPage({ searchParams }) {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5, minWidth: 720 }}>
             <thead>
-              <tr style={{ textAlign: "left", color: "#9A9084", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <tr style={{ textAlign: "left", color: "#6F7A85", fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                 <th style={{ padding: "6px 8px 8px 0" }}>Klant</th>
                 <th style={{ padding: "6px 8px 8px" }}>Betaalt</th>
                 <th style={{ padding: "6px 8px 8px" }}>Foto&apos;s</th>
@@ -262,26 +262,26 @@ export default async function KostenPage({ searchParams }) {
             </thead>
             <tbody>
               {rijen.map((r) => (
-                <tr key={r.id} style={{ borderTop: "1px solid #F4EEE3" }}>
+                <tr key={r.id} style={{ borderTop: "1px solid #EFEAE0" }}>
                   <td style={{ padding: "9px 8px 9px 0", fontWeight: 700 }}>{r.naam}</td>
                   <td style={{ padding: "9px 8px" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: r.betaalt ? "#0f6e56" : "#9A9084" }}>{r.betaalt ? "● betaalt" : "○ gratis"}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: r.betaalt ? "#0f6e56" : "#6F7A85" }}>{r.betaalt ? "● betaalt" : "○ gratis"}</span>
                   </td>
                   <td style={{ padding: "9px 8px" }}>{r.fotos}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(t.klant_domein)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(t.klant_hosting)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#6B6258" }}>{euro(aiPerKlant)}</td>
-                  <td style={{ padding: "9px 8px", textAlign: "right", color: (r.opslag + r.verkeer) > 2 ? "#b91c1c" : "#6B6258" }}>{euro(r.opslag + r.verkeer)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#4A5560" }}>{euro(t.klant_domein)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#4A5560" }}>{euro(t.klant_hosting)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: "#4A5560" }}>{euro(aiPerKlant)}</td>
+                  <td style={{ padding: "9px 8px", textAlign: "right", color: (r.opslag + r.verkeer) > 2 ? "#b91c1c" : "#4A5560" }}>{euro(r.opslag + r.verkeer)}</td>
                   <td style={{ padding: "9px 0 9px 8px", textAlign: "right", fontWeight: 700 }}>{euro(r.variabel)}</td>
                 </tr>
               ))}
               {rijen.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#9A9084" }}>Nog geen klanten in de app.</td></tr>
+                <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#6F7A85" }}>Nog geen klanten in de app.</td></tr>
               )}
             </tbody>
           </table>
         </div>
-        <p style={{ fontSize: 12, color: "#9A9084", marginTop: 12, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: "#6F7A85", marginTop: 12, lineHeight: 1.6 }}>
           <strong>Aannames die je zelf kunt aanpassen</strong> via de adresbalk. Hosting per klant: {euro(t.klant_hosting)}
           {" "}(<code>?hosting=…</code>) — controleer dit met je hoster. AI bij vol gebruik: {t.projecten_dag} projecten +
           {" "}{t.reviews_dag} reviews per dag (<code>?projectendag=…&amp;reviewsdag=…</code>). Grotere Supabase-server bij

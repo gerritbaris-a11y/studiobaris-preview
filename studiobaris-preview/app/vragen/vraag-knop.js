@@ -29,9 +29,9 @@ export default function VraagKnop({ id, status }) {
       disabled={bezig}
       style={{
         fontSize: 13, fontWeight: 700, padding: "7px 13px", borderRadius: 9, cursor: "pointer",
-        border: "1px solid " + (open ? "#0f6e56" : "#E3DACB"),
+        border: "1px solid " + (open ? "#0f6e56" : "#E3DED3"),
         background: open ? "#0f6e56" : "#fff",
-        color: open ? "#fff" : "#6B6258",
+        color: open ? "#fff" : "#4A5560",
       }}
     >
       {bezig ? "Bezig…" : open ? "Markeer als afgehandeld" : "Weer openzetten"}

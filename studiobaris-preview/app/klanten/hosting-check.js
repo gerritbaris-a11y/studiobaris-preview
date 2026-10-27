@@ -36,7 +36,7 @@ function Regel({ titel, item, uitleg }) {
           <span style={{ fontWeight: 700, fontSize: 15, wordBreak: "break-word" }}>{item.naam}</span>
           {"zeker" in item && <Label zeker={item.zeker} />}
         </div>
-        {(uitleg || item.waarom) && <div style={{ fontSize: 12.5, color: "#6B6258", marginTop: 2 }}>{uitleg || item.waarom}</div>}
+        {(uitleg || item.waarom) && <div style={{ fontSize: 12.5, color: "#4A5560", marginTop: 2 }}>{uitleg || item.waarom}</div>}
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ export default function HostingCheck({ verkoper = "" }) {
     <div style={card}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
         <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800 }}>Waar zit de hosting?</h2>
-        <span style={{ fontSize: 13, color: "#9A9084" }}>plak de website van de prospect</span>
+        <span style={{ fontSize: 13, color: "#6F7A85" }}>plak de website van de prospect</span>
       </div>
 
       <form onSubmit={check} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -182,7 +182,7 @@ export default function HostingCheck({ verkoper = "" }) {
           ) : (
             <div style={{ marginTop: 14, background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px" }}>
               <div style={{ fontWeight: 800, fontSize: 14.5, marginBottom: 4 }}>Mail voor de verhuiscode</div>
-              <div style={{ fontSize: 12.5, color: "#6B6258", marginBottom: 10 }}>
+              <div style={{ fontSize: 12.5, color: "#4A5560", marginBottom: 10 }}>
                 Deze mail stuur je naar de prospect. Bovenaan staat uitleg voor hem; het deel tussen de lijnen stuurt hij zelf door naar {r.domeinBij.onbekend ? "zijn provider" : r.domeinBij.naam}.
                 {r.domeinBij.onbekend && " Vul de naam van de provider zelf in: die konden we niet met zekerheid vinden."}
               </div>

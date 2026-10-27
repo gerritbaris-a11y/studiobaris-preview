@@ -27,7 +27,7 @@ function telLink(t) {
 
 const kaart = { background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "14px 16px", display: "grid", gap: 10 };
 const rij = { display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 12px", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 10 };
-const knop = { fontSize: 12.5, padding: "6px 11px", borderRadius: 8, border: "1px solid #C05A38", background: "#C05A38", color: "#fff", fontWeight: 700, cursor: "pointer", textDecoration: "none", fontFamily: "inherit" };
+const knop = { fontSize: 12.5, padding: "6px 11px", borderRadius: 8, border: "1px solid #1A2B3D", background: "#1A2B3D", color: "#fff", fontWeight: 700, cursor: "pointer", textDecoration: "none", fontFamily: "inherit" };
 const knopLicht = { ...knop, background: "#fff", color: "#a35400" };
 const knopRood = { ...knop, background: "#fff", color: "#c0392b", borderColor: "#e3b9b4" };
 
