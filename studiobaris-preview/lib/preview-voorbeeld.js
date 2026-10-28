@@ -69,8 +69,11 @@ export function vulVoorbeeld(content) {
 
   const diensten = Array.isArray(c.diensten) && c.diensten.length ? c.diensten : VOORBEELD_DIENSTEN;
   const voordelen = Array.isArray(c.voordelen) && c.voordelen.length ? c.voordelen : VOORBEELD_VOORDELEN;
-  const reviews = Array.isArray(c.reviews) && c.reviews.length ? c.reviews : VOORBEELD_REVIEWS;
+  const echteReviews = Array.isArray(c.reviews) && c.reviews.length > 0;
+  const reviews = echteReviews ? c.reviews : VOORBEELD_REVIEWS;
   const usps = Array.isArray(c.usps) && c.usps.length ? c.usps : VOORBEELD_USPS;
 
-  return { ...c, over_ons: overOns, bedrijf: b, hero, cta_blok: cta, diensten, voordelen, reviews, usps };
+  // reviews_voorbeeld: de preview toont dan onder de reviews een regel over
+  // reviews opvragen met de app (app/[slug]/review-brug.js).
+  return { ...c, over_ons: overOns, bedrijf: b, hero, cta_blok: cta, diensten, voordelen, reviews, reviews_voorbeeld: !echteReviews, usps };
 }

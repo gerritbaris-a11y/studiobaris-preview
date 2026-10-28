@@ -4,6 +4,7 @@ import { brandVars } from "../../lib/brand";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, heroFoto } from "../../lib/preview-assets";
 import VoorproefLabel from "../[slug]/voorproef-label";
+import ReviewBrug, { REVIEW_PLEK } from "../[slug]/review-brug";
 import { waLink, kopDelen, sterren } from "./gedeeld";
 
 // Stijl "Ambachtelijk & Klassiek": crème ondergrond, klassieke schreefletter
@@ -111,7 +112,7 @@ export default function AmbachtSite({ content, slug = "", isConcept, isReview })
   return (
     <div className="am" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} />}
+      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} slug={slug} />}
 
       <header className="hd"><div className="hd-in">
         {m.logo_url
@@ -200,11 +201,12 @@ export default function AmbachtSite({ content, slug = "", isConcept, isReview })
             {(reviews.length > 0 ? reviews.slice(0, 4) : [null, null]).map((r, i) => (
               <blockquote className="rev" key={i} style={r ? undefined : { opacity: 0.7 }}>
                 <span className="st">{sterren(r && r.score)}</span>
-                <q>{r ? r.tekst : "Hier verschijnt straks een review van een tevreden klant."}</q>
+                <q>{r ? r.tekst : REVIEW_PLEK}</q>
                 <span className="nm">{r ? r.naam : "Klantnaam"}</span>
               </blockquote>
             ))}
           </div>
+          <ReviewBrug content={c} isReview={isReview} />
           {b.google_business_url && <p className="gr"><a href={b.google_business_url}>Bekijk onze Google-reviews &rarr;</a></p>}
         </div>
       </div></section>

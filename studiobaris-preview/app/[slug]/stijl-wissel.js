@@ -2,6 +2,8 @@
 
 // Stijlwisselaar op de preview van de klant.
 // - Knop "Andere stijl bekijken" zweeft onderaan (boven de proefbalk).
+//   Klapt de prospect de proefbalk in, dan verdwijnt deze knop mee
+//   (kenmerk data-sbdicht op <html>, gezet door proef-balk.js).
 // - Paneel met alle stijlen: tikken = de hele site wisselt meteen naar die
 //   stijl (zelfde teksten en foto's). Dat onthouden we in een sessie-cookie
 //   (sbk_<slug>), zodat de server de juiste stijl rendert, ook na herladen.
@@ -124,6 +126,7 @@ export default function StijlWissel({ slug, huidige, onze, merk = {}, metBalk })
     .sbw,.sbw *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
     .sbw-knop{position:fixed;left:50%;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:10px;height:48px;padding:0 18px 0 15px;border:0;border-radius:999px;background:#16202E;color:#fff;font-size:15px;font-weight:600;box-shadow:0 10px 28px rgba(0,0,0,.35);cursor:pointer;white-space:nowrap}
     .sbw-knop:hover{background:#0B121C}
+    html[data-sbdicht="1"] .sbw-knop{display:none}
     .sbw-tel{font-size:12px;font-weight:700;color:#16202E;background:#fff;border-radius:999px;padding:2px 8px}
     .sbw-dek{position:fixed;inset:0;z-index:80;background:rgba(10,12,16,.28)}
     .sbw-paneel{position:fixed;left:0;right:0;bottom:0;z-index:81;background:#fff;color:#16202E;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);padding:10px 16px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;max-width:620px;margin:0 auto}

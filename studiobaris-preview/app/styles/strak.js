@@ -4,6 +4,7 @@ import { brandVars } from "../../lib/brand";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, heroFoto } from "../../lib/preview-assets";
 import VoorproefLabel from "../[slug]/voorproef-label";
+import ReviewBrug, { REVIEW_PLEK } from "../[slug]/review-brug";
 import { waLink, kopDelen, sterren } from "./gedeeld";
 
 // Stijl "Donker & Strak": bijna-zwart, grote foto over de volle breedte, dikke
@@ -108,7 +109,7 @@ export default function StrakSite({ content, slug = "", isConcept, isReview }) {
   return (
     <div className="sk" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} />}
+      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} slug={slug} />}
 
       <div style={{ position: "relative" }}>
         <header className="hd"><div className="hd-in">
@@ -198,10 +199,11 @@ export default function StrakSite({ content, slug = "", isConcept, isReview }) {
       <section className="reviews"><div className="wrap">
         {(reviews.length > 0 ? reviews.slice(0, 3) : [null, null, null]).map((r, i) => (
           <blockquote className="rev" key={i} style={r ? undefined : { opacity: 0.75 }}>
-            <q>{r ? r.tekst : "Hier verschijnt straks een review van een tevreden klant."}</q>
+            <q>{r ? r.tekst : REVIEW_PLEK}</q>
             <div className="nm">{sterren(r && r.score)} · {r ? r.naam : "Klantnaam"}</div>
           </blockquote>
         ))}
+        <ReviewBrug content={c} isReview={isReview} />
         {b.google_business_url && <p><a href={b.google_business_url}>Bekijk onze Google-reviews &rarr;</a></p>}
       </div></section>
 

@@ -24,6 +24,8 @@ import HostingCheck from "./hosting-check";
 import DomeinCheck from "./domein-check";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
+import { getAanvragenOverzicht } from "../../lib/aanbod";
+import AanvraagAf from "./aanvraag-af";
 import ProefStatus from "./proef-status";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
@@ -47,26 +49,35 @@ function wanneer(iso) {
   return dag + ", " + tijd;
 }
 
-function ProspectActiviteit({ p }) {
-  if (!p) return null;
+function ProspectActiviteit({ p, a }) {
+  if (!p && !a) return null;
   const regel = { fontSize: 12.5, color: "#4A5560", whiteSpace: "nowrap" };
   const uit = { ...regel, color: "#6F7A85" };
   const aan = (b) => ({ ...regel, fontWeight: 700, color: b ? "#0f6e56" : "#4A5560" });
-  const geplaatst = Number(p.geplaatst) || 0;
+  const geplaatst = p ? Number(p.geplaatst) || 0 : 0;
   // Eerste keer dat de demo-app geopend werd (sinds 22 okt een eigen kolom,
   // omdat de proef nu al bij "Benaderd" start, vóór het openen).
-  const appOpenOp = p.app_geopend_op || (p.gestart_via === "app" ? p.gestart_op : null);
+  const appOpenOp = p ? p.app_geopend_op || (p.gestart_via === "app" ? p.gestart_op : null) : null;
   return (
     <div style={{ display: "grid", gap: 3, textAlign: "right", marginTop: 6, padding: "8px 10px", background: "#F7F4EE", border: "1px solid #ECE8DF", borderRadius: 10 }}>
-      {p.bekeken_aantal > 0
+      {a && a.aanvraag_id && (
+        <span style={{ ...regel, whiteSpace: "normal", fontWeight: 800, color: "#9E3B2E", display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
+          ● {a.soort === "starten" ? "Wil starten" : "Heeft een vraag"}: bel {a.telefoon}{a.moment ? ` (${a.moment.toLowerCase()})` : ""} · {wanneer(a.aanvraag_op)}
+          <AanvraagAf id={a.aanvraag_id} klein />
+        </span>
+      )}
+      {p && (p.bekeken_aantal > 0
         ? <span style={aan(true)}>● Preview bekeken {p.bekeken_aantal}× · laatst {wanneer(p.bekeken_laatst)}</span>
-        : <span style={uit}>○ Preview nog niet bekeken</span>}
-      {appOpenOp
+        : <span style={uit}>○ Preview nog niet bekeken</span>)}
+      {p && (appOpenOp
         ? <span style={aan(true)}>● App geopend {wanneer(appOpenOp)}</span>
-        : <span style={uit}>○ App nog niet geopend</span>}
-      {geplaatst > 0
+        : <span style={uit}>○ App nog niet geopend</span>)}
+      {p && (geplaatst > 0
         ? <span style={aan(true)}>● {geplaatst} van 3 projecten geplaatst · laatst {wanneer(p.laatst_geplaatst_op)}</span>
-        : <span style={uit}>○ Nog geen project geplaatst</span>}
+        : <span style={uit}>○ Nog geen project geplaatst</span>)}
+      {a && a.aanbod_aantal > 0
+        ? <span style={aan(true)}>● &quot;Dit wil ik&quot; bekeken {a.aanbod_aantal}× · laatst {wanneer(a.aanbod_laatst)}</span>
+        : <span style={uit}>○ &quot;Dit wil ik&quot; nog niet bekeken</span>}
     </div>
   );
 }
@@ -85,7 +96,8 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst, regio] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam)]);
+  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht()]);
+  const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
   const proefPerSlug = Object.fromEntries((proefLijst || []).map((p) => [p.slug, p]));
@@ -225,7 +237,7 @@ export default async function KlantenPage() {
                 <BenaderdKnop slug={r.slug} benaderdOp={benaderdPerSlug[r.slug] || null} />
                 <GeenInteresseKnop slug={r.slug} bedrijf={r.company_name} huidige={r.pipeline_status} />
                 <div style={{ flexBasis: "100%", display: "flex", justifyContent: "flex-end" }}>
-                  <ProspectActiviteit p={proefPerSlug[r.slug]} />
+                  <ProspectActiviteit p={proefPerSlug[r.slug]} a={aanvraagPerSlug[r.slug]} />
                 </div>
               </div>
             </div>
