@@ -68,7 +68,7 @@ function groet(verkoper) {
 }
 
 // --- Route: heeft al een domein ---------------------------------------------
-function HeeftDomein({ website, contact, bedrijf, verkoper, email }) {
+function HeeftDomein({ website, contact, bedrijf, verkoper, email, gegevensRegels }) {
   const [adres, setAdres] = useState(website || "");
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
@@ -98,7 +98,12 @@ function HeeftDomein({ website, contact, bedrijf, verkoper, email }) {
     `Nog één vraag over je e-mail${r && r.mail && r.mail.naam && !r.mail.naam.includes(".") ? ` (die staat nu bij ${r.mail.naam})` : ""}: wil je dat je e-mail mee naar ons komt, of blijft hij staan waar hij nu staat?`,
     "Komt hij mee, dan zitten twee mailboxen in je abonnement; daarboven betaal je € 4,95 per extra mailbox. Laat dan even weten welke adressen je nu gebruikt. Blijft hij staan, dan merk je er niets van: je mail werkt gewoon door.",
   ];
-  const mail = r && !r.domeinBij.eigen ? maakMail(r, contact || "", bedrijf || "", verkoper, mailVraag) : null;
+  const mail = r && !r.domeinBij.eigen ? maakMail(r, contact || "", bedrijf || "", verkoper, [...gegevensRegels, ...mailVraag]) : null;
+  // Domein staat al bij ons: alleen de gegevens zijn dan nog nodig.
+  const alleenGegevens = r && r.domeinBij.eigen && gegevensRegels.length ? {
+    onderwerp: "Je website: nog even je gegevens",
+    tekst: [aanhef(contact), "", ...gegevensRegels.flatMap((x) => [x, ""]), ...groet(verkoper)].join("\n"),
+  } : null;
 
   return (
     <div style={{ marginTop: 10 }}>
@@ -125,7 +130,9 @@ function HeeftDomein({ website, contact, bedrijf, verkoper, email }) {
             <div style={{ marginTop: 8, background: KLEUR.sage.bg, color: KLEUR.sage.tekst, borderRadius: 10, padding: "9px 12px", fontSize: 13.5, fontWeight: 600 }}>
               Dit domein staat al bij StudioBaris. Een verhuiscode is niet nodig.
             </div>
-          ) : (
+          ) : null}
+          {alleenGegevens && <Bericht onderwerp={alleenGegevens.onderwerp} tekst={alleenGegevens.tekst} aan={email} />}
+          {!r.domeinBij.eigen && (
             <>
               {r.domeinBij.onbekend && (
                 <div style={{ ...uitleg, marginTop: 6 }}>De partij van het domein konden we niet met zekerheid vinden: vul die zelf in het bericht in.</div>
@@ -143,7 +150,7 @@ function HeeftDomein({ website, contact, bedrijf, verkoper, email }) {
 }
 
 // --- Route: nog geen domein --------------------------------------------------
-function GeenDomein({ voorstel, contact, verkoper, email }) {
+function GeenDomein({ voorstel, contact, verkoper, email, gegevensRegels }) {
   const [domein, setDomein] = useState(voorstel || "");
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
@@ -172,12 +179,13 @@ function GeenDomein({ voorstel, contact, verkoper, email }) {
     tekst: [
       aanhef(contact),
       "",
-      `Je website komt op ${r.domein}. Die naam is nog vrij en wij leggen hem voor je vast. Het domein is en blijft van jou.`,
+      `Top dat je akkoord bent! Je website komt op ${r.domein}. Die naam is nog vrij en wij leggen hem voor je vast. Het domein is en blijft van jou.`,
       "",
       "Liever een andere naam? Laat het even weten, dan kijken we of die vrij is.",
       "",
       `Twee mailboxen zitten in je abonnement, bijvoorbeeld info@${r.domein}. Welke adressen wil je hebben?`,
       "",
+      ...gegevensRegels.flatMap((x) => [x, ""]),
       ...groet(verkoper),
     ].join("\n"),
   } : null;
@@ -223,21 +231,12 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, website, verk
   const link = GEGEVENS_BASIS + slug;
   const voorstel = slug ? `${slug}.nl` : "";
 
-  const gegevensBericht = {
-    onderwerp: "Je website: nog even je gegevens",
-    tekst: [
-      aanhef(contact),
-      "",
-      `Top dat je akkoord bent! We gaan aan de slag met de website van ${bedrijf || "je bedrijf"}.`,
-      "",
-      "Eén ding hebben we nog van je nodig: je adres, KvK- en btw-nummer. Die komen in de footer van je website en op je facturen. Het kost je twee minuten:",
-      link,
-      "",
-      "Op dezelfde pagina kun je ook je sociale media en je Google-profiel kwijt, als je die hebt.",
-      "",
-      ...groet(verkoper),
-    ].join("\n"),
-  };
+  // Adres, KvK en btw zijn bij beide routes nodig. Ze gaan mee in hetzelfde
+  // bericht als het domein, zodat de klant één mail krijgt in plaats van twee.
+  const gegevensRegels = betaald && !gegevensIngevuld ? [
+    `Verder hebben we nog je adres, KvK- en btw-nummer nodig voor de footer van je website en je facturen. Dat kost je twee minuten: ${link}`,
+    "Op dezelfde pagina kun je ook je sociale media en je Google-profiel kwijt, als je die hebt.",
+  ] : [];
 
   return (
     <div style={blok}>
@@ -254,34 +253,31 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, website, verk
 
       {open && (
         <div style={{ marginTop: 12, background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 12, padding: "12px 14px", display: "grid", gap: 16 }}>
-          {/* 1. Gegevens */}
+          {/* 1. Domein, met daarin ook de vraag om de gegevens */}
           <div>
-            <div style={stapKop}>1. Gegevens van de klant</div>
-            {gegevensIngevuld ? (
-              <div style={{ ...uitleg, color: KLEUR.sage.tekst, fontWeight: 600 }}>✓ De klant heeft zijn gegevens ingevuld. Niets meer te doen.</div>
-            ) : betaald ? (
-              <>
-                <div style={uitleg}>Adres, KvK en btw vragen we pas na akkoord. De klant ziet de link maar één keer na het betalen, dus stuur hem dit bericht.</div>
-                <Bericht onderwerp={gegevensBericht.onderwerp} tekst={gegevensBericht.tekst} aan={email} />
-              </>
-            ) : (
-              <div style={uitleg}>De gegevenspagina werkt pas als de klant akkoord heeft gegeven via de akkoordlink. Daarna verschijnt hier het bericht.</div>
-            )}
-          </div>
-
-          {/* 2. Domein */}
-          <div>
-            <div style={stapKop}>2. Domeinnaam</div>
-            <div style={uitleg}>Vraag de klant of hij al een domeinnaam heeft.</div>
+            <div style={stapKop}>1. Domeinnaam</div>
+            <div style={uitleg}>Vraag de klant of hij al een domeinnaam heeft. Daarna staat er één bericht klaar met alles wat we van hem nodig hebben.</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
               <button type="button" onClick={() => setRoute("heeft")} style={keuze(route === "heeft")}>Heeft al een domein</button>
               <button type="button" onClick={() => setRoute("geen")} style={keuze(route === "geen")}>Nog geen domein</button>
             </div>
             {route === "heeft" && (
-              <HeeftDomein website={website} contact={contact} bedrijf={bedrijf} verkoper={verkoper} email={email} />
+              <HeeftDomein website={website} contact={contact} bedrijf={bedrijf} verkoper={verkoper} email={email} gegevensRegels={gegevensRegels} />
             )}
             {route === "geen" && (
-              <GeenDomein voorstel={voorstel} contact={contact} verkoper={verkoper} email={email} />
+              <GeenDomein voorstel={voorstel} contact={contact} verkoper={verkoper} email={email} gegevensRegels={gegevensRegels} />
+            )}
+          </div>
+
+          {/* 2. Gegevens: alleen status, het verzoek zit in het bericht hierboven */}
+          <div>
+            <div style={stapKop}>2. Gegevens van de klant</div>
+            {gegevensIngevuld ? (
+              <div style={{ ...uitleg, color: KLEUR.sage.tekst, fontWeight: 600 }}>✓ De klant heeft adres, KvK en btw ingevuld.</div>
+            ) : betaald ? (
+              <div style={uitleg}>Nog niet ingevuld. De link staat in het bericht bij stap 1. De klant ziet hem zelf maar één keer, direct na het betalen.</div>
+            ) : (
+              <div style={uitleg}>De gegevenspagina werkt pas als de klant akkoord heeft gegeven via de akkoordlink. Daarna komt de link vanzelf in het bericht bij stap 1.</div>
             )}
           </div>
 
