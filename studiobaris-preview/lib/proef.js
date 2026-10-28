@@ -113,7 +113,7 @@ export function korteDatum(iso) {
 // Niet geteld: wie is ingelogd op het teamdashboard (cookie sb_sessie), en
 // bots/linkvoorbeelden (WhatsApp, Facebook, Google, curl enz.). Herladen of
 // terugkeren binnen 30 minuten telt de database niet als nieuw bezoek.
-const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|slack|discord|linkedin|skype|google|bing|yandex|vercel|curl|wget|python|node-fetch|axios|headless|lighthouse|pagespeed/i;
+export const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|slack|discord|linkedin|skype|google|bing|yandex|vercel|curl|wget|python|node-fetch|axios|headless|lighthouse|pagespeed/i;
 
 export async function telBezoek(slug, { ingelogd, userAgent }) {
   if (!slug || ingelogd) return;

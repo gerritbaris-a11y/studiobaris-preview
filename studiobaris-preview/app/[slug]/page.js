@@ -11,6 +11,7 @@ import PersoonlijkSite from "../styles/persoonlijk";
 import AmbachtSite from "../styles/ambacht";
 import StrakSite from "../styles/strak";
 import VoorproefLabel from "./voorproef-label";
+import ReviewBrug, { REVIEW_PLEK } from "./review-brug";
 import StijlWissel from "./stijl-wissel";
 import { geldigeStijl } from "../../lib/stijlen";
 import { getProef, metProefProjecten, proefDatum, DEMO_BASIS, telBezoek } from "../../lib/proef";
@@ -89,7 +90,7 @@ export default async function Page({ params, searchParams }) {
   if (proef.actief) content = metProefProjecten(content, proef);
   const balk = proef.actief ? (
     <div style={brandVars((content && content.merk) || {})}>
-      <ProefBalk url={DEMO_BASIS + params.slug} datum={proefDatum(proef.tot)} geplaatst={proef.geplaatst} />
+      <ProefBalk slug={params.slug} url={DEMO_BASIS + params.slug} aanbodUrl={`/${params.slug}/aanbod`} datum={proefDatum(proef.tot)} geplaatst={proef.geplaatst} />
     </div>
   ) : null;
 
@@ -244,7 +245,7 @@ export default async function Page({ params, searchParams }) {
     <div className="vp" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {(isConcept || isVoorproef) && <VoorproefLabel isConcept={isConcept} />}
+      {(isConcept || isVoorproef) && <VoorproefLabel isConcept={isConcept} slug={params.slug} />}
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 42, width: "auto", display: "block" }} /> : <>{naamDelen[0]} <span className="o">{naamDelen.slice(1).join(" ")}</span></>}</div>
@@ -337,14 +338,15 @@ export default async function Page({ params, searchParams }) {
             : [0, 1, 2].map((i) => (
                 <div className="rev" key={i} style={{ opacity: 0.7 }}>
                   <div className="stars">★★★★★</div>
-                  <p className="rq">&ldquo;Hier verschijnt straks een review van een tevreden klant.&rdquo;</p>
+                  <p className="rq">&ldquo;{REVIEW_PLEK}&rdquo;</p>
                   <div className="ra"><div className="av">?</div><div className="rn">Klantnaam</div></div>
                 </div>
               ))}
         </div>
+        <ReviewBrug content={c} isReview={isVoorproef} />
         {b.google_business_url
           ? <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-ink)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>
-          : (reviews.length === 0 && <p className="phnote">Lever jullie (Google-)reviews aan en ze verschijnen hier.</p>)}
+          : (reviews.length === 0 && <p className="phnote">Met je app vraag je reviews op. Ze verschijnen dan hier.</p>)}
       </div></section>
 
       <section className="fcta" id="contact">

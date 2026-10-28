@@ -2,6 +2,7 @@ import { googleFontsHref } from "../../lib/preview";
 import MobielMenu from "../[slug]/mobiel-menu";
 import { brandVars } from "../../lib/brand";
 import VoorproefLabel from "../[slug]/voorproef-label";
+import ReviewBrug, { REVIEW_PLEK } from "../[slug]/review-brug";
 import FaseFotos, { heeftFases } from "../[slug]/fase-fotos";
 import { nicheFoto, heroAchtergrond, heroFoto, MERK_OVERLAY } from "../../lib/preview-assets";
 
@@ -108,7 +109,7 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
   return (
     <div className="pz" style={vars}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} />}
+      {(isConcept || isReview) && <VoorproefLabel isConcept={isConcept} slug={slug} />}
 
       <header className="hd"><div className="hd-in">
         <div className="logo">{m.logo_url ? <img src={m.logo_url} alt={b.naam || "logo"} style={{ height: 38, width: "auto", display: "block" }} /> : <>{naam[0]} <span className="o">{naam.slice(1).join(" ")}</span></>}</div>
@@ -181,9 +182,10 @@ export default function PersoonlijkSite({ content, slug = "", isConcept, isRevie
                 <div className="rev" key={i}><div className="stars">{"★".repeat(Math.max(0, Math.min(5, r.score || 5)))}</div><p className="rq">&ldquo;{r.tekst}&rdquo;</p><div className="rn">{r.naam}</div></div>
               ))
             : [0, 1].map((i) => (
-                <div className="rev" key={i} style={{ opacity: 0.75 }}><div className="stars">★★★★★</div><p className="rq">&ldquo;Hier verschijnt straks een review van een tevreden klant.&rdquo;</p><div className="rn">Klantnaam</div></div>
+                <div className="rev" key={i} style={{ opacity: 0.75 }}><div className="stars">★★★★★</div><p className="rq">&ldquo;{REVIEW_PLEK}&rdquo;</p><div className="rn">Klantnaam</div></div>
               ))}
         </div>
+        <ReviewBrug content={c} isReview={isReview} />
         {b.google_business_url && <p className="phnote"><a href={b.google_business_url} style={{ color: "var(--orange-ink)", fontWeight: 700 }}>Bekijk onze Google-reviews &rarr;</a></p>}
       </div></section>
 
