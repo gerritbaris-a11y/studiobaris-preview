@@ -95,7 +95,7 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
           </p>
           <h1 style={{ fontSize: 30, margin: "8px 0 14px", lineHeight: 1.2 }}>Je website bekijken{bedrijf ? ` – ${bedrijf}` : ""}</h1>
           <p style={{ fontSize: 18, lineHeight: 1.6 }}>
-            We lopen samen je website door, pagina voor pagina. Je bekijkt een pagina en tikt daarna op:
+            We lopen samen je website door, pagina voor pagina. Je ziet steeds één pagina van je website, met onderaan twee knoppen:
           </p>
           <ul style={{ fontSize: 18, lineHeight: 1.8, paddingLeft: 22 }}>
             <li><strong>Ziet er goed uit</strong>, of</li>
@@ -137,58 +137,82 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
   }
 
   // --- Een pagina van de site ---------------------------------------------------
+  // De pagina staat ín het formulier (kader), zodat de klant niet weg hoeft
+  // en terug moet komen. Onderaan altijd dezelfde twee knoppen.
   const p = PAGINAS[stap];
   const k = keuze[p.id];
-  const verder = k === "goed" || (k === "anders" && (tekst[p.id] || "").trim());
+  const url = basis ? basis + p.pad : "";
+
+  function goed() {
+    setKeuze({ ...keuze, [p.id]: "goed" });
+    setStap(stap + 1);
+  }
 
   return (
-    <main style={pagina}>
-      <div style={binnen}>
-        <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+    <main style={{ ...pagina, height: "100dvh", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {/* Kop: waar ben je */}
+      <div style={{ padding: "10px 14px 8px", background: "#fff", borderBottom: "1px solid #E3DED3", flex: "0 0 auto" }}>
+        <div style={{ display: "flex", gap: 5, marginBottom: 8 }}>
           {PAGINAS.map((x, i) => (
-            <div key={x.id} style={{ flex: 1, height: 6, borderRadius: 3, background: i <= stap ? GOUD : "#E3DED3" }} />
+            <div key={x.id} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= stap ? GOUD : "#E3DED3" }} />
           ))}
         </div>
-        <p style={{ fontSize: 14, fontWeight: 700, color: "#7E5F28" }}>Pagina {stap + 1} van {n}</p>
-        <h1 style={{ fontSize: 30, margin: "4px 0 10px" }}>{p.titel}</h1>
-        <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4A5560" }}>{p.uitleg}</p>
-
-        {basis ? (
-          <a href={basis + p.pad} target="_blank" rel="noreferrer" style={{ ...navyKnop, marginTop: 16 }}>
-            Bekijk de pagina {p.titel} ↗
-          </a>
-        ) : (
-          <p style={{ fontSize: 16, color: "#4A5560" }}>Open je website en ga naar de pagina &quot;{p.titel}&quot;.</p>
-        )}
-        <p style={{ fontSize: 14, color: "#6F7A85", textAlign: "center", margin: "8px 0 0" }}>Daarna kom je hier terug.</p>
-
-        <div style={{ display: "grid", gap: 12, marginTop: 24 }}>
-          <button type="button" onClick={() => setKeuze({ ...keuze, [p.id]: "goed" })}
-            style={k === "goed" ? { ...navyKnop } : { ...lichtKnop }}>
-            👍 Ziet er goed uit
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <button type="button" onClick={() => setStap(stap - 1)}
+            style={{ background: "none", border: "none", fontSize: 16, fontWeight: 700, color: NAVY, padding: "4px 0", cursor: "pointer", fontFamily: "inherit" }}>
+            ‹ Terug
           </button>
-          <button type="button" onClick={() => setKeuze({ ...keuze, [p.id]: "anders" })}
-            style={k === "anders" ? { ...navyKnop } : { ...lichtKnop }}>
-            ✏️ Dit wil ik anders
-          </button>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>{p.titel}</div>
+            <div style={{ fontSize: 13, color: "#6F7A85" }}>Pagina {stap + 1} van {n}</div>
+          </div>
+          <span style={{ width: 52 }} />
         </div>
+        <p style={{ fontSize: 14, color: "#4A5560", margin: "6px 0 0", textAlign: "center", lineHeight: 1.4 }}>
+          {p.uitleg} Scroll in de pagina hieronder.
+        </p>
+      </div>
 
-        {k === "anders" && (
-          <div style={{ marginTop: 16 }}>
-            <label style={{ fontSize: 17, fontWeight: 700 }}>Wat moet er anders?</label>
-            <p style={{ fontSize: 15, color: "#4A5560", margin: "4px 0 8px" }}>Schrijf het zoals je het zou zeggen. Een foto? Die kun je ons appen.</p>
-            <textarea value={tekst[p.id] || ""} onChange={(e) => setTekst({ ...tekst, [p.id]: e.target.value })} rows={5} autoFocus
-              placeholder="Bijvoorbeeld: mijn telefoonnummer klopt niet, het is 06…"
-              style={{ width: "100%", boxSizing: "border-box", padding: 14, fontSize: 17, borderRadius: 14, border: "1px solid #D8D2C4", fontFamily: "inherit" }} />
+      {/* De pagina zelf */}
+      <div style={{ flex: "1 1 auto", minHeight: 0, background: "#fff", position: "relative" }}>
+        {url ? (
+          <iframe key={url} src={url} title={p.titel} style={{ width: "100%", height: "100%", border: "none", display: "block" }} />
+        ) : (
+          <p style={{ padding: 20, fontSize: 16, color: "#4A5560" }}>Open je website en ga naar de pagina &quot;{p.titel}&quot;.</p>
+        )}
+      </div>
+
+      {/* Onderbalk: altijd in beeld */}
+      <div style={{ flex: "0 0 auto", background: "#fff", borderTop: "1px solid #E3DED3", padding: "12px 14px calc(12px + env(safe-area-inset-bottom))", boxShadow: "0 -4px 16px rgba(26,43,61,0.08)" }}>
+        {k === "anders" ? (
+          <>
+            <label style={{ fontSize: 16, fontWeight: 700 }}>Wat moet er anders op {p.titel}?</label>
+            <textarea value={tekst[p.id] || ""} onChange={(e) => setTekst({ ...tekst, [p.id]: e.target.value })} rows={3} autoFocus
+              placeholder="Schrijf het zoals je het zou zeggen. Bijvoorbeeld: mijn telefoonnummer klopt niet"
+              style={{ width: "100%", boxSizing: "border-box", padding: 12, fontSize: 16, borderRadius: 12, border: "1px solid #D8D2C4", fontFamily: "inherit", marginTop: 6 }} />
+            <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+              <button type="button" onClick={() => setKeuze({ ...keuze, [p.id]: undefined })} style={{ ...lichtKnop, padding: "14px 10px", fontSize: 16, flex: "0 0 32%" }}>Annuleer</button>
+              <button type="button" disabled={!(tekst[p.id] || "").trim()} onClick={() => setStap(stap + 1)}
+                style={{ ...goudKnop, padding: "14px 10px", fontSize: 16, opacity: (tekst[p.id] || "").trim() ? 1 : 0.45 }}>
+                Volgende pagina
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="button" onClick={() => setKeuze({ ...keuze, [p.id]: "anders" })} style={{ ...lichtKnop, padding: "16px 8px", fontSize: 16 }}>
+              ✏️ Dit wil ik anders
+            </button>
+            <button type="button" onClick={goed} style={{ ...navyKnop, padding: "16px 8px", fontSize: 16 }}>
+              👍 Ziet er goed uit
+            </button>
           </div>
         )}
-
-        <button type="button" disabled={!verder} onClick={() => setStap(stap + 1)}
-          style={{ ...goudKnop, marginTop: 24, opacity: verder ? 1 : 0.45, cursor: verder ? "pointer" : "default" }}>
-          Volgende
-        </button>
-        <button type="button" onClick={() => setStap(stap - 1)} style={{ ...lichtKnop, marginTop: 12 }}>Terug</button>
-        <Hulp />
+        {url && (
+          <a href={url} target="_blank" rel="noreferrer" style={{ display: "block", textAlign: "center", fontSize: 13, color: "#6F7A85", marginTop: 8 }}>
+            Zie je de pagina niet? Tik hier om hem los te openen.
+          </a>
+        )}
       </div>
     </main>
   );
