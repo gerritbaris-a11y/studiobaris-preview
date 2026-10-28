@@ -59,6 +59,37 @@ function Bericht({ onderwerp, tekst, aan }) {
   );
 }
 
+// Een appje voor de klant: opent WhatsApp met de tekst er al in.
+function Appje({ tekst, telefoon }) {
+  const [ok, setOk] = useState(false);
+  const nr = String(telefoon || "").replace(/[^0-9]/g, "").replace(/^06/, "316");
+  async function kopieer() {
+    try {
+      await navigator.clipboard.writeText(tekst);
+      setOk(true);
+      setTimeout(() => setOk(false), 2500);
+    } catch {}
+  }
+  return (
+    <div style={{ marginTop: 8 }}>
+      <pre style={{
+        whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13.5, lineHeight: 1.5, margin: 0,
+        background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px",
+      }}>{tekst}</pre>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+        <a href={"https://wa.me/" + nr + "?text=" + encodeURIComponent(tekst)} target="_blank" rel="noreferrer"
+          style={{ ...knop, textDecoration: "none", display: "inline-block" }}>
+          Open in WhatsApp
+        </a>
+        <button type="button" onClick={kopieer} style={knopLicht}>{ok ? "✓ Gekopieerd" : "Kopieer appje"}</button>
+      </div>
+      {!nr && <div style={{ ...uitleg, marginTop: 4 }}>Geen telefoonnummer bekend: kies de klant zelf in WhatsApp.</div>}
+    </div>
+  );
+}
+
+const SB_TEL_TOON = "06 16 73 21 05";
+
 function aanhef(naam) {
   return naam && naam.trim() ? `Hoi ${naam.trim()},` : "Hoi,";
 }
@@ -229,9 +260,11 @@ function GeenDomein({ voorstel, contact, verkoper, email, gegevensRegels }) {
 }
 
 // --- Het blok -----------------------------------------------------------------
-export default function NaAkkoord({ slug, bedrijf, contact, email, website, verkoper, betaalStatus, gegevensIngevuld }) {
+export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, website, verkoper, betaalStatus, gegevensIngevuld, beheer }) {
   const [open, setOpen] = useState(false);
   const [route, setRoute] = useState(null); // "heeft" | "geen"
+  const [siteLink, setSiteLink] = useState("");
+  const [liveDomein, setLiveDomein] = useState("");
 
   const betaald = ["akkoord", "actief"].includes(String(betaalStatus || ""));
   const link = GEGEVENS_BASIS + slug;
@@ -251,7 +284,7 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, website, verk
         onClick={() => setOpen(!open)}
         style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", fontFamily: "inherit", color: KLEUR.inkt, textAlign: "left" }}
       >
-        <span style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 800 }}>{open ? "▾" : "▸"} Na akkoord: zo gaat het verder</span>
+        <span style={{ fontFamily: HEAD, fontSize: 15, fontWeight: 800 }}>{open ? "▾" : "▸"} Na akkoord: van akkoord tot live</span>
         <span style={{ fontSize: 12.5, color: KLEUR.label }}>
           {gegevensIngevuld ? "✓ gegevens binnen" : "gegevens nog niet binnen"}
         </span>
@@ -287,17 +320,94 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, website, verk
             )}
           </div>
 
-          {/* 3. Wat er daarna gebeurt */}
+          {/* 3. Van eerste versie tot live */}
           <div>
-            <div style={stapKop}>3. Wat er daarna gebeurt</div>
-            <div style={uitleg}>Dit kun je de klant vertellen:</div>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
-              <li>Wij bouwen de website op basis van de preview die hij heeft goedgekeurd.</li>
-              <li>Hij krijgt de site te zien en mag twee correctierondes doen.</li>
-              <li>Bij oplevering krijgt hij een mail met waar alles staat, uitleg over de app en zijn persoonlijke inloglink.</li>
-              <li>Pas bij oplevering betaalt hij de tweede helft. Het maandbedrag gaat automatisch.</li>
-              <li>Het domein en de website zijn en blijven van hem.</li>
-            </ul>
+            <div style={stapKop}>3. Eerste versie, feedback en oplevering</div>
+            <div style={uitleg}>
+              Zo loopt het na de bouw. Alles gaat via WhatsApp of de telefoon: de klant hoeft geen formulier in te vullen.
+              Hij krijgt twee rondes om dingen aan te passen.
+              {!beheer && " Deze appjes stuurt StudioBaris (Gerrit of Levi); jij hoeft hier niets te doen."}
+            </div>
+            <ol style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
+              <li><strong>Eerste versie klaar:</strong> appje met de link. De klant kijkt op zijn telefoon en appt of belt wat er anders moet.</li>
+              <li><strong>Ronde 1 verwerkt:</strong> appje met de link. Goed? Dan stuurt hij &quot;Akkoord&quot;. Nog iets? Dat is ronde 2.</li>
+              <li><strong>Ronde 2 verwerkt:</strong> laatste appje voor akkoord.</li>
+              <li><strong>Live:</strong> appje dat de site live staat, de overdrachtsmail, en even bellen om samen de app op zijn telefoon te zetten. De tweede helft gaat automatisch van zijn rekening.</li>
+            </ol>
+
+            {beheer && (
+              <div style={{ marginTop: 12, display: "grid", gap: 14 }}>
+                <label style={{ fontSize: 13, fontWeight: 700 }}>
+                  Link waar de klant de website kan bekijken
+                  <input value={siteLink} onChange={(e) => setSiteLink(e.target.value)} placeholder="https://…"
+                    inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false}
+                    style={{ ...invoer, display: "block", width: "100%", marginTop: 4, fontWeight: 400 }} />
+                </label>
+
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Eerste versie klaar</div>
+                  <Appje telefoon={telefoon} tekst={[
+                    aanhef(contact),
+                    "",
+                    "Je website is klaar om te bekijken! 👉 " + (siteLink.trim() || "[link]"),
+                    "",
+                    "Kijk rustig rond, gewoon op je telefoon. Wil je iets anders of klopt er iets niet? Stuur het in een appje. Een spraakbericht of een schermafbeelding mag ook. Liever bellen? Bel " + SB_TEL_TOON + ".",
+                    "",
+                    "Je hebt twee rondes om dingen aan te laten passen. Zet daarom alles wat je wilt veranderen het liefst in één keer bij elkaar.",
+                    "",
+                    "Groet, StudioBaris",
+                  ].join("\n")} />
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Ronde 1 verwerkt</div>
+                  <Appje telefoon={telefoon} tekst={[
+                    aanhef(contact),
+                    "",
+                    "Je wijzigingen zijn verwerkt 👉 " + (siteLink.trim() || "[link]"),
+                    "",
+                    "Kijk nog even of alles goed is. Is het in orde? Stuur dan \"Akkoord\", dan zetten we je website live.",
+                    "Wil je nog iets aanpassen? Stuur het in één appje of bel ons. Dat is je tweede en laatste ronde.",
+                    "",
+                    "Groet, StudioBaris",
+                  ].join("\n")} />
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Ronde 2 verwerkt</div>
+                  <Appje telefoon={telefoon} tekst={[
+                    aanhef(contact),
+                    "",
+                    "Alles is aangepast 👉 " + (siteLink.trim() || "[link]"),
+                    "",
+                    "Is het goed zo? Stuur dan \"Akkoord\", dan zetten we je website live.",
+                    "",
+                    "Groet, StudioBaris",
+                  ].join("\n")} />
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Live</div>
+                  <input value={liveDomein} onChange={(e) => setLiveDomein(e.target.value)} placeholder="domeinnaam, bv. bedrijfsnaam.nl"
+                    inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false}
+                    style={{ ...invoer, display: "block", width: "100%", marginTop: 4 }} />
+                  <Appje telefoon={telefoon} tekst={[
+                    aanhef(contact),
+                    "",
+                    "Je website staat live! 🎉 👉 " + (liveDomein.trim() || "[domein]"),
+                    "",
+                    "Je krijgt zo een mail met alles op een rij: waar alles staat en je persoonlijke link naar de app. Stuur die link aan niemand door, hij werkt als je wachtwoord.",
+                    "",
+                    "Zullen we even bellen? Dan zetten we samen de app op je telefoon en plaats je je eerste project. Dat duurt ongeveer tien minuten. Laat maar weten wanneer het je uitkomt.",
+                    "",
+                    "De tweede helft van het websitebedrag wordt automatisch van je rekening afgeschreven. De factuur krijg je per mail.",
+                    "",
+                    "Groet, StudioBaris",
+                  ].join("\n")} />
+                  <div style={{ ...uitleg, marginTop: 6 }}>Daarna: overdrachtsmail sturen en de fase op Klaar zetten.</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

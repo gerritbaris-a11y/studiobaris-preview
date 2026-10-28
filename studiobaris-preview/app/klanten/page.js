@@ -272,10 +272,12 @@ export default async function KlantenPage() {
                 bedrijf={r.company_name}
                 contact={r.contactpersoon}
                 email={r.lead_email}
+                telefoon={r.lead_phone}
                 website={review.website}
                 verkoper={naam}
                 betaalStatus={r.betaal_status}
                 gegevensIngevuld={!!review.gegevens_aangevuld_op}
+                beheer={beheer}
               />
             )}
 
