@@ -23,6 +23,7 @@ import KlantenZoek from "./klanten-zoek";
 import HostingCheck from "./hosting-check";
 import DomeinCheck from "./domein-check";
 import NaAkkoord from "./na-akkoord";
+import { getRondes } from "../../lib/ronde";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
@@ -97,7 +98,7 @@ export default async function KlantenPage() {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht()]);
+  const [alles, mijnLeads, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : []]);
   const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
@@ -278,6 +279,7 @@ export default async function KlantenPage() {
                 betaalStatus={r.betaal_status}
                 gegevensIngevuld={!!review.gegevens_aangevuld_op}
                 beheer={beheer}
+                rondes={(rondeLijst || []).filter((f) => f.slug === r.slug)}
               />
             )}
 
