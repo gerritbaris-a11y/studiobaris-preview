@@ -22,6 +22,7 @@ import DocumentenKaart from "../documenten-kaart";
 import KlantenZoek from "./klanten-zoek";
 import HostingCheck from "./hosting-check";
 import DomeinCheck from "./domein-check";
+import NaAkkoord from "./na-akkoord";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
@@ -263,6 +264,20 @@ export default async function KlantenPage() {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
+
+            {/* Na akkoord: vervolgstappen en berichten voor de klant. Tot Klaar. */}
+            {fase !== "Klaar" && (fase === "Akkoord" || ["akkoord", "actief"].includes(String(r.betaal_status || ""))) && (
+              <NaAkkoord
+                slug={r.slug}
+                bedrijf={r.company_name}
+                contact={r.contactpersoon}
+                email={r.lead_email}
+                website={review.website}
+                verkoper={naam}
+                betaalStatus={r.betaal_status}
+                gegevensIngevuld={!!review.gegevens_aangevuld_op}
+              />
+            )}
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
               <Contactpersoon slug={r.slug} value={r.contactpersoon} />
