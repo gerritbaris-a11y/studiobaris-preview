@@ -63,6 +63,16 @@ function aanhef(naam) {
   return naam && naam.trim() ? `Hoi ${naam.trim()},` : "Hoi,";
 }
 
+// De mailvraag staat in elk bericht: het aantal mailboxen bepaalt mee het
+// maandbedrag (2 inbegrepen, daarboven € 4,95 per extra mailbox per maand).
+function mailVraag(domein, nuBij) {
+  return [
+    `Wil je ook e-mail op je eigen domein, bijvoorbeeld info@${domein}?${nuBij ? ` Je e-mail staat nu bij ${nuBij}; die kan mee naar ons.` : ""}`,
+    "Zo ja, laat dan weten hoeveel mailboxen je wilt en welke adressen. Twee mailboxen zitten in je abonnement. Elke extra mailbox kost € 4,95 per maand, bovenop je maandbedrag.",
+    ...(nuBij ? ["Wil je je e-mail liever houden waar hij nu staat? Dan merk je er niets van: je mail werkt gewoon door."] : []),
+  ];
+}
+
 function groet(verkoper) {
   return ["Groet,", verkoper && verkoper.trim() ? `${verkoper.trim()}, StudioBaris` : "StudioBaris"];
 }
@@ -92,17 +102,14 @@ function HeeftDomein({ website, contact, bedrijf, verkoper, email, gegevensRegel
     setBezig(false);
   }
 
-  // De klant kiest zelf of zijn mail meekomt.
-  const geenMail = r && r.mail && r.mail.naam === "Geen mail op dit domein";
-  const mailVraag = geenMail ? [] : [
-    `Nog één vraag over je e-mail${r && r.mail && r.mail.naam && !r.mail.naam.includes(".") ? ` (die staat nu bij ${r.mail.naam})` : ""}: wil je dat je e-mail mee naar ons komt, of blijft hij staan waar hij nu staat?`,
-    "Komt hij mee, dan zitten twee mailboxen in je abonnement; daarboven betaal je € 4,95 per extra mailbox. Laat dan even weten welke adressen je nu gebruikt. Blijft hij staan, dan merk je er niets van: je mail werkt gewoon door.",
-  ];
-  const mail = r && !r.domeinBij.eigen ? maakMail(r, contact || "", bedrijf || "", verkoper, [...gegevensRegels, ...mailVraag]) : null;
+  // Waar staat de mail nu? Alleen een bekende partij noemen, geen MX-hostnaam.
+  const nuBij = r && r.mail && r.mail.naam !== "Geen mail op dit domein" && !r.mail.naam.includes(".") ? r.mail.naam : "";
+  const vraag = r ? mailVraag(r.domein, nuBij) : [];
+  const mail = r && !r.domeinBij.eigen ? maakMail(r, contact || "", bedrijf || "", verkoper, [...gegevensRegels, ...vraag]) : null;
   // Domein staat al bij ons: alleen de gegevens zijn dan nog nodig.
-  const alleenGegevens = r && r.domeinBij.eigen && gegevensRegels.length ? {
-    onderwerp: "Je website: nog even je gegevens",
-    tekst: [aanhef(contact), "", ...gegevensRegels.flatMap((x) => [x, ""]), ...groet(verkoper)].join("\n"),
+  const alleenGegevens = r && r.domeinBij.eigen ? {
+    onderwerp: "Je website: e-mail en gegevens",
+    tekst: [aanhef(contact), "", ...vraag.flatMap((x) => [x, ""]), ...gegevensRegels.flatMap((x) => [x, ""]), ...groet(verkoper)].join("\n"),
   } : null;
 
   return (
@@ -139,7 +146,7 @@ function HeeftDomein({ website, contact, bedrijf, verkoper, email, gegevensRegel
               )}
               <Bericht onderwerp={mail.onderwerp} tekst={mail.tekst} aan={email} />
               <div style={{ ...uitleg, marginTop: 8 }}>
-                Krijg je de verhuiscode binnen, of het antwoord over de mail? Geef het door aan Gerrit of Levi. Wij doen de rest.
+                Krijg je de verhuiscode binnen, of het antwoord over de mail? Geef het door aan Gerrit of Levi, met het aantal mailboxen en de adressen. Wil de klant meer dan twee mailboxen, dan gaat zijn maandbedrag omhoog.
               </div>
             </>
           )}
@@ -183,8 +190,7 @@ function GeenDomein({ voorstel, contact, verkoper, email, gegevensRegels }) {
       "",
       "Liever een andere naam? Laat het even weten, dan kijken we of die vrij is.",
       "",
-      `Twee mailboxen zitten in je abonnement, bijvoorbeeld info@${r.domein}. Welke adressen wil je hebben?`,
-      "",
+      ...mailVraag(r.domein, "").flatMap((x) => [x, ""]),
       ...gegevensRegels.flatMap((x) => [x, ""]),
       ...groet(verkoper),
     ].join("\n"),
@@ -214,7 +220,7 @@ function GeenDomein({ voorstel, contact, verkoper, email, gegevensRegels }) {
           </div>
           <Bericht onderwerp={bericht.onderwerp} tekst={bericht.tekst} aan={email} />
           <div style={{ ...uitleg, marginTop: 8 }}>
-            Gaat de klant akkoord met de naam? Geef de naam en de gewenste mailadressen door aan Gerrit of Levi.
+            Gaat de klant akkoord met de naam? Geef de naam door aan Gerrit of Levi, met het aantal mailboxen en de adressen. Wil de klant meer dan twee mailboxen, dan gaat zijn maandbedrag omhoog.
           </div>
         </>
       )}
