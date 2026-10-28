@@ -19,7 +19,9 @@ export default async function RondePage({ params, searchParams }) {
   const site = schoonSite(sp.site);
   const info = await getBetaalinfo(p.slug);
 
-  if (!info || !["akkoord", "actief"].includes(String(info.betaal_status || ""))) {
+  // Klanten met akkoord/betaling, plus Gerrits testpreview "test" om te bekijken.
+  const magKijken = info && (p.slug === "test" || ["akkoord", "actief"].includes(String(info.betaal_status || "")));
+  if (!magKijken) {
     return (
       <main style={wrap}>
         <h1 style={{ fontSize: 26 }}>Deze link klopt niet</h1>
