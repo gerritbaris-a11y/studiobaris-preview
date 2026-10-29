@@ -42,7 +42,7 @@ function Regel({ titel, item, uitleg }) {
   );
 }
 
-export function maakMail(r, naam, bedrijf, verkoper = "") {
+export function maakMail(r, naam, bedrijf, verkoper = "", extra2 = []) {
   const partij = r.domeinBij.onbekend ? "[naam van uw provider]" : r.domeinBij.naam;
   const wie = naam.trim() || "[uw naam]";
   const regels = [
@@ -85,6 +85,8 @@ export function maakMail(r, naam, bedrijf, verkoper = "") {
     "",
     "Je zegt hiermee niets op: in de mail staat uitdrukkelijk dat je pakket en je e-mail gewoon blijven werken.",
     "",
+    // Optionele extra alinea's (bv. de mailvraag na akkoord); standaard leeg.
+    ...extra2.flatMap((x) => [x, ""]),
     "Groet,",
     verkoper.trim() ? `${verkoper.trim()}, StudioBaris` : "StudioBaris",
     "",
