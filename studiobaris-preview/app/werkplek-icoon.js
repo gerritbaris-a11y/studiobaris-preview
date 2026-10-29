@@ -2,14 +2,10 @@
 
 import { useEffect } from "react";
 
-// Favicon en app-icoon van de werkplek (huisstijl: Drive → Logo's →
-// studiobaris-alle-logos → icon/). Bewust alleen op de werkplek-schermen en het
-// inlogscherm: de previews voor prospects delen dezelfde root-layout en krijgen
-// dit icoon dus niet. Daarom staat het ook niet als /favicon.ico in de root.
+// Installeerbare werkplek (manifest + themakleur), alleen op de werkplek-schermen
+// en het inlogscherm. Het favicon zelf staat sinds 28 okt in app/layout.js, zodat
+// ook previews, aanbod-, akkoord- en gegevenspagina het StudioBaris-icoon tonen.
 const LINKS = [
-  { rel: "icon", href: "/werkplek/favicon.ico", sizes: "any" },
-  { rel: "icon", href: "/werkplek/icon.svg", type: "image/svg+xml" },
-  { rel: "apple-touch-icon", href: "/werkplek/apple-touch-icon.png" },
   { rel: "manifest", href: "/manifest.webmanifest" },
 ];
 
