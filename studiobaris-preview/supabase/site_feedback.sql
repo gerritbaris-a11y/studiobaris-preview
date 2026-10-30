@@ -7,7 +7,7 @@
 create table if not exists workflow.site_feedback (
   id            bigserial primary key,
   slug          text not null,
-  ronde         int  not null check (ronde in (1, 2)),
+  ronde         int  not null check (ronde in (1, 2, 3)),
   site          text,
   antwoorden    jsonb not null default '{}'::jsonb,
   aangemaakt_op timestamptz not null default now(),
@@ -31,7 +31,7 @@ begin
   -- Klanten met akkoord/betaling, plus Gerrits testpreview 'test'.
   if not exists (select 1 from workflow.previews where slug = p_slug and (betaal_status in ('akkoord','actief') or p_slug = 'test')) then
     return json_build_object('ok', false, 'error', 'onbekend'); end if;
-  if p_ronde not in (1, 2) then return json_build_object('ok', false, 'error', 'ronde'); end if;
+  if p_ronde not in (1, 2, 3) then return json_build_object('ok', false, 'error', 'ronde'); end if;
   if (select count(*) from workflow.site_feedback where slug = p_slug and aangemaakt_op > now() - interval '1 hour') >= 3 then
     return json_build_object('ok', false, 'error', 'te_vaak'); end if;
   insert into workflow.site_feedback (slug, ronde, site, antwoorden)
