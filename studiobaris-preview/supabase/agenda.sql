@@ -408,3 +408,7 @@ end $$;
 -- sb_agenda_test_opruimen(): testboekingen ouder dan 30 dagen wissen.
 -- sb_agenda_boek: in testmodus max. 25 boekingen per voorbeeldsite per 24 uur.
 -- (Volledige definities: zie migratie in Supabase.)
+-- ===== Aanvulling (migraties agenda_ical_feed, agenda_overzetten_naar_klant) =====
+-- agenda_instellingen.ical_token + sb_agenda_ical(token): abonneerbare agenda.
+-- sb_agenda_overzetten(van_slug, naar_company, email): demo-agenda naar het
+--   echte app-account (behandelingen, rooster, instellingen; testmodus uit).
