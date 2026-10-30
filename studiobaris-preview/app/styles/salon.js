@@ -295,6 +295,11 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           <div className="eb">Behandelingen en prijzen</div>
           <h2>Wat we voor je doen</h2>
           <p className="lead">Alle prijzen inclusief btw. De tijd erachter is hoe lang je ongeveer in de stoel zit.</p>
+          {agenda && agenda.instellingen && agenda.instellingen.test_modus && (
+            <p style={{ background: "var(--vlak2)", border: "1px dashed var(--lijn)", borderRadius: "var(--r)", padding: "10px 14px", fontSize: ".9rem", marginBottom: "1.4rem", color: "var(--zacht)" }}>
+              Voorbeeld: dit zijn veelvoorkomende behandelingen met gangbare prijzen. Je zet hier straks je eigen behandelingen, tijden en prijzen neer, in de app.
+            </p>
+          )}
           <div className="cats">
             {categorieen.map((cat) => (
               <div className="cat" key={cat}>
