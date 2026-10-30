@@ -51,8 +51,7 @@ export function parseCsv(tekst) {
   });
 }
 
-export async function haalSheet() {
-  const url = process.env.LEADS_SHEET_CSV_URL || STANDAARD_URL;
+export async function haalSheet(url = process.env.LEADS_SHEET_CSV_URL || STANDAARD_URL) {
   const res = await fetch(url, { cache: "no-store", redirect: "follow" });
   if (!res.ok) throw new Error(`Sheet niet op te halen (HTTP ${res.status}).`);
   const tekst = await res.text();
@@ -69,11 +68,13 @@ export async function haalSheet() {
 }
 
 // Haalt de Sheet op en zet hem in Supabase. Geeft de tellingen terug.
-export async function syncLeadsUitSheet() {
-  const rijen = await haalSheet();
+// Standaard de vakmannenlijst; syncEsthetiekUitSheet() hieronder doet hetzelfde
+// voor de esthetieklijst (kappers, nagel- en beautysalons).
+export async function syncLeadsUitSheet(url, rpcNaam = "sb_leads_sync") {
+  const rijen = await haalSheet(url);
   const k = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!k) throw new Error("SUPABASE_SERVICE_ROLE_KEY ontbreekt.");
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/sb_leads_sync`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpcNaam}`, {
     method: "POST",
     cache: "no-store",
     headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
@@ -81,4 +82,17 @@ export async function syncLeadsUitSheet() {
   });
   if (!res.ok) throw new Error(`Opslaan mislukt (HTTP ${res.status}).`);
   return await res.json();
+}
+
+// Esthetieklijst (test, okt 2026): eigen Sheet met dezelfde kolommen als de
+// vakmannenlijst, in te stellen via LEADS_ESTHETIEK_SHEET_CSV_URL. Zolang die
+// ontbreekt, is er niets te synchroniseren (geen fout).
+export function esthetiekSheetUrl() {
+  return process.env.LEADS_ESTHETIEK_SHEET_CSV_URL || "";
+}
+
+export async function syncEsthetiekUitSheet() {
+  const url = esthetiekSheetUrl();
+  if (!url) return { overgeslagen: true, reden: "LEADS_ESTHETIEK_SHEET_CSV_URL is nog niet ingesteld." };
+  return syncLeadsUitSheet(url, "sb_leads_sync_esthetiek");
 }

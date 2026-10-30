@@ -109,4 +109,13 @@ export const NAV_BEHEER = [
       { href: "/boekhouding", label: "Boekhouding" },
     ],
   },
+  // Test (okt 2026): previews voor kappers, nagel- en beautysalons. Alleen
+  // beheer. Benaderd volgt later, en wordt dan samengevoegd met de vakmannen.
+  {
+    label: "Previews test",
+    items: [
+      { href: "/esthetiek", label: "Mijn previews esthetiek" },
+      { href: "/esthetiek/leads", label: "Leads" },
+    ],
+  },
 ];

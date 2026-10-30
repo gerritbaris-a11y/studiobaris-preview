@@ -64,7 +64,9 @@ const PER_KEER = 10;
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
-export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer, vasteProvincie }) {
+// pad/syncPad: dezelfde leadlijst draait ook onder Previews test → Leads
+// (/esthetiek/leads, kappers en salons) met een eigen Sheet.
+export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer, vasteProvincie, pad = "/leads", syncPad = "/api/leads/sync", vakLabel = "Alle vakgebieden" }) {
   const router = useRouter();
   const params = useSearchParams();
 
@@ -107,10 +109,14 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   async function bijwerken() {
     setSync({ bezig: true, tekst: "" });
     try {
-      const res = await fetch("/api/leads/sync", { method: "POST" });
+      const res = await fetch(syncPad, { method: "POST" });
       const j = await res.json().catch(() => ({}));
       if (!j.ok) {
         setSync({ bezig: false, tekst: "Bijwerken mislukt: " + (j.error || "onbekende fout") });
+        return;
+      }
+      if (j.overgeslagen) {
+        setSync({ bezig: false, tekst: "Nog niet bijgewerkt: " + (j.reden || "er is nog geen Sheet ingesteld.") });
         return;
       }
       const delen = [`${j.in_sheet} leads in de Sheet`];
@@ -129,7 +135,8 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
   useEffect(() => { setLeads(initieel || []); }, [initieel]);
 
   const f = facetten || { provincies: [], vakgebieden: [], sites: [], werk: 0, afgerond: 0, socials: 0 };
-  const actueel = (filters.lijst || "actueel") === "actueel";
+  // De gescande lijsten (vakmannen 'actueel' en 'esthetiek') werken hetzelfde.
+  const actueel = (filters.lijst || "actueel") !== "oud";
   const limiet = Number(filters.limiet || 30);
 
   function zet(veranderingen) {
@@ -139,7 +146,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
       else q.set(k, String(v));
     });
     if (!("limiet" in veranderingen)) q.delete("limiet"); // nieuwe filters: weer bovenaan beginnen
-    router.push("/leads?" + q.toString());
+    router.push(pad + "?" + q.toString());
   }
 
   // Zoeken met een korte vertraging, zodat we niet bij elke toets de server bevragen.
@@ -335,7 +342,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
           </select>
         )}
         <select value={filters.vakgebied || ""} onChange={(e) => zet({ vakgebied: e.target.value })} style={sel}>
-          <option value="">Alle vakgebieden</option>
+          <option value="">{vakLabel}</option>
           {f.vakgebieden.map((v) => <option key={v} value={v}>{v}</option>)}
         </select>
         {actueel ? (
