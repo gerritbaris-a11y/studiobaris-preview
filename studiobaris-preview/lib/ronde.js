@@ -1,7 +1,8 @@
 // Feedbackrondes op de gebouwde WordPress-site (na akkoord, okt 2026).
-// De klant loopt via /ronde/<slug>?r=1|2&site=<domein> zijn site stap voor
+// De klant loopt via /ronde/<slug>?r=1|2|3&site=<domein> zijn site stap voor
 // stap door en zegt per pagina "goed" of "dit wil ik anders". Wij verwerken
-// het met de hand. Twee rondes.
+// het met de hand. Twee rondes, plus ronde 3 = laatste controle: de klant
+// loopt de site nog één keer door en geeft akkoord om live te gaan (okt 2026).
 //
 // Database (workflow): site_feedback. Functies (alleen service_role):
 // sb_site_feedback_nieuw, sb_site_feedback_overzicht, sb_site_feedback_verwerkt.

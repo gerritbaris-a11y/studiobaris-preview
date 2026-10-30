@@ -23,14 +23,15 @@ async function mail({ slug, bedrijf, ronde, antwoorden }) {
   const regels = Object.entries(antwoorden)
     .map(([k, v]) => `<li><strong>${html(k)}:</strong> ${html(v)}</li>`).join("");
   const body = `
-    <h2>${html(bedrijf)}: feedback ronde ${ronde}</h2>
+    <h2>${html(bedrijf)}: ${ronde === 3 ? "akkoord, zet de website live" : "feedback ronde " + ronde}</h2>
+    ${ronde === 3 ? "<p>Volgende stap: in Mijn previews de overdracht versturen (app-link en document) en het appje Live sturen.</p>" : ""}
     <ul>${regels}</ul>
     <p><a href="https://team.studiobaris.nl/klanten">Naar Mijn previews</a></p>`;
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject: `Feedback ronde ${ronde}: ${bedrijf}`, html: body }),
+      body: JSON.stringify({ from, to, subject: ronde === 3 ? `Akkoord, zet live: ${bedrijf}` : `Feedback ronde ${ronde}: ${bedrijf}`, html: body }),
     });
   } catch {}
 }
@@ -39,7 +40,7 @@ export async function POST(req) {
   try {
     const b = await req.json();
     const slug = String(b.slug || "");
-    const ronde = Number(b.ronde) === 2 ? 2 : 1;
+    const ronde = Number(b.ronde) === 3 ? 3 : Number(b.ronde) === 2 ? 2 : 1;
     const site = schoonSite(b.site);
     if (!/^[a-z0-9-]{1,120}$/.test(slug)) {
       return NextResponse.json({ ok: false, error: HULP }, { status: 404 });
@@ -58,7 +59,7 @@ export async function POST(req) {
     const bedrijf = (info && info.company_name) || slug;
     await Promise.all([
       mail({ slug, bedrijf, ronde, antwoorden }),
-      log({ persoon: "Klant", soort: "feedback", slug, bedrijf, naar: "ronde " + ronde, details: `Feedback ronde ${ronde} ingestuurd` }).catch(() => {}),
+      log({ persoon: "Klant", soort: "feedback", slug, bedrijf, naar: ronde === 3 ? "akkoord" : "ronde " + ronde, details: ronde === 3 ? "Akkoord gegeven: website mag live" : `Feedback ronde ${ronde} ingestuurd` }).catch(() => {}),
     ]);
     return NextResponse.json({ ok: true });
   } catch {

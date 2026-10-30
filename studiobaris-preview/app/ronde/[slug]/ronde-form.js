@@ -42,12 +42,19 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
 
   const n = PAGINAS.length;
   const basis = site ? "https://" + site : "";
+  // Ronde 3 = laatste controle: geen wijzigingsronde meer, alleen nog
+  // bekijken en akkoord geven om live te gaan.
+  const eind = ronde === 3;
 
   async function verstuur() {
     setStatus("bezig"); setFout("");
     const antwoorden = {};
-    for (const p of PAGINAS) {
-      antwoorden[p.titel] = keuze[p.id] === "anders" ? (tekst[p.id] || "").trim() || "Wil iets anders (niets ingevuld)" : "Goed";
+    if (eind) {
+      antwoorden["Akkoord"] = "Ja, zet de website live";
+    } else {
+      for (const p of PAGINAS) {
+        antwoorden[p.titel] = keuze[p.id] === "anders" ? (tekst[p.id] || "").trim() || "Wil iets anders (niets ingevuld)" : "Goed";
+      }
     }
     if (overig.trim()) antwoorden["Nog iets anders"] = overig.trim();
     try {
@@ -65,14 +72,16 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
 
   // --- Klaar -------------------------------------------------------------------
   if (status === "klaar") {
-    const allesGoed = PAGINAS.every((p) => keuze[p.id] === "goed") && !overig.trim();
+    const allesGoed = eind || (PAGINAS.every((p) => keuze[p.id] === "goed") && !overig.trim());
     return (
       <main style={pagina}>
         <div style={{ ...binnen, textAlign: "center", paddingTop: "14vh" }}>
           <div style={{ fontSize: 52 }}>{allesGoed ? "🎉" : "👍"}</div>
           <h1 style={{ fontSize: 28, margin: "10px 0" }}>Bedankt!</h1>
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "#4A5560" }}>
-            {allesGoed
+            {eind
+              ? "Je hebt akkoord gegeven. We zetten je website live en sturen je de mail met je app en alles op een rij."
+              : allesGoed
               ? "Fijn dat alles goed is. We nemen contact met je op om je website live te zetten."
               : "We gaan ermee aan de slag. Zodra het klaar is, sturen we je een appje."}
           </p>
@@ -91,22 +100,35 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
       <main style={pagina}>
         <div style={binnen}>
           <p style={{ fontSize: 13, letterSpacing: 2, textTransform: "uppercase", color: "#7E5F28", fontWeight: 700 }}>
-            StudioBaris · Ronde {ronde} van 2
+            StudioBaris · {eind ? "Laatste controle" : `Ronde ${ronde} van 2`}
           </p>
           <h1 style={{ fontSize: 30, margin: "8px 0 14px", lineHeight: 1.2 }}>Je website bekijken{bedrijf ? ` – ${bedrijf}` : ""}</h1>
-          <p style={{ fontSize: 18, lineHeight: 1.6 }}>
-            We lopen samen je website door, pagina voor pagina. Je ziet steeds één pagina van je website, met onderaan twee knoppen:
-          </p>
-          <ul style={{ fontSize: 18, lineHeight: 1.8, paddingLeft: 22 }}>
-            <li><strong>Ziet er goed uit</strong>, of</li>
-            <li><strong>Dit wil ik anders</strong>, en dan schrijf je kort wat.</li>
-          </ul>
-          <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4A5560" }}>
-            {ronde === 1
-              ? "Je hebt twee rondes. Zet daarom alles wat je wilt veranderen nu bij elkaar."
-              : "Dit is je tweede en laatste ronde."}{" "}
-            Het duurt een paar minuten.
-          </p>
+          {eind ? (
+            <>
+              <p style={{ fontSize: 18, lineHeight: 1.6 }}>
+                Al je wijzigingen zijn verwerkt. Loop je website nog één keer door, pagina voor pagina. Tik steeds op <strong>Volgende</strong>.
+              </p>
+              <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4A5560" }}>
+                Klopt alles? Dan geef je aan het eind akkoord en zetten wij je website live. Daarna krijg je een mail met je app en alles op een rij.
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 18, lineHeight: 1.6 }}>
+                We lopen samen je website door, pagina voor pagina. Je ziet steeds één pagina van je website, met onderaan twee knoppen:
+              </p>
+              <ul style={{ fontSize: 18, lineHeight: 1.8, paddingLeft: 22 }}>
+                <li><strong>Ziet er goed uit</strong>, of</li>
+                <li><strong>Dit wil ik anders</strong>, en dan schrijf je kort wat.</li>
+              </ul>
+              <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4A5560" }}>
+                {ronde === 1
+                  ? "Je hebt twee rondes. Zet daarom alles wat je wilt veranderen nu bij elkaar."
+                  : "Dit is je tweede en laatste ronde."}{" "}
+                Het duurt een paar minuten.
+              </p>
+            </>
+          )}
           <button type="button" onClick={() => setStap(0)} style={{ ...goudKnop, marginTop: 24 }}>Beginnen</button>
           <Hulp />
         </div>
@@ -115,6 +137,29 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
   }
 
   // --- Slot --------------------------------------------------------------------
+  if (stap === n && eind) {
+    return (
+      <main style={pagina}>
+        <div style={binnen}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: "#7E5F28" }}>Laatste stap</p>
+          <h1 style={{ fontSize: 26, margin: "6px 0 14px" }}>Is alles goed?</h1>
+          <p style={{ fontSize: 17, lineHeight: 1.6, color: "#4A5560" }}>
+            Tik op de knop hieronder, dan zetten wij je website live. Je krijgt daarna een mail met je app, je inloglink en alles op een rij.
+          </p>
+          <button type="button" onClick={verstuur} disabled={status === "bezig"} style={{ ...goudKnop, marginTop: 20, opacity: status === "bezig" ? 0.6 : 1 }}>
+            {status === "bezig" ? "Bezig…" : "Akkoord, zet mijn website live"}
+          </button>
+          {fout && <p style={{ color: "#9E3B2E", fontSize: 16, marginTop: 12 }}>{fout} Bel of app ons op {TEL}.</p>}
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: "#4A5560", marginTop: 20, textAlign: "center" }}>
+            Klopt er toch iets niet? Geef dan nog geen akkoord, maar bel of app ons even:{" "}
+            <a href="tel:+31616732105" style={{ color: NAVY, fontWeight: 700 }}>{TEL}</a>
+          </p>
+          <button type="button" onClick={() => setStap(n - 1)} style={{ ...lichtKnop, marginTop: 12 }}>Terug</button>
+        </div>
+      </main>
+    );
+  }
+
   if (stap === n) {
     return (
       <main style={pagina}>
@@ -184,7 +229,16 @@ export default function RondeForm({ slug, ronde, site, bedrijf }) {
 
       {/* Onderbalk: altijd in beeld */}
       <div style={{ flex: "0 0 auto", background: "#fff", borderTop: "1px solid #E3DED3", padding: "12px 14px calc(12px + env(safe-area-inset-bottom))", boxShadow: "0 -4px 16px rgba(26,43,61,0.08)" }}>
-        {k === "anders" ? (
+        {eind ? (
+          <>
+            <button type="button" onClick={() => setStap(stap + 1)} style={{ ...navyKnop, padding: "16px 8px", fontSize: 16 }}>
+              {stap === n - 1 ? "Naar akkoord" : "Volgende pagina"}
+            </button>
+            <p style={{ fontSize: 13, color: "#6F7A85", textAlign: "center", margin: "8px 0 0" }}>
+              Klopt er iets niet? Bel of app ons: <a href="tel:+31616732105" style={{ color: NAVY, fontWeight: 700 }}>{TEL}</a>
+            </p>
+          </>
+        ) : k === "anders" ? (
           <>
             <label style={{ fontSize: 16, fontWeight: 700 }}>Wat moet er anders op {p.titel}?</label>
             <textarea value={tekst[p.id] || ""} onChange={(e) => setTekst({ ...tekst, [p.id]: e.target.value })} rows={3} autoFocus

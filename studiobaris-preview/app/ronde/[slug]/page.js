@@ -15,7 +15,7 @@ const wrap = { maxWidth: 560, margin: "8vh auto", padding: "0 20px", fontFamily:
 export default async function RondePage({ params, searchParams }) {
   const p = await params;
   const sp = (await searchParams) || {};
-  const ronde = String(sp.r) === "2" ? 2 : 1;
+  const ronde = String(sp.r) === "3" ? 3 : String(sp.r) === "2" ? 2 : 1;
   const site = schoonSite(sp.site);
   const info = await getBetaalinfo(p.slug);
 

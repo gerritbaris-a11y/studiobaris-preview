@@ -109,7 +109,7 @@ function RondeKaart({ f }) {
   return (
     <div style={{ background: "#fff", border: `1px solid ${klaar ? KLEUR.lijn : KLEUR.amber.dot}`, borderRadius: 10, padding: "10px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <strong style={{ fontSize: 14 }}>Feedback ronde {f.ronde} · {op}</strong>
+        <strong style={{ fontSize: 14 }}>{f.ronde === 3 ? "Laatste controle: akkoord" : `Feedback ronde ${f.ronde}`} · {op}</strong>
         {klaar
           ? <span style={{ fontSize: 12.5, fontWeight: 700, color: KLEUR.sage.tekst }}>✓ Verwerkt{f.verwerkt_door ? " door " + f.verwerkt_door : ""}</span>
           : <button type="button" onClick={vinkAf} disabled={bezig} style={{ ...knopLicht, padding: "6px 12px", fontSize: 12.5 }}>{bezig ? "…" : "Verwerkt ✓"}</button>}
@@ -121,6 +121,95 @@ function RondeKaart({ f }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Overdrachtsdocument maken en versturen (alleen beheer). Een nieuwe
+// app-inloglink maakt de vorige ongeldig; daarom eerst een bevestiging.
+function Overdracht({ slug, site, email, verstuurd }) {
+  const [wp, setWp] = useState("");
+  const [mail, setMail] = useState("geen");
+  const [naar, setNaar] = useState(email || "");
+  const [bezig, setBezig] = useState("");
+  const [zeker, setZeker] = useState(false);
+  const [melding, setMelding] = useState(null); // { goed, tekst }
+
+  function download(b64) {
+    try {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = (schoonSite(site) || slug).replace(/\./g, "-") + "-website-en-app.pdf";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch {}
+  }
+
+  async function doe(actie) {
+    setBezig(actie); setMelding(null);
+    try {
+      const res = await fetch("/api/overdracht", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug, site, wp, mail, naar, actie }),
+      });
+      const d = await res.json();
+      if (d.pdf) download(d.pdf);
+      if (!d.ok) setMelding({ goed: false, tekst: d.error || "Er ging iets mis." });
+      else if (actie === "versturen") setMelding({ goed: true, tekst: `Verstuurd naar ${naar}, met een nieuwe inloglink voor de app (${d.app}). De PDF is ook gedownload.` });
+    } catch {
+      setMelding({ goed: false, tekst: "Er ging iets mis. Probeer het zo nog eens." });
+    }
+    setBezig(""); setZeker(false);
+  }
+
+  const veld = { ...invoer, display: "block", width: "100%", marginTop: 4, fontWeight: 400 };
+  const laatste = verstuurd && verstuurd[0];
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {laatste && (
+        <div style={{ ...uitleg, color: KLEUR.sage.tekst, fontWeight: 600 }}>
+          ✓ Laatst verstuurd op {new Date(laatste.verstuurd_op).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} naar {laatste.naar}{laatste.door ? ` (door ${laatste.door})` : ""}.
+        </div>
+      )}
+      <label style={{ fontSize: 13, fontWeight: 700 }}>
+        WordPress-gebruikersnaam van de klant
+        <input value={wp} onChange={(e) => setWp(e.target.value)} placeholder="zoals aangemaakt in WordPress" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={veld} />
+      </label>
+      <label style={{ fontSize: 13, fontWeight: 700 }}>
+        E-mail van de klant
+        <select value={mail} onChange={(e) => setMail(e.target.value)} style={veld}>
+          <option value="geen">Geen e-mail op het domein</option>
+          <option value="bij-ons">Verhuisd naar StudioBaris (hoofdstuk &quot;Je e-mail&quot; erbij)</option>
+          <option value="blijft">Blijft waar hij was</option>
+        </select>
+      </label>
+      <label style={{ fontSize: 13, fontWeight: 700 }}>
+        Versturen naar
+        <input value={naar} onChange={(e) => setNaar(e.target.value)} placeholder="e-mailadres klant" inputMode="email" autoCapitalize="off" style={veld} />
+      </label>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" onClick={() => doe("voorbeeld")} disabled={!!bezig} style={knopLicht}>
+          {bezig === "voorbeeld" ? "Bezig…" : "Bekijk voorbeeld (PDF)"}
+        </button>
+        {!zeker ? (
+          <button type="button" onClick={() => setZeker(true)} disabled={!!bezig} style={knop}>Maak inloglink en verstuur</button>
+        ) : (
+          <>
+            <button type="button" onClick={() => doe("versturen")} disabled={!!bezig} style={knop}>
+              {bezig === "versturen" ? "Bezig…" : "Ja, versturen"}
+            </button>
+            <button type="button" onClick={() => setZeker(false)} disabled={!!bezig} style={knopLicht}>Annuleer</button>
+          </>
+        )}
+      </div>
+      {zeker && <div style={uitleg}>Er wordt een nieuwe app-inloglink gemaakt (twee weken geldig). Een eerdere link voor deze klant werkt daarna niet meer.</div>}
+      {melding && (
+        <div style={{ background: melding.goed ? KLEUR.sage.bg : KLEUR.rust.bg, color: melding.goed ? KLEUR.sage.tekst : KLEUR.rust.tekst, borderRadius: 10, padding: "9px 12px", fontSize: 13.5, fontWeight: 600 }}>
+          {melding.tekst}
+        </div>
+      )}
     </div>
   );
 }
@@ -297,7 +386,7 @@ function GeenDomein({ voorstel, contact, verkoper, email, gegevensRegels }) {
 }
 
 // --- Het blok -----------------------------------------------------------------
-export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, website, verkoper, betaalStatus, gegevensIngevuld, beheer, rondes = [] }) {
+export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, website, verkoper, betaalStatus, gegevensIngevuld, beheer, rondes = [], overdrachten = [] }) {
   const [open, setOpen] = useState(false);
   const [route, setRoute] = useState(null); // "heeft" | "geen"
   const [site, setSite] = useState((rondes[0] && rondes[0].site) || "");
@@ -305,6 +394,7 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, web
   const betaald = ["akkoord", "actief"].includes(String(betaalStatus || ""));
   const link = GEGEVENS_BASIS + slug;
   const voorstel = slug ? `${slug}.nl` : "";
+  const akkoordLive = rondes.find((f) => f.ronde === 3);
 
   // Adres, KvK en btw zijn bij beide routes nodig. Ze gaan mee in hetzelfde
   // bericht als het domein, zodat de klant één mail krijgt in plaats van twee.
@@ -363,13 +453,14 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, web
               De klant geeft feedback via een formulier dat hem pagina voor pagina door zijn website leidt
               (Home, Diensten, Projecten, Over ons, Contact). Per pagina tikt hij &quot;Ziet er goed uit&quot; of
               &quot;Dit wil ik anders&quot; en schrijft hij kort wat. Hij krijgt twee rondes. Wij verwerken het en appen als het klaar is.
+              Daarna loopt hij de site nog één keer door en geeft hij akkoord om live te gaan.
               {!beheer && " Deze appjes stuurt StudioBaris (Gerrit of Levi); jij hoeft hier niets te doen."}
             </div>
             <ol style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
               <li><strong>Eerste versie klaar:</strong> appje met de link naar ronde 1.</li>
               <li><strong>Ronde 1 verwerkt:</strong> appje met de link naar ronde 2 (de laatste).</li>
-              <li><strong>Ronde 2 verwerkt:</strong> appje: goed zo? Dan gaat de site live.</li>
-              <li><strong>Live:</strong> appje, overdrachtsmail, en even bellen om samen de app op zijn telefoon te zetten.</li>
+              <li><strong>Ronde 2 verwerkt:</strong> appje met de link naar de laatste controle. Daar geeft hij akkoord.</li>
+              <li><strong>Akkoord binnen:</strong> site live zetten, overdrachtsdocument met de app-link versturen (stap 4), appje Live, en even bellen om samen de app op zijn telefoon te zetten.</li>
             </ol>
 
             {beheer && rondes.length > 0 && (
@@ -418,20 +509,23 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, web
                     "Loop je website nog één keer door via deze link. Dit is je tweede en laatste ronde:",
                     "👉 " + rondeUrl(slug, 2, site),
                     "",
-                    "Is alles goed? Tik dan overal op \"Ziet er goed uit\", dan zetten we je website live.",
+                    "Is alles goed? Tik dan overal op \"Ziet er goed uit\".",
                     "",
                     "Groet, StudioBaris",
                   ].join("\n")} />
                 </div>
 
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Ronde 2 verwerkt</div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Ronde 2 verwerkt → laatste controle</div>
                   <Appje telefoon={telefoon} tekst={[
                     aanhef(contact),
                     "",
-                    "Alles is aangepast 👉 " + (schoonSite(site) ? "https://" + schoonSite(site) : "[website]"),
+                    "Alles is aangepast!",
                     "",
-                    "Is het goed zo? Stuur dan \"Akkoord\", dan zetten we je website live.",
+                    "Loop je website nog één keer door via deze link. Klopt alles? Dan tik je aan het eind op \"Akkoord\" en zetten wij je website live:",
+                    "👉 " + rondeUrl(slug, 3, site),
+                    "",
+                    "Daarna krijg je een mail met je app en alles op een rij.",
                     "",
                     "Groet, StudioBaris",
                   ].join("\n")} />
@@ -452,11 +546,28 @@ export default function NaAkkoord({ slug, bedrijf, contact, email, telefoon, web
                     "",
                     "Groet, StudioBaris",
                   ].join("\n")} />
-                  <div style={{ ...uitleg, marginTop: 6 }}>Daarna: overdrachtsmail sturen en de fase op Klaar zetten.</div>
+                  <div style={{ ...uitleg, marginTop: 6 }}>Stuur dit appje nadat het overdrachtsdocument (stap 4) is verstuurd. Daarna de fase op Klaar zetten.</div>
                 </div>
               </div>
             )}
           </div>
+
+          {/* 4. Overdracht: app-link en document (alleen beheer) */}
+          {beheer && (
+            <div>
+              <div style={stapKop}>4. Overdracht: app-link en document</div>
+              <div style={uitleg}>
+                {akkoordLive
+                  ? <span style={{ color: KLEUR.sage.tekst, fontWeight: 600 }}>✓ Akkoord gegeven op {new Date(akkoordLive.aangemaakt_op).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}. </span>
+                  : "Nog geen akkoord uit de laatste controle. "}
+                Zet de site live en zorg dat het app-account en de plugin klaarstaan (draaiboek). Daarna maakt deze knop een nieuwe app-inloglink,
+                zet die in het document &quot;Je website en je app&quot; en mailt dat naar de klant.
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <Overdracht slug={slug} site={site} email={email} verstuurd={overdrachten} />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
