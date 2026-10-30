@@ -165,7 +165,9 @@ function UploadKnop({ label = "Uploaden", meerdere, rol = "foto", onKlaar, onFou
     <>
       <input ref={ref} type="file" accept="image/*" multiple={!!meerdere} style={{ display: "none" }}
         onChange={async (e) => {
-          const files = e.target.files;
+          // Eerst kopiëren: Chrome leegt de lijst zodra het veld leeg wordt
+          // gemaakt, en dan zou de knop stilletjes niets doen.
+          const files = Array.from(e.target.files || []);
           e.target.value = "";
           if (!files || !files.length) return;
           setBezig(true);
