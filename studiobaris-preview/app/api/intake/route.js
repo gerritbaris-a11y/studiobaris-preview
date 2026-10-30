@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { controleerBestand, controleerBestanden } from "../../../lib/bestand-validatie";
 import {
   SYSTEM_PROMPT_WF1,
+  SALON_AANVULLING,
   slugify,
   extractJson,
   validateContent,
 } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
+import { isEsthetiekBranche } from "../../../lib/segment";
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
 import { vakfotosVoor } from "../../../lib/vakfotos";
@@ -238,7 +240,9 @@ export async function POST(req) {
     ].join("\n");
 
     // Claude aanroepen + valideren
-    const raw = await callClaude(SYSTEM_PROMPT_WF1, docText, logoImage);
+    // Salons krijgen een eigen aanvulling op de schrijfopdracht.
+    const isSalon = isEsthetiekBranche([v("branche"), v("branche_anders")].filter(Boolean).join(" "));
+    const raw = await callClaude(isSalon ? SYSTEM_PROMPT_WF1 + SALON_AANVULLING : SYSTEM_PROMPT_WF1, docText, logoImage);
     const content = extractJson(raw);
     const fout = validateContent(content);
     if (fout) return NextResponse.json({ ok: false, error: fout, raw }, { status: 422 });

@@ -7,6 +7,10 @@
     {
       "path": "/api/leads/sync",
       "schedule": "15 5 * * *"
+    },
+    {
+      "path": "/api/agenda/herinneringen",
+      "schedule": "0 8 * * *"
     }
   ]
 }

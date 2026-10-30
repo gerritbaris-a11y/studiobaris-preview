@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { klantKiestStijl, log } from "../../../../lib/server-data";
-import { geldigeStijl, stijlKort } from "../../../../lib/stijlen";
+import { geldigeStijl, geldigeSalonStijl, stijlKort } from "../../../../lib/stijlen";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req) {
   try {
     const { slug, stijl } = await req.json();
-    const s = geldigeStijl(stijl);
+    const s = geldigeStijl(stijl) || geldigeSalonStijl(stijl);
     if (!slug || typeof slug !== "string" || !/^[a-z0-9-]{1,120}$/.test(slug) || !s) {
       return NextResponse.json({ ok: false, error: "Onbekende stijl." }, { status: 400 });
     }
