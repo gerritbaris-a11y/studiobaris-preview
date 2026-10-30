@@ -59,6 +59,22 @@ HARDE KADERS - hier wijk je nooit van af:
 
 ${NATUURLIJK_NL}`;
 
+// Aanvulling voor salons (kapper, barbier, nagelstudio, beauty). Wordt achter
+// SYSTEM_PROMPT_WF1 geplakt als de branche een salon is (lib/segment.js). De
+// salonsite (app/styles/salon.js) haalt behandelingen en prijzen uit de agenda;
+// de teksten hier gaan over de salon zelf.
+export const SALON_AANVULLING = `
+DIT IS EEN SALON (kapper, barbier, nagelstudio of beautysalon). Pas de teksten daarop aan:
+- De lezer is een particuliere klant die een afspraak wil maken. Schrijf warm en persoonlijk, in de je/jij-vorm, tenzij de tone of voice anders zegt.
+- Gebruik nergens "offerte". hero.cta_tekst = "Afspraak maken"; cta_blok.knop = "Afspraak maken"; cta_blok.kop is een uitnodigende zin om langs te komen.
+- bedrijf.branche: een kort, herkenbaar label zoals "Kapper", "Barbier", "Nagelstudio", "Beautysalon" of "Kapper & beautysalon".
+- diensten: de behandelcategorieën die uit de aangeleverde informatie blijken (bijv. "Knippen en stylen", "Kleuren en highlights", "Gellak en BIAB", "Gezichtsbehandelingen"), met per categorie een korte omschrijving van wat de klant mag verwachten. Geen prijzen, geen behandeltijden: die staan in de online agenda. Verzin geen behandelingen die niet bij de salon passen.
+- usps: concreet en waar. "Online afspraak maken, ook 's avonds" mag altijd (de site heeft een online agenda); verder alleen wat is aangeleverd.
+- over_ons: wie de salon is en hoe het voelt om er binnen te komen, op basis van de feiten.
+- seo.titel: "<branche> in <plaats> | <bedrijfsnaam>". seo.meta_omschrijving: plaats, de belangrijkste behandelingen en dat je online een afspraak maakt. Maximaal 155 tekens.
+- projecten: alleen aangeleverd werk; een kapsel of set nagels heet "look" of "set", geen "project".
+`;
+
 export const SYSTEM_PROMPT_REVISE = `Je werkt een bestaande previewwebsite van StudioBaris bij op basis van een ingevuld formulier.
 Je krijgt: (A) de huidige website-JSON en (B) de antwoorden uit het formulier.
 
