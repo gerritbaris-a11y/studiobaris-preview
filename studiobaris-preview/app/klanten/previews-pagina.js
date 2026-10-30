@@ -33,6 +33,7 @@ import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
 import { isEsthetiekPreview, isEsthetiekLead } from "../../lib/segment";
+import AgendaBerichten from "../esthetiek/agenda-berichten";
 
 // Gedeelde pagina voor "Mijn previews" (/klanten) en, als test, "Mijn previews
 // esthetiek" (/esthetiek, alleen beheer). segment = "esthetiek" toont alleen
@@ -139,6 +140,7 @@ export default async function PreviewsPagina({ segment = null } = {}) {
           Je ziet alle previews uit <strong>{regio}</strong>, ook die door collega's zijn gemaakt. Druk op <strong>Benaderd</strong> zodra je een bedrijf hebt benaderd, zodat het team ziet wat er loopt. Op <strong>Klaar</strong> zetten doen Gerrit of Levi.
         </div>
       )}
+      {esth && beheer && <AgendaBerichten />}
       <DomeinCheck />
       <HostingCheck verkoper={naam} />
       {beheer && (
@@ -274,6 +276,12 @@ export default async function PreviewsPagina({ segment = null } = {}) {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
+            {esth && (
+              <a href={`https://preview.studiobaris.nl/${r.slug}/afspraak-maken`} target="_blank" rel="noreferrer"
+                style={{ alignSelf: "flex-start", fontSize: 13.5, fontWeight: 700, color: KLEUR.klei, textDecoration: "none" }}>
+                Online agenda bekijken →
+              </a>
+            )}
 
             {/* Na akkoord: vervolgstappen en berichten voor de klant. Tot Klaar. */}
             {fase !== "Klaar" && (fase === "Akkoord" || ["akkoord", "actief"].includes(String(r.betaal_status || ""))) && (

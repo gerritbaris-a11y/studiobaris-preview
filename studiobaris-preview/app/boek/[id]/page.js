@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { agendaVoorBedrijf, isUuid } from "../../../lib/agenda";
 import { hexNaarRgb, contrast } from "../../../lib/huisstijl";
 import AgendaWidget from "../../agenda-widget";
+import Hoogte from "./hoogte";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Afspraak maken", robots: { index: false, follow: false } };
@@ -22,6 +23,7 @@ export default async function BoekPagina({ params, searchParams }) {
   return (
     <div style={{ padding: "8px 4px", fontFamily: "system-ui, -apple-system, sans-serif", background: "transparent" }}>
       <AgendaWidget agenda={agenda} test={!!agenda.instellingen.test_modus} kleur={k} tekstOpKleur={tekstOp(k)} bron="site" />
+      <Hoogte />
     </div>
   );
 }
