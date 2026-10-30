@@ -42,6 +42,11 @@ export const VAKGEBIEDEN = [
   { key: "tegelzetter", label: "Tegelzetter" },
   { key: "aannemer", label: "Aannemer / klusbedrijf" },
   { key: "stoffeerder", label: "Stoffeerder / meubelmaker" },
+  // Salons (esthetiek, test).
+  { key: "kapper", label: "Kapper" },
+  { key: "barbier", label: "Barbier" },
+  { key: "nagels", label: "Nagelstudio" },
+  { key: "beauty", label: "Beauty / schoonheidssalon" },
 ];
 
 export function isVakgebied(key) {

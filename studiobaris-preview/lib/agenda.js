@@ -50,6 +50,27 @@ export async function agendaVoorPreview(slug, content) {
   return agenda;
 }
 
+// "Morgen 10:30" / "vandaag 16:15" / "do 6 nov 9:00": eerstvolgende vrije plek
+// voor de kortste behandeling. Voor de regel "open vandaag" op de salonsite.
+export async function eerstePlekLabel(agenda) {
+  try {
+    const beh = [...((agenda && agenda.behandelingen) || [])].sort((a, b) => a.duur_min - b.duur_min)[0];
+    if (!beh) return null;
+    const dagen = await vrijeDagen(agenda.company_id, beh.id, 14);
+    if (!dagen.length) return null;
+    const tijden = await vrijeTijden(agenda.company_id, beh.id, dagen[0]);
+    if (!tijden.length) return null;
+    const vandaag = new Date().toLocaleDateString("sv-SE", { timeZone: TZ });
+    const morgen = new Date(Date.now() + 86400000).toLocaleDateString("sv-SE", { timeZone: TZ });
+    const [j, m, d] = dagen[0].split("-").map(Number);
+    const dagTekst = dagen[0] === vandaag ? "vandaag" : dagen[0] === morgen ? "morgen"
+      : new Date(Date.UTC(j, m - 1, d, 12)).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+    return `${dagTekst} ${tijden[0]}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function zetAgendaKlaar(companyId, vak, email) {
   return rpc("sb_agenda_standaard", { p_company: companyId, p_vak: vak || "", p_email: email || null });
 }

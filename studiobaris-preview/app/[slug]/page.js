@@ -18,6 +18,9 @@ import { getProef, metProefProjecten, proefDatum, DEMO_BASIS, telBezoek } from "
 import { cookies, headers } from "next/headers";
 import ProefBalk from "./proef-balk";
 import FaseFotos, { heeftFases } from "./fase-fotos";
+import SalonSite, { SALON_STIJLEN, standaardSalonStijl } from "../styles/salon";
+import { isEsthetiekBranche } from "../../lib/segment";
+import { agendaVoorPreview, eerstePlekLabel } from "../../lib/agenda";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +113,19 @@ export default async function Page({ params, searchParams }) {
   const stijl = geldigeStijl(searchParams?.stijl) || kijkStijl || onzeStijl;
   const wissel = magWisselen ? <StijlWissel slug={params.slug} huidige={stijl} onze={onzeStijl} merk={c.merk || {}} metBalk={proef.actief} /> : null;
   const props = { content: c, slug: params.slug, isConcept, isReview: isVoorproef };
+  // Salons (esthetiek): eigen salonsite met de online agenda op de pagina.
+  // ?stijl=zacht|salonmodern|luxe voor de vergelijking door het team.
+  if (isEsthetiekBranche((c.bedrijf || {}).branche)) {
+    const ids = SALON_STIJLEN.map((x) => x.id);
+    const salonStijl = ids.includes(searchParams?.stijl) ? searchParams.stijl
+      : ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : standaardSalonStijl((c.bedrijf || {}).branche);
+    let agenda = null, eerstePlek = null;
+    try {
+      agenda = await agendaVoorPreview(params.slug, c);
+      eerstePlek = agenda ? await eerstePlekLabel(agenda) : null;
+    } catch {}
+    return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} metBalk={proef.actief} />{balk}</>;
+  }
   if (stijl === "modern") return <><ModernSite {...props} />{balk}{wissel}</>;
   if (stijl === "persoonlijk") return <><PersoonlijkSite {...props} />{balk}{wissel}</>;
   if (stijl === "ambacht") return <><AmbachtSite {...props} />{balk}{wissel}</>;

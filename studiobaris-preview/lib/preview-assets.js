@@ -18,11 +18,21 @@ const SETS = {
   glazenzetter: ["photo-1527352774566-e4916e36c645", "photo-1531383339897-f369f6422e40", "photo-1630368177606-471ad5e501c4", "photo-1572739275114-ec3764ba1477", "photo-1600077349654-dafee19be957"],
   aannemer: ["photo-1593786267440-550458cc882a", "photo-1612935089040-89195ef54677", "photo-1593012671976-1422185230fb", "photo-1601303981778-0f61e3d2da64", "photo-1683372101362-2efc3e75650e"],
   schoonmaak: ["photo-1740657254989-42fe9c3b8cce", "photo-1647381518264-97ff1835026f", "photo-1713110824336-f78c320dcf8e", "photo-1581578949510-fa7315c4c350", "photo-1758523670739-0d26a3ee976d"],
+  // Salons (esthetiek, okt 2026). Gratis Unsplash-foto's, gecontroleerd op licentie.
+  kapper: ["photo-1633681926022-84c23e8cb2d6", "photo-1634449571010-02389ed0f9b0", "photo-1580618672591-eb180b1a973f", "photo-1600948836101-f9ffda59d250", "photo-1560869713-7d0a29430803", "photo-1637777277435-3c44f82fd0c9"],
+  barbier: ["photo-1790009419857-51fa0a2d9354", "photo-1702865272115-5afdbae975af", "photo-1790009419892-f6f3fd516fb2", "photo-1773904215697-e6c21fc27ac2", "photo-1626383137804-ff908d2753a2"],
+  nagels: ["photo-1619607146034-5a05296c8f9a", "photo-1604654894610-df63bc536371", "photo-1519014816548-bf5fe059798b", "photo-1604654894611-6973b376cbde", "photo-1754799670312-8e7da8e40ad7"],
+  beauty: ["photo-1746723378067-83a345ff3160", "photo-1570172619644-dfd03ed5d881", "photo-1761718210089-ba3bb5ccb54f", "photo-1761718209835-c8586b7dcac0", "photo-1757689373248-a6cd07328ba5"],
   generiek: ["photo-1517581177682-a085bb7ffb15", "photo-1618832515490-e181c4794a45", "photo-1505798577917-a65157d3320a", "photo-1634586648651-f1fb9ec10d90", "photo-1610459716431-e07abcf74230"],
 };
 
 export function nicheKey(branche) {
   const b = String(branche || "").toLowerCase();
+  // Salons eerst, met specifieke woorden (niet "kap": dat zit ook in "dakkapel").
+  if (/barbier|barber/.test(b)) return "barbier";
+  if (/nagel|nail|manicure|gellak|pedicure/.test(b)) return "nagels";
+  if (/kapper|kapsalon|haarstudio|haarsalon|haarmode|hairstyl|hair salon|coiffeur|kappers/.test(b)) return "kapper";
+  if (/beauty|schoonheid|huidverzorg|huidtherap|wimper|lash|brow|visagie|make-?up/.test(b)) return "beauty";
   if (b.includes("dak")) return "dakdekker";
   if (b.includes("schilder") || b.includes("behang")) return "schilder";
   if (b.includes("hovenier") || b.includes("tuin")) return "hovenier";
