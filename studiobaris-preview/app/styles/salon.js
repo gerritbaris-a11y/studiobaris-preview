@@ -147,14 +147,14 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
   const css = `
     @import url('${fontsHref}');
     .sl *{box-sizing:border-box;margin:0;padding:0}
-    .sl{--bg:${T.bg};--vlak:${T.vlak};--vlak2:${T.vlak2};--inkt:${T.inkt};--zacht:${T.zacht};--lijn:${T.lijn};--r:${T.r}px;--rk:${T.rk}px;
+    .sl{--sbg:${T.bg};--vlak:${T.vlak};--vlak2:${T.vlak2};--inkt:${T.inkt};--zacht:${T.zacht};--lijn:${T.lijn};--r:${T.r}px;--rk:${T.rk}px;
       --ac:${accent};--act:${stijl === "luxe" ? "var(--orange-zwart)" : "var(--orange-ink)"};--opac:${tekstOp(accent)};--basis:${basis};
-      font-family:var(--font-body);background:var(--bg);color:var(--inkt);line-height:1.6;font-size:16px}
+      font-family:var(--font-body);background:var(--sbg);color:var(--inkt);line-height:1.6;font-size:16px}
     .sl a{color:inherit;text-decoration:none}
     .sl h1,.sl h2,.sl h3{font-family:var(--font-head);font-weight:${T.kopGewicht};letter-spacing:-.3px;line-height:1.15}
     .sl .w{max-width:1040px;margin:0 auto;padding:0 20px}
     .sl .eb{font-size:.78rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--act)}
-    .sl .hd{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--lijn)}
+    .sl .hd{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--sbg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--lijn)}
     .sl .hd-in{max-width:1040px;margin:0 auto;padding:.8rem 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sl .logo{font-family:var(--font-head);font-weight:800;font-size:1.15rem}
     .sl .nav{display:flex;gap:1.3rem;font-size:.92rem;color:var(--zacht)}
@@ -221,7 +221,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
     .sl .ckaart{background:var(--vlak);border:1px solid var(--lijn);border-radius:var(--r);padding:20px}
     .sl .ckaart a{display:block;margin:.3rem 0;font-weight:600}
     .sl .ft{border-top:1px solid var(--lijn);padding:2rem 0 6rem;color:var(--zacht);font-size:.88rem;text-align:center}
-    .sl .mobiel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--lijn)}
+    .sl .mobiel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--sbg);border-top:1px solid var(--lijn)}
     .sl .mobiel a{flex:1}
     @media(min-width:760px){.sl .mobiel{display:none}.sl .ft{padding-bottom:2rem}}
     @media(max-width:759px){.sl .nav{display:none}}
