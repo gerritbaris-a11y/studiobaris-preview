@@ -679,9 +679,8 @@ function OpslaanKnop({ gewijzigd, opgeslagen, bezig, onClick }) {
 function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }) {
   const naam = (contact && contact.trim()) || bedrijf || "";
   const previewLink = "https://preview.studiobaris.nl/" + slug;
-  // Persoonlijke demo-app: de app in het jasje van deze klant. Is die er (nog) niet
-  // of is hij leeg, dan laten we de app-regel weg (de algemene demo is uitgezet, okt 2026).
-  const demoLink = demoGevuld ? "https://demo.studiobaris.nl/" + slug : "";
+  // De demo-app zit sinds okt 2026 in de preview zelf; een aparte app-link in
+  // het appje is niet meer nodig (30 okt 2026, op verzoek van Gerrit).
   const groet = afzender || "Gerrit";
   const zin = (persoonlijk && persoonlijk.trim()) || "[PERSOONLIJKE ZIN — vul deze nog in]";
 
@@ -703,7 +702,6 @@ function bouwAppje({ contact, bedrijf, slug, afzender, persoonlijk, demoGevuld }
     "Ik heb alvast een complete website-opzet voor jouw bedrijf ontworpen, inclusief de app-koppeling. Je kunt 'm hier direct bekijken:",
     "",
     "Jouw website: " + previewLink,
-    ...(demoLink ? ["Jouw app: " + demoLink] : []),
     "",
     "Het inrichten doe ik tot eind augustus gratis. Kijk eerst maar even of het ontwerp je bevalt — vind je 'm niks, dan is de prijs toch niet interessant. En bevalt-ie wel, dan vertel ik je precies wat het kost. Geen kleine lettertjes.",
     "",
@@ -1029,7 +1027,10 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
   // naast te leggen. Alleen als we die kennen.
   const siteUrl = website ? (/^https?:\/\//i.test(website) ? website : "https://" + website) : "";
   const linkSite = siteUrl ? { key: "w", naam: "Huidige website", url: siteUrl, hint: "Bestaande site van de prospect" } : null;
-  const links = [linkPreview, linkDemo, linkBetaal, linkSite].filter(Boolean);
+  // De demo-app wordt gedeeld via de preview zelf; een losse Demo-app-link
+  // tonen we daarom niet meer (30 okt 2026). linkDemo blijft alleen bestaan
+  // voor de "+ Demo-app maken"-knop hieronder.
+  const links = [linkPreview, linkBetaal, linkSite].filter(Boolean);
 
   function copy(url, key) {
     try {
@@ -1075,7 +1076,7 @@ export function LinkChips({ slug, gepubliceerd, heeftDemo, demoGevuld, magMaken,
           Stijl kiezen{stijl ? ` (${stijl})` : ""}
         </a>
 
-        {[linkPreview, linkDemo].map((l) => (
+        {[linkPreview].map((l) => (
           <button
             key={l.key}
             onClick={() => !l.uit && copy(l.url, l.key)}
