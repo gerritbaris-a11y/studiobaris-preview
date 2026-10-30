@@ -121,7 +121,7 @@ export default async function Page({ params, searchParams }) {
       : ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : standaardSalonStijl((c.bedrijf || {}).branche);
     let agenda = null, eerstePlek = null;
     try {
-      agenda = await agendaVoorPreview(params.slug, c);
+      agenda = await agendaVoorPreview(params.slug, content); // zonder voorbeeldvulling: geen nep-e-mailadres
       eerstePlek = agenda ? await eerstePlekLabel(agenda) : null;
     } catch {}
     return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} metBalk={proef.actief} />{balk}</>;

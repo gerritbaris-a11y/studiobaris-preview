@@ -84,7 +84,13 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
   const vak = nicheKey(b.branche);
   const vakNaam = VAK[vak] || b.branche || "Salon";
   const plaats = plaatsUit(b.adres, b.regio);
-  const [kop1, kop2] = kopDelen(c);
+  let [kop1, kop2] = kopDelen(c);
+  // Zelfde als de andere stijlen: staat het accentwoord niet aan het eind van
+  // de kop, dan komt het er alsnog achter (anders loopt de kop dood op "in").
+  if (!kop2 && hero.kop_accent && !String(kop1).toLowerCase().includes(String(hero.kop_accent).toLowerCase())) {
+    kop1 = String(kop1).trim() + " ";
+    kop2 = hero.kop_accent;
+  }
   const behandelingen = (agenda && agenda.behandelingen) || [];
   const categorieen = [...new Set(behandelingen.map((x) => x.categorie))];
   const perDag = tijdenPerDag(agenda && agenda.rooster);
@@ -108,9 +114,10 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
   }[stijl] || {};
 
   const heroUrl = (hero.achtergrond && String(hero.achtergrond)) || nicheFoto(b.branche, 0).replace("w=1000", "w=1800");
-  const fotos = projecten.length
-    ? projecten.slice(0, 6)
-    : [1, 2, 3].map((i) => ({ beeld_url: nicheFoto(b.branche, i), titel: "" }));
+  // Galerij altijd minstens 3 tegels: eigen werk eerst, aangevuld met sfeerbeeld.
+  const eigen = projecten.filter((p) => p && (p.beeld_url || heeftFases(p))).slice(0, 6);
+  const fotos = [...eigen, ...[1, 2, 3, 4, 5].map((i) => ({ beeld_url: nicheFoto(b.branche, i), titel: "" }))]
+    .slice(0, Math.max(3, eigen.length));
 
   // Gestructureerde gegevens voor Google (LocalBusiness). Alleen wat we weten.
   const schema = {
@@ -141,12 +148,12 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
     @import url('${fontsHref}');
     .sl *{box-sizing:border-box;margin:0;padding:0}
     .sl{--bg:${T.bg};--vlak:${T.vlak};--vlak2:${T.vlak2};--inkt:${T.inkt};--zacht:${T.zacht};--lijn:${T.lijn};--r:${T.r}px;--rk:${T.rk}px;
-      --ac:${accent};--opac:${tekstOp(accent)};--basis:${basis};
+      --ac:${accent};--act:${stijl === "luxe" ? "var(--orange-zwart)" : "var(--orange-ink)"};--opac:${tekstOp(accent)};--basis:${basis};
       font-family:var(--font-body);background:var(--bg);color:var(--inkt);line-height:1.6;font-size:16px}
     .sl a{color:inherit;text-decoration:none}
     .sl h1,.sl h2,.sl h3{font-family:var(--font-head);font-weight:${T.kopGewicht};letter-spacing:-.3px;line-height:1.15}
     .sl .w{max-width:1040px;margin:0 auto;padding:0 20px}
-    .sl .eb{font-size:.78rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ac)}
+    .sl .eb{font-size:.78rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--act)}
     .sl .hd{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--lijn)}
     .sl .hd-in{max-width:1040px;margin:0 auto;padding:.8rem 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .sl .logo{font-family:var(--font-head);font-weight:800;font-size:1.15rem}
@@ -155,18 +162,18 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
     .sl .knop{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ac);color:var(--opac);font-weight:700;
       padding:.85rem 1.4rem;border-radius:var(--rk);text-transform:${T.hoofdletters};letter-spacing:${T.hoofdletters === "uppercase" ? ".6px" : "0"};font-size:${T.hoofdletters === "uppercase" ? ".85rem" : ".98rem"}}
     .sl .knop2{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid currentColor;font-weight:700;padding:.8rem 1.3rem;border-radius:var(--rk)}
-    .sl .knop.klein{padding:.55rem 1rem;font-size:.85rem}
+    .sl .knop.klein{padding:.55rem 1rem;font-size:.85rem;white-space:nowrap;flex:none}
     .sl .hero{position:relative;color:${T.heroDonker ? "#fff" : "var(--inkt)"};padding:4.5rem 0 4rem;overflow:hidden}
     .sl .hero .w{position:relative;z-index:1}
     .sl .hero h1{font-size:clamp(2.2rem,6vw,3.6rem);margin:.6rem 0 .8rem;max-width:16ch}
-    .sl .hero h1 em{font-style:normal;color:var(--ac)}
+    .sl .hero h1 em{font-style:normal;color:${T.heroDonker ? "var(--orange-zwart)" : "var(--act)"}}
     .sl .hero p.sub{font-size:1.12rem;max-width:52ch;opacity:.9;margin-bottom:1.5rem}
     .sl .hero .rij{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .sl .score{display:inline-flex;gap:8px;align-items:center;margin-top:1.4rem;font-size:.95rem;opacity:.95}
-    .sl .score b{color:var(--ac);letter-spacing:2px}
+    .sl .score b{color:var(--act);letter-spacing:2px}
     .sl .zacht-hero{display:grid;gap:2rem;align-items:center}
-    .sl .zacht-hero .foto{border-radius:calc(var(--r) * 1.4);aspect-ratio:4/5;background-size:cover;background-position:center;box-shadow:0 30px 60px -30px rgba(60,30,20,.35)}
-    @media(min-width:860px){.sl .zacht-hero{grid-template-columns:1.1fr .9fr}}
+    .sl .zacht-hero .foto{border-radius:calc(var(--r) * 1.4);aspect-ratio:16/11;background-size:cover;background-position:center;box-shadow:0 30px 60px -30px rgba(60,30,20,.35)}
+    @media(min-width:860px){.sl .zacht-hero{grid-template-columns:1.1fr .9fr}.sl .zacht-hero .foto{aspect-ratio:4/5}}
     .sl .vandaag{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;background:var(--vlak);border:1px solid var(--lijn);border-radius:var(--r);padding:14px 18px;margin-top:-28px;position:relative;z-index:2;font-size:.95rem}
     .sl .stip{width:9px;height:9px;border-radius:99px;display:inline-block;margin-right:6px;vertical-align:middle}
     .sl .sec{padding:4rem 0}
@@ -196,17 +203,17 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
     .sl .over .foto{border-radius:var(--r);aspect-ratio:4/3;background-size:cover;background-position:center}
     .sl .usps{display:grid;gap:10px;margin-top:1.2rem}
     .sl .usps li{list-style:none;display:flex;gap:10px}
-    .sl .usps li:before{content:"✓";color:var(--ac);font-weight:800}
+    .sl .usps li:before{content:"✓";color:var(--act);font-weight:800}
     .sl .revs{display:grid;gap:16px}
     @media(min-width:760px){.sl .revs{grid-template-columns:repeat(3,1fr)}}
     .sl .rev{background:var(--vlak);border:1px solid var(--lijn);border-radius:var(--r);padding:18px}
-    .sl .rev .st{color:var(--ac);letter-spacing:2px}
+    .sl .rev .st{color:var(--act);letter-spacing:2px}
     .sl .rev .q{margin:.5rem 0;font-size:1.02rem}
     .sl .rev .nm{font-weight:700;font-size:.92rem}
     .sl details.faq{border-bottom:1px solid var(--lijn);padding:1rem 0}
     .sl details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px}
     .sl details.faq summary::-webkit-details-marker{display:none}
-    .sl details.faq summary:after{content:"+";color:var(--ac);font-size:1.3rem;line-height:1}
+    .sl details.faq summary:after{content:"+";color:var(--act);font-size:1.3rem;line-height:1}
     .sl details.faq[open] summary:after{content:"–"}
     .sl details.faq p{color:var(--zacht);margin-top:.5rem;max-width:66ch}
     .sl .contact{display:grid;gap:24px}
@@ -279,7 +286,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
               {openNu ? "Nu geopend" : "Nu gesloten"}{vandaagTijden ? ` · vandaag ${vandaagTijden}` : " · vandaag gesloten"}</span>
           )}
           {eerstePlek && <span>Eerstvolgende vrije plek: <strong>{eerstePlek}</strong></span>}
-          {agendaKlaar && <a href="#afspraak" style={{ marginLeft: "auto", fontWeight: 700, color: "var(--ac)" }}>Direct boeken →</a>}
+          {agendaKlaar && <a href="#afspraak" style={{ marginLeft: "auto", fontWeight: 700, color: "var(--act)" }}>Direct boeken →</a>}
         </div></div>
       )}
 
@@ -359,7 +366,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           ))}
         </div>
         <ReviewBrug content={c} isReview={isReview} />
-        {b.google_business_url && <p style={{ marginTop: "1rem" }}><a href={b.google_business_url} style={{ color: "var(--ac)", fontWeight: 700 }}>Alle Google-reviews →</a></p>}
+        {b.google_business_url && <p style={{ marginTop: "1rem" }}><a href={b.google_business_url} style={{ color: "var(--act)", fontWeight: 700 }}>Alle Google-reviews →</a></p>}
       </div></section>
 
       <section className="sec" id="vragen" style={{ background: "var(--vlak)" }}><div className="w" style={{ maxWidth: 780 }}>
@@ -378,7 +385,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           )}
           {b.adres && (
             <details className="faq"><summary>Waar zitten jullie?</summary>
-              <p>{b.adres}. <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.naam} ${b.adres}`)}`} style={{ color: "var(--ac)", fontWeight: 700 }}>Route plannen →</a></p></details>
+              <p>{b.adres}. <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.naam} ${b.adres}`)}`} style={{ color: "var(--act)", fontWeight: 700 }}>Route plannen →</a></p></details>
           )}
         </div>
       </div></section>
@@ -394,7 +401,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
             {b.telefoon && <a href={`tel:${b.telefoon}`}>Bel {b.telefoon}</a>}
             {wa && <a href={wa}>WhatsApp</a>}
             {b.email && <a href={`mailto:${b.email}`}>{b.email}</a>}
-            {b.adres && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.naam} ${b.adres}`)}`} style={{ color: "var(--ac)" }}>Route plannen →</a>}
+            {b.adres && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${b.naam} ${b.adres}`)}`} style={{ color: "var(--act)" }}>Route plannen →</a>}
             <div style={{ display: "flex", gap: 12, marginTop: ".6rem" }}>
               {socials.instagram && <a href={socials.instagram}>Instagram</a>}
               {socials.facebook && <a href={socials.facebook}>Facebook</a>}

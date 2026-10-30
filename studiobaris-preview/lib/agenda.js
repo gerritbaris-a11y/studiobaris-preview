@@ -44,7 +44,8 @@ export async function agendaVoorPreview(slug, content) {
   if (!agenda) return null;                       // nog geen demo-bedrijf
   if (!agenda.instellingen || !(agenda.behandelingen || []).length) {
     const b = (content && content.bedrijf) || {};
-    await zetAgendaKlaar(agenda.company_id, b.branche || "", b.email || null);
+    const email = /@voorbeeld\.nl$/i.test(b.email || "") ? null : b.email || null; // nooit het nep-adres uit de voorbeeldvulling
+    await zetAgendaKlaar(agenda.company_id, b.branche || "", email);
     agenda = await agendaVoorSlug(slug);
   }
   return agenda;
