@@ -114,18 +114,24 @@ export default async function Page({ params, searchParams }) {
   const wissel = magWisselen ? <StijlWissel slug={params.slug} huidige={stijl} onze={onzeStijl} merk={c.merk || {}} metBalk={proef.actief} /> : null;
   const props = { content: c, slug: params.slug, isConcept, isReview: isVoorproef };
   // Salons (esthetiek): eigen salonsite met de online agenda op de pagina.
-  // ?stijl=zacht|salonmodern|luxe voor de vergelijking door het team.
+  // Vier salonstijlen; de prospect wisselt zelf met de stijlwisselaar (cookie),
+  // het team kan met ?stijl=zacht|salonmodern|luxe|natuurlijk vergelijken.
   if (isEsthetiekBranche((c.bedrijf || {}).branche)) {
     const ids = SALON_STIJLEN.map((x) => x.id);
-    const salonStijl = ids.includes(searchParams?.stijl) ? searchParams.stijl
-      : ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : standaardSalonStijl((c.bedrijf || {}).branche);
+    const onzeSalon = ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : standaardSalonStijl((c.bedrijf || {}).branche);
+    const kijkSalon = magWisselen ? cookies().get("sbk_" + params.slug)?.value : null;
+    const salonStijl = ids.includes(searchParams?.stijl) ? searchParams.stijl : ids.includes(kijkSalon) ? kijkSalon : onzeSalon;
     let agenda = null, eerstePlek = null;
     try {
       agenda = await agendaVoorPreview(params.slug, content); // zonder voorbeeldvulling: geen nep-e-mailadres
       eerstePlek = agenda ? await eerstePlekLabel(agenda) : null;
     } catch {}
-    return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} metBalk={proef.actief} />{balk}</>;
+    const salonWissel = magWisselen
+      ? <StijlWissel slug={params.slug} huidige={salonStijl} onze={onzeSalon} merk={c.merk || {}} metBalk={proef.actief} stijlen={SALON_STIJLEN} />
+      : null;
+    return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} metBalk={proef.actief || !!salonWissel} />{balk}{salonWissel}</>;
   }
+
   if (stijl === "modern") return <><ModernSite {...props} />{balk}{wissel}</>;
   if (stijl === "persoonlijk") return <><PersoonlijkSite {...props} />{balk}{wissel}</>;
   if (stijl === "ambacht") return <><AmbachtSite {...props} />{balk}{wissel}</>;

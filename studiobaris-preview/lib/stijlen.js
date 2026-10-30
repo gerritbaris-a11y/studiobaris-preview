@@ -49,7 +49,20 @@ export function geldigeStijl(id) {
   return STIJL_IDS.includes(id) ? id : null;
 }
 
+// Stijlen voor salons (esthetiek): eigen opzet in app/styles/salon.js.
+export const SALON_STIJLEN = [
+  { id: "zacht", naam: "Zacht & Licht", kort: "Zacht", uitleg: "Warm, licht en rond. Voor beauty en nagels.", kortUitleg: "Warm, licht, rond" },
+  { id: "salonmodern", naam: "Strak & Modern", kort: "Modern", uitleg: "Wit, strak, met een grote foto bovenaan. Voor kappers.", kortUitleg: "Wit, strak, grote foto" },
+  { id: "luxe", naam: "Luxe & Donker", kort: "Luxe", uitleg: "Donker met een sterke accentkleur. Voor barbiers en lash-studio's.", kortUitleg: "Donker, luxe" },
+  { id: "natuurlijk", naam: "Natuurlijk & Rustig", kort: "Rustig", uitleg: "Zachte aardetinten en veel rust. Voor huidverzorging en wellness.", kortUitleg: "Aardetinten, rustig" },
+];
+export const SALON_STIJL_IDS = SALON_STIJLEN.map((s) => s.id);
+
+export function geldigeSalonStijl(id) {
+  return SALON_STIJL_IDS.includes(id) ? id : null;
+}
+
 export function stijlKort(id) {
-  const s = STIJLEN.find((x) => x.id === id);
+  const s = STIJLEN.find((x) => x.id === id) || SALON_STIJLEN.find((x) => x.id === id);
   return s ? s.kort : id || "";
 }

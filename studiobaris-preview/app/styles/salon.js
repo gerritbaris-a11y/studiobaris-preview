@@ -16,11 +16,7 @@ import AgendaWidget from "../agenda-widget";
 import { hexNaarRgb, contrast } from "../../lib/huisstijl";
 import { waLink, kopDelen } from "./gedeeld";
 
-export const SALON_STIJLEN = [
-  { id: "zacht", naam: "Zacht & Licht", uitleg: "Warm, licht en rond. Voor beauty en nagels." },
-  { id: "salonmodern", naam: "Strak & Modern", uitleg: "Wit, strak en zakelijk. Voor kappers." },
-  { id: "luxe", naam: "Luxe & Donker", uitleg: "Donker met goud. Voor barbiers en lash-studio's." },
-];
+export { SALON_STIJLEN } from "../../lib/stijlen";
 
 export function standaardSalonStijl(branche) {
   const k = nicheKey(branche);
@@ -110,6 +106,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
   const T = {
     zacht: { bg: "#FBF6F2", vlak: "#FFFFFF", vlak2: "#F4ECE6", inkt: "#2B2320", zacht: "#6E625C", lijn: "#EADFD7", r: 22, rk: 999, kopGewicht: 700, hoofdletters: "none", heroDonker: false },
     salonmodern: { bg: "#FFFFFF", vlak: "#F5F6F7", vlak2: "#ECEEF0", inkt: "#121417", zacht: "#5B6470", lijn: "#E4E7EB", r: 10, rk: 10, kopGewicht: 800, hoofdletters: "uppercase", heroDonker: true },
+    natuurlijk: { bg: "#F2F0E8", vlak: "#FBFAF6", vlak2: "#E8E6DA", inkt: "#26302A", zacht: "#5F6A62", lijn: "#DDDBCD", r: 14, rk: 999, kopGewicht: 600, hoofdletters: "none", heroDonker: false },
     luxe: { bg: "#111111", vlak: "#1B1B1B", vlak2: "#242424", inkt: "#F3EFE8", zacht: "#B9B1A6", lijn: "#2E2E2E", r: 4, rk: 4, kopGewicht: 700, hoofdletters: "uppercase", heroDonker: true },
   }[stijl] || {};
 

@@ -13,7 +13,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { STIJLEN } from "../../lib/stijlen";
+import { STIJLEN as VAK_STIJLEN } from "../../lib/stijlen";
 
 const MONSTER = {
   stoer: { bg: "#1F2328", fg: "#fff", font: "system-ui,sans-serif", gewicht: 800, tekst: "Aa", rand: "transparent" },
@@ -21,6 +21,11 @@ const MONSTER = {
   persoonlijk: { bg: "#FDF3E7", fg: "#2A2018", font: "system-ui,sans-serif", gewicht: 700, tekst: "Aa", rand: "transparent" },
   ambacht: { bg: "#F4EEE3", fg: "#2A241D", font: "Georgia,'Times New Roman',serif", gewicht: 500, tekst: "Aa", rand: "transparent" },
   strak: { bg: "#0F1214", fg: "#fff", font: "system-ui,sans-serif", gewicht: 900, tekst: "AA", rand: "transparent" },
+  // Salonstijlen
+  zacht: { bg: "#FBF6F2", fg: "#2B2320", font: "system-ui,sans-serif", gewicht: 700, tekst: "Aa", rand: "#EADFD7" },
+  salonmodern: { bg: "#FFFFFF", fg: "#121417", font: "system-ui,sans-serif", gewicht: 800, tekst: "AA", rand: "#E4E7EB" },
+  luxe: { bg: "#111111", fg: "#F3EFE8", font: "system-ui,sans-serif", gewicht: 700, tekst: "AA", rand: "transparent" },
+  natuurlijk: { bg: "#F2F0E8", fg: "#26302A", font: "Georgia,'Times New Roman',serif", gewicht: 500, tekst: "Aa", rand: "#DDDBCD" },
 };
 
 function leesLokaal(k) {
@@ -30,7 +35,8 @@ function zetLokaal(k, v) {
   try { window.localStorage.setItem(k, v); } catch {}
 }
 
-export default function StijlWissel({ slug, huidige, onze, merk = {}, metBalk }) {
+export default function StijlWissel({ slug, huidige, onze, merk = {}, metBalk, stijlen = null }) {
+  const STIJLEN = stijlen || VAK_STIJLEN;
   const router = useRouter();
   const [zichtbaar, setZichtbaar] = useState(false);
   const [open, setOpen] = useState(false);
@@ -135,7 +141,7 @@ export default function StijlWissel({ slug, huidige, onze, merk = {}, metBalk })
     .sbw-kop strong{display:block;font-size:18px}
     .sbw-kop span{font-size:13px;color:#4A5560}
     .sbw-x{width:44px;height:44px;flex:none;border:0;border-radius:999px;background:#F1F3F5;color:#16202E;display:grid;place-items:center;cursor:pointer}
-    .sbw-rij{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;padding-top:8px}
+    .sbw-rij{display:grid;grid-template-columns:repeat(${STIJLEN.length},minmax(0,1fr));gap:7px;padding-top:8px}
     .sbw-tegel{position:relative;border:1.5px solid #E1E5E9;background:#fff;border-radius:12px;padding:5px 5px 8px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#16202E;min-height:44px}
     .sbw-tegel[aria-pressed="true"]{border:2px solid #16202E;padding:4.5px 4.5px 7.5px}
     .sbw-monster{height:52px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:18px;line-height:1}
