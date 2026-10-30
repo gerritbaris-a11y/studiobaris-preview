@@ -1,4 +1,4 @@
-import { getOverview, getMijnLeads, getTeamLogin } from "../../lib/server-data";
+import { getOverview, getMijnLeads, getTeamLogin, getAppAccounts, zoekAppAccount } from "../../lib/server-data";
 import { stijlKort } from "../../lib/stijlen";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
@@ -34,6 +34,7 @@ import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
 import { isEsthetiekPreview, isEsthetiekLead } from "../../lib/segment";
 import AgendaBerichten from "../esthetiek/agenda-berichten";
+import AgendaLiveKnop from "../esthetiek/agenda-live-knop";
 
 // Gedeelde pagina voor "Mijn previews" (/klanten) en, als test, "Mijn previews
 // esthetiek" (/esthetiek, alleen beheer). segment = "esthetiek" toont alleen
@@ -106,6 +107,8 @@ export default async function PreviewsPagina({ segment = null } = {}) {
   const beheer = isBeheer(sessie);
   const [allesRuw, mijnLeadsRuw, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : []]);
   const alles = esth ? (allesRuw || []).filter(isEsthetiekPreview) : allesRuw;
+  // Esthetiek: app-accounts van klanten, voor "Agenda live zetten in de app".
+  const appAccounts = esth && beheer ? await getAppAccounts() : [];
   const mijnLeads = esth ? (mijnLeadsRuw || []).filter(isEsthetiekLead) : mijnLeadsRuw;
   const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
@@ -276,6 +279,10 @@ export default async function PreviewsPagina({ segment = null } = {}) {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
+            {esth && beheer && (r.klantnummer || r.klant_kandidaat) && zoekAppAccount(r, appAccounts) && (
+              <AgendaLiveKnop slug={r.slug} naar={zoekAppAccount(r, appAccounts).id}
+                accountNaam={zoekAppAccount(r, appAccounts).name} email={r.factuur_email || r.lead_email || null} />
+            )}
             {esth && (
               <a href={`https://preview.studiobaris.nl/${r.slug}/afspraak-maken`} target="_blank" rel="noreferrer"
                 style={{ alignSelf: "flex-start", fontSize: 13.5, fontWeight: 700, color: KLEUR.klei, textDecoration: "none" }}>
