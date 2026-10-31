@@ -88,6 +88,10 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
     kop2 = hero.kop_accent;
   }
   const behandelingen = (agenda && agenda.behandelingen) || [];
+  // Teksten die de salon zelf in de app (Mijn website) heeft aangepast gaan voor.
+  const eigenTekst = (agenda && agenda.teksten) || {};
+  const intro = (eigenTekst.intro && String(eigenTekst.intro).trim()) || hero.subkop;
+  const overTekst = (eigenTekst.over && String(eigenTekst.over).trim()) || c.over_ons;
   const categorieen = [...new Set(behandelingen.map((x) => x.categorie))];
   const perDag = tijdenPerDag(agenda && agenda.rooster);
   const nu = nuInAmsterdam();
@@ -252,7 +256,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           <>
             <div className="eb">{vakNaam}{plaats ? ` in ${plaats}` : ""}</div>
             <h1>{kop1}{kop2 ? <em>{kop2}</em> : null}</h1>
-            {hero.subkop && <p className="sub">{hero.subkop}</p>}
+            {intro && <p className="sub">{intro}</p>}
             <div className="rij">
               <a className="knop" href={boekHref}>Boek online</a>
               {b.telefoon && <a className="knop2" href={`tel:${b.telefoon}`}>Bel {b.telefoon}</a>}
@@ -264,7 +268,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
             <div>
               <div className="eb">{vakNaam}{plaats ? ` in ${plaats}` : ""}</div>
               <h1>{kop1}{kop2 ? <em>{kop2}</em> : null}</h1>
-              {hero.subkop && <p className="sub">{hero.subkop}</p>}
+              {intro && <p className="sub">{intro}</p>}
               <div className="rij">
                 <a className="knop" href={boekHref}>Boek online</a>
                 {b.telefoon && <a className="knop2" href={`tel:${b.telefoon}`}>Bel {b.telefoon}</a>}
@@ -349,7 +353,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
         <div>
           <div className="eb">Over {b.naam}</div>
           <h2>{plaats ? `Jouw ${vakNaam.toLowerCase()} in ${plaats}` : `Over ${b.naam}`}</h2>
-          {c.over_ons && <p className="lead" style={{ marginTop: ".6rem" }}>{c.over_ons}</p>}
+          {overTekst && <p className="lead" style={{ marginTop: ".6rem", whiteSpace: "pre-line" }}>{overTekst}</p>}
           {usps.length > 0 && <ul className="usps">{usps.slice(0, 4).map((u, i) => <li key={i}>{u}</li>)}</ul>}
         </div>
         <div className="foto" style={{ backgroundImage: `url(${JSON.stringify(nicheFoto(b.branche, 3))})` }} role="img" aria-label="Sfeerbeeld salon" />
