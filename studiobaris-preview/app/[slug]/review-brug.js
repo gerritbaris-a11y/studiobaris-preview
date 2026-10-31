@@ -5,6 +5,8 @@
 // die komt precies hier te staan. Alleen op de preview die de prospect ziet
 // (isReview), nooit in concept/werkversie en nooit op een echte klantsite.
 
+import { isEsthetiekBranche } from "../../lib/segment";
+
 export const REVIEW_PLEK = "Hier komt straks een echte review van je klant.";
 
 export default function ReviewBrug({ content, isReview }) {
@@ -14,8 +16,10 @@ export default function ReviewBrug({ content, isReview }) {
       margin: "1.4rem auto 0", maxWidth: 560, padding: ".75rem 1rem", borderRadius: 12,
       border: "1.5px dashed currentColor", opacity: 0.85, fontSize: ".92rem", lineHeight: 1.5, textAlign: "center",
     }}>
-      <strong>Dit zijn voorbeeldreviews.</strong> Met je app vraag je na elke klus zelf een review aan je klant.
-      Die komt hier te staan, en dat maakt het verschil met een beunhaas.
+      <strong>Dit zijn voorbeeldreviews.</strong>{" "}
+      {isEsthetiekBranche(content.bedrijf && content.bedrijf.branche)
+        ? "Met je app vraag je na een afspraak zelf een review aan je klant. Die komt hier te staan, en zo zien nieuwe klanten meteen hoe tevreden anderen zijn."
+        : "Met je app vraag je na elke klus zelf een review aan je klant. Die komt hier te staan, en dat maakt het verschil met een beunhaas."}
     </p>
   );
 }
