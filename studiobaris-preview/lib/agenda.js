@@ -109,6 +109,13 @@ export async function herinneringGezet(id) {
 export async function testOpruimen() {
   return rpc("sb_agenda_test_opruimen", {});
 }
+export async function reviewverzoekenLijst() {
+  return (await rpc("sb_agenda_reviewverzoeken_lijst", {})) || [];
+}
+export async function reviewverzoekMaak(afspraakId) {
+  return rpc("sb_agenda_reviewverzoek_maak", { p_afspraak: afspraakId });
+}
+
 export async function berichtenMaand(companyId) {
   return (await rpc("sb_agenda_berichten_maand", { p_company: companyId })) || { email: 0, whatsapp: 0, bundel: 150 };
 }
@@ -310,6 +317,26 @@ export async function stuurHerinnering(a, agenda, teller) {
     return ok ? "email" : null;
   }
   return null;
+}
+
+// De dag na de afspraak: vriendelijk om een review vragen. De link gaat naar
+// dezelfde reviewpagina als de verzoeken die de salon zelf in de app maakt.
+const KLANT_APP = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobaris.nl";
+export async function stuurReviewverzoek(a, agenda, token) {
+  if (!a.klant_email || !token) return false;
+  const bedrijf = agenda.naam || "de salon";
+  const voornaam = String(a.klant_naam || "").split(" ")[0] || "";
+  const ok = await mail({
+    to: a.klant_email,
+    subject: `${a.test ? "[Test] " : ""}Hoe vond je het bij ${bedrijf}?`,
+    html: kader(`Bedankt voor je bezoek${voornaam ? ", " + esc(voornaam) : ""}!`,
+      `<p>Gisteren was je bij <strong>${esc(bedrijf)}</strong> voor ${esc(a.behandeling_naam)}. Ben je blij met het resultaat?
+       Een korte review helpt de salon enorm. Het kost je een minuutje.</p>
+       ${knop(`${KLANT_APP}/r/${token}`, "Review schrijven")}`),
+    reply: agenda.melding_email || undefined,
+  });
+  await logBericht(agenda.company_id, a.id, "email", "reviewverzoek", a.klant_email, ok);
+  return ok;
 }
 
 // CORS: de boekingswidget draait ook op klantsites (WordPress) op een ander domein.

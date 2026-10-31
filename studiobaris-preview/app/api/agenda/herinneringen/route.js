@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   herinneringenLijst, herinneringGezet, testOpruimen, berichtenMaand, agendaVoorBedrijf, stuurHerinnering,
+  reviewverzoekenLijst, reviewverzoekMaak, stuurReviewverzoek,
 } from "../../../../lib/agenda";
 
 export const runtime = "nodejs";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Dagelijks (Vercel Cron, vercel.json): herinnering voor alle afspraken van
-// morgen, en oude testboekingen opruimen. Zelfde toegangsregels als de andere crons.
+// morgen, reviewverzoek voor die van gisteren, en oude testboekingen opruimen. Zelfde toegangsregels als de andere crons.
 export async function GET(req) {
   const geheim = process.env.CRON_SECRET;
   const kop = req.headers.get("authorization") || "";
@@ -17,7 +18,7 @@ export async function GET(req) {
   const magDoor = geheim ? kop === `Bearer ${geheim}` || sleutel === geheim : agent.startsWith("vercel-cron/");
   if (!magDoor) return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 401 });
 
-  const uitkomst = { verstuurd: 0, whatsapp: 0, email: 0, overgeslagen: 0, opgeruimd: 0 };
+  const uitkomst = { verstuurd: 0, whatsapp: 0, email: 0, overgeslagen: 0, opgeruimd: 0, reviewverzoeken: 0 };
   try {
     const lijst = await herinneringenLijst();
     const agendas = {}, tellers = {};
@@ -29,6 +30,12 @@ export async function GET(req) {
       const kanaal = agendas[a.company_id] ? await stuurHerinnering(a, agendas[a.company_id], tellers[a.company_id]) : null;
       await herinneringGezet(a.id);
       if (kanaal) { uitkomst.verstuurd++; uitkomst[kanaal]++; } else uitkomst.overgeslagen++;
+    }
+    // Reviewverzoek voor de afspraken van gisteren (als de salon dat aan heeft).
+    for (const a of await reviewverzoekenLijst()) {
+      if (!agendas[a.company_id]) agendas[a.company_id] = await agendaVoorBedrijf(a.company_id);
+      const token = await reviewverzoekMaak(a.id);
+      if (token && agendas[a.company_id] && (await stuurReviewverzoek(a, agendas[a.company_id], token))) uitkomst.reviewverzoeken++;
     }
     uitkomst.opgeruimd = (await testOpruimen()) || 0;
     return NextResponse.json({ ok: true, ...uitkomst });
