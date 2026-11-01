@@ -412,3 +412,12 @@ end $$;
 -- agenda_instellingen.ical_token + sb_agenda_ical(token): abonneerbare agenda.
 -- sb_agenda_overzetten(van_slug, naar_company, email): demo-agenda naar het
 --   echte app-account (behandelingen, rooster, instellingen; testmodus uit).
+
+-- ── Migraties agenda_medewerkers_reeksen_import + agenda_medewerkers_preview (1 nov 2026) ──
+-- agenda_medewerkers, agenda_medewerker_rooster, agenda_klanten (RLS "Eigenaar beheert").
+-- agenda_behandelingen.medewerker_ids, agenda_afspraken.medewerker_id + reeks_id,
+-- agenda_blokkades.medewerker_id, agenda_instellingen.buffer_min; bron 'import'.
+-- agenda_geen_overlap nu per (company_id, coalesce(medewerker_id, 0-uuid)).
+-- Functies: sb_agenda_kandidaten, sb_agenda_vrij, sb_agenda_kies_medewerker,
+-- sb_agenda_medewerkers_zet; vrije_tijden/vrije_dagen/boek met p_medewerker;
+-- sb_agenda_publiek geeft medewerkers en behandelingen.medewerker_ids mee.

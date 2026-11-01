@@ -34,6 +34,7 @@ export async function POST(req) {
       naam: String(b.naam || "").slice(0, 120), telefoon: String(b.telefoon || "").slice(0, 40),
       email, opmerking: String(b.opmerking || "").slice(0, 500),
       bron: b.bron === "preview" ? "preview" : "site",
+      medewerkerId: isUuid(b.m) ? b.m : null,
     });
     if (!r || !r.ok) {
       const code = (r && r.fout) || "onbekend";
@@ -46,7 +47,7 @@ export async function POST(req) {
     } catch {}
     return NextResponse.json({
       ok: true,
-      afspraak: { start: a.start, eind: a.eind, behandeling: a.behandeling_naam, token: a.token, test: a.test },
+      afspraak: { start: a.start, eind: a.eind, behandeling: a.behandeling_naam, token: a.token, test: a.test, medewerker: a.medewerker_naam || null },
     }, { headers: CORS });
   } catch {
     return NextResponse.json({ ok: false, error: "Agenda niet bereikbaar. Probeer het zo nog eens." }, { status: 500, headers: CORS });

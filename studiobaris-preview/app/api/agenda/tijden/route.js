@@ -16,7 +16,8 @@ export async function GET(req) {
     return NextResponse.json({ ok: false, error: "Onbekende agenda." }, { status: 400, headers: CORS });
   }
   try {
-    const tijden = await vrijeTijden(c, b, d);
+    const m = sp.get("m");
+    const tijden = await vrijeTijden(c, b, d, isUuid(m) ? m : null);
     return NextResponse.json({ ok: true, tijden }, { headers: CORS });
   } catch {
     return NextResponse.json({ ok: false, error: "Agenda niet bereikbaar." }, { status: 500, headers: CORS });

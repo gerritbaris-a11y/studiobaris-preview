@@ -315,6 +315,10 @@ export async function POST(req) {
     const SB_TELEFOON = "06 16 73 21 05";
     const SB_EMAIL = "info@studiobaris.nl";
     content.bedrijf = content.bedrijf || {};
+    // Salon: namen van medewerkers voor de agenda op de preview (max 8).
+    if (isSalon && v("medewerkers")) {
+      content.medewerkers = v("medewerkers").split(/[,;\n]+/).map((x) => x.trim().slice(0, 40)).filter(Boolean).slice(0, 8);
+    }
     const leeg = (x) => !x || !String(x).trim();
     const terugval = [];
     if (leeg(content.bedrijf.telefoon)) { content.bedrijf.telefoon = SB_TELEFOON; terugval.push("telefoonnummer"); }
