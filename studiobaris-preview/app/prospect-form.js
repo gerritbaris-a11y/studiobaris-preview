@@ -141,7 +141,9 @@ export default function ProspectForm({
   const [brancheFout, setBrancheFout] = useState("");
   // Salon? Dan vragen we ook de namen van de medewerkers, voor de agenda.
   const [brancheAnders, setBrancheAnders] = useState("");
-  const isSalon = isEsthetiekBranche([...branches, brancheAnders].join(" "));
+  // Sector (alleen team): uit de leadlijst, anders automatisch.
+  const [sector, setSector] = useState(prefill && prefill.lijst === "spoed" ? "spoed" : prefill && prefill.lijst === "esthetiek" ? "boeking" : "");
+  const isSalon = sector === "boeking" || (sector === "" && isEsthetiekBranche([...branches, brancheAnders].join(" ")));
   // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
   const [uploadStand, setUploadStand] = useState("");
 
@@ -294,6 +296,7 @@ export default function ProspectForm({
     const val = (naam) => (f[naam] ? f[naam].value : "");
     put("diensten", val("diensten"));
     put("medewerkers", val("medewerkers"));
+    put("sector", val("sector"));
     put("slogan", val("slogan"));
     put("kernwaarden", waarden.join(", "));
     put("regio", regios.filter((r) => r.trim()).join(", "));
@@ -505,6 +508,17 @@ export default function ProspectForm({
         )}
 
         {stapBlok("wie", <>
+        {intern && !revise && (
+          <label style={{ ...label, marginBottom: 14 }}>Soort website
+            <span style={hint}>Automatisch: salons krijgen Boeking &amp; Sfeer, de rest Portfolio &amp; Offerte. Spoed &amp; Lead kies je zelf (loodgieter, elektricien, slotenmaker …).</span>
+            <select style={veld} name="sector" value={sector} onChange={(e) => setSector(e.target.value)}>
+              <option value="">Automatisch</option>
+              <option value="portfolio">Portfolio &amp; Offerte (vakmannen)</option>
+              <option value="boeking">Boeking &amp; Sfeer (salons)</option>
+              <option value="spoed">Spoed &amp; Lead (spoed)</option>
+            </select>
+          </label>
+        )}
         <div style={label}>{revise ? "Branche (meerdere mogelijk)" : "Branche * (meerdere mogelijk)"}</div>
         <span style={hint}>{revise ? "Alleen aanvinken als de branche op de site niet klopt of aangevuld moet worden." : "Vink alles aan wat van toepassing is. Hoe preciezer, hoe gerichter de teksten en het vaklabel."}</span>
         <div>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { getAanbodInfo, telAanbod, prijsVoor, euro, echtNummer } from "../../../lib/aanbod";
+import { isEsthetiekBranche } from "../../../lib/segment";
 import { betaallinkUrl } from "../../../lib/betaallink";
 import { BRIEF_REVIEWS } from "../../../lib/brief-instellingen";
 import { SB_TEL, SB_TEL_TOON, SB_KVK, SB_PERSOON, waMet } from "../../../lib/sb-contact";
@@ -92,7 +93,10 @@ export default async function AanbodPagina({ params }) {
   });
 
   const bedrijf = info.bedrijf || slug;
-  const prijs = prijsVoor(info.brief);
+  const sector = ["portfolio", "boeking", "spoed"].includes(info.sector) ? info.sector
+    : isEsthetiekBranche(info.branche) ? "boeking" : "portfolio";
+  const prijs = prijsVoor(info.brief, sector);
+  const spoed = sector === "spoed", salon = sector === "boeking";
   const reviews = (BRIEF_REVIEWS || []).filter((r) => r && r.tekst);
   const terug = `/${slug}`;
 
@@ -107,7 +111,11 @@ export default async function AanbodPagina({ params }) {
 
         <div className="sba-eyebrow">Voor {bedrijf}</div>
         <h1>Je website staat al klaar.</h1>
-        <p className="sba-lead">Je zet je projecten online vanaf je telefoon. Wij doen de rest.</p>
+        <p className="sba-lead">{spoed
+          ? "Klanten in nood bellen of appen je met één tik. Wij zorgen dat ze je vinden."
+          : salon
+            ? "Klanten boeken online, ook 's avonds. Jij ziet alles in de app."
+            : "Je zet je projecten online vanaf je telefoon. Wij doen de rest."}</p>
 
         {prijs && prijs.oud && (
           <div className="sba-actie">
@@ -125,7 +133,14 @@ export default async function AanbodPagina({ params }) {
           <h2>Wat je krijgt</h2>
           <ul className="sba-lijst">
             <li><Vink /><div><strong>Deze website, helemaal af</strong><span>Met je eigen teksten, foto&apos;s en logo. Je krijgt twee rondes om te zeggen wat anders moet.</span></div></li>
-            <li><Vink /><div><strong>De StudioBaris-app</strong><span>Projecten en reviews zet je zelf online vanaf je telefoon. Binnen enkele minuten staan ze op je site.</span></div></li>
+            {spoed ? (
+              <li><Vink /><div><strong>Bellen, WhatsApp en storingsmeldingen</strong><span>Een grote belknop die altijd in beeld blijft, en meldingen met adres en omschrijving direct in je mail.</span></div></li>
+            ) : salon ? (
+              <li><Vink /><div><strong>Online agenda en de StudioBaris-app</strong><span>Klanten boeken zelf, per medewerker. Bevestiging en herinnering gaan automatisch per e-mail. In de app zie je je afspraken en pas je je behandelingen en prijzen aan.</span></div></li>
+            ) : (
+              <li><Vink /><div><strong>De StudioBaris-app</strong><span>Projecten en reviews zet je zelf online vanaf je telefoon. Binnen enkele minuten staan ze op je site.</span></div></li>
+            )}
+            {spoed && <li><Vink /><div><strong>Een pagina per plaats in je werkgebied</strong><span>Zodat je gevonden wordt op &quot;{(info.branche || "loodgieter").toLowerCase()} + plaatsnaam&quot;.</span></div></li>}
             <li><Vink /><div><strong>Domeinnaam, hosting en 2 mailadressen</strong><span>Inclusief beveiliging (https). Wij regelen het, ook als je nu al een domein hebt.</span></div></li>
             <li><Vink /><div><strong>Onderhoud zonder omkijken</strong><span>Updates, back-ups en storingen: dat doen wij.</span></div></li>
             <li><Vink /><div><strong>Snel op elke telefoon</strong><span>Onze sites scoren boven de 90 op Google PageSpeed.</span></div></li>
@@ -137,16 +152,17 @@ export default async function AanbodPagina({ params }) {
             <h2>Wat het kost</h2>
             <div className="sba-prijs">
               <div>
-                <span>Website + app, eenmalig</span>
+                <span>{spoed ? "Website, eenmalig" : salon ? "Website + agenda + app, eenmalig" : "Website + app, eenmalig"}</span>
                 <span className="bedrag">{prijs.oud && <s>{euro(prijs.oud)}</s>}{euro(prijs.website)}</span>
               </div>
               <div>
-                <span>Daarna per maand<br /><span className="sba-klein">hosting, onderhoud en de app</span></span>
+                <span>Daarna per maand<br /><span className="sba-klein">{spoed ? "hosting en onderhoud" : salon ? "hosting, onderhoud, agenda en de app" : "hosting, onderhoud en de app"}</span></span>
                 <span className="bedrag">{euro(prijs.maand)}</span>
               </div>
             </div>
             <p className="sba-klein" style={{ marginTop: 10 }}>
               Alle bedragen excl. btw. Je betaalt de helft vooraf en de rest pas als je site live staat.
+              {salon ? " Bevestigingen en herinneringen per e-mail zitten erbij. Herinneringen via WhatsApp kunnen later als losse optie; daar hoor je dan vooraf de prijs van." : ""}
               {prijs.oud ? ` De brief-actie geldt tot en met ${prijs.tot}.` : ""}
             </p>
           </section>
@@ -169,7 +185,7 @@ export default async function AanbodPagina({ params }) {
           <ol className="sba-stappen">
             <li><div><strong>Je zegt ja</strong><br /><span className="sba-klein">Hieronder, of gewoon aan de telefoon.</span></div></li>
             <li><div><strong>Wij maken je site af</strong><br /><span className="sba-klein">We bellen je, nemen je teksten en foto&apos;s door en regelen domein en mail.</span></div></li>
-            <li><div><strong>Je site staat live</strong><br /><span className="sba-klein">Jij zet je projecten online vanaf je telefoon. Volgende week kun je al beginnen.</span></div></li>
+            <li><div><strong>Je site staat live</strong><br /><span className="sba-klein">{spoed ? "Klanten bellen en appen je direct. Volgende week kun je al beginnen." : salon ? "Klanten boeken online. Je afspraken uit je oude systeem zetten wij voor je over." : "Jij zet je projecten online vanaf je telefoon. Volgende week kun je al beginnen."}</span></div></li>
           </ol>
         </section>
 

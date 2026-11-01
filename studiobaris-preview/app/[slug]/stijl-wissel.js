@@ -26,6 +26,11 @@ const MONSTER = {
   salonmodern: { bg: "#FFFFFF", fg: "#121417", font: "system-ui,sans-serif", gewicht: 800, tekst: "AA", rand: "#E4E7EB" },
   luxe: { bg: "#111111", fg: "#F3EFE8", font: "system-ui,sans-serif", gewicht: 700, tekst: "AA", rand: "transparent" },
   natuurlijk: { bg: "#F2F0E8", fg: "#26302A", font: "Georgia,'Times New Roman',serif", gewicht: 500, tekst: "Aa", rand: "#DDDBCD" },
+  // Spoedstijlen
+  signaal: { bg: "#0E1116", fg: "#FFC400", font: "system-ui,sans-serif", gewicht: 900, tekst: "AA", rand: "transparent" },
+  helder: { bg: "#FFFFFF", fg: "#0B63F6", font: "system-ui,sans-serif", gewicht: 800, tekst: "Aa", rand: "#E2E8F0" },
+  vakman: { bg: "#F6F3EE", fg: "#E8590C", font: "system-ui,sans-serif", gewicht: 800, tekst: "Aa", rand: "#E6E0D5" },
+  fris: { bg: "#F3FAF7", fg: "#0E9F6E", font: "system-ui,sans-serif", gewicht: 800, tekst: "Aa", rand: "#D5EBE2" },
 };
 
 function leesLokaal(k) {

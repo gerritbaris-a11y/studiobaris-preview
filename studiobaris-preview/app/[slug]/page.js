@@ -20,6 +20,7 @@ import ProefBalk from "./proef-balk";
 import FaseFotos, { heeftFases } from "./fase-fotos";
 import SalonSite, { SALON_STIJLEN, standaardSalonStijl } from "../styles/salon";
 import { isEsthetiekBranche } from "../../lib/segment";
+import SpoedSite, { SPOED_STIJLEN } from "../styles/spoed";
 import { agendaVoorPreview, eerstePlekLabel } from "../../lib/agenda";
 
 export const dynamic = "force-dynamic";
@@ -116,7 +117,18 @@ export default async function Page({ params, searchParams }) {
   // Salons (esthetiek): eigen salonsite met de online agenda op de pagina.
   // Vier salonstijlen; de prospect wisselt zelf met de stijlwisselaar (cookie),
   // het team kan met ?stijl=zacht|salonmodern|luxe|natuurlijk vergelijken.
-  if (isEsthetiekBranche((c.bedrijf || {}).branche)) {
+  // Spoed & Lead: eigen site met bel- en WhatsApp-knop voorop (geen app, geen agenda).
+  if (c.sector === "spoed") {
+    const ids = SPOED_STIJLEN.map((x) => x.id);
+    const onzeSpoed = ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : "signaal";
+    const kijkSpoed = magWisselen ? cookies().get("sbk_" + params.slug)?.value : null;
+    const spoedStijl = ids.includes(searchParams?.stijl) ? searchParams.stijl : ids.includes(kijkSpoed) ? kijkSpoed : onzeSpoed;
+    const spoedWissel = magWisselen
+      ? <StijlWissel slug={params.slug} huidige={spoedStijl} onze={onzeSpoed} merk={c.merk || {}} metBalk={proef.actief} stijlen={SPOED_STIJLEN} />
+      : null;
+    return <><SpoedSite {...props} stijl={spoedStijl} metBalk={proef.actief || !!spoedWissel} />{balk}{spoedWissel}</>;
+  }
+  if (c.sector === "boeking" || (c.sector !== "portfolio" && isEsthetiekBranche((c.bedrijf || {}).branche))) {
     const ids = SALON_STIJLEN.map((x) => x.id);
     const onzeSalon = ids.includes(c.merk && c.merk.stijl) ? c.merk.stijl : standaardSalonStijl((c.bedrijf || {}).branche);
     const kijkSalon = magWisselen ? cookies().get("sbk_" + params.slug)?.value : null;

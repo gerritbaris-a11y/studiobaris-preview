@@ -3,12 +3,17 @@ import { controleerBestand, controleerBestanden } from "../../../lib/bestand-val
 import {
   SYSTEM_PROMPT_WF1,
   SALON_AANVULLING,
+  SPOED_AANVULLING,
   slugify,
   extractJson,
   validateContent,
 } from "../../../lib/intake-helpers";
 import { callClaude } from "../../../lib/anthropic";
 import { isEsthetiekBranche } from "../../../lib/segment";
+
+// Sector uit het formulier (alleen team): portfolio | boeking | spoed. Leeg =
+// automatisch (salon → boeking, anders portfolio).
+const SECTOR_IDS = ["portfolio", "boeking", "spoed"];
 import { sendPreviewEmail } from "../../../lib/email";
 import { maakDemoApp } from "../../../lib/demo-app";
 import { vakfotosVoor } from "../../../lib/vakfotos";
@@ -241,8 +246,11 @@ export async function POST(req) {
 
     // Claude aanroepen + valideren
     // Salons krijgen een eigen aanvulling op de schrijfopdracht.
-    const isSalon = isEsthetiekBranche([v("branche"), v("branche_anders")].filter(Boolean).join(" "));
-    const raw = await callClaude(isSalon ? SYSTEM_PROMPT_WF1 + SALON_AANVULLING : SYSTEM_PROMPT_WF1, docText, logoImage);
+    const gekozenSector = SECTOR_IDS.includes(v("sector")) ? v("sector") : "";
+    const isSpoed = gekozenSector === "spoed";
+    const isSalon = !isSpoed && (gekozenSector === "boeking" || isEsthetiekBranche([v("branche"), v("branche_anders")].filter(Boolean).join(" ")));
+    const prompt = isSpoed ? SYSTEM_PROMPT_WF1 + SPOED_AANVULLING : isSalon ? SYSTEM_PROMPT_WF1 + SALON_AANVULLING : SYSTEM_PROMPT_WF1;
+    const raw = await callClaude(prompt, docText, logoImage);
     const content = extractJson(raw);
     const fout = validateContent(content);
     if (fout) return NextResponse.json({ ok: false, error: fout, raw }, { status: 422 });
@@ -315,6 +323,10 @@ export async function POST(req) {
     const SB_TELEFOON = "06 16 73 21 05";
     const SB_EMAIL = "info@studiobaris.nl";
     content.bedrijf = content.bedrijf || {};
+    if (gekozenSector) content.sector = gekozenSector;
+    if (isSpoed && !["signaal", "helder", "vakman", "fris"].includes(content.merk && content.merk.stijl)) {
+      content.merk = { ...(content.merk || {}), stijl: "signaal" };
+    }
     // Salon: namen van medewerkers voor de agenda op de preview (max 8).
     if (isSalon && v("medewerkers")) {
       content.medewerkers = v("medewerkers").split(/[,;\n]+/).map((x) => x.trim().slice(0, 40)).filter(Boolean).slice(0, 8);

@@ -75,6 +75,22 @@ DIT IS EEN SALON (kapper, barbier, nagelstudio of beautysalon). Pas de teksten d
 - projecten: alleen aangeleverd werk; een kapsel of set nagels heet "look" of "set", geen "project".
 `;
 
+export const SPOED_AANVULLING = `
+DIT IS EEN SPOEDVAK (loodgieter, ontstopper, elektricien, slotenmaker, cv-monteur of vergelijkbaar). De lezer heeft NU een probleem en wil binnen een minuut iemand aan de lijn. Pas de teksten daarop aan:
+- Schrijf kort, rustig en direct, in de je/jij-vorm. Geen verkooppraat, wel vertrouwen: wie komt er, wat kost het, hoe snel.
+- hero.kop: het probleem en de oplossing in een paar woorden (bijv. "Lekkage of verstopping?"); hero.kop_accent: de belofte (bijv. "Wij komen vandaag nog"), alleen als de snelheid is aangeleverd, anders iets als "Bel ons direct". hero.cta_tekst = "Bel direct".
+- Gebruik nergens "offerte" als hoofdactie. cta_blok.knop = "Bel direct".
+- Voeg BOVENOP het schema één extra sleutel "spoed" toe:
+  "spoed": {"bereikbaar":"","reactietijd":"","storingen":[{"titel":"","tekst":""}],"tarieven":[{"omschrijving":"","prijs":""}],"werkgebied":[]}
+  - bereikbaar: bijv. "24/7" of "ma t/m za 7:00 tot 22:00", alleen als aangeleverd, anders "".
+  - reactietijd: bijv. "binnen 60 minuten ter plaatse", alleen als aangeleverd, anders "".
+  - storingen: 3 tot 5 veelvoorkomende problemen waarvoor je deze vakman belt, passend bij zijn vak (bijv. "Lekkage", "Verstopte afvoer", "Geen warm water"), met een korte zin wat hij dan doet. Dit mag je afleiden uit het vak.
+  - tarieven: ALLEEN aangeleverde tarieven (voorrijkosten, uurtarief, toeslag avond/weekend). Niets verzonnen, anders [].
+  - werkgebied: de plaatsen die zijn genoemd of duidelijk in de regio liggen die is aangeleverd (maximaal 12), anders [].
+- bedrijf.branche: kort label zoals "Loodgieter", "Ontstoppingsbedrijf", "Elektricien", "Slotenmaker".
+- seo.titel: "<branche> <plaats> | Snel ter plaatse | <bedrijfsnaam>" (of zonder "Snel ter plaatse" als snelheid niet is aangeleverd). seo.meta_omschrijving: de belangrijkste storingen, het werkgebied en dat je direct kunt bellen. Maximaal 155 tekens.
+`;
+
 export const SYSTEM_PROMPT_REVISE = `Je werkt een bestaande previewwebsite van StudioBaris bij op basis van een ingevuld formulier.
 Je krijgt: (A) de huidige website-JSON en (B) de antwoorden uit het formulier.
 
