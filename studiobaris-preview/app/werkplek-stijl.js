@@ -70,8 +70,12 @@ export const NAV_VERKOPER = [
 export const NAV_BEHEER = [
   // "Vandaag": startscherm voor beheer (wekelijkse AI-update, meldingen).
   { href: "/vandaag", label: "Vandaag" },
+  // Previews (nov 2026): bovenin het uitklapmenu eerst de sector (Portfolio &
+  // Offerte, Boeking & Sfeer, Spoed & Lead), daaronder de drie schermen voor
+  // die sector. Zie lib/segment.js (SECTOREN) en werkplek-shell.js.
   {
     label: "Previews",
+    sectoren: true,
     items: [
       { href: "/klanten", label: "Mijn previews" },
       { href: "/benaderd", label: "Benaderd" },
@@ -107,15 +111,6 @@ export const NAV_BEHEER = [
       { href: "/marges", label: "Marges" },
       { href: "/kosten", label: "Kosten & resultaat" },
       { href: "/boekhouding", label: "Boekhouding" },
-    ],
-  },
-  // Test (okt 2026): previews voor kappers, nagel- en beautysalons. Alleen
-  // beheer. Benaderd volgt later, en wordt dan samengevoegd met de vakmannen.
-  {
-    label: "Previews test",
-    items: [
-      { href: "/esthetiek", label: "Mijn previews esthetiek" },
-      { href: "/esthetiek/leads", label: "Leads" },
     ],
   },
 ];

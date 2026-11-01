@@ -3,11 +3,14 @@
 import { useState, useRef } from "react";
 import { KLEUR, HEAD, BODY, NAV_BEHEER, NAV_VERKOPER } from "./werkplek-stijl";
 import WerkplekIcoon from "./werkplek-icoon";
+import { SECTOREN, sectorPad } from "../lib/segment";
 
 // Eén navigatiegroep (bijv. "Financieel") als knop met een uitklapmenu.
 // Vervangt meerdere losse tabbladen door één, zodat de balk overzichtelijk blijft.
-function NavGroep({ groep, actief }) {
+function NavGroep({ groep, actief, sector }) {
   const [open, setOpen] = useState(false);
+  // Previews: eerst een sector kiezen, de links eronder gaan naar die sector.
+  const [gekozen, setGekozen] = useState(sector || "portfolio");
   const [pos, setPos] = useState(null);
   const btnRef = useRef(null);
   const aan = groep.items.some((n) => n.href === actief);
@@ -28,7 +31,11 @@ function NavGroep({ groep, actief }) {
         ref={btnRef}
         type="button"
         onClick={toggle}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onBlur={(e) => {
+          // Klik op een sectorknop in het menu laat het menu open.
+          if (e.relatedTarget && e.relatedTarget.dataset && e.relatedTarget.dataset.sector) return;
+          setTimeout(() => setOpen(false), 150);
+        }}
         style={{
           padding: "9px 14px", borderRadius: 999, fontSize: 14,
           fontWeight: aan ? 700 : 600,
@@ -49,12 +56,40 @@ function NavGroep({ groep, actief }) {
             boxShadow: "0 8px 24px rgba(43,39,36,.12)", padding: 6, minWidth: 180,
           }}
         >
+          {groep.sectoren && (
+            <div style={{ padding: "4px 4px 8px", marginBottom: 4, borderBottom: `1px solid ${KLEUR.lijn}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: KLEUR.label, textTransform: "uppercase", letterSpacing: 0.6, padding: "2px 8px 6px" }}>Sector</div>
+              <div style={{ display: "grid", gap: 4 }}>
+                {SECTOREN.map((sc) => {
+                  const aanS = sc.id === gekozen;
+                  return (
+                    <button
+                      key={sc.id}
+                      type="button"
+                      data-sector={sc.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setGekozen(sc.id)}
+                      style={{
+                        textAlign: "left", padding: "7px 10px", borderRadius: 8, fontSize: 13.5,
+                        fontWeight: aanS ? 700 : 600, cursor: "pointer", fontFamily: "inherit",
+                        color: aanS ? "#fff" : KLEUR.inkt,
+                        background: aanS ? KLEUR.navy : KLEUR.baan,
+                        border: "none", whiteSpace: "nowrap",
+                      }}
+                    >
+                      {sc.label} <span style={{ fontWeight: 500, opacity: 0.75 }}>· {sc.kort}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {groep.items.map((n) => {
-            const itemAan = n.href === actief;
+            const itemAan = n.href === actief && (!groep.sectoren || gekozen === (sector || "portfolio"));
             return (
               <a
                 key={n.href}
-                href={n.href}
+                href={groep.sectoren ? sectorPad(n.href, gekozen) : n.href}
                 style={{
                   display: "block", padding: "8px 12px", borderRadius: 8, fontSize: 14,
                   fontWeight: itemAan ? 700 : 500,
@@ -94,7 +129,7 @@ function NavLink({ n, aan }) {
 // De gedeelde schil voor alle werkplek-schermen: kop met logo, navigatie, crème achtergrond
 // en de juiste fonts. Zo voelt elk scherm als één product. De inhoud van het scherm
 // geef je mee als children.
-export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts, children }) {
+export default function WerkplekShell({ naam, beheer, actief, sector, titel, sub, rechts, children }) {
   return (
     <div style={{ minHeight: "100vh", background: KLEUR.papier, color: KLEUR.inkt, fontFamily: BODY }}>
 
@@ -132,7 +167,7 @@ export default function WerkplekShell({ naam, beheer, actief, titel, sub, rechts
           </a>
           {(beheer ? NAV_BEHEER : NAV_VERKOPER).map((n) =>
             n.items ? (
-              <NavGroep key={n.label} groep={n} actief={actief} />
+              <NavGroep key={n.label} groep={n} actief={actief} sector={sector} />
             ) : (
               <NavLink key={n.href} n={n} aan={n.href === actief} />
             )

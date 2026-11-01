@@ -64,8 +64,9 @@ const PER_KEER = 10;
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
-// pad/syncPad: dezelfde leadlijst draait ook onder Previews test → Leads
-// (/esthetiek/leads, kappers en salons) met een eigen Sheet.
+// pad/syncPad: dezelfde leadlijst draait per sector (/leads?sector=…). Zonder
+// syncPad (lijst zonder Sheet, zoals salons en spoed: die vult Claude direct in
+// de database) verdwijnt de knop "Nu bijwerken uit de Sheet".
 export default function LeadsClient({ leads: initieel, totaal, facetten, mij, filters, beheer, vasteProvincie, pad = "/leads", syncPad = "/api/leads/sync", vakLabel = "Alle vakgebieden" }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -286,7 +287,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         @media (min-width: 1080px) { .sb-cards { grid-template-columns: repeat(3, 1fr); } }
       `}</style>
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+      {syncPad && <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={bijwerken} disabled={sync.bezig}
           style={{ border: "1px solid #E3DED3", background: "#fff", color: "#4A5560", borderRadius: 9, padding: "7px 12px", fontSize: 13, fontWeight: 700, cursor: sync.bezig ? "wait" : "pointer" }}>
           {sync.bezig ? "Bezig met bijwerken…" : "↻ Nu bijwerken uit de Sheet"}
@@ -294,7 +295,7 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
         <span style={{ fontSize: 12.5, color: "#6F7A85" }}>
           {sync.tekst || "Wordt ook elke ochtend automatisch bijgewerkt."}
         </span>
-      </div>
+      </div>}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         {tabBtn("werk", "Werkstapel", f.werk)}

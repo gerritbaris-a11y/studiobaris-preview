@@ -259,3 +259,8 @@ as $function$
     ) s on true
   ) t;
 $function$;
+
+-- ── Migratie sectoren_previews_en_leads (1 nov 2026) ─────────────────────────
+-- get_overview geeft p.content->>'sector' mee als `sector`; sb_leads_zoek_v2
+-- en sb_lead_facetten_v3 behandelen lijst 'spoed' zoals 'actueel'/'esthetiek'.
+-- Toegepast via een DO-blok dat de bestaande functiedefinities aanpast.

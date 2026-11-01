@@ -32,13 +32,13 @@ import ProefStatus from "./proef-status";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
-import { isEsthetiekPreview, isEsthetiekLead } from "../../lib/segment";
+import { sectorVanPreview, sectorVanLead, sectorPad, sectorInfo } from "../../lib/segment";
+import SectorBalk from "../sector-balk";
 import AgendaBerichten from "../esthetiek/agenda-berichten";
 import AgendaLiveKnop from "../esthetiek/agenda-live-knop";
 
-// Gedeelde pagina voor "Mijn previews" (/klanten) en, als test, "Mijn previews
-// esthetiek" (/esthetiek, alleen beheer). segment = "esthetiek" toont alleen
-// previews en opgepakte leads van kappers, nagel- en beautysalons.
+// Mijn previews (/klanten), per sector (?sector=portfolio|boeking|spoed, zie
+// lib/segment.js). Boeking & Sfeer toont daarnaast de agenda-onderdelen.
 
 const REACTIE_LABEL = { intake: "klant-intake", feedback: "feedback" };
 
@@ -99,17 +99,19 @@ function BetaalBadge({ status }) {
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
 }
 
-export default async function PreviewsPagina({ segment = null } = {}) {
-  const esth = segment === "esthetiek";
-  const leadsPad = esth ? "/esthetiek/leads" : "/leads";
+export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
+  const esth = sector === "boeking";
+  const leadsPad = sectorPad("/leads", sector);
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
   const [allesRuw, mijnLeadsRuw, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : []]);
-  const alles = esth ? (allesRuw || []).filter(isEsthetiekPreview) : allesRuw;
+  const perSector = { portfolio: 0, boeking: 0, spoed: 0 };
+  for (const r of allesRuw || []) perSector[sectorVanPreview(r)] += 1;
+  const alles = (allesRuw || []).filter((r) => sectorVanPreview(r) === sector);
   // Esthetiek: app-accounts van klanten, voor "Agenda live zetten in de app".
   const appAccounts = esth && beheer ? await getAppAccounts() : [];
-  const mijnLeads = esth ? (mijnLeadsRuw || []).filter(isEsthetiekLead) : mijnLeadsRuw;
+  const mijnLeads = (mijnLeadsRuw || []).filter((l) => sectorVanLead(l) === sector);
   const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
@@ -132,12 +134,16 @@ export default async function PreviewsPagina({ segment = null } = {}) {
     <WerkplekShell
       naam={naam || "collega"}
       beheer={beheer}
-      actief={esth ? "/esthetiek" : "/klanten"}
-      titel={esth ? "Mijn previews esthetiek" : beheer ? "Alle previews" : regio ? `Mijn previews · ${regio}` : "Mijn previews"}
+      actief="/klanten"
+      sector={sector}
+      titel={beheer ? `Mijn previews · ${sectorInfo(sector).label}` : regio ? `Mijn previews · ${regio}` : "Mijn previews"}
       sub={esth
-        ? "Test: previews voor kappers, nagel- en beautysalons. Werkt precies zoals Mijn previews."
-        : "Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."}
+        ? "Kappers, barbiers, nagel- en beautysalons: website met online agenda."
+        : sector === "spoed"
+          ? "Loodgieters, elektriciens, slotenmakers en ontstoppers: een site die bellen en WhatsApp voorop zet."
+          : "Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."}
     >
+      {beheer && <SectorBalk pad="/klanten" sector={sector} tellers={perSector} />}
       {regio && (
         <div style={{ background: KLEUR.kleiZacht, border: `1px solid ${KLEUR.baanRand}`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: KLEUR.kleiDonker }}>
           Je ziet alle previews uit <strong>{regio}</strong>, ook die door collega's zijn gemaakt. Druk op <strong>Benaderd</strong> zodra je een bedrijf hebt benaderd, zodat het team ziet wat er loopt. Op <strong>Klaar</strong> zetten doen Gerrit of Levi.
