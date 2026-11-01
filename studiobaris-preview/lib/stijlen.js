@@ -62,7 +62,21 @@ export function geldigeSalonStijl(id) {
   return SALON_STIJL_IDS.includes(id) ? id : null;
 }
 
+// Stijlen voor Spoed & Lead (loodgieter, elektricien, slotenmaker …): eigen
+// opzet in app/styles/spoed.js. Bellen en WhatsApp staan altijd voorop.
+export const SPOED_STIJLEN = [
+  { id: "signaal", naam: "Signaal", kort: "Signaal", uitleg: "Donker met een felle actiekleur. Valt op, straalt spoed uit.", kortUitleg: "Donker, fel" },
+  { id: "helder", naam: "Helder & Betrouwbaar", kort: "Helder", uitleg: "Wit en strak met blauw. Rustig en vertrouwd.", kortUitleg: "Wit, blauw" },
+  { id: "vakman", naam: "Vakman", kort: "Vakman", uitleg: "Warm crème met donkerblauw en oranje. Degelijk en dichtbij.", kortUitleg: "Crème, oranje" },
+  { id: "fris", naam: "Fris & Groen", kort: "Fris", uitleg: "Licht met groen. Schoon en zorgvuldig, past bij ontstoppen en installatie.", kortUitleg: "Licht, groen" },
+];
+export const SPOED_STIJL_IDS = SPOED_STIJLEN.map((s) => s.id);
+
+export function geldigeSpoedStijl(id) {
+  return SPOED_STIJL_IDS.includes(id) ? id : null;
+}
+
 export function stijlKort(id) {
-  const s = STIJLEN.find((x) => x.id === id) || SALON_STIJLEN.find((x) => x.id === id);
+  const s = STIJLEN.find((x) => x.id === id) || SALON_STIJLEN.find((x) => x.id === id) || SPOED_STIJLEN.find((x) => x.id === id);
   return s ? s.kort : id || "";
 }

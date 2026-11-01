@@ -33,6 +33,13 @@ async function rpc(naam, body) {
 //  - brief zonder prijs              → geen bedragen op de aanbodpagina
 //  - geen brief                      → gewone prijs
 export const PRIJS = { website: 599, actie: 399, maand: 29.95 };
+// Per sector (nov 2026): salons € 39,95 p/m (website + online agenda + app),
+// spoed € 19,95 p/m en € 399 eenmalig, zonder app en zonder brief-actie.
+export const PRIJS_SECTOR = {
+  portfolio: PRIJS,
+  boeking: { website: 599, actie: 399, maand: 39.95 },
+  spoed: { website: 399, actie: null, maand: 19.95 },
+};
 
 function leesDatum(s) {
   const m = String(s || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -51,18 +58,19 @@ function vandaagNL() {
   return new Date(Date.UTC(j, m - 1, d));
 }
 
-export function prijsVoor(brief) {
+export function prijsVoor(brief, sector = "portfolio") {
+  const P = PRIJS_SECTOR[sector] || PRIJS;
   if (brief && brief.verzonden && leesDatum(brief.verzonden)) {
     if (brief.prijs === false) return null;
     const einde = plusMaand(leesDatum(brief.verzonden));
-    if (vandaagNL().getTime() <= einde.getTime()) {
+    if (P.actie && vandaagNL().getTime() <= einde.getTime()) {
       return {
-        website: PRIJS.actie, oud: PRIJS.website, maand: PRIJS.maand,
+        website: P.actie, oud: P.website, maand: P.maand,
         tot: einde.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }),
       };
     }
   }
-  return { website: PRIJS.website, oud: null, maand: PRIJS.maand, tot: null };
+  return { website: P.website, oud: null, maand: P.maand, tot: null };
 }
 
 export function euro(n) {

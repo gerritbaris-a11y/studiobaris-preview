@@ -8,6 +8,13 @@
 
 const ESTHETIEK = /kap(per|sal|ster)|haar(studio|salon|stylist|werk)|barbier|barber|nagel|nail|beauty|schoonheid|wimper|lash|brow|wenkbrauw|visagie|make-?up|pedicure|manicure|huidverzorg|huidtherap|sal(on|ons)\b/i;
 
+// Spoedvakken: herkenning alleen als voorstel in de intake; de sector zelf is
+// altijd een bewuste keuze (bestaande loodgieters zijn Portfolio).
+const SPOED = /loodgiet|ontstop|riool|slotenmak|sleutelserv|cv[- ]?(monteur|ketel|install)|storingsdienst|lekkage|elektric|glaszet|ongedierte/i;
+export function isSpoedBranche(tekst) {
+  return SPOED.test(String(tekst || ""));
+}
+
 export function isEsthetiekBranche(tekst) {
   return ESTHETIEK.test(String(tekst || ""));
 }
