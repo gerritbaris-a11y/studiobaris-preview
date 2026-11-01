@@ -29,6 +29,9 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
   const categorieen = useMemo(() => [...new Set(behandelingen.map((b) => b.categorie))], [behandelingen]);
   const [cat, setCat] = useState(categorieen[0] || "");
   const [beh, setBeh] = useState(null);
+  // Medewerker: "" = geen voorkeur. Alleen te kiezen als er meer dan één
+  // medewerker deze behandeling doet.
+  const [mw, setMw] = useState("");
   const [dagen, setDagen] = useState(null);
   const [dag, setDag] = useState("");
   const [tijden, setTijden] = useState(null);
@@ -41,22 +44,25 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
   const [testMailStand, setTestMailStand] = useState("");
 
   const c = agenda?.company_id;
+  const alleMw = agenda?.medewerkers || [];
+  const mwVoorBeh = beh ? alleMw.filter((m) => !beh.medewerker_ids || beh.medewerker_ids.length === 0 || beh.medewerker_ids.includes(m.id)) : [];
+  const mq = mw ? `&m=${mw}` : "";
 
   useEffect(() => {
     if (!beh) return;
     setDagen(null); setDag(""); setTijden(null); setTijd("");
-    fetch(`${basis}/api/agenda/dagen?c=${c}&b=${beh.id}`).then((r) => r.json())
+    fetch(`${basis}/api/agenda/dagen?c=${c}&b=${beh.id}${mq}`).then((r) => r.json())
       .then((j) => { const d = j.dagen || []; setDagen(d); if (d[0]) setDag(d[0]); })
       .catch(() => setDagen([]));
-  }, [beh, c, basis]);
+  }, [beh, mq, c, basis]);
 
   useEffect(() => {
     if (!beh || !dag) return;
     setTijden(null); setTijd("");
-    fetch(`${basis}/api/agenda/tijden?c=${c}&b=${beh.id}&d=${dag}`).then((r) => r.json())
+    fetch(`${basis}/api/agenda/tijden?c=${c}&b=${beh.id}&d=${dag}${mq}`).then((r) => r.json())
       .then((j) => setTijden(j.tijden || []))
       .catch(() => setTijden([]));
-  }, [beh, dag, c, basis]);
+  }, [beh, dag, mq, c, basis]);
 
   async function bevestig(e) {
     e.preventDefault();
@@ -68,13 +74,13 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
       const res = await fetch(`${basis}/api/agenda/boek`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ c, b: beh.id, d: dag, t: tijd, ...form, bron }),
+        body: JSON.stringify({ c, b: beh.id, d: dag, t: tijd, m: mw || undefined, ...form, bron }),
       });
       const j = await res.json().catch(() => ({}));
       if (!j.ok) {
         setFout(j.error || "Boeken is niet gelukt.");
         if (j.code === "bezet") { setTijd(""); setTijden(null);
-          fetch(`${basis}/api/agenda/tijden?c=${c}&b=${beh.id}&d=${dag}`).then((r) => r.json()).then((x) => setTijden(x.tijden || [])); }
+          fetch(`${basis}/api/agenda/tijden?c=${c}&b=${beh.id}&d=${dag}${mq}`).then((r) => r.json()).then((x) => setTijden(x.tijden || [])); }
         return;
       }
       setKlaar(j.afspraak);
@@ -94,7 +100,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
   }
 
   function opnieuw() {
-    setKlaar(null); setBeh(null); setDag(""); setTijd(""); setFout("");
+    setKlaar(null); setBeh(null); setMw(""); setDag(""); setTijd(""); setFout("");
     setForm({ naam: "", telefoon: "", email: "", opmerking: "", website: "" });
   }
 
@@ -131,7 +137,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
           <div style={s.vink}>✓</div>
           <h3 style={s.kop}>Je afspraak staat vast</h3>
           <p style={s.tekst}>
-            {klaar.behandeling}<br />
+            {klaar.behandeling}{klaar.medewerker ? ` bij ${klaar.medewerker}` : ""}<br />
             <strong>{new Date(klaar.start).toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Amsterdam" })}{" "}
               om {new Date(klaar.start).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Amsterdam" })}</strong>
           </p>
@@ -162,7 +168,17 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
         </div>
       ) : (
         <div>
-          <button type="button" onClick={() => setBeh(null)} style={s.terug}>← {beh.naam} · {duur(beh.duur_min)} · wijzigen</button>
+          <button type="button" onClick={() => { setBeh(null); setMw(""); }} style={s.terug}>← {beh.naam} · {duur(beh.duur_min)} · wijzigen</button>
+          {!tijd && mwVoorBeh.length > 1 && (
+            <>
+              <div style={s.label}>Bij wie?</div>
+              <div style={s.tabs} role="radiogroup" aria-label="Medewerker">
+                {[{ id: "", naam: "Geen voorkeur" }, ...mwVoorBeh].map((m) => (
+                  <button key={m.id || "geen"} type="button" role="radio" aria-checked={mw === m.id} onClick={() => setMw(m.id)} style={s.tab(mw === m.id)}>{m.naam}</button>
+                ))}
+              </div>
+            </>
+          )}
 
           {!tijd ? (
             <>
@@ -194,7 +210,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
           ) : (
             <form onSubmit={bevestig}>
               <button type="button" onClick={() => setTijd("")} style={s.terug}>
-                ← {(() => { const l = dagLabel(dag); return `${l.dag} ${l.nr} ${l.maand}`; })()} om {tijd} · wijzigen
+                ← {(() => { const l = dagLabel(dag); return `${l.dag} ${l.nr} ${l.maand}`; })()} om {tijd}{mw ? ` bij ${(alleMw.find((m) => m.id === mw) || {}).naam || ""}` : ""} · wijzigen
               </button>
               <input aria-label="Naam" placeholder="Je naam" value={form.naam} onChange={(e) => setForm({ ...form, naam: e.target.value })} style={s.veld} autoComplete="name" />
               <input aria-label="Telefoon" placeholder="Telefoonnummer" value={form.telefoon} onChange={(e) => setForm({ ...form, telefoon: e.target.value })} style={s.veld} type="tel" autoComplete="tel" />

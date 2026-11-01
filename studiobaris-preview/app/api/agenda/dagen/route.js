@@ -14,7 +14,8 @@ export async function GET(req) {
   const c = sp.get("c"), b = sp.get("b");
   if (!isUuid(c) || !isUuid(b)) return NextResponse.json({ ok: false, error: "Onbekende agenda." }, { status: 400, headers: CORS });
   try {
-    const dagen = await vrijeDagen(c, b, 28);
+    const m = sp.get("m");
+    const dagen = await vrijeDagen(c, b, 28, isUuid(m) ? m : null);
     return NextResponse.json({ ok: true, dagen }, { headers: CORS });
   } catch (e) {
     return NextResponse.json({ ok: false, error: "Agenda niet bereikbaar." }, { status: 500, headers: CORS });

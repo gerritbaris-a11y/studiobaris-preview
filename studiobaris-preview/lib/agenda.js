@@ -48,6 +48,15 @@ export async function agendaVoorPreview(slug, content) {
     await zetAgendaKlaar(agenda.company_id, b.branche || "", email);
     agenda = await agendaVoorSlug(slug);
   }
+  // Medewerkers uit de intake: eenmalig aanmaken, zodat de prospect in de
+  // testagenda meteen zijn eigen team ziet ("Bij wie?").
+  const namen = (content && Array.isArray(content.medewerkers)) ? content.medewerkers : [];
+  if (agenda && namen.length && !(agenda.medewerkers || []).length) {
+    try {
+      await rpc("sb_agenda_medewerkers_zet", { p_company: agenda.company_id, p_namen: namen });
+      agenda = await agendaVoorSlug(slug);
+    } catch {}
+  }
   return agenda;
 }
 
@@ -75,17 +84,18 @@ export async function eerstePlekLabel(agenda) {
 export async function zetAgendaKlaar(companyId, vak, email) {
   return rpc("sb_agenda_standaard", { p_company: companyId, p_vak: vak || "", p_email: email || null });
 }
-export async function vrijeDagen(companyId, behandelingId, dagen = 21) {
-  return (await rpc("sb_agenda_vrije_dagen", { p_company: companyId, p_behandeling: behandelingId, p_dagen: dagen })) || [];
+// medewerkerId: optioneel (klant koos een medewerker); leeg = geen voorkeur.
+export async function vrijeDagen(companyId, behandelingId, dagen = 21, medewerkerId = null) {
+  return (await rpc("sb_agenda_vrije_dagen", { p_company: companyId, p_behandeling: behandelingId, p_dagen: dagen, p_medewerker: medewerkerId || null })) || [];
 }
-export async function vrijeTijden(companyId, behandelingId, datum) {
-  return (await rpc("sb_agenda_vrije_tijden", { p_company: companyId, p_behandeling: behandelingId, p_datum: datum })) || [];
+export async function vrijeTijden(companyId, behandelingId, datum, medewerkerId = null) {
+  return (await rpc("sb_agenda_vrije_tijden", { p_company: companyId, p_behandeling: behandelingId, p_datum: datum, p_medewerker: medewerkerId || null })) || [];
 }
 export async function boek(v) {
   return rpc("sb_agenda_boek", {
     p_company: v.companyId, p_behandeling: v.behandelingId, p_datum: v.datum, p_tijd: v.tijd,
     p_naam: v.naam || "", p_telefoon: v.telefoon || "", p_email: v.email || "", p_opmerking: v.opmerking || "",
-    p_bron: v.bron || "site",
+    p_bron: v.bron || "site", p_medewerker: v.medewerkerId || null,
   });
 }
 export async function afspraakOpToken(token) {
@@ -222,7 +232,8 @@ function kader(kop, inhoud, voet) {
 }
 function afspraakBlok(a) {
   return `<table style="border-collapse:collapse;font-size:15px;margin:8px 0 16px">
-  <tr><td style="padding:3px 14px 3px 0;color:#6F7A85">Behandeling</td><td><strong>${esc(a.behandeling_naam)}</strong></td></tr>
+  <tr><td style="padding:3px 14px 3px 0;color:#6F7A85">Behandeling</td><td><strong>${esc(a.behandeling_naam)}</strong></td></tr>${a.medewerker_naam ? `
+  <tr><td style="padding:3px 14px 3px 0;color:#6F7A85">Bij</td><td>${esc(a.medewerker_naam)}</td></tr>` : ""}
   <tr><td style="padding:3px 14px 3px 0;color:#6F7A85">Wanneer</td><td><strong>${esc(datumLang(a.start))}, ${esc(tijdKort(a.start))}</strong></td></tr>
   ${a.prijs != null ? `<tr><td style="padding:3px 14px 3px 0;color:#6F7A85">Prijs</td><td>${esc(euro(a.prijs))}</td></tr>` : ""}
   </table>`;

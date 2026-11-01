@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isEsthetiekBranche } from "../lib/segment";
 import { ACCEPT_ATTRIBUUT, controleerBestanden } from "../lib/bestand-validatie";
 import { verkleinFoto } from "../lib/verklein-foto";
 import LocatieVeld from "./locatie-veld";
@@ -138,6 +139,9 @@ export default function ProspectForm({
   const [fotoFout, setFotoFout] = useState("");
   // Branche is verplicht bij een nieuwe aanvraag (niet bij aanpassen).
   const [brancheFout, setBrancheFout] = useState("");
+  // Salon? Dan vragen we ook de namen van de medewerkers, voor de agenda.
+  const [brancheAnders, setBrancheAnders] = useState("");
+  const isSalon = isEsthetiekBranche([...branches, brancheAnders].join(" "));
   // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
   const [uploadStand, setUploadStand] = useState("");
 
@@ -289,6 +293,7 @@ export default function ProspectForm({
     // niet in de publieke intake), dus eerst kijken of ze er zijn.
     const val = (naam) => (f[naam] ? f[naam].value : "");
     put("diensten", val("diensten"));
+    put("medewerkers", val("medewerkers"));
     put("slogan", val("slogan"));
     put("kernwaarden", waarden.join(", "));
     put("regio", regios.filter((r) => r.trim()).join(", "));
@@ -510,8 +515,14 @@ export default function ProspectForm({
           ))}
         </div>
         <input style={{ ...veld, marginTop: 10 }} name="branche_anders" placeholder={revise ? "Anders, namelijk... (optioneel)" : "Anders, namelijk..."}
-          onChange={(e) => { if (e.target.value.trim()) setBrancheFout(""); }} />
+          onChange={(e) => { setBrancheAnders(e.target.value); if (e.target.value.trim()) setBrancheFout(""); }} />
         {brancheFout && <span style={foutTekst}>{brancheFout}</span>}
+        {isSalon && (
+          <label style={{ ...label, marginTop: 14 }}>Medewerkers (optioneel)
+            <span style={hint}>Voornamen, gescheiden door komma's. Klanten kiezen dan in de online agenda bij wie ze komen.</span>
+            <input style={veld} name="medewerkers" placeholder="Bijv. Sanne, Yara, Mo" />
+          </label>
+        )}
         </>)}
 
         {uitgebreid && (
