@@ -39,10 +39,13 @@ export function isEsthetiekLead(l) {
 // loodgieters en elektriciens horen bij Portfolio.
 // Verkopers zien voorlopig alleen Portfolio.
 
+// Nov 2026: Spoed & Lead is geen eigen sector meer maar een variant binnen
+// Vakmannen (zelfde doelgroep; anders beconcurreren we ons eigen pakket met
+// app). Spoedpreviews (content.sector = 'spoed') en de spoed-leadlijst staan
+// dus onder Portfolio, met een label "spoedsite".
 export const SECTOREN = [
-  { id: "portfolio", label: "Portfolio & Offerte", kort: "vakmannen", lijst: "actueel" },
+  { id: "portfolio", label: "Portfolio & Offerte", kort: "vakmannen", lijst: "vakman" },
   { id: "boeking", label: "Boeking & Sfeer", kort: "salons", lijst: "esthetiek" },
-  { id: "spoed", label: "Spoed & Lead", kort: "spoed", lijst: "spoed" },
 ];
 const SECTOR_IDS = SECTOREN.map((s) => s.id);
 
@@ -56,8 +59,14 @@ export function kiesSector(waarde, beheer) {
   return SECTOR_IDS.includes(waarde) ? waarde : "portfolio";
 }
 
+// Is dit een spoedsite (variant binnen Vakmannen)?
+export function isSpoedsite(r) {
+  return !!r && r.sector === "spoed";
+}
+
 export function sectorVanPreview(r) {
   if (!r) return "portfolio";
+  if (r.sector === "spoed") return "portfolio";
   if (SECTOR_IDS.includes(r.sector)) return r.sector;
   return isEsthetiekBranche(r.b_branche) ? "boeking" : "portfolio";
 }
@@ -65,7 +74,7 @@ export function sectorVanPreview(r) {
 export function sectorVanLead(l) {
   if (!l) return "portfolio";
   if (l.lijst === "esthetiek") return "boeking";
-  if (l.lijst === "spoed") return "spoed";
+  if (l.lijst === "spoed") return "portfolio";
   if (l.lijst) return "portfolio";
   return isEsthetiekBranche(l.vakgebied) ? "boeking" : "portfolio";
 }

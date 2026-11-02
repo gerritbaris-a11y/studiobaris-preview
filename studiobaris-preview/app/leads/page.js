@@ -18,8 +18,8 @@ export default async function LeadsPage({ searchParams }) {
   // ziet alleen leads uit die provincie. Beheer ziet alles.
   const regio = beheer ? null : await getRegio(naam);
 
-  // Per sector een eigen gescande lijst: Portfolio 'actueel', Boeking & Sfeer
-  // 'esthetiek', Spoed & Lead 'spoed'. De oude import van 7.900 leads blijft op
+  // Per sector een eigen gescande lijst: Portfolio 'vakman' (= de lijsten
+  // 'actueel' en 'spoed' samen), Boeking & Sfeer 'esthetiek'. De oude import van 7.900 leads blijft op
   // de achtergrond in de database staan, maar niet op het dashboard.
   const sector = kiesSector(sp.sector, beheer);
   const lijst = sectorInfo(sector).lijst;
@@ -71,7 +71,7 @@ export default async function LeadsPage({ searchParams }) {
         beheer={beheer}
         vasteProvincie={regio}
         syncPad={sector === "portfolio" ? "/api/leads/sync" : null}
-        vakLabel={sector === "boeking" ? "Alle soorten salons" : sector === "spoed" ? "Alle spoedvakken" : "Alle vakgebieden"}
+        vakLabel={sector === "boeking" ? "Alle soorten salons" : "Alle vakgebieden"}
       />
     </WerkplekShell>
   );

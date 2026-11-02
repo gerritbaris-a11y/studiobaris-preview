@@ -32,7 +32,7 @@ import ProefStatus from "./proef-status";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
-import { sectorVanPreview, sectorVanLead, sectorPad, sectorInfo } from "../../lib/segment";
+import { sectorVanPreview, sectorVanLead, sectorPad, sectorInfo, isSpoedsite } from "../../lib/segment";
 import SectorBalk from "../sector-balk";
 import AgendaBerichten from "../esthetiek/agenda-berichten";
 import AgendaLiveKnop from "../esthetiek/agenda-live-knop";
@@ -106,7 +106,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
   const [allesRuw, mijnLeadsRuw, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : []]);
-  const perSector = { portfolio: 0, boeking: 0, spoed: 0 };
+  const perSector = { portfolio: 0, boeking: 0 };
   for (const r of allesRuw || []) perSector[sectorVanPreview(r)] += 1;
   const alles = (allesRuw || []).filter((r) => sectorVanPreview(r) === sector);
   // Esthetiek: app-accounts van klanten, voor "Agenda live zetten in de app".
@@ -139,9 +139,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
       titel={beheer ? `Mijn previews · ${sectorInfo(sector).label}` : regio ? `Mijn previews · ${regio}` : "Mijn previews"}
       sub={esth
         ? "Kappers, barbiers, nagel- en beautysalons: website met online agenda."
-        : sector === "spoed"
-          ? "Loodgieters, elektriciens, slotenmakers en ontstoppers: een site die bellen en WhatsApp voorop zet."
-          : "Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."}
+        : "Hier haal je de sale binnen: vul de gegevens in, verstuur het appje, en zet de fase op Akkoord zodra hij ja zegt."}
     >
       {beheer && <SectorBalk pad="/klanten" sector={sector} tellers={perSector} />}
       {regio && (
@@ -209,7 +207,9 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
           <div key={r.slug} style={card} data-klant={zoektekst} data-fase={fase} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}</div>
+                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}
+                  {isSpoedsite(r) && <span title="Spoedsite: € 399 + € 19,95 p/m, zonder app" style={{ marginLeft: 8, verticalAlign: "middle", fontFamily: "inherit", fontSize: 11.5, fontWeight: 800, color: "#9E3B2E", background: "#F6E1DB", borderRadius: 999, padding: "2px 8px" }}>spoedsite</span>}
+                </div>
                 <div style={{ fontSize: 13, color: "#4A5560" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
                 {r.b_adres && r.b_adres.trim() && <div style={{ fontSize: 13, color: "#4A5560", marginTop: 1 }}>{r.b_adres.trim()}</div>}
                 {beheer && review.bron && <div style={{ fontSize: 12, color: "#6F7A85", marginTop: 2 }}>Via: {review.bron}</div>}

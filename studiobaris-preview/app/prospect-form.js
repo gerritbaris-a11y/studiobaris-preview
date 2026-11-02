@@ -142,7 +142,11 @@ export default function ProspectForm({
   // Salon? Dan vragen we ook de namen van de medewerkers, voor de agenda.
   const [brancheAnders, setBrancheAnders] = useState("");
   // Sector (alleen team): uit de leadlijst, anders automatisch.
-  const [sector, setSector] = useState(prefill && prefill.lijst === "spoed" ? "spoed" : prefill && prefill.lijst === "esthetiek" ? "boeking" : "");
+  // Spoedsite alleen voor echte spoedbedrijven (ontstopper, slotenmaker);
+  // loodgieters en elektriciens krijgen standaard de vakmansite met app.
+  const [sector, setSector] = useState(
+    prefill && /ontstop|riool|sloten|sleutel/i.test(prefill.vakgebied || "") ? "spoed"
+      : prefill && prefill.lijst === "esthetiek" ? "boeking" : "");
   const isSalon = sector === "boeking" || (sector === "" && isEsthetiekBranche([...branches, brancheAnders].join(" ")));
   // Toont "Foto 2 van 5 uploaden..." tijdens het rechtstreeks versturen.
   const [uploadStand, setUploadStand] = useState("");
@@ -510,12 +514,12 @@ export default function ProspectForm({
         {stapBlok("wie", <>
         {intern && !revise && (
           <label style={{ ...label, marginBottom: 14 }}>Soort website
-            <span style={hint}>Automatisch: salons krijgen Boeking &amp; Sfeer, de rest Portfolio &amp; Offerte. Spoed &amp; Lead kies je zelf (loodgieter, elektricien, slotenmaker …).</span>
+            <span style={hint}>Automatisch: salons krijgen de salonsite, vakmannen de vakmansite met app (€ 29,95). De spoedsite (€ 19,95, zonder app) alleen voor bedrijven die vooral noodwerk doen, zoals ontstoppers en slotenmakers.</span>
             <select style={veld} name="sector" value={sector} onChange={(e) => setSector(e.target.value)}>
               <option value="">Automatisch</option>
-              <option value="portfolio">Portfolio &amp; Offerte (vakmannen)</option>
-              <option value="boeking">Boeking &amp; Sfeer (salons)</option>
-              <option value="spoed">Spoed &amp; Lead (spoed)</option>
+              <option value="portfolio">Vakman: site met app en projecten</option>
+              <option value="spoed">Vakman: spoedsite (bellen voorop, zonder app)</option>
+              <option value="boeking">Salon: site met online agenda</option>
             </select>
           </label>
         )}
