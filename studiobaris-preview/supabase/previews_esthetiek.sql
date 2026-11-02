@@ -264,3 +264,6 @@ $function$;
 -- get_overview geeft p.content->>'sector' mee als `sector`; sb_leads_zoek_v2
 -- en sb_lead_facetten_v3 behandelen lijst 'spoed' zoals 'actueel'/'esthetiek'.
 -- Toegepast via een DO-blok dat de bestaande functiedefinities aanpast.
+
+-- ── Migratie leads_lijst_vakman (2 nov 2026) ───────────────────────────────
+-- Spoed is een variant binnen Vakmannen: p_lijst 'vakman' = lijsten 'actueel' + 'spoed'.

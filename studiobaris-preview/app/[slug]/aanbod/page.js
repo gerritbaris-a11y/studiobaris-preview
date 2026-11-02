@@ -163,6 +163,7 @@ export default async function AanbodPagina({ params }) {
             <p className="sba-klein" style={{ marginTop: 10 }}>
               Alle bedragen excl. btw. Je betaalt de helft vooraf en de rest pas als je site live staat.
               {salon ? " Bevestigingen en herinneringen per e-mail zitten erbij. Herinneringen via WhatsApp kunnen later als losse optie; daar hoor je dan vooraf de prijs van." : ""}
+              {spoed ? " Wil je ook je projecten en reviews zelf online zetten met de StudioBaris-app? Dat kan met het vakmanpakket: € 599 eenmalig en € 29,95 per maand." : ""}
               {prijs.oud ? ` De brief-actie geldt tot en met ${prijs.tot}.` : ""}
             </p>
           </section>
