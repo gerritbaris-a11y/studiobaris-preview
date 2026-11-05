@@ -222,9 +222,11 @@ function MailKaart({ mail, geblokkeerd }) {
       <div style={{ fontSize: 12.5, color: KLEUR.labelDonker }}>
         <span style={{ fontWeight: 700 }}>Onderwerp:</span> {mail.onderwerp}
       </div>
-      {/* Zo ziet de klant hem: "hier" is de link. */}
+      {/* Zo ziet de klant hem: "Betaal hier →" is de link. Bewust een witte
+          achtergrond: wie de tekst hier zelf selecteert en kopieert, neemt
+          anders de achtergrondkleur van dit vak mee in de mail. */}
       <div
-        style={{ border: `1px dashed ${KLEUR.lijn2}`, borderRadius: 8, padding: "10px 12px", background: "#fffdf9" }}
+        style={{ border: `1px dashed ${KLEUR.lijn2}`, borderRadius: 8, padding: "10px 12px", background: "#ffffff" }}
         dangerouslySetInnerHTML={{ __html: alsHtml(mail) }}
       />
       <div style={{ fontSize: 11.5, color: KLEUR.label, wordBreak: "break-all" }}>
@@ -265,7 +267,7 @@ export default function StandaardMails({ r }) {
         <MailKaart key={m.key} mail={m} geblokkeerd={blokkade(m)} />
       ))}
       <div style={{ fontSize: 11.5, color: KLEUR.label }}>
-        Plak met Ctrl/Cmd + V in je mail; "Betaal hier →" blijft dan een klikbare link. De aanhef gebruikt de voornaam van de contactpersoon.
+        Gebruik de knop "Kopieer mail" (niet zelf de tekst selecteren) en plak met Ctrl/Cmd + V in je mail: dan komt de tekst zonder opmaak of achtergrond mee en blijft "Betaal hier →" een klikbare link. De aanhef gebruikt de voornaam van de contactpersoon.
       </div>
     </div>
   );
