@@ -83,8 +83,8 @@ function ProspectActiviteit({ p, a }) {
         ? <span style={aan(true)}>● {geplaatst} van 3 projecten geplaatst · laatst {wanneer(p.laatst_geplaatst_op)}</span>
         : <span style={uit}>○ Nog geen project geplaatst</span>)}
       {a && a.aanbod_aantal > 0
-        ? <span style={aan(true)}>● &quot;Dit wil ik&quot; bekeken {a.aanbod_aantal}× · laatst {wanneer(a.aanbod_laatst)}</span>
-        : <span style={uit}>○ &quot;Dit wil ik&quot; nog niet bekeken</span>}
+        ? <span style={aan(true)}>● &quot;Bekijk wat je krijgt&quot; bekeken {a.aanbod_aantal}× · laatst {wanneer(a.aanbod_laatst)}</span>
+        : <span style={uit}>○ &quot;Bekijk wat je krijgt&quot; nog niet bekeken</span>}
     </div>
   );
 }

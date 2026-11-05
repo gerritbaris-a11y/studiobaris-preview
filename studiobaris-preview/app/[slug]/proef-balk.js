@@ -1,9 +1,10 @@
 "use client";
 
 // Balk onderaan de preview (okt 2026, herzien 28 okt).
-// - Twee knoppen: "Open je app" (proberen) en "Dit wil ik" (naar de
+// - Twee knoppen: "Open je app" (proberen) en "Bekijk wat je krijgt" (naar de
 //   aanbodpagina /<slug>/aanbod). Zolang de prospect nog niets plaatste is de
-//   app de hoofdknop; daarna "Dit wil ik".
+//   app de hoofdknop; daarna "Bekijk wat je krijgt". (5 nov: was "Dit wil ik",
+//   dat klonk alsof je meteen moest kopen; nu gelijk aan het voorproef-label.)
 // - De einddatum van de proefapp staat zichtbaar in de balk.
 // - Inklappen: de balk én de stijlknop verdwijnen samen; er blijft één klein
 //   knopje rechtsonder over om ze terug te halen. Onthouden per preview zolang
@@ -112,11 +113,11 @@ export default function ProefBalk({ slug, url, aanbodUrl, datum, geplaatst = 0 }
     .sbp-tab{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;gap:7px;height:44px;padding:0 15px 0 12px;
       border:0;border-radius:999px;background:#111827;color:#fff;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer}
     @media (min-width:760px){.sbp-paneel{grid-template-columns:1.3fr 1fr}}
-    @media (max-width:560px){.sbp-knoppen{width:100%}.sbp-knop,.sbp-knop2{flex:1;padding-left:.6rem;padding-right:.6rem}}
+    @media (max-width:560px){.sbp-knoppen{width:100%}.sbp-knop,.sbp-knop2{flex:1;padding-left:.6rem;padding-right:.6rem;text-align:center;line-height:1.2}}
   `;
 
   const knopApp = <a key="app" className={appEerst ? "sbp-knop" : "sbp-knop2"} href={url} target="_blank" rel="noopener">Open je app</a>;
-  const knopWil = <a key="wil" className={appEerst ? "sbp-knop2" : "sbp-knop"} href={aanbodUrl}>Dit wil ik</a>;
+  const knopWil = <a key="wil" className={appEerst ? "sbp-knop2" : "sbp-knop"} href={aanbodUrl}>Bekijk wat je krijgt</a>;
 
   return (
     <>
@@ -161,7 +162,7 @@ export default function ProefBalk({ slug, url, aanbodUrl, datum, geplaatst = 0 }
               </ol>
               <div className="sbp-blok" style={{ display: "grid", gap: ".7rem" }}>
                 <p><strong>Je mag {MAX} projecten plaatsen om het te ervaren.</strong> {datum ? `Je proefapp is actief tot ${datum}.` : "Je proefapp is een maand actief."} Op je echte website staat een project er binnen enkele minuten.</p>
-                <p><strong>Bevalt het?</strong> Tik op <a href={aanbodUrl} style={{ color: "#fff", fontWeight: 700 }}>Dit wil ik</a>. Wij zetten je website en je app live, jij hoeft niks te regelen.</p>
+                <p><strong>Bevalt het?</strong> <a href={aanbodUrl} style={{ color: "#fff", fontWeight: 700 }}>Bekijk wat je krijgt</a> en wat het kost. Wij zetten je website en je app live, jij hoeft niks te regelen.</p>
                 <div className="sbp-wie">
                   <img src={SB_PERSOON.foto} alt="" width="48" height="48" />
                   <div>
