@@ -9,7 +9,8 @@ import AanbodForm from "./aanbod-form";
 
 export const dynamic = "force-dynamic";
 
-// "Dit wil ik" (okt 2026): de pagina achter de knop in de balk van de preview.
+// Aanbodpagina (okt 2026): de pagina achter de knop "Bekijk wat je krijgt" in
+// de balk van de preview (tot 5 nov heette die knop "Dit wil ik").
 // Opbouw volgens de boekskills:
 //  - kop + kernzin in 5 seconden te snappen (StoryBrand, Krug)
 //  - meteen een knop naar "ja" (directe actie) en bellen als tussenstap

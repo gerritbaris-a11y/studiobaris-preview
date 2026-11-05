@@ -9,7 +9,7 @@ import ProefMeldingen from "./proef-meldingen";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
 import AanvraagAf from "../klanten/aanvraag-af";
 
-// Terugbelverzoeken van de aanbodpagina ("Dit wil ik" op de preview). Warmste
+// Terugbelverzoeken van de aanbodpagina ("Bekijk wat je krijgt" op de preview, eerder "Dit wil ik"). Warmste
 // leads die er zijn: bovenaan, tot iemand "Gebeld" aanvinkt.
 function telLink(t) {
   let d = String(t || "").replace(/[^0-9+]/g, "");
@@ -29,7 +29,7 @@ function Terugbellen({ lijst }) {
     <div style={{ background: "#fff", border: "2px solid #C79A56", borderRadius: 14, padding: "14px 16px", display: "grid", gap: 10, marginBottom: 14 }}>
       <div>
         <div style={{ fontWeight: 800, fontSize: 15 }}>Wil teruggebeld worden</div>
-        <div style={{ fontSize: 13, color: KLEUR.gedempt }}>Via &quot;Dit wil ik&quot; op hun preview. Bel ze nu het warm is en vink daarna af.</div>
+        <div style={{ fontSize: 13, color: KLEUR.gedempt }}>Via &quot;Bekijk wat je krijgt&quot; op hun preview. Bel ze nu het warm is en vink daarna af.</div>
       </div>
       {lijst.map((a) => (
         <div key={a.aanvraag_id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 12px", borderTop: `1px solid ${KLEUR.baan}`, paddingTop: 10 }}>
