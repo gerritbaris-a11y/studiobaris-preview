@@ -28,9 +28,9 @@ const DOCS = [
 // Uitlegvideo's voor verkopers (9 nov 2026): schermopnames met tekst in beeld,
 // geen geluid. Bestanden in public/documenten/videos (mp4 + stilstaand beeld).
 const VIDEOS = [
-  { bestand: "1-jouw-werk", titel: "1. Wat er van je verwacht wordt", sub: "het proces: bellen, opvolgen, verhuiscode", duur: "6 min" },
+  { bestand: "1-jouw-werk", titel: "1. Wat er van je verwacht wordt", sub: "het proces: bellen, opvolgen, verhuiscode", duur: "8 min" },
   { bestand: "2-de-app", titel: "2. Wat je verkoopt: website + app", sub: "projecten, reviews en SEO/AIO", duur: "5,5 min" },
-  { bestand: "3-het-dashboard", titel: "3. Werken met het dashboard", sub: "Mijn previews, Benaderd, Financieel overzicht, Leads", duur: "3 min" },
+  { bestand: "3-het-dashboard", titel: "3. Werken met het dashboard", sub: "Mijn previews, Benaderd, Financieel overzicht, Leads", duur: "4,5 min" },
 ];
 
 function datumNL(iso) {
@@ -107,7 +107,7 @@ export default function DocumentenKaart() {
         {VIDEOS.map((v) => (
           <a
             key={v.bestand}
-            href={`/documenten/videos/${v.bestand}.mp4`}
+            href={`/documenten/videos/${v.bestand}.mp4?v=20261109b`}
             target="_blank"
             rel="noreferrer"
             style={{
