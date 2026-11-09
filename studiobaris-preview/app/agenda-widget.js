@@ -40,7 +40,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
   const [klaar, setKlaar] = useState(null);
-  const [testMail, setTestMail] = useState(agenda?.melding_email || "");
+  const [testMail, setTestMail] = useState("");
   const [testMailStand, setTestMailStand] = useState("");
 
   const c = agenda?.company_id;
@@ -117,7 +117,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
           echte boeking binnenkomt. Meldingen gaan naar:
           <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
             <input value={testMail} onChange={(e) => { setTestMail(e.target.value); setTestMailStand(""); }}
-              placeholder="jouw@email.nl" type="email" style={{ ...s.veld, flex: "1 1 200px", margin: 0 }} />
+              placeholder="Vul hier je mailadres in" type="email" style={{ ...s.veld, flex: "1 1 200px", margin: 0 }} />
             <button type="button" onClick={bewaarTestMail} style={{ ...s.knopKlein }} disabled={testMailStand === "bezig"}>
               {testMailStand === "ok" ? "Opgeslagen ✓" : "Opslaan"}
             </button>
