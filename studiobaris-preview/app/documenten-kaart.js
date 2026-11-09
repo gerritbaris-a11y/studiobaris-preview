@@ -25,6 +25,14 @@ const DOCS = [
   { bestand: "algemene-voorwaarden.pdf", titel: "Algemene voorwaarden", sub: "waar de klant akkoord op geeft, met verwerkersovereenkomst" },
 ];
 
+// Uitlegvideo's voor verkopers (9 nov 2026): schermopnames met tekst in beeld,
+// geen geluid. Bestanden in public/documenten/videos (mp4 + stilstaand beeld).
+const VIDEOS = [
+  { bestand: "1-jouw-werk", titel: "1. Wat er van je verwacht wordt", sub: "het proces: bellen, opvolgen, verhuiscode", duur: "6 min" },
+  { bestand: "2-de-app", titel: "2. Wat je verkoopt: website + app", sub: "projecten, reviews en SEO/AIO", duur: "5,5 min" },
+  { bestand: "3-het-dashboard", titel: "3. Werken met het dashboard", sub: "Mijn previews, Benaderd, Financieel overzicht, Leads", duur: "3 min" },
+];
+
 function datumNL(iso) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("nl-NL", { day: "numeric", month: "long" });
 }
@@ -87,6 +95,39 @@ export default function DocumentenKaart() {
               <span style={{ display: "block", fontSize: 12.5, color: "#4A5560" }}>{d.sub}</span>
             </span>
             <span style={{ fontSize: 13, fontWeight: 700, color: KLEUR.klei, whiteSpace: "nowrap" }}>Openen ↗</span>
+          </a>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", margin: "18px 0 10px" }}>
+        <h3 style={{ fontFamily: HEAD, fontSize: 15, margin: 0, fontWeight: 800 }}>Uitlegvideo's</h3>
+        <span style={{ fontSize: 13, color: "#6F7A85" }}>zonder geluid, tekst in beeld</span>
+      </div>
+      <div style={{ display: "grid", gap: 8 }}>
+        {VIDEOS.map((v) => (
+          <a
+            key={v.bestand}
+            href={`/documenten/videos/${v.bestand}.mp4`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "flex", alignItems: "center", gap: 12, textDecoration: "none",
+              background: KLEUR.papier, border: `1px solid ${KLEUR.lijn}`, borderRadius: 10,
+              padding: "8px 13px 8px 8px", color: "#1A2B3D",
+            }}
+          >
+            <img
+              src={`/documenten/videos/${v.bestand}.jpg`}
+              alt=""
+              width={96}
+              height={54}
+              style={{ flex: "0 0 auto", width: 96, height: 54, objectFit: "cover", borderRadius: 6, display: "block" }}
+            />
+            <span style={{ flex: "1 1 auto", minWidth: 0 }}>
+              <span style={{ display: "block", fontWeight: 700, fontSize: 14 }}>{v.titel}</span>
+              <span style={{ display: "block", fontSize: 12.5, color: "#4A5560" }}>{v.sub} · {v.duur}</span>
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: KLEUR.klei, whiteSpace: "nowrap" }}>Bekijken ▶</span>
           </a>
         ))}
       </div>
