@@ -294,7 +294,7 @@ function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
 // zodat een vinkje nooit stilletjes de incasso verandert.
 const MODULES = [
   { key: "facturatie", label: "Facturatie", uitleg: "Facturen inspreken, prijslijst, bonnetjes, reviewverzoek na betaling.", klaar: true },
-  { key: "offertes", label: "Offertes", uitleg: "Komt in de volgende ronde.", klaar: false },
+  { key: "offertes", label: "Offertes", uitleg: "Offertes inspreken, stelposten, klant geeft online akkoord, met één tik naar factuur.", klaar: true },
 ];
 const PRIJS_COMPLEET = 49.95;
 
@@ -342,7 +342,7 @@ function ModulesBlok({ app, maandbedrag }) {
     setBezig("");
   }
 
-  const compleet = mods.includes("facturatie");
+  const compleet = mods.includes("facturatie") || mods.includes("offertes");
   const bedragWijkt = compleet && Number(maandbedrag || 0) !== PRIJS_COMPLEET;
 
   return (
@@ -420,8 +420,10 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
         {variant !== "oud" && (
           <td style={td}>
             <PakketLabel type={r.pakket_type} />
-            {app?.modules?.includes("facturatie") && (
-              <div style={{ fontSize: 11.5, color: KLEUR.klei, fontWeight: 700 }}>+ Facturatie</div>
+            {app?.modules?.length > 0 && (
+              <div style={{ fontSize: 11.5, color: KLEUR.klei, fontWeight: 700 }}>
+                + {app.modules.map((m) => (m === "facturatie" ? "Facturatie" : m === "offertes" ? "Offertes" : m)).join(" + ")}
+              </div>
             )}
           </td>
         )}
