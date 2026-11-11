@@ -66,7 +66,10 @@ function nuInAmsterdam() {
   return { dag, tijd };
 }
 
-export default function SalonSite({ content, slug = "", isConcept, isReview, agenda, stijl = "zacht", eerstePlek, metBalk = false }) {
+const KLANT_APP = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobaris.nl";
+
+export default function SalonSite({ content, slug = "", isConcept, isReview, agenda, stijl = "zacht", eerstePlek, metBalk = false, cadeaubon = null }) {
+  const cadeauHref = cadeaubon && cadeaubon.slug ? `${KLANT_APP}/cadeaubon/${encodeURIComponent(cadeaubon.slug)}` : null;
   const c = content || {};
   const b = c.bedrijf || {};
   const m = c.merk || {};
@@ -246,6 +249,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           {behandelingen.length > 0 && <a href="#behandelingen">Behandelingen</a>}
           <a href="#werk">Werk</a>
           <a href="#over">Over ons</a>
+          {cadeauHref && <a href={cadeauHref}>Cadeaubon</a>}
           <a href="#contact">Contact</a>
         </nav>
         <a className="knop klein" href={boekHref}>Afspraak maken</a>
@@ -333,6 +337,15 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
           </div>
           <AgendaWidget agenda={agenda} test={agenda.instellingen ? agenda.instellingen.test_modus : true}
             kleur={accent} tekstOpKleur={tekstOp(accent)} bron="preview" />
+        </div></section>
+      )}
+
+      {cadeauHref && (
+        <section className="sec" id="cadeaubon"><div className="w" style={{ textAlign: "center" }}>
+          <div className="eb">Cadeau geven</div>
+          <h2>Geef een cadeaubon</h2>
+          <p className="lead" style={{ marginLeft: "auto", marginRight: "auto" }}>Kies zelf het bedrag en betaal met je bank-app. Na je betaling krijg je de bon in je mail, om te printen of door te sturen. {cadeaubon.geldig_maanden ? `${cadeaubon.geldig_maanden} maanden geldig.` : ""}</p>
+          <a className="knop" href={cadeauHref}>Cadeaubon kopen</a>
         </div></section>
       )}
 

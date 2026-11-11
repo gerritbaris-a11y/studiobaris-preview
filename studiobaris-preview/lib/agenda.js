@@ -33,6 +33,10 @@ export const isTijd = (v) => /^\d{2}:\d{2}$/.test(String(v || ""));
 export async function agendaVoorSlug(slug) {
   return rpc("sb_agenda_publiek", { p_slug: slug, p_company: null });
 }
+// Salon compleet: staan online cadeaubonnen aan voor dit bedrijf? (null = nee)
+export async function cadeaubonVoorSlug(slug) {
+  try { return await rpc("sb_cadeaubon_info", { p_slug: slug }); } catch { return null; }
+}
 export async function agendaVoorBedrijf(companyId) {
   return rpc("sb_agenda_publiek", { p_slug: null, p_company: companyId });
 }
