@@ -126,6 +126,14 @@ export async function reviewverzoekMaak(afspraakId) {
   return rpc("sb_agenda_reviewverzoek_maak", { p_afspraak: afspraakId });
 }
 
+// Salon compleet: "Tijd voor een nieuwe afspraak?" (lijst en vinkje).
+export async function terugkomLijst() {
+  return (await rpc("sb_terugkom_lijst", {})) || [];
+}
+export async function terugkomGezet(id) {
+  return rpc("sb_terugkom_gezet", { p_id: id });
+}
+
 export async function berichtenMaand(companyId) {
   return (await rpc("sb_agenda_berichten_maand", { p_company: companyId })) || { email: 0, whatsapp: 0, bundel: 150 };
 }
@@ -347,6 +355,26 @@ export async function stuurReviewverzoek(a, agenda, token) {
     reply: agenda.melding_email || undefined,
   });
   await logBericht(agenda.company_id, a.id, "email", "reviewverzoek", a.klant_email, ok);
+  return ok;
+}
+
+// Salon compleet: een tijd na de behandeling een vriendelijke uitnodiging om
+// opnieuw te boeken. Alleen als de klant nog geen nieuwe afspraak heeft (dat
+// filtert de database al).
+export async function stuurTerugkom(a) {
+  if (!a.klant_email) return false;
+  const bedrij = a.salon || "de salon";
+  const voornaam = String(a.klant_naam || "").split(" ")[0] || "";
+  const ok = await mail({
+    to: a.klant_email,
+    subject: `Tijd voor een nieuwe afspraak bij ${bedrij}?`,
+    html: kader(`Hoi${voornaam ? " " + esc(voornaam) : ""}!`,
+      `<p>Het is alweer ${esc(a.weken)} weken geleden dat je bij <strong>${esc(bedrij)}</strong> was voor ${esc(a.behandeling_naam)}.
+       Zin om weer langs te komen? Je kiest zelf een moment dat jou uitkomt.</p>
+       ${knop(`${SITE_URL}/boek/${a.company_id}`, "Plan je volgende afspraak")}`),
+    reply: a.melding_email || undefined,
+  });
+  await logBericht(a.company_id, a.id, "email", "terugkom", a.klant_email, ok);
   return ok;
 }
 

@@ -460,7 +460,7 @@ export async function getAppAccounts() {
 
 // Modules per app-account (Facturatie, later Offertes). De app leest dit;
 // alleen beheer zet het, via de servicesleutel.
-export const BEKENDE_MODULES = ["facturatie", "offertes"];
+export const BEKENDE_MODULES = ["facturatie", "offertes", "salon_compleet"];
 
 export async function zetModules(companyId, modules, door) {
   const schoon = [...new Set((modules || []).filter((m) => BEKENDE_MODULES.includes(m)))];

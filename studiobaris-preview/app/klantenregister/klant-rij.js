@@ -292,6 +292,9 @@ function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
 // Modules per klant (nov 2026): welke extra tabbladen de klant in zijn app
 // krijgt. Staat los van het maandbedrag: dat pas je zelf aan bij De afspraak,
 // zodat een vinkje nooit stilletjes de incasso verandert.
+const MODULES_SALON = [
+  { key: "salon_compleet", label: "Salon compleet", uitleg: "Cadeaubonnen online verkopen en inwisselen, \"tijd voor een nieuwe afspraak?\"-mail.", klaar: true },
+];
 const MODULES = [
   { key: "facturatie", label: "Facturatie", uitleg: "Facturen inspreken, prijslijst, bonnetjes, reviewverzoek na betaling.", klaar: true },
   { key: "offertes", label: "Offertes", uitleg: "Offertes inspreken, stelposten, klant geeft online akkoord, met één tik naar factuur.", klaar: true },
@@ -311,18 +314,11 @@ function ModulesBlok({ app, maandbedrag }) {
       </div>
     );
   }
-  if (app.soort === "salon") {
-    return (
-      <div style={{ fontSize: 13, color: KLEUR.label }}>
-        Salon-app. "Salon compleet" (herinneringen, reviewverzoek na afspraak, cadeaubonnen) komt in een volgende ronde.
-      </div>
-    );
-  }
 
   async function wissel(key) {
     const aan = mods.includes(key);
     const nieuw = aan ? mods.filter((m) => m !== key) : [...mods, key];
-    const label = MODULES.find((m) => m.key === key)?.label || key;
+    const label = [...MODULES, ...MODULES_SALON].find((m) => m.key === key)?.label || key;
     const vraag = aan
       ? `${label} uitzetten voor ${app.naam}? Het tabblad verdwijnt uit de app. Facturen en gegevens blijven bewaard.`
       : `${label} aanzetten voor ${app.naam}? Het tabblad verschijnt meteen in de app.`;
@@ -342,12 +338,15 @@ function ModulesBlok({ app, maandbedrag }) {
     setBezig("");
   }
 
-  const compleet = mods.includes("facturatie") || mods.includes("offertes");
-  const bedragWijkt = compleet && Number(maandbedrag || 0) !== PRIJS_COMPLEET;
+  const salon = app.soort === "salon";
+  const lijst = salon ? MODULES_SALON : MODULES;
+  const compleet = salon ? mods.includes("salon_compleet") : mods.includes("facturatie") || mods.includes("offertes");
+  const prijsCompleet = 49.95;
+  const bedragWijkt = compleet && Number(maandbedrag || 0) !== prijsCompleet;
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      {MODULES.map((m) => (
+      {lijst.map((m) => (
         <label key={m.key} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, opacity: m.klaar ? 1 : 0.55, cursor: m.klaar ? "pointer" : "default" }}>
           <input
             type="checkbox"
@@ -363,7 +362,7 @@ function ModulesBlok({ app, maandbedrag }) {
         </label>
       ))}
       <div style={{ fontSize: 12, color: KLEUR.label }}>
-        Pakket: <b>{compleet ? "Compleet (€ 49,95 p/m)" : "Website (€ 29,95 p/m)"}</b>
+        Pakket: <b>{salon ? (compleet ? "Salon compleet (voorstel € 49,95 p/m)" : "Salon (€ 39,95 p/m)") : compleet ? "Compleet (€ 49,95 p/m)" : "Website (€ 29,95 p/m)"}</b>
         {info.op ? ` · laatst gewijzigd ${korteDatum(info.op)}${info.door ? " door " + info.door : ""}` : ""}
       </div>
       {bedragWijkt && (
@@ -422,7 +421,7 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
             <PakketLabel type={r.pakket_type} />
             {app?.modules?.length > 0 && (
               <div style={{ fontSize: 11.5, color: KLEUR.klei, fontWeight: 700 }}>
-                + {app.modules.map((m) => (m === "facturatie" ? "Facturatie" : m === "offertes" ? "Offertes" : m)).join(" + ")}
+                + {app.modules.map((m) => (m === "facturatie" ? "Facturatie" : m === "offertes" ? "Offertes" : m === "salon_compleet" ? "Salon compleet" : m)).join(" + ")}
               </div>
             )}
           </td>
