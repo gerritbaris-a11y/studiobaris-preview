@@ -442,11 +442,39 @@ export const KLANT_APP_BASE = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://
 
 // Alle echte app-accounts (geen demo's) met hun huidige inloglink-status.
 export async function getAppAccounts() {
-  const data = await rest(
-    "companies?select=id,slug,name,login_token,login_token_expires_at,login_token_used_at" +
-      "&is_demo=not.is.true&demo_van_slug=is.null"
-  );
-  return Array.isArray(data) ? data : [];
+  const [data, mods] = await Promise.all([
+    rest(
+      "companies?select=id,slug,name,soort,login_token,login_token_expires_at,login_token_used_at" +
+        "&is_demo=not.is.true&demo_van_slug=is.null"
+    ),
+    rest("company_modules?select=company_id,modules,updated_at,updated_by"),
+  ]);
+  const perId = new Map((Array.isArray(mods) ? mods : []).map((m) => [m.company_id, m]));
+  return (Array.isArray(data) ? data : []).map((a) => ({
+    ...a,
+    modules: perId.get(a.id)?.modules || [],
+    modules_op: perId.get(a.id)?.updated_at || null,
+    modules_door: perId.get(a.id)?.updated_by || null,
+  }));
+}
+
+// Modules per app-account (Facturatie, later Offertes). De app leest dit;
+// alleen beheer zet het, via de servicesleutel.
+export const BEKENDE_MODULES = ["facturatie", "offertes", "salon_compleet"];
+
+export async function zetModules(companyId, modules, door) {
+  const schoon = [...new Set((modules || []).filter((m) => BEKENDE_MODULES.includes(m)))];
+  const res = await rest("company_modules?on_conflict=company_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({
+      company_id: companyId,
+      modules: schoon,
+      updated_at: new Date().toISOString(),
+      updated_by: door || null,
+    }),
+  });
+  return Array.isArray(res) && res[0] ? res[0] : null;
 }
 
 // Naam/slug gelijk trekken: "Oudshoorn Hoveniers vof" en "Oudshoorn Hoveniers"
@@ -494,6 +522,10 @@ export function appLinkInfo(account) {
   return {
     id: account.id,
     naam: account.name,
+    soort: account.soort || "vakman",
+    modules: account.modules || [],
+    modules_op: account.modules_op || null,
+    modules_door: account.modules_door || null,
     url: account.login_token ? KLANT_APP_BASE + "/in/" + account.login_token : null,
     verloopt: account.login_token_expires_at || null,
     gebruikt: account.login_token_used_at || null,

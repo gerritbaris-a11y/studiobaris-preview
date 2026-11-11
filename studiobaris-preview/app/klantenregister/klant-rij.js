@@ -289,6 +289,92 @@ function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
   );
 }
 
+// Modules per klant (nov 2026): welke extra tabbladen de klant in zijn app
+// krijgt. Staat los van het maandbedrag: dat pas je zelf aan bij De afspraak,
+// zodat een vinkje nooit stilletjes de incasso verandert.
+const MODULES_SALON = [
+  { key: "salon_compleet", label: "Salon compleet", uitleg: "Cadeaubonnen online verkopen en inwisselen, \"tijd voor een nieuwe afspraak?\"-mail.", klaar: true },
+];
+const MODULES = [
+  { key: "facturatie", label: "Facturatie", uitleg: "Facturen inspreken, prijslijst, bonnetjes, reviewverzoek na betaling.", klaar: true },
+  { key: "offertes", label: "Offertes", uitleg: "Offertes inspreken, stelposten, klant geeft online akkoord, met één tik naar factuur.", klaar: true },
+];
+const PRIJS_COMPLEET = 49.95;
+
+function ModulesBlok({ app, maandbedrag }) {
+  const [mods, setMods] = useState(app?.modules || []);
+  const [info, setInfo] = useState({ op: app?.modules_op || null, door: app?.modules_door || null });
+  const [bezig, setBezig] = useState("");
+  const [fout, setFout] = useState("");
+
+  if (!app) {
+    return (
+      <div style={{ fontSize: 13, color: KLEUR.label }}>
+        Nog geen app-account. Modules zet je aan zodra de app er is.
+      </div>
+    );
+  }
+
+  async function wissel(key) {
+    const aan = mods.includes(key);
+    const nieuw = aan ? mods.filter((m) => m !== key) : [...mods, key];
+    const label = [...MODULES, ...MODULES_SALON].find((m) => m.key === key)?.label || key;
+    const vraag = aan
+      ? `${label} uitzetten voor ${app.naam}? Het tabblad verdwijnt uit de app. Facturen en gegevens blijven bewaard.`
+      : `${label} aanzetten voor ${app.naam}? Het tabblad verschijnt meteen in de app.`;
+    if (!confirm(vraag)) return;
+    setBezig(key); setFout("");
+    try {
+      const r = await fetch("/api/klant/modules", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: app.id, modules: nieuw }),
+      });
+      const j = await r.json();
+      if (!j.ok) setFout(j.error || "Opslaan mislukt.");
+      else { setMods(j.modules || []); setInfo({ op: j.op, door: j.door }); }
+    } catch {
+      setFout("Geen verbinding.");
+    }
+    setBezig("");
+  }
+
+  const salon = app.soort === "salon";
+  const lijst = salon ? MODULES_SALON : MODULES;
+  const compleet = salon ? mods.includes("salon_compleet") : mods.includes("facturatie") || mods.includes("offertes");
+  const prijsCompleet = 49.95;
+  const bedragWijkt = compleet && Number(maandbedrag || 0) !== prijsCompleet;
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {lijst.map((m) => (
+        <label key={m.key} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, opacity: m.klaar ? 1 : 0.55, cursor: m.klaar ? "pointer" : "default" }}>
+          <input
+            type="checkbox"
+            checked={mods.includes(m.key)}
+            disabled={!m.klaar || !!bezig}
+            onChange={() => wissel(m.key)}
+            style={{ width: 18, height: 18, marginTop: 1 }}
+          />
+          <span>
+            <b>{m.label}</b>{bezig === m.key ? " · bezig…" : ""}
+            <span style={{ display: "block", fontSize: 12, color: KLEUR.label }}>{m.uitleg}</span>
+          </span>
+        </label>
+      ))}
+      <div style={{ fontSize: 12, color: KLEUR.label }}>
+        Pakket: <b>{salon ? (compleet ? "Salon compleet (voorstel € 49,95 p/m)" : "Salon (€ 39,95 p/m)") : compleet ? "Compleet (€ 49,95 p/m)" : "Website (€ 29,95 p/m)"}</b>
+        {info.op ? ` · laatst gewijzigd ${korteDatum(info.op)}${info.door ? " door " + info.door : ""}` : ""}
+      </div>
+      {bedragWijkt && (
+        <div style={{ fontSize: 12, color: KLEUR.kleiDonker || "#b45309", fontWeight: 600 }}>
+          Het maandbedrag staat nog op {maandbedrag ? euro(maandbedrag) : "—"}. Pas het zelf aan bij "De afspraak" als de klant Compleet afneemt.
+        </div>
+      )}
+      {fout && <div style={{ fontSize: 12, color: KLEUR.kleiDonker || "#b45309" }}>{fout}</div>}
+    </div>
+  );
+}
+
 // Telefoonnummers komen soms met spaties/streepjes binnen (bijv. handmatig
 // overgetypt); voor een uniforme kolom laten we alleen cijfers en een
 // eventuele voorloop-"+" staan.
@@ -330,7 +416,16 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
             <div style={{ fontSize: 11.5, color: KLEUR.label }}>facturen: {r.factuur_email}</div>
           )}
         </td>
-        {variant !== "oud" && <td style={td}><PakketLabel type={r.pakket_type} /></td>}
+        {variant !== "oud" && (
+          <td style={td}>
+            <PakketLabel type={r.pakket_type} />
+            {app?.modules?.length > 0 && (
+              <div style={{ fontSize: 11.5, color: KLEUR.klei, fontWeight: 700 }}>
+                + {app.modules.map((m) => (m === "facturatie" ? "Facturatie" : m === "offertes" ? "Offertes" : m === "salon_compleet" ? "Salon compleet" : m)).join(" + ")}
+              </div>
+            )}
+          </td>
+        )}
         {variant === "klant" && (
           <td style={td} onClick={(e) => e.stopPropagation()}>
             <KlantNaam slug={r.slug} value={r.verzamelaar} team={team} />
@@ -372,6 +467,15 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
                 </div>
                 <GegevensEditor slug={r.slug} data={r} defaultOpen />
               </div>
+
+              {variant !== "oud" && (
+                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+                    Pakket &amp; modules in de app
+                  </div>
+                  <ModulesBlok app={app} maandbedrag={r.maandbedrag} />
+                </div>
+              )}
 
               <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
                 <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>

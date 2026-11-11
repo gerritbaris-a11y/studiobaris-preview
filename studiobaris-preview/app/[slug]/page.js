@@ -21,7 +21,7 @@ import FaseFotos, { heeftFases } from "./fase-fotos";
 import SalonSite, { SALON_STIJLEN, standaardSalonStijl } from "../styles/salon";
 import { isEsthetiekBranche } from "../../lib/segment";
 import SpoedSite, { SPOED_STIJLEN } from "../styles/spoed";
-import { agendaVoorPreview, eerstePlekLabel } from "../../lib/agenda";
+import { agendaVoorPreview, eerstePlekLabel, cadeaubonVoorSlug } from "../../lib/agenda";
 
 export const dynamic = "force-dynamic";
 
@@ -141,7 +141,9 @@ export default async function Page({ params, searchParams }) {
     const salonWissel = magWisselen
       ? <StijlWissel slug={params.slug} huidige={salonStijl} onze={onzeSalon} merk={c.merk || {}} metBalk={proef.actief} stijlen={SALON_STIJLEN} />
       : null;
-    return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} metBalk={proef.actief || !!salonWissel} />{balk}{salonWissel}</>;
+    // Salon compleet: alleen een echte klant met cadeaubonnen aan krijgt de knop.
+    const cadeaubon = await cadeaubonVoorSlug(params.slug);
+    return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} cadeaubon={cadeaubon} metBalk={proef.actief || !!salonWissel} />{balk}{salonWissel}</>;
   }
 
   if (stijl === "modern") return <><ModernSite {...props} />{balk}{wissel}</>;
