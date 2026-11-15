@@ -206,8 +206,10 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
           return (
           <div key={r.slug} style={card} data-klant={zoektekst} data-fase={fase} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}
+              {/* Linkerkolom krimpt mee (lange namen lopen door op een volgende regel),
+                  zodat de knoppen rechts altijd rechtsboven blijven staan. */}
+              <div style={{ flex: "1 1 0", minWidth: 240 }}>
+                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700, overflowWrap: "anywhere" }}>{r.company_name || r.slug}
                   {isSpoedsite(r) && <span title="Spoedsite: € 399 + € 19,95 p/m, zonder app" style={{ marginLeft: 8, verticalAlign: "middle", fontFamily: "inherit", fontSize: 11.5, fontWeight: 800, color: "#9E3B2E", background: "#F6E1DB", borderRadius: 999, padding: "2px 8px" }}>spoedsite</span>}
                 </div>
                 <div style={{ fontSize: 13, color: "#4A5560" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
@@ -243,7 +245,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
                   </div>
                 )}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <div style={{ flex: "0 1 auto", marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {beheer ? (
                   <>
                     <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#6F7A85", whiteSpace: "nowrap" }}>
