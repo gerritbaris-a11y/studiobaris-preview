@@ -21,6 +21,7 @@ const MONSTER = {
   persoonlijk: { bg: "#FDF3E7", fg: "#2A2018", font: "system-ui,sans-serif", gewicht: 700, tekst: "Aa", rand: "transparent" },
   ambacht: { bg: "#F4EEE3", fg: "#2A241D", font: "Georgia,'Times New Roman',serif", gewicht: 500, tekst: "Aa", rand: "transparent" },
   strak: { bg: "#0F1214", fg: "#fff", font: "system-ui,sans-serif", gewicht: 900, tekst: "AA", rand: "transparent" },
+  social: { bg: "#151A17", fg: "#F3C21B", font: "Impact,'Arial Narrow',sans-serif", gewicht: 400, tekst: "AA", rand: "transparent" },
   // Salonstijlen
   zacht: { bg: "#FBF6F2", fg: "#2B2320", font: "system-ui,sans-serif", gewicht: 700, tekst: "Aa", rand: "#EADFD7" },
   salonmodern: { bg: "#FFFFFF", fg: "#121417", font: "system-ui,sans-serif", gewicht: 800, tekst: "AA", rand: "#E4E7EB" },

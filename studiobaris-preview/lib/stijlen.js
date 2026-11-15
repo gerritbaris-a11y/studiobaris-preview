@@ -41,6 +41,13 @@ export const STIJLEN = [
     uitleg: "Donker, groot beeld en dikke koppen in hoofdletters. Stoer en modern tegelijk.",
     kortUitleg: "Donker, groot beeld, dikke koppen",
   },
+  {
+    id: "social",
+    naam: "Social & Creator",
+    kort: "Social",
+    uitleg: "Voor vakmensen met een volgersbasis: foto's als stories, kanalen en volgers in beeld.",
+    kortUitleg: "Donker, stories, social media",
+  },
 ];
 
 export const STIJL_IDS = STIJLEN.map((s) => s.id);
