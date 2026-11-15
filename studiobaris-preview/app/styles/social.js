@@ -252,7 +252,6 @@ export default function SocialSite({ content, slug = "", isConcept, isReview }) 
     .so .plat small{opacity:.6;font-weight:600}
     .so .grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-top:3.2rem}
     .so .grid6 a{aspect-ratio:9/16;border-radius:14px;background:#222 center/cover no-repeat;transition:transform .4s}
-    .so .grid6 a:nth-child(even){transform:translateY(1.6rem)}
 
     .so .slot .wrap{display:grid;grid-template-columns:1fr;gap:2.5rem;align-items:center}
     .so .slot h2{font-size:clamp(2.5rem,5vw,4.3rem);margin:.9rem 0 1.2rem}
@@ -276,7 +275,8 @@ export default function SocialSite({ content, slug = "", isConcept, isReview }) 
       .so .kaart.groot{grid-column:span 2}
       .so .stappen{grid-template-columns:repeat(2,1fr)}
       .so .revs{grid-template-columns:repeat(3,1fr)}
-      .so .grid6{grid-template-columns:repeat(6,1fr)}
+      .so .grid6{grid-template-columns:repeat(6,1fr);padding-bottom:1.6rem}
+      .so .grid6 a:nth-child(even){transform:translateY(1.6rem)}
     }
     @media(min-width:980px){
       .so .hero .wrap{grid-template-columns:1.05fr 1fr}
