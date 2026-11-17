@@ -134,6 +134,7 @@ export default async function AanbodPagina({ params }) {
           <h2>Wat je krijgt</h2>
           <ul className="sba-lijst">
             <li><Vink /><div><strong>Deze website, helemaal af</strong><span>Met je eigen teksten, foto&apos;s en logo. Je krijgt twee rondes om te zeggen wat anders moet.</span></div></li>
+            <li><Vink /><div><strong>De website is daarna van jou</strong><span>Na betaling is je website echt van jou. Je domeinnaam ook, voor altijd.</span></div></li>
             {spoed ? (
               <li><Vink /><div><strong>Bellen, WhatsApp en storingsmeldingen</strong><span>Een grote belknop die altijd in beeld blijft, en meldingen met adres en omschrijving direct in je mail.</span></div></li>
             ) : salon ? (
