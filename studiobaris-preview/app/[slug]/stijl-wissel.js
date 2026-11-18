@@ -193,13 +193,13 @@ export default function StijlWissel({ slug, huidige, onze, merk = {}, metBalk, s
               </button>
             </div>
             <div className="sbw-rij">
-              {STIJLEN.map((s) => {
+              {STIJLEN.map((s, i) => {
                 const mo = MONSTER[s.id] || MONSTER.stoer;
                 const label = labelVan(s.id);
                 return (
                   <button key={s.id} type="button" className="sbw-tegel" aria-pressed={s.id === huidige} onClick={() => bekijk(s.id)} title={s.uitleg}>
                     <span className="sbw-monster" style={{ background: mo.bg, color: mo.fg, fontFamily: mo.font, fontWeight: mo.gewicht, boxShadow: `inset 0 0 0 1px ${mo.rand}` }}>
-                      {bezig === s.id ? <span className="sbw-draai" /> : mo.tekst}
+                      {bezig === s.id ? <span className="sbw-draai" /> : i + 1}
                       <span className="sbw-streep" style={{ background: accent }} />
                     </span>
                     <span className="sbw-naam">{s.kort}</span>
