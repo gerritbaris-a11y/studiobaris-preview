@@ -14,6 +14,7 @@ const SOORT_LABEL = {
   aanbetaling: "Aanbetaling",
   slottermijn: "Slottermijn",
   maandelijks: "Maandelijks",
+  credit: "Creditnota",
 };
 
 const STATUS_CHIP = {
@@ -38,7 +39,13 @@ const STATUS_LABEL = {
 // en vanuit "geannuleerd" kan alleen terug naar "concept" (ongedaan maken).
 // Zelfde regels als sb_factuur_status() in de database; dit voorkomt dat de
 // dropdown een keuze aanbiedt die de server toch zou weigeren.
-function statusOpties(huidig) {
+//
+// Een verstuurde/betaalde factuur gaat niet naar "geannuleerd" maar wordt
+// gecrediteerd (knop "Crediteren"). Een gecrediteerde factuur kan niet meer
+// terug naar concept; de status van een creditnota zelf ligt vast.
+function statusOpties(huidig, f = {}) {
+  if (f.soort === "credit") return [huidig];
+  if (f.gecrediteerd_op) return ["verstuurd", "betaald", "mislukt"].includes(huidig) ? ["verstuurd", "betaald", "mislukt"] : [huidig];
   if (huidig === "geannuleerd") return ["geannuleerd", "concept"];
   if (huidig === "concept") return ["concept", "verstuurd", "betaald", "mislukt", "geannuleerd"];
   return ["concept", "verstuurd", "betaald", "mislukt"];
@@ -89,6 +96,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
   const [versturenBezig, setVersturenBezig] = useState(null);
   const [statusBezig, setStatusBezig] = useState(null);
   const [klantFilter, setKlantFilter] = useState(null); // { slug, klant } — komt uit ?klant= op de URL
+  const [crediteerFactuur, setCrediteerFactuur] = useState(null); // de factuur waarvoor de crediteer-popup open staat
 
   // Vanuit "Mijn klanten" kom je hier met ?klant=<slug> binnen, zodat je bij
   // duizenden facturen niet hoeft te scrollen om die van één klant te vinden.
@@ -244,13 +252,19 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                 <td style={td}>
                   {SOORT_LABEL[f.soort] || f.soort}
                   {f.periode && <div style={{ color: KLEUR.label, fontSize: 12.5 }}>{f.periode}</div>}
+                  {f.soort === "credit" && f.credit_van_nummer && (
+                    <div style={{ color: KLEUR.label, fontSize: 12.5 }}>voor factuur {f.credit_van_nummer}</div>
+                  )}
+                  {f.creditnota_nummer && (
+                    <div style={{ marginTop: 3 }}><Chip kleur="grijs">Gecrediteerd · {f.creditnota_nummer}</Chip></div>
+                  )}
                 </td>
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(f.factuurdatum)}</td>
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{euro(f.bedrag_incl)}</td>
                 <td style={td}>
                   <select
                     value={f.status}
-                    disabled={statusBezig === f.nummer}
+                    disabled={statusBezig === f.nummer || f.soort === "credit"}
                     onChange={(e) => statusWijzigen(f.nummer, e.target.value)}
                     title="Status handmatig wijzigen"
                     style={{
@@ -263,7 +277,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                       opacity: statusBezig === f.nummer ? 0.6 : 1,
                     }}
                   >
-                    {statusOpties(f.status).map((s) => (
+                    {statusOpties(f.status, f).map((s) => (
                       <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                     ))}
                   </select>
@@ -299,6 +313,19 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                           : "Opnieuw versturen"}
                       </button>
                     )}
+                    {f.soort !== "credit" && !f.gecrediteerd_op && !f.creditnota_nummer &&
+                      (f.status === "verstuurd" || f.status === "betaald") && (
+                      <button
+                        onClick={() => setCrediteerFactuur(f)}
+                        style={{
+                          background: "none", border: "none", padding: 0, cursor: "pointer",
+                          fontSize: 12.5, fontWeight: 700, color: KLEUR.kleiDonker, whiteSpace: "nowrap",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        Crediteren
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -314,6 +341,16 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
           onSluiten={() => setModalOpen(false)}
           onOpgeslagen={() => {
             setModalOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
+      {crediteerFactuur && (
+        <CrediteerModal
+          factuur={crediteerFactuur}
+          onSluiten={() => setCrediteerFactuur(null)}
+          onKlaar={() => {
+            setCrediteerFactuur(null);
             router.refresh();
           }}
         />
@@ -704,6 +741,108 @@ function Totaalregel({ label, waarde, dik }) {
     >
       <span>{label}</span>
       <span>{waarde}</span>
+    </div>
+  );
+}
+
+// Crediteren: de waarschuwingspopup vóórdat er een creditnota ontstaat. Een
+// creditnota is definitief (eigen nummer, telt mee in de boekhouding), dus
+// eerst bevestigen met een vinkje. Bij een betaalde factuur ook de vraag of
+// het geld al is teruggestort, zodat dat niet vergeten wordt.
+function CrediteerModal({ factuur, onSluiten, onKlaar }) {
+  const [reden, setReden] = useState("");
+  const [mailen, setMailen] = useState(false);
+  const [begrepen, setBegrepen] = useState(false);
+  const [teruggestort, setTeruggestort] = useState(false);
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState("");
+  const betaald = factuur.status === "betaald";
+
+  async function bevestigen() {
+    setFout("");
+    if (!begrepen) return setFout("Vink eerst aan dat je begrijpt dat dit definitief is.");
+    if (betaald && !teruggestort) return setFout("Vink aan dat het geld is (of wordt) teruggestort.");
+    setBezig(true);
+    try {
+      const res = await fetch("/api/facturen/crediteren", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nummer: factuur.nummer, reden: reden.trim() || null, mailen }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Crediteren mislukte.");
+      if (d.mailFout) alert(`Creditnota ${d.creditnota} is aangemaakt, maar mailen lukte niet: ${d.mailFout}`);
+      onKlaar();
+    } catch (e) {
+      setFout(String(e.message || e));
+    }
+    setBezig(false);
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "rgba(26,43,61,.35)",
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: "40px 16px", overflowY: "auto", zIndex: 50,
+      }}
+      onClick={onSluiten}
+    >
+      <div style={{ ...kaart, maxWidth: 520, width: "100%", overflow: "hidden" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ background: KLEUR.kleiDonker, color: "#fff", padding: "16px 20px", fontFamily: HEAD, fontWeight: 800, fontSize: 16 }}>
+          Let op: je crediteert factuur {factuur.nummer}
+        </div>
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14, fontSize: 14 }}>
+          <div style={{ background: KLEUR.baan, borderRadius: 10, padding: "12px 14px", lineHeight: 1.5 }}>
+            <strong>{factuur.klant}</strong> · {SOORT_LABEL[factuur.soort] || factuur.soort} · {euro(factuur.bedrag_incl)} incl. btw
+            <div style={{ color: KLEUR.label, fontSize: 13, marginTop: 6 }}>
+              Er wordt een creditnota aangemaakt met een eigen nummer en een bedrag van {euro(-Number(factuur.bedrag_incl || 0))}.
+              De factuur blijft zichtbaar, maar samen met de creditnota telt hij niet meer mee in omzet en btw.
+              Dit kan <strong>niet</strong> ongedaan worden gemaakt.
+            </div>
+          </div>
+
+          <div>
+            <span style={labelStijl}>Reden (komt op de creditnota)</span>
+            <input
+              style={veldStijl}
+              placeholder="Bijv. per ongeluk vanaf privérekening betaald, bedrag teruggestort"
+              value={reden}
+              onChange={(e) => setReden(e.target.value)}
+            />
+          </div>
+
+          {betaald && (
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start", cursor: "pointer" }}>
+              <input type="checkbox" checked={teruggestort} onChange={(e) => setTeruggestort(e.target.checked)} style={{ marginTop: 3 }} />
+              <span>
+                Het betaalde bedrag is (of wordt) teruggestort.
+                {factuur.via_mollie && (
+                  <span style={{ color: KLEUR.label, fontSize: 13, display: "block" }}>
+                    Betaald via Mollie: stort het liefst terug via "Terugbetalen" in Mollie, en zeg daar ook het mandaat/abonnement op als dat nodig is.
+                  </span>
+                )}
+              </span>
+            </label>
+          )}
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+            <input type="checkbox" checked={mailen} onChange={(e) => setMailen(e.target.checked)} />
+            <span>Creditnota meteen naar de klant mailen</span>
+          </label>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+            <input type="checkbox" checked={begrepen} onChange={(e) => setBegrepen(e.target.checked)} />
+            <span style={{ fontWeight: 700 }}>Ik begrijp dat dit definitief is</span>
+          </label>
+
+          {fout && <div style={{ fontSize: 13, color: KLEUR.kleiDonker, fontWeight: 600 }}>{fout}</div>}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "14px 20px", borderTop: `1px solid ${KLEUR.lijn}` }}>
+          <Knop kind="secondair" onClick={onSluiten}>Terug</Knop>
+          <Knop kind="primair" onClick={bevestigen}>{bezig ? "Bezig…" : "Crediteren"}</Knop>
+        </div>
+      </div>
     </div>
   );
 }

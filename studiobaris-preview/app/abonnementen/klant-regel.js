@@ -161,7 +161,7 @@ export default function KlantRegel({ rij, facturen, siteUrl }) {
                       >
                         <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{f.nummer}</span>
                         <span style={{ fontSize: 13, color: KLEUR.gedempt }}>
-                          {f.soort === "maandelijks" ? `maand ${f.periode || ""}` : f.soort}
+                          {f.soort === "maandelijks" ? `maand ${f.periode || ""}` : f.soort === "credit" ? "creditnota" : f.soort}
                         </span>
                         <span style={{ fontVariantNumeric: "tabular-nums" }}>{euro(f.bedrag_incl)}</span>
                         <Chip kleur={f.status === "verstuurd" || f.status === "betaald" ? "sage" : f.status === "mislukt" ? "rust" : f.status === "geannuleerd" ? "grijs" : "amber"}>

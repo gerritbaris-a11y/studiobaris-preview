@@ -135,6 +135,12 @@ export async function setFactuurStatus(nummer, status) {
   return await stil(() => rpc("sb_factuur_status", { p_nummer: nummer, p_status: status }), null);
 }
 
+// Volledige creditnota voor een verstuurde/betaalde factuur. Geen stil():
+// de foutmelding uit de database (bijv. "al gecrediteerd") moet zichtbaar zijn.
+export async function crediteerFactuur(nummer, reden = null) {
+  return await rpc("sb_factuur_crediteren", { p_nummer: nummer, p_reden: reden });
+}
+
 // Alle facturen van alle klanten samen, voor de facturen-overzichtpagina.
 export async function getFacturenOverzicht() {
   const data = await stil(() => rpc("sb_facturen_overzicht", {}), []);
