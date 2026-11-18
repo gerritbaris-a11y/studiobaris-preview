@@ -19,8 +19,8 @@ const DOCS = [
     bestand: "belscript.pdf",
     titel: "Belscript",
     sub: "zo bel je een prospect over zijn preview en app",
-    aangepast: "2026-11-05",
-    wat: "Opnieuw opgebouwd volgens Cold Calling Sucks: niet meer vragen of je Jan spreekt, eerst zijn probleem, één vraag tegelijk, bezwaren in drie stappen, twee voicemails en een opvolgschema.",
+    aangepast: "2026-11-18",
+    wat: "Dit gesprek verkoopt alleen de volgende stap: de link open en een vervolgbel van 10 minuten. Bij stap 4 urgentie zonder nepdruk. Ophangen is iets anders dan een duidelijke nee: na een expliciete nee bel je niet opnieuw.",
   },
   { bestand: "algemene-voorwaarden.pdf", titel: "Algemene voorwaarden", sub: "waar de klant akkoord op geeft, met verwerkersovereenkomst" },
 ];
