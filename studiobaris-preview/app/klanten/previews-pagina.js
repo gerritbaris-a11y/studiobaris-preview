@@ -112,6 +112,16 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
   // Esthetiek: app-accounts van klanten, voor "Agenda live zetten in de app".
   const appAccounts = esth && beheer ? await getAppAccounts() : [];
   const mijnLeads = (mijnLeadsRuw || []).filter((l) => sectorVanLead(l) === sector);
+  // Niet alle leads op deze pagina zetten: honderden rijen lieten Chrome
+  // vastlopen ("Pagina reageert niet"). Toon de 10 belangrijkste (eerst
+  // benaderd, dan zonder website, dan de rest); de volledige lijst staat in Leads.
+  const LEADS_HIER = 10;
+  const leadGewicht = (l) => (l.status === "benaderd" ? 0 : l.alleen_socials ? 1 : 2);
+  const mijnLeadsTop = mijnLeads
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => leadGewicht(a.l) - leadGewicht(b.l) || a.i - b.i)
+    .slice(0, LEADS_HIER)
+    .map((x) => x.l);
   const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
@@ -163,7 +173,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
             <a href={`${leadsPad}?wie=mij`} style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.klei }}>Naar de leadlijst</a>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {mijnLeads.map((l) => (
+            {mijnLeadsTop.map((l) => (
               <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px" }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{l.bedrijfsnaam}</div>
@@ -181,6 +191,11 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
               </div>
             ))}
           </div>
+          {mijnLeads.length > mijnLeadsTop.length && (
+            <a href={`${leadsPad}?wie=mij`} style={{ alignSelf: "flex-start", fontSize: 13.5, fontWeight: 700, color: KLEUR.klei }}>
+              Alle {mijnLeads.length} bekijken in de leadlijst →
+            </a>
+          )}
         </div>
       )}
 
