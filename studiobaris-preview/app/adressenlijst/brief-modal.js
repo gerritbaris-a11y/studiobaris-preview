@@ -57,7 +57,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
       });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Ophalen mislukt.");
-      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, kaartje: d.teksten.kaartje === true, verzonden: d.teksten.verzonden || vandaagIso(), aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
+      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, kaartje: d.teksten.kaartje === true, verzonden: d.teksten.verzonden || null, aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
       setNotitieVlak(d.notitie_vlak !== false);
       setOpgeslagen(d.opgeslagen || null);
     } catch (e) {
@@ -146,10 +146,20 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
               </div>
 
               <div>
-                <span style={label}>Brief gaat de deur uit op</span>
-                <input type="date" style={{ ...veld, width: "auto" }} value={t.verzonden} onChange={(e) => wijzig("verzonden", e.target.value)} />
+                <span style={label}>Verstuurd</span>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
+                    <input type="checkbox" checked={!!t.verzonden} onChange={(e) => wijzig("verzonden", e.target.checked ? vandaagIso() : null)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
+                    Deze brief is verstuurd op
+                  </label>
+                  {t.verzonden ? (
+                    <input type="date" style={{ ...veld, width: "auto" }} value={t.verzonden} onChange={(e) => wijzig("verzonden", e.target.value || vandaagIso())} />
+                  ) : null}
+                </div>
                 <div style={hulp}>
-                  Dit is de datum op de brief.{t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand).` : ""}
+                  {t.verzonden
+                    ? `De datum op de brief ligt nu vast.${t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand) en staat vanaf nu op de previewpagina.` : ""}`
+                    : `Nog niet verstuurd: de brief krijgt steeds de datum van de dag dat je hem print (vandaag ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", timeZone: "Europe/Amsterdam" })}) en de deadline schuift mee. Vink dit pas aan als de brief echt de deur uit is.`}
                 </div>
               </div>
 

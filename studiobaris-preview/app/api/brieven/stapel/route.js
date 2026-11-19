@@ -11,12 +11,15 @@ export const maxDuration = 60;
 const MAX_BRIEVEN = 40;
 
 // POST /api/brieven/stapel (formulier vanuit de Adressenlijst, veld "data" =
-// JSON { slugs, verzonden }): alle brieven voor de route in één PDF.
+// JSON { slugs, verstuurd, verzonden }): alle brieven voor de route in één PDF.
 // - Alleen adressen met een gecontroleerde (opgeslagen) brief; de rest slaan
 //   we over. Er wordt hier nooit nieuwe tekst door Claude geschreven.
 // - Volgorde: alfabetisch op bedrijfsnaam, dezelfde als de kaartjes-stapel.
-// - verzonden ("YYYY-MM-DD") geldt voor de hele stapel en wordt per brief
-//   opgeslagen, zodat opnieuw printen dezelfde datum en deadline geeft.
+// - Gewoon printen verandert niets aan de opgeslagen brieven: een brief die nog
+//   niet verstuurd is krijgt de datum van vandaag, een verstuurde brief houdt
+//   zijn verzenddatum.
+// - verstuurd = true: alle brieven in de stapel krijgen verzonden ("YYYY-MM-DD",
+//   standaard vandaag) en die wordt opgeslagen; vanaf dan ligt de datum vast.
 // Alleen voor beheer (API_BEHEER "/api/brieven" in middleware.js).
 export async function POST(req) {
   let data = null;
@@ -27,7 +30,8 @@ export async function POST(req) {
   const slugs = Array.isArray(data && data.slugs) ? data.slugs.map(String).filter(Boolean) : [];
   if (!slugs.length) return NextResponse.json({ ok: false, error: "Geen adressen aangevinkt." }, { status: 400 });
   if (slugs.length > MAX_BRIEVEN) return NextResponse.json({ ok: false, error: `Maximaal ${MAX_BRIEVEN} brieven per keer.` }, { status: 400 });
-  const verzonden = datumIso(leesDatum(data.verzonden) || vandaagNL());
+  const markeer = data.verstuurd === true;
+  const verzonden = markeer ? datumIso(leesDatum(data.verzonden) || vandaagNL()) : null;
 
   const sessie = leesSessie();
   const afzender = sessie && sessie.naam ? sessie.naam : null;
@@ -40,9 +44,9 @@ export async function POST(req) {
     const brief = await getBrief(slug);
     if (!brief || !isActueleBrief(brief.teksten)) return null; // nog niet (opnieuw) gecontroleerd: overslaan
     const content = (await getFull(slug)) || {};
-    const teksten = normaliseerTeksten({ ...brief.teksten, verzonden });
+    const teksten = normaliseerTeksten(markeer ? { ...brief.teksten, verzonden } : brief.teksten);
     const notitieVlak = brief.notitie_vlak !== false;
-    await slaBriefOp(slug, teksten, notitieVlak, afzender);
+    if (markeer) await slaBriefOp(slug, teksten, notitieVlak, afzender);
     const pdf = await briefPdf({ rij, content, teksten, afzender, notitieVlak });
     return { naam: String(rij.company_name || slug), pdf };
   }))).filter(Boolean);
@@ -53,7 +57,8 @@ export async function POST(req) {
   klaar.sort((a, b) => a.naam.localeCompare(b.naam, "nl"));
 
   const samen = await PDFDocument.create();
-  samen.setTitle(`Brieven ${verzonden} (${klaar.length})`);
+  const titelDatum = verzonden || datumIso(vandaagNL());
+  samen.setTitle(`Brieven ${titelDatum} (${klaar.length})`);
   samen.setAuthor("StudioBaris");
   for (const k of klaar) {
     const los = await PDFDocument.load(k.pdf);
@@ -64,7 +69,7 @@ export async function POST(req) {
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="Brieven-${verzonden}-${klaar.length}.pdf"`,
+      "Content-Disposition": `inline; filename="Brieven-${titelDatum}-${klaar.length}.pdf"`,
       "Cache-Control": "no-store",
     },
   });
