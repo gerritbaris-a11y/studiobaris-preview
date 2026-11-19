@@ -64,6 +64,56 @@ const PER_KEER = 10;
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
+// Keuzelijst waarin je meerdere waarden kunt aanvinken. Waarden gaan als
+// 'a|b|c' in de URL en zo naar sb_leads_zoek_v2.
+function MeerKeuze({ waarde, opties, leegLabel, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const gekozen = (waarde || "").split("|").filter(Boolean);
+  useEffect(() => {
+    if (!open) return;
+    const dicht = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("pointerdown", dicht);
+    return () => document.removeEventListener("pointerdown", dicht);
+  }, [open]);
+  function wissel(w) {
+    const nieuw = gekozen.includes(w) ? gekozen.filter((x) => x !== w) : [...gekozen, w];
+    onChange(nieuw.join("|"));
+  }
+  const kort = (w) => (opties.find((o) => o.waarde === w) || { kort: w }).kort;
+  const tekst = gekozen.length === 0 ? leegLabel
+    : gekozen.length <= 2 ? gekozen.map(kort).join(" + ")
+    : `${gekozen.length} gekozen`;
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        style={{ ...sel, textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6,
+          fontWeight: gekozen.length ? 700 : 400, borderColor: gekozen.length ? "#1A2B3D" : "#d1d5db" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tekst}</span>
+        <span style={{ fontSize: 10, opacity: 0.6 }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", zIndex: 30, top: "calc(100% + 4px)", left: 0, minWidth: "100%", width: "max-content", maxWidth: "min(90vw, 340px)",
+          maxHeight: 320, overflowY: "auto", background: "#fff", border: "1px solid #E3DED3", borderRadius: 12, boxShadow: "0 8px 24px rgba(26,43,61,0.15)", padding: 6 }}>
+          {opties.map((o) => (
+            <label key={o.waarde} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", fontSize: 14, cursor: "pointer", borderRadius: 8 }}>
+              <input type="checkbox" checked={gekozen.includes(o.waarde)} onChange={() => wissel(o.waarde)}
+                style={{ width: 18, height: 18, accentColor: "#1A2B3D", flexShrink: 0 }} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+          {gekozen.length > 0 && (
+            <button type="button" onClick={() => { onChange(""); setOpen(false); }}
+              style={{ width: "100%", marginTop: 4, padding: "8px 10px", fontSize: 13, fontWeight: 700, border: "none", borderTop: "1px solid #ECE8DF", background: "#fff", color: "#4A5560", cursor: "pointer", textAlign: "left" }}>
+              Wis selectie
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // pad/syncPad: dezelfde leadlijst draait per sector (/leads?sector=…). Zonder
 // syncPad (lijst zonder Sheet, zoals salons en spoed: die vult Claude direct in
 // de database) verdwijnt de knop "Nu bijwerken uit de Sheet".
@@ -337,27 +387,21 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
             <option value={vasteProvincie}>{vasteProvincie}</option>
           </select>
         ) : (
-          <select value={filters.provincie || ""} onChange={(e) => zet({ provincie: e.target.value })} style={sel}>
-            <option value="">Alle provincies</option>
-            {f.provincies.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
+          <MeerKeuze waarde={filters.provincie} leegLabel="Alle provincies"
+            opties={f.provincies.map((p) => ({ waarde: p, label: p, kort: p }))}
+            onChange={(v) => zet({ provincie: v })} />
         )}
-        <select value={filters.vakgebied || ""} onChange={(e) => zet({ vakgebied: e.target.value })} style={sel}>
-          <option value="">{vakLabel}</option>
-          {f.vakgebieden.map((v) => <option key={v} value={v}>{v}</option>)}
-        </select>
+        <MeerKeuze waarde={filters.vakgebied} leegLabel={vakLabel}
+          opties={f.vakgebieden.map((v) => ({ waarde: v, label: v, kort: v }))}
+          onChange={(v) => zet({ vakgebied: v })} />
         {actueel ? (
-          <select value={filters.site || ""} onChange={(e) => zet({ site: e.target.value })} style={sel}>
-            <option value="">Alle website-situaties</option>
-            {(f.sites || []).map((s) => (
-              <option key={s.site} value={s.site}>{SITE_LABELS[s.site] || s.site} ({s.aantal})</option>
-            ))}
-          </select>
+          <MeerKeuze waarde={filters.site} leegLabel="Alle website-situaties"
+            opties={(f.sites || []).map((s) => ({ waarde: s.site, label: `${SITE_LABELS[s.site] || s.site} (${s.aantal})`, kort: SITE_LABELS[s.site] || s.site }))}
+            onChange={(v) => zet({ site: v })} />
         ) : (
-          <select value={filters.potentie || ""} onChange={(e) => zet({ potentie: e.target.value })} style={sel}>
-            <option value="">Alle potentie</option>
-            {["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
+          <MeerKeuze waarde={filters.potentie} leegLabel="Alle potentie"
+            opties={["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => ({ waarde: p, label: p, kort: p }))}
+            onChange={(v) => zet({ potentie: v })} />
         )}
       </div>
 
