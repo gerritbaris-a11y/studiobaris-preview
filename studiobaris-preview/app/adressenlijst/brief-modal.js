@@ -145,24 +145,6 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
                 <div style={hulp}>Staat direct onder het app-blok. Kort houden: 2-3 zinnen.</div>
               </div>
 
-              <div>
-                <span style={label}>Verstuurd</span>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
-                    <input type="checkbox" checked={!!t.verzonden} onChange={(e) => wijzig("verzonden", e.target.checked ? vandaagIso() : null)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />
-                    Deze brief is verstuurd op
-                  </label>
-                  {t.verzonden ? (
-                    <input type="date" style={{ ...veld, width: "auto" }} value={t.verzonden} onChange={(e) => wijzig("verzonden", e.target.value || vandaagIso())} />
-                  ) : null}
-                </div>
-                <div style={hulp}>
-                  {t.verzonden
-                    ? `De datum op de brief ligt nu vast.${t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand) en staat vanaf nu op de previewpagina.` : ""}`
-                    : `Nog niet verstuurd: de brief krijgt steeds de datum van de dag dat je hem print (vandaag ${new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", timeZone: "Europe/Amsterdam" })}) en de deadline schuift mee. Vink dit pas aan als de brief echt de deur uit is.`}
-                </div>
-              </div>
-
               <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                 <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: KLEUR.inkt, cursor: "pointer" }}>
                   <input type="checkbox" checked={t.kaartje === true} onChange={(e) => wijzig("kaartje", e.target.checked)} style={{ width: 18, height: 18, accentColor: KLEUR.klei }} />

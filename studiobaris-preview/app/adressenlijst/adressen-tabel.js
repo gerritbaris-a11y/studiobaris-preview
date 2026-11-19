@@ -75,6 +75,23 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
       setMarkeer(false);
     }
   }
+  const [bezig, setBezig] = useState(null);
+  async function zetVerstuurd(slug, aan) {
+    setBezig(slug);
+    try {
+      const res = await fetch("/api/brieven/verstuurd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, verstuurd: aan }),
+      });
+      const d = await res.json();
+      if (!d.ok) throw new Error(d.error || "Opslaan mislukt.");
+      setGemaakt((oud) => ({ ...oud, [slug]: { ...oud[slug], verzonden: d.verzonden } }));
+    } catch (e) {
+      alert(e.message || "Er ging iets mis.");
+    }
+    setBezig(null);
+  }
   function printKaartjes() {
     const slugs = stapel.metKaartje.map((r) => r.slug).join(",");
     window.open(`/api/brieven/kaartjes?stapel=1&slugs=${encodeURIComponent(slugs)}`, "_blank");
@@ -205,8 +222,9 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
             <tbody>
               {zichtbaar.map((r) => {
                 const aan = gekozen.has(r.slug);
+                const verstuurd = !!(gemaakt[r.slug] && gemaakt[r.slug].verzonden);
                 return (
-                  <tr key={r.slug} onClick={() => wissel(r.slug)} style={{ cursor: "pointer", background: aan ? KLEUR.kleiZacht : undefined }}>
+                  <tr key={r.slug} onClick={() => wissel(r.slug)} style={{ cursor: "pointer", background: aan ? KLEUR.kleiZacht : verstuurd ? KLEUR.sage.bg : undefined }}>
                     <td style={td}>
                       <input type="checkbox" checked={aan} onChange={() => wissel(r.slug)} onClick={(e) => e.stopPropagation()} style={vinkje} aria-label={`${r.bedrijf} aanvinken`} />
                     </td>
@@ -248,7 +266,34 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
                               </a>
                             </>
                           ) : "zonder kaartje"}
-                          {gemaakt[r.slug].verzonden ? <div>verstuurd op {datumKort(gemaakt[r.slug].verzonden)}</div> : <div>nog niet verstuurd (datum loopt mee)</div>}
+                          <div style={{ marginTop: 6, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                            {verstuurd ? (
+                              <>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: KLEUR.sage.tekst }}>&#10003; Verstuurd {datumKort(gemaakt[r.slug].verzonden)}</span>
+                                <button
+                                  type="button"
+                                  disabled={bezig === r.slug}
+                                  onClick={(e) => { e.stopPropagation(); if (confirm("Deze brief terugzetten naar niet verstuurd? De datum loopt dan weer mee.")) zetVerstuurd(r.slug, false); }}
+                                  style={{ background: "none", border: "none", padding: 0, fontSize: 11.5, color: KLEUR.labelDonker, textDecoration: "underline", cursor: "pointer", fontFamily: BODY }}
+                                >
+                                  ongedaan maken
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={bezig === r.slug}
+                                  onClick={(e) => { e.stopPropagation(); zetVerstuurd(r.slug, true); }}
+                                  style={{ ...briefKnop, cursor: "pointer", borderColor: KLEUR.sage.dot, color: KLEUR.sage.tekst, padding: "4px 10px", fontSize: 12 }}
+                                  title="Zet de datum van vandaag vast op deze brief; de actie op de preview gaat lopen"
+                                >
+                                  {bezig === r.slug ? "Bezig…" : "Markeer verstuurd"}
+                                </button>
+                                <span style={{ fontSize: 11.5 }}>datum loopt mee</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       )}
                     </td>

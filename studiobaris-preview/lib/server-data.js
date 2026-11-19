@@ -628,6 +628,12 @@ export async function slaBriefOp(slug, teksten, notitieVlak, afzender) {
   });
 }
 
+// Alleen de verzenddatum van een brief zetten (iso "YYYY-MM-DD") of wissen (null),
+// zonder tekst, afzender of teller aan te raken.
+export async function zetBriefVerstuurd(slug, verzonden) {
+  return await rpc("sb_brief_verstuurd", { p_slug: slug, p_verzonden: verzonden || null });
+}
+
 export async function getBrievenLijst() {
   const data = await rpc("sb_brieven_lijst", {});
   return Array.isArray(data) ? data : [];
