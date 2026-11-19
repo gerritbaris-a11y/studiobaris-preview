@@ -99,7 +99,7 @@ function BetaalBadge({ status }) {
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
 }
 
-export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
+export default async function PreviewsPagina({ sector = "portfolio", filters = {} } = {}) {
   const esth = sector === "boeking";
   const leadsPad = sectorPad("/leads", sector);
   const sessie = leesSessie();
@@ -139,6 +139,48 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
   // maar wel terug te vinden en terug te zetten in een eigen sectie onderaan.
   const afgewezen = rows.filter((r) => (r.pipeline_status || "") === "Afgewezen");
   const actief = rows.filter((r) => (r.pipeline_status || "") !== "Afgewezen");
+
+  // Zoeken, filteren en "meer laden" gebeuren op de server (via ?zoek=&fase=&limiet=).
+  // Eerder stonden alle kaarten (200+) tegelijk op de pagina en werden ze in de
+  // browser verborgen; daar liep Chrome op vast ("Pagina reageert niet").
+  const PER_KEER = 10;
+  const fFase = ["geen", "akkoord", "klaar", "archief"].includes(filters.fase) ? filters.fase : "";
+  const fZoek = String(filters.zoek || "").trim().toLowerCase();
+  const fLimiet = Number(filters.limiet) > 0 ? Math.min(Number(filters.limiet), 500) : PER_KEER;
+  const zoektekstVan = (r) => {
+    let rv = {};
+    try { rv = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
+    return [r.company_name, r.slug, r.lead_phone, r.lead_email, r.b_adres, r.verzamelaar, rv.bron, r.provincie]
+      .filter(Boolean).join(" ").toLowerCase();
+  };
+  // Zelfde regels als voorheen in klanten-zoek.js: Klaar alleen onder "Klaar",
+  // gearchiveerd alleen onder "Archief".
+  const pastFase = (fase, f) => {
+    if (f === "archief") return fase === "archief";
+    if (fase === "archief") return false;
+    if (f === "klaar") return fase === "Klaar";
+    if (fase === "Klaar") return false;
+    if (!f) return true;
+    if (f === "geen") return fase === "Preview";
+    return fase === "Akkoord";
+  };
+  const kandidaten = [
+    ...actief.map((r) => ({ r, fase: normFase(r.pipeline_status) })),
+    ...afgewezen.map((r) => ({ r, fase: "archief" })),
+  ];
+  const aantallen = Object.fromEntries(["", "geen", "akkoord", "klaar", "archief"]
+    .map((k) => [k, kandidaten.filter((x) => pastFase(x.fase, k)).length]));
+  const treffers = kandidaten.filter((x) => pastFase(x.fase, fFase) && (!fZoek || zoektekstVan(x.r).includes(fZoek)));
+  const actiefZichtbaar = treffers.filter((x) => x.fase !== "archief").slice(0, fLimiet).map((x) => x.r);
+  const archiefZichtbaar = treffers.filter((x) => x.fase === "archief").slice(0, fLimiet).map((x) => x.r);
+  const meerLink = (() => {
+    const q = new URLSearchParams();
+    if (sector !== "portfolio") q.set("sector", sector);
+    if (fZoek) q.set("zoek", filters.zoek);
+    if (fFase) q.set("fase", fFase);
+    q.set("limiet", String(fLimiet + PER_KEER));
+    return "/klanten?" + q.toString();
+  })();
 
   return (
     <WerkplekShell
@@ -207,9 +249,11 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
 
       {/* Ook bij maar één preview tonen zodra er één op Klaar staat: die is
           onder Alle verborgen en alleen via de knop Klaar terug te vinden. */}
-      {(actief.length > 1 || afgewezen.length > 0 || actief.some((r) => normFase(r.pipeline_status) === "Klaar")) && <KlantenZoek />}
+      {(actief.length > 1 || afgewezen.length > 0 || actief.some((r) => normFase(r.pipeline_status) === "Klaar")) && (
+        <KlantenZoek zoek={filters.zoek || ""} fase={fFase} aantallen={aantallen} sector={sector} />
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-        {actief.map((r) => {
+        {actiefZichtbaar.map((r) => {
           let review = {};
           try { review = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
           const reactieOp = r.laatste_feedback_op
@@ -362,14 +406,28 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
         })}
       </div>
 
-      {afgewezen.length > 0 && (
+      {treffers.length === 0 && (actief.length + afgewezen.length) > 0 && (
+        <div style={{ marginTop: 10, fontSize: 14, color: KLEUR.gedempt }}>
+          Geen klant gevonden. Pas je zoekterm of filter aan.
+        </div>
+      )}
+      {treffers.length > fLimiet && (
+        <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <a href={meerLink} style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 999, padding: "9px 16px", fontSize: 14, fontWeight: 700, color: KLEUR.inkt, textDecoration: "none" }}>
+            Meer laden
+          </a>
+          <span style={{ fontSize: 13, color: "#6F7A85" }}>{Math.min(fLimiet, treffers.length)} van {treffers.length} getoond</span>
+        </div>
+      )}
+
+      {fFase === "archief" && archiefZichtbaar.length > 0 && (
         <div style={{ marginTop: 28 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
             <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800, color: "#6F7A85" }}>Geen interesse</h2>
             <span style={{ fontSize: 13, color: "#6F7A85" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {afgewezen.map((r) => {
+            {archiefZichtbaar.map((r) => {
               const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar]
                 .filter(Boolean).join(" ").toLowerCase();
               return (
