@@ -46,6 +46,7 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
   const [gekozen, setGekozen] = useState(() => new Set());
   const [status, setStatus] = useState("idle");
   const [verzonden, setVerzonden] = useState(vandaagIso);
+  const [markeer, setMarkeer] = useState(false);
   const stapelForm = useRef(null);
   const stapelData = useRef(null);
 
@@ -63,8 +64,16 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
   }, [rijen, gekozen, gemaakt]);
 
   function printBrieven() {
-    stapelData.current.value = JSON.stringify({ slugs: stapel.metBrief.map((r) => r.slug), verzonden });
+    stapelData.current.value = JSON.stringify({ slugs: stapel.metBrief.map((r) => r.slug), verstuurd: markeer, verzonden });
     stapelForm.current.submit(); // opent de PDF in een nieuw tabblad
+    if (markeer) {
+      setGemaakt((oud) => {
+        const nieuw = { ...oud };
+        for (const r of stapel.metBrief) nieuw[r.slug] = { ...nieuw[r.slug], verzonden };
+        return nieuw;
+      });
+      setMarkeer(false);
+    }
   }
   function printKaartjes() {
     const slugs = stapel.metKaartje.map((r) => r.slug).join(",");
@@ -145,10 +154,13 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
         <div style={{ background: KLEUR.kaart, border: `1px solid ${KLEUR.lijn}`, borderRadius: 14, padding: "14px 16px", marginBottom: 12, fontFamily: BODY }}>
           <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 10 }}>Printen voor route</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-            <label style={{ fontSize: 14, color: KLEUR.inkt, display: "flex", gap: 8, alignItems: "center" }}>
-              Gaat de deur uit op
-              <input type="date" value={verzonden} onChange={(e) => setVerzonden(e.target.value)}
-                style={{ padding: "8px 10px", fontSize: 14, border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, background: "#fff", fontFamily: BODY }} />
+            <label style={{ fontSize: 14, color: KLEUR.inkt, display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+              <input type="checkbox" checked={markeer} onChange={(e) => setMarkeer(e.target.checked)} style={vinkje} />
+              Meteen op verstuurd zetten
+              {markeer ? (
+                <input type="date" value={verzonden} onChange={(e) => setVerzonden(e.target.value || vandaagIso())}
+                  style={{ padding: "8px 10px", fontSize: 14, border: `1px solid ${KLEUR.lijn2}`, borderRadius: 10, background: "#fff", fontFamily: BODY }} />
+              ) : null}
             </label>
             <Knop kind="primair" onClick={printBrieven} disabled={!stapel.metBrief.length}>
               {`Brieven printen (${stapel.metBrief.length})`}
@@ -158,7 +170,7 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
             </Knop>
           </div>
           <div style={{ fontSize: 12.5, color: KLEUR.labelDonker, marginTop: 8 }}>
-            Brieven en kaartjes staan in dezelfde volgorde (alfabetisch). De datum komt op elke brief; de actie loopt een maand.
+            Brieven en kaartjes staan in dezelfde volgorde (alfabetisch). Brieven die nog niet verstuurd zijn krijgen de datum van vandaag; verstuurde brieven houden hun verzenddatum. Zet "Meteen op verstuurd zetten" alleen aan als de stapel vandaag echt de deur uit gaat: dan ligt de datum vast en loopt de actie een maand.
           </div>
           {stapel.zonderBrief.length > 0 && (
             <div style={{ fontSize: 13, color: KLEUR.kleiDonker, marginTop: 8 }}>
@@ -236,7 +248,7 @@ export default function AdressenTabel({ rijen, brieven = [] }) {
                               </a>
                             </>
                           ) : "zonder kaartje"}
-                          {gemaakt[r.slug].verzonden ? <div>datum op brief: {datumKort(gemaakt[r.slug].verzonden)}</div> : null}
+                          {gemaakt[r.slug].verzonden ? <div>verstuurd op {datumKort(gemaakt[r.slug].verzonden)}</div> : <div>nog niet verstuurd (datum loopt mee)</div>}
                         </div>
                       )}
                     </td>
