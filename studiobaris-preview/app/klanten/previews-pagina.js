@@ -85,6 +85,30 @@ function ProspectActiviteit({ p, a }) {
       {a && a.aanbod_aantal > 0
         ? <span style={aan(true)}>● &quot;Bekijk wat je krijgt&quot; bekeken {a.aanbod_aantal}× · laatst {wanneer(a.aanbod_laatst)}</span>
         : <span style={uit}>○ &quot;Bekijk wat je krijgt&quot; nog niet bekeken</span>}
+      {p && p.voor_benaderd && <VoorBenaderd v={p.voor_benaderd} />}
+    </div>
+  );
+}
+
+// Wat er gebeurde vóórdat de preview op "Benaderd" ging. Bij Benaderd gaan de
+// tellers hierboven op nul; deze stand wordt op dat moment vastgelegd
+// (workflow.benaderd_voorgeschiedenis) zodat je kunt zien wat er al was.
+function VoorBenaderd({ v }) {
+  const regel = { fontSize: 12, color: "#6F7A85", whiteSpace: "normal" };
+  const delen = [];
+  if (v.bekeken_laatst) {
+    const n = v.bekeken_aantal == null ? "" : (v.bekeken_aantal > 0 ? ` ${v.bekeken_aantal}×` : "");
+    delen.push(`preview bekeken${n} (${wanneer(v.bekeken_eerst)} t/m ${wanneer(v.bekeken_laatst)})`);
+  }
+  if (v.app_geopend_op) delen.push(`app geopend ${wanneer(v.app_geopend_op)}`);
+  if (v.geplaatst > 0) delen.push(`${v.geplaatst} project${v.geplaatst === 1 ? "" : "en"} geplaatst · laatst ${wanneer(v.laatst_geplaatst_op)}`);
+  if (v.aanbod_aantal > 0) delen.push(`"Bekijk wat je krijgt" ${v.aanbod_aantal}× bekeken`);
+  return (
+    <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #DDD6C8", display: "grid", gap: 2 }}>
+      <span style={{ ...regel, fontWeight: 700 }}>Vóór benaderd ({wanneer(v.benaderd_op)})</span>
+      {delen.length
+        ? delen.map((d) => <span key={d} style={regel}>{d}</span>)
+        : <span style={regel}>geen activiteit</span>}
     </div>
   );
 }
