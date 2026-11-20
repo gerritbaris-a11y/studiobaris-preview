@@ -431,7 +431,9 @@ export async function POST(req) {
     // zijn commissie terugzien. De pipeline-status wordt wel gezet, anders komt
     // zo'n aanvraag helemaal niet in je overzicht terecht. update_klant negeert
     // null-waarden, dus de lege verzamelaar overschrijft niets.
-    try {
+    // Bij opnieuw maken niet aan de pipeline komen: verzamelaar (commissie) en
+    // fase blijven zoals ze waren.
+    if (!overschrijf) try {
       await updateKlant(slug, { verzamelaar: verzamelaar || null, status: "Preview" });
     } catch (e) {
       console.error("pipeline-status zetten mislukt:", e && e.message);
@@ -439,7 +441,7 @@ export async function POST(req) {
 
     // De lead afsluiten: status op preview en de koppeling met deze preview leggen.
     const leadId = v("lead_id");
-    if (leadId) {
+    if (leadId && !overschrijf) {
       try {
         const oudeLead = await getLead(leadId);
         await updateLead(leadId, {

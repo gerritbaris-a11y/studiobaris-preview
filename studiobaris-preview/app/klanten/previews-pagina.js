@@ -29,6 +29,7 @@ import { getProefOverzicht } from "../../lib/proef";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
 import AanvraagAf from "./aanvraag-af";
 import ProefStatus from "./proef-status";
+import OpnieuwKnop from "./opnieuw-knop";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
@@ -370,6 +371,8 @@ export default async function PreviewsPagina({ sector = "portfolio", filters = {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
+            {/* Alleen in fase Preview: na akkoord overschrijven we niets meer. */}
+            {fase === "Preview" && <OpnieuwKnop slug={r.slug} bedrijf={r.company_name} website={review.website || ""} />}
             {esth && beheer && (r.klantnummer || r.klant_kandidaat) && zoekAppAccount(r, appAccounts) && (
               <AgendaLiveKnop slug={r.slug} naar={zoekAppAccount(r, appAccounts).id}
                 accountNaam={zoekAppAccount(r, appAccounts).name} email={r.factuur_email || r.lead_email || null} />
