@@ -9,6 +9,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import { periodeInWoorden, periodeKort, datumNL } from "./mollie";
 import { jakartaFonts } from "./plus-jakarta-font";
 import { bodoniFonts } from "./bodoni-moda-font";
+import { isGratisMaand } from "./bring-a-friend";
 
 export const BEDRIJF = {
   naam: "StudioBaris",
@@ -58,6 +59,8 @@ export async function factuurPdf(f) {
   // originele factuur. Nooit een incasso of betaalinstructie.
   const credit = f.soort === "credit";
   const automatischeIncasso = !credit && (maandelijks || f.soort === "slottermijn");
+  // Bring a friend: maandfactuur van € 0,00 — er wordt niets afgeschreven.
+  const gratis = isGratisMaand(f);
 
   const pdf = await PDFDocument.create();
   const pagina = pdf.addPage([595.28, 841.89]); // A4
@@ -258,7 +261,7 @@ export async function factuurPdf(f) {
 
   y -= 14;
   vlak(L, y - 1, 16, 1.5, GOUD);
-  tekst(credit ? "Toelichting" : automatischeIncasso ? "Incassogegevens" : alBetaaldViaLink ? "Betaalstatus" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
+  tekst(credit || gratis ? "Toelichting" : automatischeIncasso ? "Incassogegevens" : alBetaaldViaLink ? "Betaalstatus" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
   y -= 8;
 
   // Bij "oneoff" (de oude, handmatige /restbetaling-flow) is er geen mandaat
@@ -270,6 +273,12 @@ export async function factuurPdf(f) {
         ...(snap.credit_reden ? [`Reden: ${snap.credit_reden}`] : []),
         "Heb je de originele factuur al betaald, dan wordt het bedrag teruggestort of is dat al gebeurd. Je hoeft zelf niets te doen.",
         `Vragen over deze creditnota? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
+      ]
+    : gratis
+    ? [
+        "Deze maand is gratis dankzij Bring a friend — bedankt! Er wordt deze maand niets van je rekening afgeschreven.",
+        "Vanaf de maand hierna loopt de maandelijkse incasso weer gewoon door, tegen dezelfde machtiging.",
+        `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
       ]
     : automatischeIncasso
     ? [
@@ -340,10 +349,13 @@ export async function mailFactuur(f, pdfBytes, opties = {}) {
   // maandelijkse incasso, i.p.v. de oude "maak zelf over"-mail.
   const credit = f.soort === "credit";
   const automatischeIncasso = !credit && (maandelijks || f.soort === "slottermijn");
+  const gratis = isGratisMaand(f);
   const bedrag = euro(f.bedrag_incl);
 
   const onderwerp = credit
     ? `Creditnota ${f.nummer} bij factuur ${snap.credit_van_nummer || ""}`.trim()
+    : gratis
+    ? `Gratis maand: ${periodeInWoorden(f.periode)} (factuur ${f.nummer})`
     : maandelijks
     ? `Factuur ${f.nummer} — ${periodeInWoorden(f.periode)}`
     : f.soort === "slottermijn"
@@ -355,6 +367,12 @@ export async function mailFactuur(f, pdfBytes, opties = {}) {
          (${bedrag} incl. btw). Daarmee vervalt die factuur.</p>
        ${snap.credit_reden ? `<p>Reden: ${String(snap.credit_reden).replace(/[<>&]/g, "")}</p>` : ""}
        <p>Had je al betaald? Dan wordt het bedrag teruggestort, of is dat al gebeurd. Je hoeft zelf niets te doen.</p>`
+    : gratis
+    ? `<p>Goed nieuws: <strong>${periodeInWoorden(f.periode)}</strong> is gratis, als bedankje
+         voor Bring a friend. Er wordt deze maand <strong>niets</strong> van je rekening
+         afgeschreven. Voor je administratie zit de factuur van € 0,00 als bijlage bij deze mail.</p>
+       <p style="color:#6B6258;font-size:14px">Vanaf de maand hierna loopt de maandelijkse
+         incasso weer gewoon door.</p>`
     : maandelijks
     ? `<p>Hierbij de factuur voor <strong>${periodeInWoorden(f.periode)}</strong>.
          Het bedrag van <strong>${bedrag}</strong> incl. btw wordt op

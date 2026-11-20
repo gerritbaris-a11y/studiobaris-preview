@@ -1,4 +1,4 @@
-import { getAbonnementen, getFacturenKlant, getKandidaten } from "../../lib/abonnementen-data";
+import { getAbonnementen, getFacturenKlant, getKandidaten, getBafOverzicht } from "../../lib/abonnementen-data";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
@@ -51,11 +51,18 @@ export default async function AbonnementenPage() {
   // De facturen per klant erbij. Het gaat om een handvol klanten; zodra dat er
   // honderden worden, halen we ze pas op bij het openklappen van een regel.
   const facturenPerKlant = {};
+  const bafPerKlant = {};
   await Promise.all(
     rijen.map(async (r) => {
-      facturenPerKlant[r.slug] = await getFacturenKlant(r.slug);
+      const [f, b] = await Promise.all([getFacturenKlant(r.slug), getBafOverzicht(r.slug)]);
+      facturenPerKlant[r.slug] = f;
+      bafPerKlant[r.slug] = b;
     })
   );
+  // Keuzelijst voor "Aangebracht door": alle klanten in dit overzicht.
+  const klantenLijst = rijen
+    .map((r) => ({ slug: r.slug, company_name: r.company_name }))
+    .sort((a, b) => String(a.company_name || a.slug).localeCompare(String(b.company_name || b.slug), "nl"));
 
   const lopend = rijen.filter((r) => r.betaal_status === "actief" && r.betaal_abonnement_id);
   const perMaand = lopend.reduce((som, r) => som + (Number(r.maandbedrag_incl) || 0), 0);
@@ -103,6 +110,8 @@ export default async function AbonnementenPage() {
                   rij={r}
                   facturen={facturenPerKlant[r.slug] || []}
                   siteUrl={SITE_URL}
+                  baf={bafPerKlant[r.slug] || null}
+                  klanten={klantenLijst}
                 />
               ))}
             </tbody>
