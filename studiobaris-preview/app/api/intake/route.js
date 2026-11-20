@@ -405,7 +405,9 @@ export async function POST(req) {
         await fetch(`${SUPABASE_URL}/rest/v1/rpc/sb_set_huisstijl`, {
           method: "POST",
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ p_slug: slug, p_merk: {}, p_notes: { ...review, opnieuw_gemaakt: new Date().toISOString() } }),
+          // website/kleur_bron expliciet meesturen (ook als leeg), anders blijft
+          // de oude link in de notities staan.
+          body: JSON.stringify({ p_slug: slug, p_merk: {}, p_notes: { website: null, ...review, opnieuw_gemaakt: new Date().toISOString() } }),
         });
       } catch (e) {
         console.error("notities bijwerken mislukt:", e && e.message);

@@ -38,6 +38,8 @@ export async function POST(req) {
   // opnieuw = de bestaande preview overschrijven (zelfde link) met de website
   // die nu bij de lead staat. Voor als de website of huisstijl niet klopte.
   const opnieuw = !!(body && body.opnieuw);
+  // zonderWebsite = bij opnieuw maken bewust géén website gebruiken (veld leeggemaakt).
+  const zonderWebsite = opnieuw && !!(body && body.zonderWebsite);
   if (!id) return NextResponse.json({ ok: false, error: "Geen lead opgegeven." }, { status: 400 });
 
   const lead = await getLeadVoorPreview(id);
@@ -77,12 +79,12 @@ export async function POST(req) {
   zet("email", lead.email);
   zet("adres", lead.adres);
   // Alleen een echte, verouderde site levert bruikbare feiten op.
-  const oud = lead.website || (lead.website_status === "VEROUDERD" ? lead.gevonden_url : "");
+  const oud = zonderWebsite ? "" : lead.website || (lead.website_status === "VEROUDERD" ? lead.gevonden_url : "");
   if (oud) zet("oude_website", oud);
   // De site van de prospect altijd bewaren (link in het dashboard) en daar de
   // huisstijl van lezen, behalve als het alleen social media of een geparkeerd
   // domein is.
-  zet("website", lead.website || lead.gevonden_url);
+  if (!zonderWebsite) zet("website", lead.website || lead.gevonden_url);
   // Een zelf ingevulde website (lead.website) gaat altijd voor de scanuitkomst.
   if (!lead.website && ["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
   zet("notities", lead.reden);

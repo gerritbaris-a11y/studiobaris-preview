@@ -11,13 +11,14 @@ export default function OpnieuwKnop({ slug, bedrijf, website }) {
 
   async function maak() {
     const w = site.trim();
-    if (!window.confirm(`Preview van ${bedrijf || slug} opnieuw maken?\n\nTeksten, logo en kleuren worden opnieuw opgehaald${w ? ` van ${w}` : ""}. De link blijft hetzelfde; wat er nu op de preview staat wordt overschreven. Duurt ongeveer een minuut.`)) return;
+    if (!window.confirm(`Preview van ${bedrijf || slug} opnieuw maken?\n\n${w ? `Teksten, logo en kleuren worden opnieuw opgehaald van ${w}.` : "De preview wordt opnieuw gemaakt zonder website (de oude link vervalt)."} De link blijft hetzelfde; wat er nu op de preview staat wordt overschreven. Duurt ongeveer een minuut.`)) return;
     setSt({ bezig: true, tekst: "", fout: false });
     try {
       const res = await fetch("/api/leads/opnieuw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, website: w }),
+        // Alleen meesturen als je het veld wijzigde; leeggemaakt = zonder website.
+        body: JSON.stringify(w === (website || "").trim() ? { slug } : { slug, website: w }),
       });
       const j = await res.json().catch(() => ({}));
       if (j.ok) setSt({ bezig: false, tekst: "Opnieuw gemaakt. Open de preview om te kijken.", fout: false });

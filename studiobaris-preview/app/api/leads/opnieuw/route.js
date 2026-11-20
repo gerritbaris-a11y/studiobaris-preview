@@ -31,17 +31,19 @@ export async function POST(req) {
   const slug = String(body.slug || "").trim();
   if (!/^[a-z0-9-]{1,120}$/.test(slug)) return NextResponse.json({ ok: false, error: "Geen preview opgegeven." }, { status: 400 });
   const website = schoon(body.website);
+  // Veld leeggemaakt = opnieuw maken zonder website (oude link weg).
+  const zonderWebsite = typeof body.website === "string" && !website;
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/leads?select=id&preview_slug=eq.${encodeURIComponent(slug)}&limit=1`, { headers: hdr(), cache: "no-store" });
   const rijen = res.ok ? await res.json() : [];
   const lead = Array.isArray(rijen) && rijen[0];
 
   if (lead) {
-    if (website) await updateLead(lead.id, { website });
+    if (website || zonderWebsite) await updateLead(lead.id, { website: website || null });
     return leadPreviewPost(new Request("http://intern/api/leads/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: lead.id, opnieuw: true }),
+      body: JSON.stringify({ id: lead.id, opnieuw: true, zonderWebsite }),
     }));
   }
 
@@ -65,7 +67,7 @@ export async function POST(req) {
   if (!eigen(bedrijf.telefoon)) zet("telefoon", bedrijf.telefoon);
   if (!eigen(bedrijf.email)) zet("email", bedrijf.email);
   zet("adres", bedrijf.adres);
-  const site = website || notes.website || "";
+  const site = zonderWebsite ? "" : website || notes.website || "";
   zet("website", site);
   zet("oude_website", site);
   if (notes.bron) zet("bron", notes.bron);
