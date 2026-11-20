@@ -125,9 +125,15 @@ export async function POST(req) {
     const naam = v("naam");
     if (!naam) return NextResponse.json({ ok: false, error: "Bedrijfsnaam is verplicht." }, { status: 400 });
 
+    // "Preview opnieuw maken" vanaf de leadlijst: dezelfde slug overschrijven.
+    // Kan alleen intern (app/api/leads/preview), nooit via het publieke formulier:
+    // de header moet de service-sleutel bevatten.
+    const intern = req.headers.get("x-sb-intern") === SERVICE_KEY;
+    const overschrijf = intern ? String(req.headers.get("x-sb-overschrijf") || "").trim() : "";
+
     // Unieke slug bepalen
-    let slug = slugify(naam);
-    if (!(await slugBeschikbaar(slug))) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+    let slug = overschrijf || slugify(naam);
+    if (!overschrijf && !(await slugBeschikbaar(slug))) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
     // Afbeeldingen uploaden
     let logoUrl = "";
@@ -390,6 +396,20 @@ export async function POST(req) {
     });
     if (!insertRes.ok) {
       return NextResponse.json({ ok: false, error: "Opslaan mislukt: " + (await insertRes.text()) }, { status: 500 });
+    }
+
+    // Bij opnieuw maken laat create_preview de interne notities staan. Werk de
+    // controlepunten (o.a. website en kleurbron) bij; overige notities blijven.
+    if (overschrijf) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/sb_set_huisstijl`, {
+          method: "POST",
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ p_slug: slug, p_merk: {}, p_notes: { ...review, opnieuw_gemaakt: new Date().toISOString() } }),
+        });
+      } catch (e) {
+        console.error("notities bijwerken mislukt:", e && e.message);
+      }
     }
 
     // Persoonlijke demo-app klaarzetten: de klant-app in het jasje van deze klant,

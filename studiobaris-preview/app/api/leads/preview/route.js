@@ -35,6 +35,9 @@ export async function POST(req) {
 
   const body = await req.json().catch(() => null);
   const id = body && body.id ? String(body.id) : "";
+  // opnieuw = de bestaande preview overschrijven (zelfde link) met de website
+  // die nu bij de lead staat. Voor als de website of huisstijl niet klopte.
+  const opnieuw = !!(body && body.opnieuw);
   if (!id) return NextResponse.json({ ok: false, error: "Geen lead opgegeven." }, { status: 400 });
 
   const lead = await getLeadVoorPreview(id);
@@ -49,7 +52,7 @@ export async function POST(req) {
   }
 
   // Er is al een preview: geen tweede maken, gewoon de bestaande teruggeven.
-  if (lead.preview_slug) {
+  if (lead.preview_slug && !opnieuw) {
     return NextResponse.json({ ok: true, bestond: true, slug: lead.preview_slug, url: `${SITE_URL}/${lead.preview_slug}` });
   }
 
@@ -80,7 +83,8 @@ export async function POST(req) {
   // huisstijl van lezen, behalve als het alleen social media of een geparkeerd
   // domein is.
   zet("website", lead.website || lead.gevonden_url);
-  if (["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
+  // Een zelf ingevulde website (lead.website) gaat altijd voor de scanuitkomst.
+  if (!lead.website && ["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
   zet("notities", lead.reden);
   fd.set("stijl", "stoer");
   fd.set("verzamelaar", naam);
@@ -89,7 +93,10 @@ export async function POST(req) {
 
   let uit;
   try {
-    const res = await intakePost(new Request("http://intern/api/intake", { method: "POST", body: fd }));
+    const headers = opnieuw && lead.preview_slug
+      ? { "x-sb-intern": process.env.SUPABASE_SERVICE_ROLE_KEY || "", "x-sb-overschrijf": lead.preview_slug }
+      : {};
+    const res = await intakePost(new Request("http://intern/api/intake", { method: "POST", body: fd, headers }));
     uit = await res.json();
   } catch (e) {
     uit = { ok: false, error: String((e && e.message) || e) };

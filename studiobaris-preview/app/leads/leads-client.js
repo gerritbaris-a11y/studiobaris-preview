@@ -132,21 +132,24 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
 
   // Eén klik: de preview wordt meteen gemaakt (zelfde route als het goedkeuren
   // van een voorstel op Vandaag). De lead komt daarbij op jouw naam te staan.
-  async function maakPreview(l) {
-    if (!window.confirm(`Preview maken voor ${l.bedrijfsnaam}? Dit duurt ongeveer een minuut.`)) return;
-    setPreview((p) => ({ ...p, [l.id]: { bezig: true } }));
+  async function maakPreview(l, opnieuw = false) {
+    const vraag = opnieuw
+      ? `Preview van ${l.bedrijfsnaam} opnieuw maken?\n\nTeksten, logo en kleuren worden opnieuw opgehaald${l.website ? ` van ${l.website}` : ""}. De link blijft hetzelfde; wat er nu op de preview staat wordt overschreven. Duurt ongeveer een minuut.`
+      : `Preview maken voor ${l.bedrijfsnaam}? Dit duurt ongeveer een minuut.`;
+    if (!window.confirm(vraag)) return;
+    setPreview((p) => ({ ...p, [l.id]: { bezig: true, opnieuw } }));
     try {
       const res = await fetch("/api/leads/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: l.id }),
+        body: JSON.stringify({ id: l.id, opnieuw }),
       });
       const j = await res.json().catch(() => ({}));
       if (!j.ok) {
         setPreview((p) => ({ ...p, [l.id]: { fout: j.error || "Preview maken mislukt." } }));
         return;
       }
-      setPreview((p) => ({ ...p, [l.id]: { url: j.url } }));
+      setPreview((p) => ({ ...p, [l.id]: { url: j.url, klaar: opnieuw } }));
       setLeads((prev) => prev.map((x) => (x.id === l.id
         ? { ...x, status: "preview", preview_slug: j.slug, owner: x.owner || mij }
         : x)));
@@ -548,12 +551,12 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
               </div>
 
               {/* De brondata klopt niet altijd. Kom je toch een website tegen? Vul 'm hier in. */}
-              {l.alleen_socials && tab !== "archief" && (
+              {tab !== "archief" && (
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <input
                     value={siteVeld[l.id] || ""}
                     onChange={(e) => setSiteVeld((v) => ({ ...v, [l.id]: e.target.value }))}
-                    placeholder="Toch een website? Plak 'm hier"
+                    placeholder={l.website || l.alleen_socials ? "Website klopt niet? Plak de juiste" : "Toch een website? Plak 'm hier"}
                     style={{ ...sel, fontSize: 12.5, padding: "7px 9px" }}
                   />
                   <button onClick={() => bewaarSite(l)} disabled={!(siteVeld[l.id] || "").trim()}
@@ -569,9 +572,25 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 const url = pv.url || (l.preview_slug ? `https://preview.studiobaris.nl/${l.preview_slug}` : "");
                 if (url) {
                   return (
-                    <a href={url} target="_blank" rel="noreferrer" style={{ ...knop, background: "#1d7a46", color: "#fff" }}>
-                      Bekijk preview ↗
-                    </a>
+                    <div>
+                      <a href={url} target="_blank" rel="noreferrer" style={{ ...knop, background: "#1d7a46", color: "#fff" }}>
+                        Bekijk preview ↗
+                      </a>
+                      {tab !== "archief" && (
+                        <button onClick={() => maakPreview(l, true)} disabled={pv.bezig}
+                          style={{ ...knop, background: "#fff", color: "#1A2B3D", border: "1px solid #E3DED3", padding: "9px", fontSize: 13, cursor: pv.bezig ? "wait" : "pointer" }}>
+                          {pv.bezig ? "Preview wordt opnieuw gemaakt… (±1 min)" : "↻ Preview opnieuw maken"}
+                        </button>
+                      )}
+                      {pv.klaar && !pv.bezig && (
+                        <div style={{ marginTop: 6, fontSize: 12.5, color: "#1d7a46", fontWeight: 600 }}>Opnieuw gemaakt. Open de preview om te kijken.</div>
+                      )}
+                      {pv.fout && (
+                        <div style={{ marginTop: 6, background: "#FDECEA", border: "1px solid #F5C6C0", color: "#9E3B2E", borderRadius: 8, padding: "7px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                          {pv.fout}
+                        </div>
+                      )}
+                    </div>
                   );
                 }
                 if (done || tab === "archief") return null;
