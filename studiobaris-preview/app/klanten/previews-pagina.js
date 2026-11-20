@@ -1,4 +1,4 @@
-import { getOverview, getMijnLeads, getTeamLogin, getAppAccounts, zoekAppAccount } from "../../lib/server-data";
+import { getOverview, getMijnLeads, getLeadWebsites, getTeamLogin, getAppAccounts, zoekAppAccount } from "../../lib/server-data";
 import { stijlKort } from "../../lib/stijlen";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
@@ -198,6 +198,7 @@ export default async function PreviewsPagina({ sector = "portfolio", filters = {
   const treffers = kandidaten.filter((x) => pastFase(x.fase, fFase) && (!fZoek || zoektekstVan(x.r).includes(fZoek)));
   const actiefZichtbaar = treffers.filter((x) => x.fase !== "archief").slice(0, fLimiet).map((x) => x.r);
   const archiefZichtbaar = treffers.filter((x) => x.fase === "archief").slice(0, fLimiet).map((x) => x.r);
+  const leadSite = await getLeadWebsites(actiefZichtbaar.map((r) => r.slug)).catch(() => ({}));
   const meerLink = (() => {
     const q = new URLSearchParams();
     if (sector !== "portfolio") q.set("sector", sector);
@@ -372,7 +373,7 @@ export default async function PreviewsPagina({ sector = "portfolio", filters = {
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
             {/* Alleen in fase Preview: na akkoord overschrijven we niets meer. */}
-            {fase === "Preview" && <OpnieuwKnop slug={r.slug} bedrijf={r.company_name} website={review.website || ""} />}
+            {fase === "Preview" && <OpnieuwKnop slug={r.slug} bedrijf={r.company_name} website={(r.slug in leadSite ? leadSite[r.slug] : review.website) || ""} />}
             {esth && beheer && (r.klantnummer || r.klant_kandidaat) && zoekAppAccount(r, appAccounts) && (
               <AgendaLiveKnop slug={r.slug} naar={zoekAppAccount(r, appAccounts).id}
                 accountNaam={zoekAppAccount(r, appAccounts).name} email={r.factuur_email || r.lead_email || null} />

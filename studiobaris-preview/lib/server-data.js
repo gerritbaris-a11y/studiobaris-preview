@@ -195,6 +195,17 @@ export async function setUserWachtwoord(id, hash) {
   });
 }
 
+// Website zoals die nu bij de lead staat, per preview-slug (voor "Preview
+// opnieuw maken" in Mijn previews: dat is de site die dan gebruikt wordt).
+export async function getLeadWebsites(slugs) {
+  const lijst = (slugs || []).filter((s) => /^[a-z0-9-]{1,120}$/.test(s));
+  if (!lijst.length) return {};
+  const data = await rest(`leads?select=preview_slug,website,gevonden_url&preview_slug=in.(${lijst.join(",")})`).catch(() => null);
+  const uit = {};
+  (Array.isArray(data) ? data : []).forEach((l) => { uit[l.preview_slug] = l.website || l.gevonden_url || ""; });
+  return uit;
+}
+
 export async function updateLead(id, fields) {
   const body = { ...fields, updated_at: new Date().toISOString() };
   if (fields.owner !== undefined && fields.owner) body.claimed_at = new Date().toISOString();
