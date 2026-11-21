@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getBetaalinfo, setBetaling, setRest } from "../../../../lib/server-data";
 import { mollie, eersteIncasso, inclBtw, incassodagVoor } from "../../../../lib/mollie";
 import {
-  setIncassodag, maakFactuur, setFactuurStatus, getFacturenKlant,
+  setIncassodag, maakFactuur, setFactuurStatus, getFacturenKlant, bafToekennen,
 } from "../../../../lib/abonnementen-data";
 import { maakTaak, getTaken } from "../../../../lib/taken-data";
 import {
@@ -164,6 +164,12 @@ export async function POST(req) {
             await setIncassodag(slug, incassodagVoor(new Date(payment.paidAt).getDate()));
           }
         }
+
+        // Bring a friend: is deze klant aangebracht door een bestaande klant,
+        // dan krijgen ze nu allebei een gratis maand tegoed. Idempotent in de
+        // database, dus een herhaalde webhook levert nooit dubbele maanden op.
+        // Verrekenen gebeurt later in de dagelijkse cron.
+        await bafToekennen(slug);
 
         // De factuur voor wat er zojuist is afgerekend: het websitedeel plus de
         // eerste maand. Vastgeklonken aan het betaal-id van Mollie, dus een

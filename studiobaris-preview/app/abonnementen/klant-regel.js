@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AfspraakForm from "./afspraak-form";
+import BringAFriend from "./bring-a-friend";
 import { Chip } from "../werkplek-shell";
 import { KLEUR, HEAD } from "../werkplek-stijl";
 import { VerwijderKnop } from "../dashboard/dashboard-actions";
@@ -40,7 +41,7 @@ const knop = {
   border: `1px solid ${KLEUR.lijn2}`, background: "#fff", color: KLEUR.inkt, fontFamily: HEAD,
 };
 
-export default function KlantRegel({ rij, facturen, siteUrl }) {
+export default function KlantRegel({ rij, facturen, siteUrl, baf, klanten }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [bezig, setBezig] = useState("");
@@ -138,6 +139,13 @@ export default function KlantRegel({ rij, facturen, siteUrl }) {
                   De afspraak
                 </div>
                 <AfspraakForm rij={rij} onKlaar={() => router.refresh()} />
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+                  Bring a friend
+                </div>
+                <BringAFriend rij={rij} overzicht={baf} klanten={klanten} />
               </div>
 
               <div>

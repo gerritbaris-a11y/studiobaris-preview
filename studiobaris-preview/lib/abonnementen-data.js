@@ -242,3 +242,32 @@ export async function getMarges() {
     instellingen: STANDAARD_INSTELLINGEN, klanten: [], per_pakket: [],
   });
 }
+
+// ── Bring a friend ──────────────────────────────────────────────────────────
+// Zie supabase/bring_a_friend.sql. Leesacties via stil(): zolang die SQL nog
+// niet gedraaid is, geven ze gewoon "niets" terug en loopt alles zoals vóór
+// deze actie (geen gratis maanden, geen fout op het scherm of in de cron).
+export async function setAanbrenger(slug, aanbrengerSlug) {
+  return await rpc("sb_baf_instellen", { p_slug: slug, p_aanbrenger_slug: aanbrengerSlug || null });
+}
+
+export async function bafToekennen(slug) {
+  return await stil(() => rpc("sb_baf_toekennen", { p_slug: slug }), null);
+}
+
+export async function getBafOverzicht(slug) {
+  return await stil(() => rpc("sb_baf_overzicht", { p_slug: slug }), null);
+}
+
+export async function getVolgendTegoed(slug) {
+  const t = await stil(() => rpc("sb_tegoed_volgende", { p_slug: slug }), null);
+  return t && typeof t === "object" && t.id ? t : null;
+}
+
+export async function tegoedVerrekenen(id, factuurNummer) {
+  return await stil(() => rpc("sb_tegoed_verrekenen", { p_id: id, p_factuur_nummer: factuurNummer }), null);
+}
+
+export async function tegoedIntrekken(id) {
+  return await rpc("sb_tegoed_intrekken", { p_id: id });
+}
