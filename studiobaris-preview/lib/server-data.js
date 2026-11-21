@@ -460,6 +460,52 @@ export async function getAppAccounts() {
   return Array.isArray(data) ? data : [];
 }
 
+// --- Klantenregister: techniek en gebruik per app-account ---
+// Voor de signalen ("aandacht nodig") en de klant-detailpagina. Alleen lezen.
+
+export async function getKlantTechniek() {
+  const data = await rest(
+    "companies?select=id,slug,name,allowed_domains,plugin_versie,plugin_gezien_op," +
+      "site_ververs_fout,plugin_bijwerk_fout,login_token,login_token_expires_at,login_token_used_at" +
+      "&is_demo=not.is.true&demo_van_slug=is.null"
+  );
+  return Array.isArray(data) ? data : [];
+}
+
+export async function getSiteMonitor() {
+  const data = await rest("site_monitor?select=domain,actief,status,fouten_op_rij,laatste_fout,laatst_gecheckt,status_sinds");
+  return Array.isArray(data) ? data : [];
+}
+
+// Per app-account: aantal projecten/reviews en het laatste moment dat er iets
+// is toegevoegd. Eén query per tabel, samengevat in JS.
+export async function getAppGebruik() {
+  const [projecten, reviews] = await Promise.all([
+    rest("projects?select=company_id,created_at&order=created_at.desc&limit=20000"),
+    rest("reviews?select=company_id,created_at&order=created_at.desc&limit=20000"),
+  ]);
+  const uit = {};
+  const tel = (lijst, veld) => {
+    for (const r of Array.isArray(lijst) ? lijst : []) {
+      if (!r.company_id) continue;
+      const u = (uit[r.company_id] ||= { projecten: 0, reviews: 0, laatst: null });
+      u[veld]++;
+      if (r.created_at && (!u.laatst || r.created_at > u.laatst)) u.laatst = r.created_at;
+    }
+  };
+  tel(projecten, "projecten");
+  tel(reviews, "reviews");
+  return uit;
+}
+
+export async function getActiviteitVoorSlug(slug, limiet = 15) {
+  if (!/^[a-z0-9-]{1,120}$/.test(String(slug || ""))) return [];
+  const data = await rest(
+    `activiteit?select=moment,persoon,soort,van,naar&slug=eq.${slug}&order=moment.desc&limit=${Number(limiet) || 15}`
+  );
+  return Array.isArray(data) ? data : [];
+}
+
 // Naam/slug gelijk trekken: "Oudshoorn Hoveniers vof" en "Oudshoorn Hoveniers"
 // zijn dezelfde klant, net als "kaandorp-bouw" en "Kaandorp Bouw en Renovatie".
 function normNaam(s) {
