@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { vrijeDagen, isUuid, CORS } from "../../../../lib/agenda";
+import { vrijeDagen, isUuid, CORS, wachtlijstAan } from "../../../../lib/agenda";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,8 +15,8 @@ export async function GET(req) {
   if (!isUuid(c) || !isUuid(b)) return NextResponse.json({ ok: false, error: "Onbekende agenda." }, { status: 400, headers: CORS });
   try {
     const m = sp.get("m");
-    const dagen = await vrijeDagen(c, b, 28, isUuid(m) ? m : null);
-    return NextResponse.json({ ok: true, dagen }, { headers: CORS });
+    const [dagen, wachtlijst] = await Promise.all([vrijeDagen(c, b, 28, isUuid(m) ? m : null), wachtlijstAan(c)]);
+    return NextResponse.json({ ok: true, dagen, wachtlijst }, { headers: CORS });
   } catch (e) {
     return NextResponse.json({ ok: false, error: "Agenda niet bereikbaar." }, { status: 500, headers: CORS });
   }

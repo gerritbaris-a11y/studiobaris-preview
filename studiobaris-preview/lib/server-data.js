@@ -453,11 +453,83 @@ export const KLANT_APP_BASE = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://
 
 // Alle echte app-accounts (geen demo's) met hun huidige inloglink-status.
 export async function getAppAccounts() {
-  const data = await rest(
-    "companies?select=id,slug,name,login_token,login_token_expires_at,login_token_used_at" +
-      "&is_demo=not.is.true&demo_van_slug=is.null"
-  );
-  return Array.isArray(data) ? data : [];
+  const [data, mods] = await Promise.all([
+    rest(
+      "companies?select=id,slug,name,soort,login_token,login_token_expires_at,login_token_used_at" +
+        "&is_demo=not.is.true&demo_van_slug=is.null"
+    ),
+    rest("company_modules?select=company_id,modules,updated_at,updated_by"),
+  ]);
+  const perId = new Map((Array.isArray(mods) ? mods : []).map((m) => [m.company_id, m]));
+  const salons = (Array.isArray(data) ? data : []).some((a) => a.soort === "salon") ? await getSalonWhatsapp().catch(() => ({})) : {};
+  return (Array.isArray(data) ? data : []).map((a) => ({
+    ...a,
+    whatsapp: salons[a.id] || null,
+    modules: perId.get(a.id)?.modules || [],
+    modules_op: perId.get(a.id)?.updated_at || null,
+    modules_door: perId.get(a.id)?.updated_by || null,
+  }));
+}
+
+// Modules per app-account. De app leest dit; alleen beheer zet het, via de
+// servicesleutel. Voorlopig alleen salonmodules (Facturatie en Offertes staan
+// stil); bestaande andere modules blijven bij opslaan gewoon staan.
+export const BEKENDE_MODULES = ["cadeaubonnen", "wachtlijst", "whatsapp_s", "whatsapp_m"];
+const BEWAREN_MODULES = ["facturatie", "offertes"];
+export const WHATSAPP_BUNDEL = { whatsapp_s: 100, whatsapp_m: 250 };
+
+export async function zetModules(companyId, modules, door) {
+  let schoon = [...new Set((modules || []).filter((m) => BEKENDE_MODULES.includes(m) || BEWAREN_MODULES.includes(m)))];
+  // WhatsApp S en M sluiten elkaar uit: de laatst aangevinkte wint (M boven S).
+  if (schoon.includes("whatsapp_s") && schoon.includes("whatsapp_m")) schoon = schoon.filter((m) => m !== "whatsapp_s");
+  const res = await rest("company_modules?on_conflict=company_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({
+      company_id: companyId,
+      modules: schoon,
+      updated_at: new Date().toISOString(),
+      updated_by: door || null,
+    }),
+  });
+  const rij = Array.isArray(res) && res[0] ? res[0] : null;
+  // Agenda-instellingen gelijk trekken, zodat oudere schermen het ook goed tonen.
+  if (rij) {
+    const bundel = schoon.includes("whatsapp_m") ? WHATSAPP_BUNDEL.whatsapp_m : schoon.includes("whatsapp_s") ? WHATSAPP_BUNDEL.whatsapp_s : 0;
+    try {
+      await rest(`agenda_instellingen?company_id=eq.${companyId}`, {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ whatsapp_aan: bundel > 0, whatsapp_bundel: bundel || 150 }),
+      });
+    } catch {}
+  }
+  return rij;
+}
+
+// WhatsApp-nummer van de salon (Meta phone-number-ID + het nummer zelf, om te tonen).
+export async function zetWhatsappNummer(companyId, phoneId, nummer) {
+  const res = await rest(`agenda_instellingen?company_id=eq.${companyId}`, {
+    method: "PATCH", headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ whatsapp_phone_id: phoneId || null, whatsapp_nummer: nummer || null }),
+  });
+  return Array.isArray(res) && res[0] ? res[0] : null;
+}
+
+// Agenda-gegevens per app-account voor het modulesblok: WhatsApp-nummer en
+// het aantal WhatsApp-berichten deze maand (voor de extra's op de factuur).
+export async function getSalonWhatsapp() {
+  const maandStart = new Date(new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" }).slice(0, 8) + "01T00:00:00+01:00").toISOString();
+  const [ins, ber] = await Promise.all([
+    rest("agenda_instellingen?select=company_id,whatsapp_phone_id,whatsapp_nummer"),
+    rest(`agenda_berichten?select=company_id&kanaal=eq.whatsapp&gelukt=eq.true&verstuurd_op=gte.${encodeURIComponent(maandStart)}`),
+  ]);
+  const telling = new Map();
+  for (const b of Array.isArray(ber) ? ber : []) telling.set(b.company_id, (telling.get(b.company_id) || 0) + 1);
+  const uit = {};
+  for (const i of Array.isArray(ins) ? ins : []) {
+    uit[i.company_id] = { phone_id: i.whatsapp_phone_id || null, nummer: i.whatsapp_nummer || null, deze_maand: telling.get(i.company_id) || 0 };
+  }
+  return uit;
 }
 
 // --- Klantenregister: techniek en gebruik per app-account ---
@@ -551,6 +623,10 @@ export function appLinkInfo(account) {
   return {
     id: account.id,
     naam: account.name,
+    soort: account.soort || "vakman",
+    modules: account.modules || [],
+    modules_op: account.modules_op || null,
+    modules_door: account.modules_door || null,
     url: account.login_token ? KLANT_APP_BASE + "/in/" + account.login_token : null,
     verloopt: account.login_token_expires_at || null,
     gebruikt: account.login_token_used_at || null,
