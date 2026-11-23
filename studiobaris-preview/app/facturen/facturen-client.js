@@ -66,6 +66,31 @@ function datumNL(d) {
   if (Number.isNaN(dt.getTime())) return "—";
   return dt.toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
+// Incassodatum zoals de klant 'm op zijn afschrift (en wij in Mollie) zien.
+// - Maandfactuur met incasso: de geplande/uitgevoerde incassodatum.
+// - Eerste betaling direct via Mollie (geen incasso): de datum van betalen.
+// - Anders (handmatig overmaken, geannuleerd, credit): geen incasso → "—".
+function IncassoCel({ f }) {
+  const sub = { color: KLEUR.label, fontSize: 12.5 };
+  if (f.incassodatum) {
+    const gepland = f.status === "verstuurd" && f.incassodatum >= vandaag();
+    return (
+      <>
+        {datumNL(f.incassodatum)}
+        {gepland && <div style={sub}>gepland</div>}
+      </>
+    );
+  }
+  if (f.via_mollie && f.betaald_op) {
+    return (
+      <>
+        {datumNL(f.betaald_op)}
+        <div style={sub}>direct via Mollie</div>
+      </>
+    );
+  }
+  return <span style={{ color: KLEUR.label }}>—</span>;
+}
 function vandaag() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -221,7 +246,8 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
               <th style={th}>Nr</th>
               <th style={th}>Klant</th>
               <th style={th}>Omschrijving</th>
-              <th style={th}>Datum</th>
+              <th style={th}>Factuurdatum</th>
+              <th style={th}>Incassodatum</th>
               <th style={th}>Bedrag</th>
               <th style={th}>Status</th>
               <th style={th}></th>
@@ -230,7 +256,7 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
           <tbody>
             {gefilterd.length === 0 && (
               <tr>
-                <td style={{ ...td, borderBottom: "none", color: KLEUR.label }} colSpan={7}>
+                <td style={{ ...td, borderBottom: "none", color: KLEUR.label }} colSpan={8}>
                   {facturen.length === 0
                     ? "Nog geen facturen — maak de eerste met “+ Nieuwe factuur”."
                     : "Geen facturen die aan dit filter voldoen."}
@@ -260,6 +286,9 @@ export default function FacturenClient({ facturen, klanten, volgendNummer, inste
                   )}
                 </td>
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{datumNL(f.factuurdatum)}</td>
+                <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>
+                  <IncassoCel f={f} />
+                </td>
                 <td style={{ ...td, fontVariantNumeric: "tabular-nums" }}>{euro(f.bedrag_incl)}</td>
                 <td style={td}>
                   <select
