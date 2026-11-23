@@ -453,83 +453,83 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
       {open && (
         <tr style={{ background: KLEUR.baan }} {...filterAttrsDetail}>
           <td colSpan={kolommen} style={{ padding: "14px 18px" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "grid", gap: 12 }}>
-              {variant !== "oud" && (
-                <div style={{ fontSize: 13.5 }}>
-                  <span style={veldLabel}>Websiteprijs</span>{r.websiteprijs ? euro(r.websiteprijs) : "—"}
-                </div>
-              )}
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
-                  <Contactpersoon slug={r.slug} value={r.contactpersoon} />
-                  <FactuurEmail slug={r.slug} value={r.factuur_email} standaard={r.b_email || r.lead_email} />
-                </div>
-                <GegevensEditor slug={r.slug} data={r} defaultOpen />
-              </div>
-
-              {variant !== "oud" && (
-                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
-                    Pakket &amp; modules in de app
-                  </div>
-                  <ModulesBlok app={app} maandbedrag={r.maandbedrag} />
-                </div>
-              )}
-
-              <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
-                  App-inloglink
-                </div>
-                <AppLinkBlok app={app} telefoon={r.lead_phone || r.b_telefoon} bedrijf={r.company_name} />
-              </div>
-
-              {(variant === "klant" || variant === "toekomstig") && (
-                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
-                    De afspraak
-                  </div>
-                  <AfspraakForm rij={r} onKlaar={() => location.reload()} />
-                  {variant === "toekomstig" && (
-                    <div style={{ fontSize: 12, color: KLEUR.label, marginTop: 8 }}>
-                      Let op: "Vastleggen" geeft meteen een klantnummer — hij verschijnt hierna bij "Klanten".
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(variant === "klant" || variant === "toekomstig") && (
-                <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                  <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
-                    Standaardmails
-                  </div>
-                  <StandaardMails r={r} />
-                </div>
-              )}
-
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
-                {variant === "klant" && (
-                  <a href={`/facturen?klant=${encodeURIComponent(r.slug)}`} style={{ color: KLEUR.klei, fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
-                    Facturen bekijken →
-                  </a>
-                )}
-                {(variant === "klant" || variant === "toekomstig") && (
-                  <BetaallinkKnop slug={r.slug} style={actieKnop} />
-                )}
-                {variant === "klant" && <SlottermijnKnop r={r} />}
-                {variant === "klant" && (
-                  <MarkeerAlsOudKlantKnop slug={r.slug} bedrijf={r.company_name} heeftActiefAbonnement={r.betaal_status === "actief"} />
-                )}
-                {variant === "toekomstig" && <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />}
-                {variant === "oud" && <HeractiveerKlantKnop slug={r.slug} bedrijf={r.company_name} />}
-                <div style={{ marginLeft: "auto" }}>
-                  <VerwijderKnop slug={r.slug} naam={r.company_name} />
-                </div>
-              </div>
-            </div>
+            <KlantDetailActies r={r} variant={variant} app={app} />
           </td>
         </tr>
       )}
     </>
+  );
+}
+
+
+// De bewerk- en actieblokken van één klant: gebruikt in de opengeklapte rij én
+// op de detailpagina (/klantenregister/[slug]).
+export function KlantDetailActies({ r, variant, app = null }) {
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      {variant !== "oud" && (
+        <div style={{ fontSize: 13.5 }}>
+          <span style={veldLabel}>Websiteprijs</span>{r.websiteprijs ? euro(r.websiteprijs) : "—"}
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+          <Contactpersoon slug={r.slug} value={r.contactpersoon} />
+          <FactuurEmail slug={r.slug} value={r.factuur_email} standaard={r.b_email || r.lead_email} />
+        </div>
+        <GegevensEditor slug={r.slug} data={r} defaultOpen />
+      </div>
+
+      <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+        <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+          App-inloglink
+        </div>
+        <AppLinkBlok app={app} telefoon={r.lead_phone || r.b_telefoon} bedrijf={r.company_name} />
+      </div>
+
+      {(variant === "klant" || variant === "toekomstig") && (
+        <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+            De afspraak
+          </div>
+          <AfspraakForm rij={r} onKlaar={() => location.reload()} />
+          {variant === "toekomstig" && (
+            <div style={{ fontSize: 12, color: KLEUR.label, marginTop: 8 }}>
+              Let op: "Vastleggen" geeft meteen een klantnummer — hij verschijnt hierna bij "Klanten".
+            </div>
+          )}
+        </div>
+      )}
+
+      {(variant === "klant" || variant === "toekomstig") && (
+        <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+            Standaardmails
+          </div>
+          <StandaardMails r={r} />
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+        {variant === "klant" && (
+          <a href={`/facturen?klant=${encodeURIComponent(r.slug)}`} style={{ color: KLEUR.klei, fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
+            Facturen bekijken →
+          </a>
+        )}
+        {(variant === "klant" || variant === "toekomstig") && (
+          <BetaallinkKnop slug={r.slug} style={actieKnop} />
+        )}
+        {variant === "klant" && <SlottermijnKnop r={r} />}
+        {variant === "klant" && (
+          <MarkeerAlsOudKlantKnop slug={r.slug} bedrijf={r.company_name} heeftActiefAbonnement={r.betaal_status === "actief"} />
+        )}
+        {variant === "toekomstig" && <MarkeerAlsKlantKnop slug={r.slug} bedrijf={r.company_name} data={r} />}
+        {variant === "oud" && <HeractiveerKlantKnop slug={r.slug} bedrijf={r.company_name} />}
+        <div style={{ marginLeft: "auto" }}>
+          <VerwijderKnop slug={r.slug} naam={r.company_name} />
+        </div>
+      </div>
+    </div>
   );
 }

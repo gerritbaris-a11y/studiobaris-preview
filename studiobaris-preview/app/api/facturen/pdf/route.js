@@ -19,7 +19,7 @@ export async function GET(req) {
   return new NextResponse(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="Factuur-${nummer}.pdf"`,
+      "Content-Disposition": `inline; filename="${factuur.soort === "credit" ? "Creditnota" : "Factuur"}-${nummer}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

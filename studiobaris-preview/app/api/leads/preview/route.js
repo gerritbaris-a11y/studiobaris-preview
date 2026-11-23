@@ -35,6 +35,11 @@ export async function POST(req) {
 
   const body = await req.json().catch(() => null);
   const id = body && body.id ? String(body.id) : "";
+  // opnieuw = de bestaande preview overschrijven (zelfde link) met de website
+  // die nu bij de lead staat. Voor als de website of huisstijl niet klopte.
+  const opnieuw = !!(body && body.opnieuw);
+  // zonderWebsite = bij opnieuw maken bewust géén website gebruiken (veld leeggemaakt).
+  const zonderWebsite = opnieuw && !!(body && body.zonderWebsite);
   if (!id) return NextResponse.json({ ok: false, error: "Geen lead opgegeven." }, { status: 400 });
 
   const lead = await getLeadVoorPreview(id);
@@ -49,7 +54,7 @@ export async function POST(req) {
   }
 
   // Er is al een preview: geen tweede maken, gewoon de bestaande teruggeven.
-  if (lead.preview_slug) {
+  if (lead.preview_slug && !opnieuw) {
     return NextResponse.json({ ok: true, bestond: true, slug: lead.preview_slug, url: `${SITE_URL}/${lead.preview_slug}` });
   }
 
@@ -74,13 +79,14 @@ export async function POST(req) {
   zet("email", lead.email);
   zet("adres", lead.adres);
   // Alleen een echte, verouderde site levert bruikbare feiten op.
-  const oud = lead.website || (lead.website_status === "VEROUDERD" ? lead.gevonden_url : "");
+  const oud = zonderWebsite ? "" : lead.website || (lead.website_status === "VEROUDERD" ? lead.gevonden_url : "");
   if (oud) zet("oude_website", oud);
   // De site van de prospect altijd bewaren (link in het dashboard) en daar de
   // huisstijl van lezen, behalve als het alleen social media of een geparkeerd
   // domein is.
-  zet("website", lead.website || lead.gevonden_url);
-  if (["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
+  if (!zonderWebsite) zet("website", lead.website || lead.gevonden_url);
+  // Een zelf ingevulde website (lead.website) gaat altijd voor de scanuitkomst.
+  if (!lead.website && ["ALLEEN SOCIAL", "PARKED", "GEEN SITE"].includes(String(lead.website_status || "").toUpperCase())) fd.set("huisstijl_lezen", "nee");
   zet("notities", lead.reden);
   fd.set("stijl", "stoer");
   fd.set("verzamelaar", naam);
@@ -89,7 +95,10 @@ export async function POST(req) {
 
   let uit;
   try {
-    const res = await intakePost(new Request("http://intern/api/intake", { method: "POST", body: fd }));
+    const headers = opnieuw && lead.preview_slug
+      ? { "x-sb-intern": process.env.SUPABASE_SERVICE_ROLE_KEY || "", "x-sb-overschrijf": lead.preview_slug }
+      : {};
+    const res = await intakePost(new Request("http://intern/api/intake", { method: "POST", body: fd, headers }));
     uit = await res.json();
   } catch (e) {
     uit = { ok: false, error: String((e && e.message) || e) };

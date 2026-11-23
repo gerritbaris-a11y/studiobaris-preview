@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { KLEUR } from "../werkplek-stijl";
 
-// Zoekbalk + filterknoppen voor Mijn klanten. Filtert de al-gerenderde
-// klantkaarten (met data-attributen) rechtstreeks in beeld, zonder herladen.
-// Zoekt op naam, plaats, telefoon, e-mail en verzamelaar; filtert op de fase
-// uit de fasebalk (data-fase, zie normFase() in lib/fase.js) — niet
-// op betaalstatus, die is hier niet leidend (dat zijn het Klantenregister en
-// het financiële tabblad) en staat al gewoon op de kaart zelf.
-// Previews op "Klaar" staan alleen onder hun eigen knop "Klaar", niet onder
-// Alle of Akkoord: die zijn afgerond en maken de werklijst anders onrustig.
+// Zoekbalk + filterknoppen voor Mijn previews. Zoeken en filteren gebeurt op de
+// server (via ?zoek=&fase=); de pagina toont per keer 10 kaarten met "Meer laden".
+// Eerder stonden alle kaarten tegelijk in beeld en werden ze hier verborgen;
+// bij 200+ previews liep Chrome daarop vast.
+// Filterregels (welke fase onder welke knop) staan in previews-pagina.js:
+// Klaar alleen onder "Klaar", gearchiveerd alleen onder "Archief".
 const FILTERS = [
   { key: "", label: "Alle" },
   { key: "geen", label: "Nog geen akkoord" },
@@ -19,55 +18,27 @@ const FILTERS = [
   { key: "archief", label: "Archief" },
 ];
 
-function pastFilter(el, f) {
-  const fase = el.getAttribute("data-fase") || "Preview";
-  if (f === "archief") return fase === "archief";
-  // Gearchiveerde klanten alleen tonen als de knop "Archief" actief staat,
-  // nooit onder Alle/Nog geen akkoord/Akkoord/Klaar — anders vervuilen ze de
-  // actieve lijst weer.
-  if (fase === "archief") return false;
-  if (f === "klaar") return fase === "Klaar";
-  // Klaar = afgerond: alleen onder de knop "Klaar", nergens anders.
-  if (fase === "Klaar") return false;
-  if (!f) return true;
-  if (f === "geen") return fase === "Preview";
-  return fase === "Akkoord";
-}
+export default function KlantenZoek({ zoek: zoekStart = "", fase = "", aantallen = {}, sector = "portfolio" }) {
+  const router = useRouter();
+  const [zoek, setZoek] = useState(zoekStart);
+  const eerste = useRef(true);
 
-export default function KlantenZoek() {
-  const [zoek, setZoek] = useState("");
-  const [filter, setFilter] = useState("");
-  const [aantallen, setAantallen] = useState({});
+  const ga = (nieuwZoek, nieuweFase) => {
+    const q = new URLSearchParams();
+    if (sector !== "portfolio") q.set("sector", sector);
+    if (nieuwZoek.trim()) q.set("zoek", nieuwZoek.trim());
+    if (nieuweFase) q.set("fase", nieuweFase);
+    const s = q.toString();
+    router.replace("/klanten" + (s ? "?" + s : ""), { scroll: false });
+  };
 
-  // Tellers achter de filterknoppen: hoeveel klanten onder elke knop vallen,
-  // los van de zoekterm. Opnieuw geteld zodra de lijst verandert (bijv. na
-  // archiveren of een fasewissel), zodat de getallen altijd kloppen.
+  // Zoeken: even wachten tot je klaar bent met typen.
   useEffect(() => {
-    const tel = () => {
-      const kaarten = Array.from(document.querySelectorAll("[data-klant]"));
-      const nieuw = {};
-      FILTERS.forEach((f) => {
-        nieuw[f.key] = kaarten.filter((el) => pastFilter(el, f.key)).length;
-      });
-      setAantallen((oud) => (FILTERS.every((f) => oud[f.key] === nieuw[f.key]) ? oud : nieuw));
-    };
-    tel();
-    const obs = new MutationObserver(tel);
-    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-fase"] });
-    return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const q = zoek.trim().toLowerCase();
-    let zichtbaar = 0;
-    document.querySelectorAll("[data-klant]").forEach((el) => {
-      const match = (!q || (el.getAttribute("data-klant") || "").includes(q)) && pastFilter(el, filter);
-      el.style.display = match ? "" : "none";
-      if (match) zichtbaar++;
-    });
-    const leeg = document.getElementById("klanten-geen-resultaat");
-    if (leeg) leeg.style.display = zichtbaar === 0 ? "block" : "none";
-  }, [zoek, filter]);
+    if (eerste.current) { eerste.current = false; return; }
+    const t = setTimeout(() => ga(zoek, fase), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoek]);
 
   return (
     <div style={{ marginBottom: 14 }}>
@@ -98,12 +69,12 @@ export default function KlantenZoek() {
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
         {FILTERS.map((f) => {
-          const aan = filter === f.key;
+          const aan = fase === f.key;
           return (
             <button
               key={f.key}
               type="button"
-              onClick={() => setFilter(f.key)}
+              onClick={() => ga(zoek, f.key)}
               style={{
                 padding: "7px 12px", borderRadius: 999, fontSize: 13, fontWeight: aan ? 700 : 600,
                 fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
@@ -115,10 +86,6 @@ export default function KlantenZoek() {
             </button>
           );
         })}
-      </div>
-
-      <div id="klanten-geen-resultaat" style={{ display: "none", marginTop: 10, fontSize: 14, color: KLEUR.gedempt }}>
-        Geen klant gevonden. Pas je zoekterm of filter aan.
       </div>
     </div>
   );

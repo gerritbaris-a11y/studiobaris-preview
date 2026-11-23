@@ -9,5 +9,5 @@ export const dynamic = "force-dynamic";
 export default async function KlantenPage({ searchParams }) {
   const sp = (await searchParams) || {};
   const sector = kiesSector(sp.sector, isBeheer(leesSessie()));
-  return <PreviewsPagina sector={sector} />;
+  return <PreviewsPagina sector={sector} filters={{ zoek: sp.zoek || "", fase: sp.fase || "", limiet: sp.limiet || "" }} />;
 }

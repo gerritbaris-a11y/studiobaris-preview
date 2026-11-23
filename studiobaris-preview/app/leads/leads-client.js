@@ -64,6 +64,56 @@ const PER_KEER = 10;
 const sel = { padding: "10px 10px", fontSize: 14, border: "1px solid #d1d5db", borderRadius: 9, background: "#fff", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
 const card = { background: "#fff", border: "1px solid #ECE8DF", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 9 };
 
+// Keuzelijst waarin je meerdere waarden kunt aanvinken. Waarden gaan als
+// 'a|b|c' in de URL en zo naar sb_leads_zoek_v2.
+function MeerKeuze({ waarde, opties, leegLabel, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const gekozen = (waarde || "").split("|").filter(Boolean);
+  useEffect(() => {
+    if (!open) return;
+    const dicht = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("pointerdown", dicht);
+    return () => document.removeEventListener("pointerdown", dicht);
+  }, [open]);
+  function wissel(w) {
+    const nieuw = gekozen.includes(w) ? gekozen.filter((x) => x !== w) : [...gekozen, w];
+    onChange(nieuw.join("|"));
+  }
+  const kort = (w) => (opties.find((o) => o.waarde === w) || { kort: w }).kort;
+  const tekst = gekozen.length === 0 ? leegLabel
+    : gekozen.length <= 2 ? gekozen.map(kort).join(" + ")
+    : `${gekozen.length} gekozen`;
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        style={{ ...sel, textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6,
+          fontWeight: gekozen.length ? 700 : 400, borderColor: gekozen.length ? "#1A2B3D" : "#d1d5db" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tekst}</span>
+        <span style={{ fontSize: 10, opacity: 0.6 }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", zIndex: 30, top: "calc(100% + 4px)", left: 0, minWidth: "100%", width: "max-content", maxWidth: "min(90vw, 340px)",
+          maxHeight: 320, overflowY: "auto", background: "#fff", border: "1px solid #E3DED3", borderRadius: 12, boxShadow: "0 8px 24px rgba(26,43,61,0.15)", padding: 6 }}>
+          {opties.map((o) => (
+            <label key={o.waarde} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", fontSize: 14, cursor: "pointer", borderRadius: 8 }}>
+              <input type="checkbox" checked={gekozen.includes(o.waarde)} onChange={() => wissel(o.waarde)}
+                style={{ width: 18, height: 18, accentColor: "#1A2B3D", flexShrink: 0 }} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+          {gekozen.length > 0 && (
+            <button type="button" onClick={() => { onChange(""); setOpen(false); }}
+              style={{ width: "100%", marginTop: 4, padding: "8px 10px", fontSize: 13, fontWeight: 700, border: "none", borderTop: "1px solid #ECE8DF", background: "#fff", color: "#4A5560", cursor: "pointer", textAlign: "left" }}>
+              Wis selectie
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // pad/syncPad: dezelfde leadlijst draait per sector (/leads?sector=…). Zonder
 // syncPad (lijst zonder Sheet, zoals salons en spoed: die vult Claude direct in
 // de database) verdwijnt de knop "Nu bijwerken uit de Sheet".
@@ -82,21 +132,24 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
 
   // Eén klik: de preview wordt meteen gemaakt (zelfde route als het goedkeuren
   // van een voorstel op Vandaag). De lead komt daarbij op jouw naam te staan.
-  async function maakPreview(l) {
-    if (!window.confirm(`Preview maken voor ${l.bedrijfsnaam}? Dit duurt ongeveer een minuut.`)) return;
-    setPreview((p) => ({ ...p, [l.id]: { bezig: true } }));
+  async function maakPreview(l, opnieuw = false) {
+    const vraag = opnieuw
+      ? `Preview van ${l.bedrijfsnaam} opnieuw maken?\n\nTeksten, logo en kleuren worden opnieuw opgehaald${l.website ? ` van ${l.website}` : ""}. De link blijft hetzelfde; wat er nu op de preview staat wordt overschreven. Duurt ongeveer een minuut.`
+      : `Preview maken voor ${l.bedrijfsnaam}? Dit duurt ongeveer een minuut.`;
+    if (!window.confirm(vraag)) return;
+    setPreview((p) => ({ ...p, [l.id]: { bezig: true, opnieuw } }));
     try {
       const res = await fetch("/api/leads/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: l.id }),
+        body: JSON.stringify({ id: l.id, opnieuw }),
       });
       const j = await res.json().catch(() => ({}));
       if (!j.ok) {
         setPreview((p) => ({ ...p, [l.id]: { fout: j.error || "Preview maken mislukt." } }));
         return;
       }
-      setPreview((p) => ({ ...p, [l.id]: { url: j.url } }));
+      setPreview((p) => ({ ...p, [l.id]: { url: j.url, klaar: opnieuw } }));
       setLeads((prev) => prev.map((x) => (x.id === l.id
         ? { ...x, status: "preview", preview_slug: j.slug, owner: x.owner || mij }
         : x)));
@@ -337,27 +390,21 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
             <option value={vasteProvincie}>{vasteProvincie}</option>
           </select>
         ) : (
-          <select value={filters.provincie || ""} onChange={(e) => zet({ provincie: e.target.value })} style={sel}>
-            <option value="">Alle provincies</option>
-            {f.provincies.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
+          <MeerKeuze waarde={filters.provincie} leegLabel="Alle provincies"
+            opties={f.provincies.map((p) => ({ waarde: p, label: p, kort: p }))}
+            onChange={(v) => zet({ provincie: v })} />
         )}
-        <select value={filters.vakgebied || ""} onChange={(e) => zet({ vakgebied: e.target.value })} style={sel}>
-          <option value="">{vakLabel}</option>
-          {f.vakgebieden.map((v) => <option key={v} value={v}>{v}</option>)}
-        </select>
+        <MeerKeuze waarde={filters.vakgebied} leegLabel={vakLabel}
+          opties={f.vakgebieden.map((v) => ({ waarde: v, label: v, kort: v }))}
+          onChange={(v) => zet({ vakgebied: v })} />
         {actueel ? (
-          <select value={filters.site || ""} onChange={(e) => zet({ site: e.target.value })} style={sel}>
-            <option value="">Alle website-situaties</option>
-            {(f.sites || []).map((s) => (
-              <option key={s.site} value={s.site}>{SITE_LABELS[s.site] || s.site} ({s.aantal})</option>
-            ))}
-          </select>
+          <MeerKeuze waarde={filters.site} leegLabel="Alle website-situaties"
+            opties={(f.sites || []).map((s) => ({ waarde: s.site, label: `${SITE_LABELS[s.site] || s.site} (${s.aantal})`, kort: SITE_LABELS[s.site] || s.site }))}
+            onChange={(v) => zet({ site: v })} />
         ) : (
-          <select value={filters.potentie || ""} onChange={(e) => zet({ potentie: e.target.value })} style={sel}>
-            <option value="">Alle potentie</option>
-            {["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
+          <MeerKeuze waarde={filters.potentie} leegLabel="Alle potentie"
+            opties={["Erg hoog", "Hoog", "Gemiddeld", "Laag", "Erg laag"].map((p) => ({ waarde: p, label: p, kort: p }))}
+            onChange={(v) => zet({ potentie: v })} />
         )}
       </div>
 
@@ -504,12 +551,12 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
               </div>
 
               {/* De brondata klopt niet altijd. Kom je toch een website tegen? Vul 'm hier in. */}
-              {l.alleen_socials && tab !== "archief" && (
+              {tab !== "archief" && (
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <input
                     value={siteVeld[l.id] || ""}
                     onChange={(e) => setSiteVeld((v) => ({ ...v, [l.id]: e.target.value }))}
-                    placeholder="Toch een website? Plak 'm hier"
+                    placeholder={l.website || l.alleen_socials ? "Website klopt niet? Plak de juiste" : "Toch een website? Plak 'm hier"}
                     style={{ ...sel, fontSize: 12.5, padding: "7px 9px" }}
                   />
                   <button onClick={() => bewaarSite(l)} disabled={!(siteVeld[l.id] || "").trim()}
@@ -525,9 +572,25 @@ export default function LeadsClient({ leads: initieel, totaal, facetten, mij, fi
                 const url = pv.url || (l.preview_slug ? `https://preview.studiobaris.nl/${l.preview_slug}` : "");
                 if (url) {
                   return (
-                    <a href={url} target="_blank" rel="noreferrer" style={{ ...knop, background: "#1d7a46", color: "#fff" }}>
-                      Bekijk preview ↗
-                    </a>
+                    <div>
+                      <a href={url} target="_blank" rel="noreferrer" style={{ ...knop, background: "#1d7a46", color: "#fff" }}>
+                        Bekijk preview ↗
+                      </a>
+                      {tab !== "archief" && (
+                        <button onClick={() => maakPreview(l, true)} disabled={pv.bezig}
+                          style={{ ...knop, background: "#fff", color: "#1A2B3D", border: "1px solid #E3DED3", padding: "9px", fontSize: 13, cursor: pv.bezig ? "wait" : "pointer" }}>
+                          {pv.bezig ? "Preview wordt opnieuw gemaakt… (±1 min)" : "↻ Preview opnieuw maken"}
+                        </button>
+                      )}
+                      {pv.klaar && !pv.bezig && (
+                        <div style={{ marginTop: 6, fontSize: 12.5, color: "#1d7a46", fontWeight: 600 }}>Opnieuw gemaakt. Open de preview om te kijken.</div>
+                      )}
+                      {pv.fout && (
+                        <div style={{ marginTop: 6, background: "#FDECEA", border: "1px solid #F5C6C0", color: "#9E3B2E", borderRadius: 8, padding: "7px 10px", fontSize: 12.5, fontWeight: 600 }}>
+                          {pv.fout}
+                        </div>
+                      )}
+                    </div>
                   );
                 }
                 if (done || tab === "archief") return null;

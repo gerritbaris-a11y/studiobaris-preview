@@ -10,6 +10,7 @@ import ModernSite from "../styles/modern";
 import PersoonlijkSite from "../styles/persoonlijk";
 import AmbachtSite from "../styles/ambacht";
 import StrakSite from "../styles/strak";
+import SocialSite from "../styles/social";
 import VoorproefLabel from "./voorproef-label";
 import ReviewBrug, { REVIEW_PLEK } from "./review-brug";
 import StijlWissel from "./stijl-wissel";
@@ -150,6 +151,7 @@ export default async function Page({ params, searchParams }) {
   if (stijl === "persoonlijk") return <><PersoonlijkSite {...props} />{balk}{wissel}</>;
   if (stijl === "ambacht") return <><AmbachtSite {...props} />{balk}{wissel}</>;
   if (stijl === "strak") return <><StrakSite {...props} />{balk}{wissel}</>;
+  if (stijl === "social") return <><SocialSite {...props} />{balk}{wissel}</>;
   const b = c.bedrijf || {};
   const m = c.merk || {};
   let sloganAcc = null;

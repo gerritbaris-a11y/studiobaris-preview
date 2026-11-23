@@ -228,8 +228,10 @@ function rijkeRegels(tekst, size, maxBreedte, basis, vetFont) {
 // Teksten die in het bewerkvenster zijn aangepast: schoonmaken, lengte
 // begrenzen (alles moet op één A4 passen) en de vorm controleren.
 // prijs: true = brief met brief-actie (standaard), false = zonder prijs (A/B).
-// verzonden: dag dat de brief de deur uit gaat ("YYYY-MM-DD"); de actie
-// loopt tot en met dezelfde dag een maand later. Ontbreekt hij: vandaag.
+// verzonden: dag dat de brief echt verstuurd is ("YYYY-MM-DD"), of null zolang
+// hij nog niet op "verstuurd" staat. Zonder verzonden krijgt de brief bij elke
+// keer printen de datum van vandaag (en loopt de deadline mee); pas na
+// "verstuurd" ligt de datum vast en geldt de actie op de previewpagina.
 const MAX = { aanhef: 80, opening: 400, eigen: 300, app: 450 };
 // Versie van de brieftekst. Brieven opgeslagen vóór de nieuwe brief (okt 2026,
 // ik-vorm en oude opbouw) hebben geen versie en tellen niet als gecontroleerd:
@@ -242,7 +244,7 @@ export function isActueleBrief(teksten) {
 export function normaliseerTeksten(t) {
   const x = t || {};
   const verzonden = leesDatum(x.verzonden);
-  const uit = { versie: BRIEF_VERSIE, vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, kaartje: x.kaartje === true, verzonden: datumIso(verzonden || vandaagNL()) };
+  const uit = { versie: BRIEF_VERSIE, vorm: x.vorm === "je" ? "je" : "jullie", prijs: x.prijs !== false, kaartje: x.kaartje === true, verzonden: verzonden ? datumIso(verzonden) : null };
   for (const veld of Object.keys(MAX)) uit[veld] = schoon(x[veld] || "").slice(0, MAX[veld]);
   return uit;
 }

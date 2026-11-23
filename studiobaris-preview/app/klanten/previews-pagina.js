@@ -1,4 +1,4 @@
-import { getOverview, getMijnLeads, getTeamLogin, getAppAccounts, zoekAppAccount } from "../../lib/server-data";
+import { getOverview, getMijnLeads, getLeadWebsites, getTeamLogin, getAppAccounts, zoekAppAccount } from "../../lib/server-data";
 import { stijlKort } from "../../lib/stijlen";
 import { leesSessie, isBeheer } from "../../lib/auth";
 import {
@@ -29,6 +29,7 @@ import { getProefOverzicht } from "../../lib/proef";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
 import AanvraagAf from "./aanvraag-af";
 import ProefStatus from "./proef-status";
+import OpnieuwKnop from "./opnieuw-knop";
 import BenaderdKnop from "./benaderd-knop";
 import { getBenaderdLijst } from "../../lib/benaderd";
 import { getRegio, magPreview } from "../../lib/regio";
@@ -85,6 +86,30 @@ function ProspectActiviteit({ p, a }) {
       {a && a.aanbod_aantal > 0
         ? <span style={aan(true)}>● &quot;Bekijk wat je krijgt&quot; bekeken {a.aanbod_aantal}× · laatst {wanneer(a.aanbod_laatst)}</span>
         : <span style={uit}>○ &quot;Bekijk wat je krijgt&quot; nog niet bekeken</span>}
+      {p && p.voor_benaderd && <VoorBenaderd v={p.voor_benaderd} />}
+    </div>
+  );
+}
+
+// Wat er gebeurde vóórdat de preview op "Benaderd" ging. Bij Benaderd gaan de
+// tellers hierboven op nul; deze stand wordt op dat moment vastgelegd
+// (workflow.benaderd_voorgeschiedenis) zodat je kunt zien wat er al was.
+function VoorBenaderd({ v }) {
+  const regel = { fontSize: 12, color: "#6F7A85", whiteSpace: "normal" };
+  const delen = [];
+  if (v.bekeken_laatst) {
+    const n = v.bekeken_aantal == null ? "" : (v.bekeken_aantal > 0 ? ` ${v.bekeken_aantal}×` : "");
+    delen.push(`preview bekeken${n} (${wanneer(v.bekeken_eerst)} t/m ${wanneer(v.bekeken_laatst)})`);
+  }
+  if (v.app_geopend_op) delen.push(`app geopend ${wanneer(v.app_geopend_op)}`);
+  if (v.geplaatst > 0) delen.push(`${v.geplaatst} project${v.geplaatst === 1 ? "" : "en"} geplaatst · laatst ${wanneer(v.laatst_geplaatst_op)}`);
+  if (v.aanbod_aantal > 0) delen.push(`"Bekijk wat je krijgt" ${v.aanbod_aantal}× bekeken`);
+  return (
+    <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #DDD6C8", display: "grid", gap: 2 }}>
+      <span style={{ ...regel, fontWeight: 700 }}>Vóór benaderd ({wanneer(v.benaderd_op)})</span>
+      {delen.length
+        ? delen.map((d) => <span key={d} style={regel}>{d}</span>)
+        : <span style={regel}>geen activiteit</span>}
     </div>
   );
 }
@@ -99,7 +124,7 @@ function BetaalBadge({ status }) {
   return <span style={{ fontSize: 12.5, fontWeight: 600, color: kleur }}>{label}</span>;
 }
 
-export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
+export default async function PreviewsPagina({ sector = "portfolio", filters = {} } = {}) {
   const esth = sector === "boeking";
   const leadsPad = sectorPad("/leads", sector);
   const sessie = leesSessie();
@@ -112,6 +137,16 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
   // Esthetiek: app-accounts van klanten, voor "Agenda live zetten in de app".
   const appAccounts = esth && beheer ? await getAppAccounts() : [];
   const mijnLeads = (mijnLeadsRuw || []).filter((l) => sectorVanLead(l) === sector);
+  // Niet alle leads op deze pagina zetten: honderden rijen lieten Chrome
+  // vastlopen ("Pagina reageert niet"). Toon de 10 belangrijkste (eerst
+  // benaderd, dan zonder website, dan de rest); de volledige lijst staat in Leads.
+  const LEADS_HIER = 10;
+  const leadGewicht = (l) => (l.status === "benaderd" ? 0 : l.alleen_socials ? 1 : 2);
+  const mijnLeadsTop = mijnLeads
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => leadGewicht(a.l) - leadGewicht(b.l) || a.i - b.i)
+    .slice(0, LEADS_HIER)
+    .map((x) => x.l);
   const aanvraagPerSlug = Object.fromEntries((aanvraagLijst || []).map((a) => [a.slug, a]));
   const benaderdPerSlug = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_op]));
   const benaderdDoor = Object.fromEntries((benaderdLijst || []).map((b) => [b.slug, b.benaderd_door]));
@@ -129,6 +164,49 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
   // maar wel terug te vinden en terug te zetten in een eigen sectie onderaan.
   const afgewezen = rows.filter((r) => (r.pipeline_status || "") === "Afgewezen");
   const actief = rows.filter((r) => (r.pipeline_status || "") !== "Afgewezen");
+
+  // Zoeken, filteren en "meer laden" gebeuren op de server (via ?zoek=&fase=&limiet=).
+  // Eerder stonden alle kaarten (200+) tegelijk op de pagina en werden ze in de
+  // browser verborgen; daar liep Chrome op vast ("Pagina reageert niet").
+  const PER_KEER = 10;
+  const fFase = ["geen", "akkoord", "klaar", "archief"].includes(filters.fase) ? filters.fase : "";
+  const fZoek = String(filters.zoek || "").trim().toLowerCase();
+  const fLimiet = Number(filters.limiet) > 0 ? Math.min(Number(filters.limiet), 500) : PER_KEER;
+  const zoektekstVan = (r) => {
+    let rv = {};
+    try { rv = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
+    return [r.company_name, r.slug, r.lead_phone, r.lead_email, r.b_adres, r.verzamelaar, rv.bron, r.provincie]
+      .filter(Boolean).join(" ").toLowerCase();
+  };
+  // Zelfde regels als voorheen in klanten-zoek.js: Klaar alleen onder "Klaar",
+  // gearchiveerd alleen onder "Archief".
+  const pastFase = (fase, f) => {
+    if (f === "archief") return fase === "archief";
+    if (fase === "archief") return false;
+    if (f === "klaar") return fase === "Klaar";
+    if (fase === "Klaar") return false;
+    if (!f) return true;
+    if (f === "geen") return fase === "Preview";
+    return fase === "Akkoord";
+  };
+  const kandidaten = [
+    ...actief.map((r) => ({ r, fase: normFase(r.pipeline_status) })),
+    ...afgewezen.map((r) => ({ r, fase: "archief" })),
+  ];
+  const aantallen = Object.fromEntries(["", "geen", "akkoord", "klaar", "archief"]
+    .map((k) => [k, kandidaten.filter((x) => pastFase(x.fase, k)).length]));
+  const treffers = kandidaten.filter((x) => pastFase(x.fase, fFase) && (!fZoek || zoektekstVan(x.r).includes(fZoek)));
+  const actiefZichtbaar = treffers.filter((x) => x.fase !== "archief").slice(0, fLimiet).map((x) => x.r);
+  const archiefZichtbaar = treffers.filter((x) => x.fase === "archief").slice(0, fLimiet).map((x) => x.r);
+  const leadSite = await getLeadWebsites(actiefZichtbaar.map((r) => r.slug)).catch(() => ({}));
+  const meerLink = (() => {
+    const q = new URLSearchParams();
+    if (sector !== "portfolio") q.set("sector", sector);
+    if (fZoek) q.set("zoek", filters.zoek);
+    if (fFase) q.set("fase", fFase);
+    q.set("limiet", String(fLimiet + PER_KEER));
+    return "/klanten?" + q.toString();
+  })();
 
   return (
     <WerkplekShell
@@ -163,7 +241,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
             <a href={`${leadsPad}?wie=mij`} style={{ marginLeft: "auto", fontSize: 13, color: KLEUR.klei }}>Naar de leadlijst</a>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {mijnLeads.map((l) => (
+            {mijnLeadsTop.map((l) => (
               <div key={l.id} style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 10, padding: "10px 12px" }}>
                 <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14.5 }}>{l.bedrijfsnaam}</div>
@@ -181,6 +259,11 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
               </div>
             ))}
           </div>
+          {mijnLeads.length > mijnLeadsTop.length && (
+            <a href={`${leadsPad}?wie=mij`} style={{ alignSelf: "flex-start", fontSize: 13.5, fontWeight: 700, color: KLEUR.klei }}>
+              Alle {mijnLeads.length} bekijken in de leadlijst →
+            </a>
+          )}
         </div>
       )}
 
@@ -192,9 +275,11 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
 
       {/* Ook bij maar één preview tonen zodra er één op Klaar staat: die is
           onder Alle verborgen en alleen via de knop Klaar terug te vinden. */}
-      {(actief.length > 1 || afgewezen.length > 0 || actief.some((r) => normFase(r.pipeline_status) === "Klaar")) && <KlantenZoek />}
+      {(actief.length > 1 || afgewezen.length > 0 || actief.some((r) => normFase(r.pipeline_status) === "Klaar")) && (
+        <KlantenZoek zoek={filters.zoek || ""} fase={fFase} aantallen={aantallen} sector={sector} />
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-        {actief.map((r) => {
+        {actiefZichtbaar.map((r) => {
           let review = {};
           try { review = r.internal_notes ? JSON.parse(r.internal_notes) : {}; } catch {}
           const reactieOp = r.laatste_feedback_op
@@ -206,8 +291,10 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
           return (
           <div key={r.slug} style={card} data-klant={zoektekst} data-fase={fase} data-betaal={r.betaal_status || "geen"} data-reactie={r.laatste_feedback_op ? "ja" : "nee"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700 }}>{r.company_name || r.slug}
+              {/* Linkerkolom krimpt mee (lange namen lopen door op een volgende regel),
+                  zodat de knoppen rechts altijd rechtsboven blijven staan. */}
+              <div style={{ flex: "1 1 0", minWidth: 240 }}>
+                <div style={{ fontFamily: HEAD, fontSize: 17, fontWeight: 700, overflowWrap: "anywhere" }}>{r.company_name || r.slug}
                   {isSpoedsite(r) && <span title="Spoedsite: € 399 + € 19,95 p/m, zonder app" style={{ marginLeft: 8, verticalAlign: "middle", fontFamily: "inherit", fontSize: 11.5, fontWeight: 800, color: "#9E3B2E", background: "#F6E1DB", borderRadius: 999, padding: "2px 8px" }}>spoedsite</span>}
                 </div>
                 <div style={{ fontSize: 13, color: "#4A5560" }}>{[r.lead_phone, r.lead_email].filter(Boolean).join(" · ") || "—"}</div>
@@ -243,7 +330,7 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
                   </div>
                 )}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <div style={{ flex: "0 1 auto", marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {beheer ? (
                   <>
                     <span style={{ fontSize: 12, fontWeight: 700, color: r.gepubliceerd ? "#0f6e56" : "#6F7A85", whiteSpace: "nowrap" }}>
@@ -285,6 +372,8 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
+            {/* Alleen in fase Preview: na akkoord overschrijven we niets meer. */}
+            {fase === "Preview" && <OpnieuwKnop slug={r.slug} bedrijf={r.company_name} website={(r.slug in leadSite ? leadSite[r.slug] : review.website) || ""} />}
             {esth && beheer && (r.klantnummer || r.klant_kandidaat) && zoekAppAccount(r, appAccounts) && (
               <AgendaLiveKnop slug={r.slug} naar={zoekAppAccount(r, appAccounts).id}
                 accountNaam={zoekAppAccount(r, appAccounts).name} email={r.factuur_email || r.lead_email || null} />
@@ -345,14 +434,28 @@ export default async function PreviewsPagina({ sector = "portfolio" } = {}) {
         })}
       </div>
 
-      {afgewezen.length > 0 && (
+      {treffers.length === 0 && (actief.length + afgewezen.length) > 0 && (
+        <div style={{ marginTop: 10, fontSize: 14, color: KLEUR.gedempt }}>
+          Geen klant gevonden. Pas je zoekterm of filter aan.
+        </div>
+      )}
+      {treffers.length > fLimiet && (
+        <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <a href={meerLink} style={{ background: "#fff", border: `1px solid ${KLEUR.lijn}`, borderRadius: 999, padding: "9px 16px", fontSize: 14, fontWeight: 700, color: KLEUR.inkt, textDecoration: "none" }}>
+            Meer laden
+          </a>
+          <span style={{ fontSize: 13, color: "#6F7A85" }}>{Math.min(fLimiet, treffers.length)} van {treffers.length} getoond</span>
+        </div>
+      )}
+
+      {fFase === "archief" && archiefZichtbaar.length > 0 && (
         <div style={{ marginTop: 28 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
             <h2 style={{ fontFamily: HEAD, fontSize: 16, margin: 0, fontWeight: 800, color: "#6F7A85" }}>Geen interesse</h2>
             <span style={{ fontSize: 13, color: "#6F7A85" }}>{afgewezen.length} gearchiveerd &mdash; hier terug te zetten</span>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {afgewezen.map((r) => {
+            {archiefZichtbaar.map((r) => {
               const zoektekst = [r.company_name, r.slug, r.lead_phone, r.lead_email, r.verzamelaar]
                 .filter(Boolean).join(" ").toLowerCase();
               return (

@@ -9,6 +9,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import { periodeInWoorden, periodeKort, datumNL } from "./mollie";
 import { jakartaFonts } from "./plus-jakarta-font";
 import { bodoniFonts } from "./bodoni-moda-font";
+import { isGratisMaand } from "./bring-a-friend";
 
 export const BEDRIJF = {
   naam: "StudioBaris",
@@ -54,7 +55,12 @@ export async function factuurPdf(f) {
   // Slottermijn (optie 5) loopt sinds het betaallinkenplan ook automatisch
   // via het bestaande mandaat, net als de maandelijkse incasso — vandaar
   // dezelfde "incassogegevens"-opmaak i.p.v. de oude "maak zelf over"-tekst.
-  const automatischeIncasso = maandelijks || f.soort === "slottermijn";
+  // Creditnota (soort "credit"): negatieve bedragen, verwijst naar de
+  // originele factuur. Nooit een incasso of betaalinstructie.
+  const credit = f.soort === "credit";
+  const automatischeIncasso = !credit && (maandelijks || f.soort === "slottermijn");
+  // Bring a friend: maandfactuur van € 0,00 — er wordt niets afgeschreven.
+  const gratis = isGratisMaand(f);
 
   const pdf = await PDFDocument.create();
   const pagina = pdf.addPage([595.28, 841.89]); // A4
@@ -130,13 +136,15 @@ export async function factuurPdf(f) {
 
   // ── FACTUUR-titel + ondertitel links, kerngegevens rechts ─────────────────
   vlak(L, y - 22, 4, 24, GOUD);
-  tekst("FACTUUR", L + 12, y, { size: 24, vet: true });
+  tekst(credit ? "CREDITNOTA" : "FACTUUR", L + 12, y, { size: 24, vet: true });
   tekst(BEDRIJF.ondertitel, L + 12, y - 16, { size: 9, italic: true, kleur: GRIJS });
 
   const gegevens = [
-    ["Factuurnummer:", f.nummer],
-    ["Factuurdatum:", datumNL(f.factuurdatum)],
-    automatischeIncasso
+    [credit ? "Creditnotanummer:" : "Factuurnummer:", f.nummer],
+    [credit ? "Datum:" : "Factuurdatum:", datumNL(f.factuurdatum)],
+    credit
+      ? ["Crediteert factuur:", snap.credit_van_nummer || "—"]
+      : automatischeIncasso
       ? ["Incassodatum:", datumNL(f.incassodatum || f.vervaldatum)]
       : ["Vervaldatum:", datumNL(f.vervaldatum)],
     ["Klantnummer:", klant.klantnummer || "—"],
@@ -165,7 +173,7 @@ export async function factuurPdf(f) {
 
   vlak(L, y - blokhoogte, BREEDTE, blokhoogte, VLAK);
   vlak(L, y - blokhoogte, 3, blokhoogte, GOUD);
-  tekst("FACTUUR AAN", L + 16, y - 14, { size: 7.5, vet: true, kleur: GRIJS });
+  tekst(credit ? "CREDITNOTA AAN" : "FACTUUR AAN", L + 16, y - 14, { size: 7.5, vet: true, kleur: GRIJS });
   let ky = y - 14 - 16;
   klantregels.forEach((r, i) => {
     tekst(r, L + 16, ky, { vet: i === 0, size: i === 0 ? 11 : 9.5 });
@@ -249,17 +257,30 @@ export async function factuurPdf(f) {
   // uit een handmatige aanmaak (Beheer) en moet nog echt betaald worden.
   // Dat onderscheid voorkomt dat iemand die net heeft afgerekend alsnog een
   // "maak binnen 14 dagen over naar IBAN ..."-instructie krijgt.
-  const alBetaaldViaLink = !automatischeIncasso && Boolean(f.mollie_payment_id);
+  const alBetaaldViaLink = !credit && !automatischeIncasso && Boolean(f.mollie_payment_id);
 
   y -= 14;
   vlak(L, y - 1, 16, 1.5, GOUD);
-  tekst(automatischeIncasso ? "Incassogegevens" : alBetaaldViaLink ? "Betaalstatus" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
+  tekst(credit || gratis ? "Toelichting" : automatischeIncasso ? "Incassogegevens" : alBetaaldViaLink ? "Betaalstatus" : "Betaalgegevens", L + 22, y - 5, { size: 10, vet: true });
   y -= 8;
 
   // Bij "oneoff" (de oude, handmatige /restbetaling-flow) is er geen mandaat
   // en dus geen incassodatum bekend — die factuur ontstaat daar pas ná
   // betaling en toont dan gewoon de betaalgegevens-tak hieronder.
-  const punten = automatischeIncasso
+  const punten = credit
+    ? [
+        `Deze creditnota crediteert factuur ${snap.credit_van_nummer || "—"}${snap.credit_van_datum ? ` van ${datumNL(snap.credit_van_datum)}` : ""} volledig.`,
+        ...(snap.credit_reden ? [`Reden: ${snap.credit_reden}`] : []),
+        "Heb je de originele factuur al betaald, dan wordt het bedrag teruggestort of is dat al gebeurd. Je hoeft zelf niets te doen.",
+        `Vragen over deze creditnota? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
+      ]
+    : gratis
+    ? [
+        "Deze maand is gratis dankzij Bring a friend — bedankt! Er wordt deze maand niets van je rekening afgeschreven.",
+        "Vanaf de maand hierna loopt de maandelijkse incasso weer gewoon door, tegen dezelfde machtiging.",
+        `Vragen over deze factuur? Neem contact op via ${BEDRIJF.email} of WhatsApp ${BEDRIJF.telefoon}.`,
+      ]
+    : automatischeIncasso
     ? [
         f.soort === "slottermijn"
           ? `Dit bedrag wordt automatisch geïncasseerd op ${datumNL(f.incassodatum || f.vervaldatum)} van je rekening — de slottermijn van je website, nu deze is opgeleverd.`
@@ -326,16 +347,33 @@ export async function mailFactuur(f, pdfBytes, opties = {}) {
   // Slottermijn loopt sinds het betaallinkenplan ook automatisch via het
   // bestaande mandaat — zelfde "je hoeft niets te doen"-toon als de
   // maandelijkse incasso, i.p.v. de oude "maak zelf over"-mail.
-  const automatischeIncasso = maandelijks || f.soort === "slottermijn";
+  const credit = f.soort === "credit";
+  const automatischeIncasso = !credit && (maandelijks || f.soort === "slottermijn");
+  const gratis = isGratisMaand(f);
   const bedrag = euro(f.bedrag_incl);
 
-  const onderwerp = maandelijks
+  const onderwerp = credit
+    ? `Creditnota ${f.nummer} bij factuur ${snap.credit_van_nummer || ""}`.trim()
+    : gratis
+    ? `Gratis maand: ${periodeInWoorden(f.periode)} (factuur ${f.nummer})`
+    : maandelijks
     ? `Factuur ${f.nummer} — ${periodeInWoorden(f.periode)}`
     : f.soort === "slottermijn"
       ? `Factuur ${f.nummer} — slottermijn van je website`
       : `Factuur ${f.nummer} van StudioBaris`;
 
-  const kern = maandelijks
+  const kern = credit
+    ? `<p>Hierbij een creditnota voor factuur <strong>${snap.credit_van_nummer || ""}</strong>
+         (${bedrag} incl. btw). Daarmee vervalt die factuur.</p>
+       ${snap.credit_reden ? `<p>Reden: ${String(snap.credit_reden).replace(/[<>&]/g, "")}</p>` : ""}
+       <p>Had je al betaald? Dan wordt het bedrag teruggestort, of is dat al gebeurd. Je hoeft zelf niets te doen.</p>`
+    : gratis
+    ? `<p>Goed nieuws: <strong>${periodeInWoorden(f.periode)}</strong> is gratis, als bedankje
+         voor Bring a friend. Er wordt deze maand <strong>niets</strong> van je rekening
+         afgeschreven. Voor je administratie zit de factuur van € 0,00 als bijlage bij deze mail.</p>
+       <p style="color:#6B6258;font-size:14px">Vanaf de maand hierna loopt de maandelijkse
+         incasso weer gewoon door.</p>`
+    : maandelijks
     ? `<p>Hierbij de factuur voor <strong>${periodeInWoorden(f.periode)}</strong>.
          Het bedrag van <strong>${bedrag}</strong> incl. btw wordt op
          <strong>${datumNL(f.incassodatum || f.vervaldatum)}</strong> automatisch
@@ -377,7 +415,7 @@ export async function mailFactuur(f, pdfBytes, opties = {}) {
         bcc: process.env.NOTIFY_EMAIL || "info@studiobaris.nl",
         subject: onderwerp,
         html,
-        attachments: [{ filename: `Factuur-${f.nummer}.pdf`, content: bijlage }],
+        attachments: [{ filename: `${credit ? "Creditnota" : "Factuur"}-${f.nummer}.pdf`, content: bijlage }],
       }),
     });
     if (!res.ok) {

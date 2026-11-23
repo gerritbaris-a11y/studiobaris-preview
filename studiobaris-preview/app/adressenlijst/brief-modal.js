@@ -57,7 +57,7 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
       });
       const d = await res.json();
       if (!d.ok) throw new Error(d.error || "Ophalen mislukt.");
-      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, kaartje: d.teksten.kaartje === true, verzonden: d.teksten.verzonden || vandaagIso(), aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
+      setT({ vorm: d.teksten.vorm || "jullie", prijs: d.teksten.prijs !== false, kaartje: d.teksten.kaartje === true, verzonden: d.teksten.verzonden || null, aanhef: d.teksten.aanhef || "", opening: d.teksten.opening || "", eigen: d.teksten.eigen || "", app: d.teksten.app || "" });
       setNotitieVlak(d.notitie_vlak !== false);
       setOpgeslagen(d.opgeslagen || null);
     } catch (e) {
@@ -143,14 +143,6 @@ export default function BriefModal({ rij, onSluiten, onGemaakt }) {
                 <span style={label}>Vak-alinea (app en reviews)</span>
                 <textarea style={{ ...veld, minHeight: 110 }} value={t.app} onChange={(e) => wijzig("app", e.target.value)} maxLength={700} />
                 <div style={hulp}>Staat direct onder het app-blok. Kort houden: 2-3 zinnen.</div>
-              </div>
-
-              <div>
-                <span style={label}>Brief gaat de deur uit op</span>
-                <input type="date" style={{ ...veld, width: "auto" }} value={t.verzonden} onChange={(e) => wijzig("verzonden", e.target.value)} />
-                <div style={hulp}>
-                  Dit is de datum op de brief.{t.prijs !== false && actieTot(t.verzonden) ? ` De actie loopt tot en met ${actieTot(t.verzonden)} (een maand).` : ""}
-                </div>
               </div>
 
               <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
