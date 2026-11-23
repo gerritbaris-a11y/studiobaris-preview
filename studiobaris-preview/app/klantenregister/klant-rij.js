@@ -300,8 +300,8 @@ const APP_URL = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobari
 const MODULES_SALON = [
   {
     key: "cadeaubonnen", label: "Cadeaubonnen", prijs: 0,
-    uitleg: "Online cadeaubonnen verkopen (iDEAL via eigen Mollie, of overboeking), inwisselen met restwaarde, verkopen aan de balie.",
-    letOp: "Let op: de klant heeft een eigen Mollie-account nodig om online met iDEAL te laten betalen (zonder Mollie kan alleen per overboeking).\n\nStuur de klant de handleiding:\n" + APP_URL + "/hulp/mollie\n\nDaar staat ook de btw-uitleg: een cadeaubon is omzet bij inwisselen, niet bij verkoop.\n\nHeb je dit met de klant besproken?",
+    uitleg: "Online cadeaubonnen verkopen (via eigen Mollie, eigen Tikkie Zakelijk, of overboeking), inwisselen met restwaarde, verkopen aan de balie.",
+    letOp: "Let op: voor automatisch online betalen heeft de klant een eigen Mollie-account OF Tikkie Zakelijk nodig (zonder een van beide kan alleen per overboeking; de salon zet de bon dan zelf op betaald). Bespreek met de klant wat het best past.\n\nStuur de klant de handleiding:\n" + APP_URL + "/hulp/mollie\n\nDaar staat ook de btw-uitleg: een cadeaubon is omzet bij inwisselen, niet bij verkoop.\n\nHeb je dit met de klant besproken?",
   },
   {
     key: "wachtlijst", label: "Wachtlijst", prijs: 0,
