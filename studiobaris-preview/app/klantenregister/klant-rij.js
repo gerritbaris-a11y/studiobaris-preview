@@ -310,12 +310,12 @@ const MODULES_SALON = [
   {
     key: "whatsapp_s", label: "WhatsApp S", prijs: 9.95,
     uitleg: "Herinneringen via WhatsApp vanaf het eigen nummer van de salon, tot 100 per maand. Daarboven € 0,10 per bericht.",
-    letOp: "Let op: WhatsApp gaat altijd vanaf het EIGEN nummer van de salon. Dat nummer moet eerst via Meta aan ons account gekoppeld worden; vul daarna hieronder het phone-number-ID in. Tot die tijd gaan herinneringen per e-mail.\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 9,95).",
+    letOp: "Let op, voorwaarde: de salon gebruikt WhatsApp Business (niet de gewone WhatsApp) op haar eigen nummer, al minstens een week, met de nieuwste versie, en heeft een Facebook/Meta-account om het koppelen te bevestigen. WhatsApp gaat altijd vanaf dat EIGEN nummer. Na het koppelen via Meta vul je hieronder het phone-number-ID in; tot die tijd gaan herinneringen per e-mail.\n\nStuur de salon de voorwaarden: " + APP_URL + "/hulp/whatsapp\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 9,95).",
   },
   {
     key: "whatsapp_m", label: "WhatsApp M", prijs: 19.95,
     uitleg: "Idem, tot 250 per maand. Daarboven € 0,10 per bericht.",
-    letOp: "Let op: WhatsApp gaat altijd vanaf het EIGEN nummer van de salon. Dat nummer moet eerst via Meta aan ons account gekoppeld worden; vul daarna hieronder het phone-number-ID in. Tot die tijd gaan herinneringen per e-mail.\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 19,95).",
+    letOp: "Let op, voorwaarde: de salon gebruikt WhatsApp Business (niet de gewone WhatsApp) op haar eigen nummer, al minstens een week, met de nieuwste versie, en heeft een Facebook/Meta-account om het koppelen te bevestigen. WhatsApp gaat altijd vanaf dat EIGEN nummer. Na het koppelen via Meta vul je hieronder het phone-number-ID in; tot die tijd gaan herinneringen per e-mail.\n\nStuur de salon de voorwaarden: " + APP_URL + "/hulp/whatsapp\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 19,95).",
   },
 ];
 const MODULE_LABEL = Object.fromEntries(MODULES_SALON.map((m) => [m.key, m.label]));
