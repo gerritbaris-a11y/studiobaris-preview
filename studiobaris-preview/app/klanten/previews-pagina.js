@@ -28,6 +28,8 @@ import { KLEUR, HEAD } from "../werkplek-stijl";
 import { getProefOverzicht } from "../../lib/proef";
 import { getAanvragenOverzicht } from "../../lib/aanbod";
 import AanvraagAf from "./aanvraag-af";
+import DemoModules from "./demo-modules";
+import { demoModulesPerSlug } from "../../lib/demo-app";
 import ProefStatus from "./proef-status";
 import OpnieuwKnop from "./opnieuw-knop";
 import BenaderdKnop from "./benaderd-knop";
@@ -130,7 +132,7 @@ export default async function PreviewsPagina({ sector = "portfolio", filters = {
   const sessie = leesSessie();
   const naam = sessie ? sessie.naam : "";
   const beheer = isBeheer(sessie);
-  const [allesRuw, mijnLeadsRuw, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : []]);
+  const [allesRuw, mijnLeadsRuw, teamleden, proefLijst, benaderdLijst, regio, aanvraagLijst, rondeLijst, demoMods] = await Promise.all([getOverview(), getMijnLeads(naam), getTeamLogin(), getProefOverzicht(), getBenaderdLijst(), beheer ? null : getRegio(naam), getAanvragenOverzicht(), beheer ? getRondes() : [], esth ? demoModulesPerSlug().catch(() => ({})) : {}]);
   const perSector = { portfolio: 0, boeking: 0 };
   for (const r of allesRuw || []) perSector[sectorVanPreview(r)] += 1;
   const alles = (allesRuw || []).filter((r) => sectorVanPreview(r) === sector);
@@ -371,6 +373,7 @@ export default async function PreviewsPagina({ sector = "portfolio", filters = {
             </div>
 
             <LinkChips slug={r.slug} gepubliceerd={r.gepubliceerd} heeftDemo={r.heeft_demo} demoGevuld={r.demo_gevuld} magMaken={beheer} stijl={r.stijl} bedrijf={r.company_name} website={review.website} />
+            {esth && r.heeft_demo && <DemoModules slug={r.slug} modules={demoMods[r.slug] || []} />}
             <ProefStatus proef={proefPerSlug[r.slug]} magVerlengen={magVerlengen} />
             {/* Alleen in fase Preview: na akkoord overschrijven we niets meer. */}
             {fase === "Preview" && <OpnieuwKnop slug={r.slug} bedrijf={r.company_name} website={(r.slug in leadSite ? leadSite[r.slug] : review.website) || ""} />}

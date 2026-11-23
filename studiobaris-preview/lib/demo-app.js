@@ -6,6 +6,7 @@
 // Server-only: gebruikt de service-role key. Nooit client-side importeren.
 
 import crypto from "crypto";
+import { isEsthetiekBranche } from "./segment";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ipiqrsxbsgylxhgzlhsd.supabase.co";
@@ -124,6 +125,23 @@ export async function maakDemoApp(slug, content) {
   });
   if (!res.ok) throw new Error("Demo-app aanmaken mislukt: " + JSON.stringify(res.body));
 
+  // Salons: de gratis modules (Cadeaubonnen, Wachtlijst) staan in de demo
+  // standaard aan, zodat de prospect ze in zijn eigen app ziet. Alleen als er
+  // nog niets is ingesteld; in de werkplek per preview aan/uit te zetten.
+  if (isEsthetiekBranche(bedrijf.branche || "")) {
+    try {
+      const d = await sb(`/rest/v1/companies?demo_van_slug=eq.${encodeURIComponent(slug)}&select=id&limit=1`);
+      const id = Array.isArray(d.body) && d.body[0] ? d.body[0].id : null;
+      if (id) {
+        await sb("/rest/v1/company_modules?on_conflict=company_id", {
+          method: "POST",
+          headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+          body: JSON.stringify({ company_id: id, modules: DEMO_MODULES_STANDAARD, updated_at: new Date().toISOString(), updated_by: "standaard demo" }),
+        });
+      }
+    } catch {}
+  }
+
   return { slug, url: demoLink(slug), aantalProjecten: projecten.length, aantalReviews: reviews.length };
 }
 
@@ -139,6 +157,38 @@ export async function verwijderDemoApp(slug) {
     await sb(`/auth/v1/admin/users/${owner}`, { method: "DELETE" });
   }
   return true;
+}
+
+export const DEMO_MODULES_STANDAARD = ["cadeaubonnen", "wachtlijst"];
+export const DEMO_MODULES = ["cadeaubonnen", "wachtlijst", "whatsapp_s"];
+
+// Modules van de demo-app van een preview aan/uit zetten (werkplek).
+export async function zetDemoModules(slug, modules, door) {
+  if (!key()) throw new Error("Server-key ontbreekt.");
+  const d = await sb(`/rest/v1/companies?demo_van_slug=eq.${encodeURIComponent(slug)}&select=id,soort&limit=1`);
+  const rij = Array.isArray(d.body) && d.body[0] ? d.body[0] : null;
+  if (!rij) throw new Error("Deze preview heeft (nog) geen demo-app.");
+  const schoon = [...new Set((modules || []).filter((m) => DEMO_MODULES.includes(m)))];
+  const res = await sb("/rest/v1/company_modules?on_conflict=company_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({ company_id: rij.id, modules: schoon, updated_at: new Date().toISOString(), updated_by: door || null }),
+  });
+  if (!res.ok) throw new Error("Opslaan mislukt.");
+  return schoon;
+}
+
+// Modules van alle demo-apps, per previewslug (voor Mijn previews).
+export async function demoModulesPerSlug() {
+  if (!key()) return {};
+  const [c, m] = await Promise.all([
+    sb("/rest/v1/companies?demo_van_slug=not.is.null&select=id,demo_van_slug"),
+    sb("/rest/v1/company_modules?select=company_id,modules"),
+  ]);
+  const perId = new Map((Array.isArray(m.body) ? m.body : []).map((r) => [r.company_id, r.modules || []]));
+  const uit = {};
+  for (const r of Array.isArray(c.body) ? c.body : []) uit[r.demo_van_slug] = perId.get(r.id) || [];
+  return uit;
 }
 
 export function demoLink(slug) {

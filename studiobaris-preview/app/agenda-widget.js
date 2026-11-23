@@ -56,7 +56,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
     if (!beh) return;
     setDagen(null); setDag(""); setTijden(null); setTijd("");
     fetch(`${basis}/api/agenda/dagen?c=${c}&b=${beh.id}${mq}`).then((r) => r.json())
-      .then((j) => { const d = j.dagen || []; setDagen(d); setMetWacht(!!j.wachtlijst && !test); if (d[0]) setDag(d[0]); })
+      .then((j) => { const d = j.dagen || []; setDagen(d); setMetWacht(!!j.wachtlijst); if (d[0]) setDag(d[0]); })
       .catch(() => setDagen([]));
   }, [beh, mq, c, basis]);
 
