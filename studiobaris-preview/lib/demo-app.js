@@ -169,6 +169,14 @@ export async function zetDemoModules(slug, modules, door) {
   const rij = Array.isArray(d.body) && d.body[0] ? d.body[0] : null;
   if (!rij) throw new Error("Deze preview heeft (nog) geen demo-app.");
   const schoon = [...new Set((modules || []).filter((m) => DEMO_MODULES.includes(m)))];
+  // Oudere demo's van salonpreviews staan nog als vakman-app (ze worden pas
+  // salon zodra iemand de preview met agenda opent). Dan zie je de modules
+  // niet; daarom hier meteen omzetten naar de salon-app met agenda.
+  if (rij.soort !== "salon") {
+    const full = await sb("/rest/v1/rpc/get_full", { method: "POST", body: JSON.stringify({ p_slug: slug }) });
+    const branche = (full.ok && full.body && full.body.bedrijf && full.body.bedrijf.branche) || "";
+    await sb("/rest/v1/rpc/sb_agenda_standaard", { method: "POST", body: JSON.stringify({ p_company: rij.id, p_vak: branche, p_email: null }) });
+  }
   const res = await sb("/rest/v1/company_modules?on_conflict=company_id", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates,return=representation" },
