@@ -142,7 +142,7 @@ export default async function Page({ params, searchParams }) {
     const salonWissel = magWisselen
       ? <StijlWissel slug={params.slug} huidige={salonStijl} onze={onzeSalon} merk={c.merk || {}} metBalk={proef.actief} stijlen={SALON_STIJLEN} />
       : null;
-    // Salon compleet: alleen een echte klant met cadeaubonnen aan krijgt de knop.
+    // Module Cadeaubonnen: alleen een echte klant met cadeaubonnen aan krijgt de knop.
     const cadeaubon = await cadeaubonVoorSlug(params.slug);
     return <><SalonSite {...props} agenda={agenda} stijl={salonStijl} eerstePlek={eerstePlek} cadeaubon={cadeaubon} metBalk={proef.actief || !!salonWissel} />{balk}{salonWissel}</>;
   }

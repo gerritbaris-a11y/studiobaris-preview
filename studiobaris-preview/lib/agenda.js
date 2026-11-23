@@ -33,7 +33,7 @@ export const isTijd = (v) => /^\d{2}:\d{2}$/.test(String(v || ""));
 export async function agendaVoorSlug(slug) {
   return rpc("sb_agenda_publiek", { p_slug: slug, p_company: null });
 }
-// Salon compleet: staan online cadeaubonnen aan voor dit bedrijf? (null = nee)
+// Module Cadeaubonnen: staan online cadeaubonnen aan voor dit bedrijf? (null = nee)
 export async function cadeaubonVoorSlug(slug) {
   try { return await rpc("sb_cadeaubon_info", { p_slug: slug }); } catch { return null; }
 }
@@ -130,14 +130,6 @@ export async function reviewverzoekMaak(afspraakId) {
   return rpc("sb_agenda_reviewverzoek_maak", { p_afspraak: afspraakId });
 }
 
-// Salon compleet: "Tijd voor een nieuwe afspraak?" (lijst en vinkje).
-export async function terugkomLijst() {
-  return (await rpc("sb_terugkom_lijst", {})) || [];
-}
-export async function terugkomGezet(id) {
-  return rpc("sb_terugkom_gezet", { p_id: id });
-}
-
 export async function berichtenMaand(companyId) {
   return (await rpc("sb_agenda_berichten_maand", { p_company: companyId })) || { email: 0, whatsapp: 0, bundel: 150 };
 }
@@ -205,10 +197,22 @@ async function mail({ to, subject, html, ics, reply }) {
 }
 
 // WhatsApp-herinnering via een goedgekeurd Meta-sjabloon ("afspraak_herinnering",
-// parameters: bedrijf, behandeling, dag, tijd). Werkt pas als de StudioBaris-
-// WhatsApp-business-account is ingericht; tot die tijd valt alles terug op e-mail.
-function whatsappKlaar() {
-  return !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID);
+// parameters: bedrijf, behandeling, dag, tijd). Altijd vanaf het EIGEN nummer van
+// de salon (agenda_instellingen.whatsapp_phone_id), zodat antwoorden bij de salon
+// binnenkomen en niet bij StudioBaris. Het nummer koppelen we via Meta (Embedded
+// Signup / coexistence); WHATSAPP_TOKEN is het systeemtoken van onze Meta-app.
+// Geen phone-ID of geen WhatsApp-module: dan gewoon e-mail.
+export const WHATSAPP_BUNDELS = { whatsapp_s: 100, whatsapp_m: 250 };
+export const WHATSAPP_PRIJS_EXTRA = 0.10;   // per bericht boven de bundel
+const WHATSAPP_PLAFOND = 3;                 // veiligheid: nooit meer dan 3x de bundel per maand
+export function whatsappBundel(modules) {
+  const m = Array.isArray(modules) ? modules : [];
+  if (m.includes("whatsapp_m")) return WHATSAPP_BUNDELS.whatsapp_m;
+  if (m.includes("whatsapp_s")) return WHATSAPP_BUNDELS.whatsapp_s;
+  return 0;
+}
+function whatsappKlaar(phoneId) {
+  return !!(process.env.WHATSAPP_TOKEN && phoneId);
 }
 function telefoonInternationaal(t) {
   let d = String(t || "").replace(/[^\d+]/g, "");
@@ -218,11 +222,11 @@ function telefoonInternationaal(t) {
   if (d.startsWith("0") && d.length === 10) return "31" + d.slice(1);
   return d.length >= 10 ? d : "";
 }
-async function whatsapp(naar, sjabloon, parameters) {
+async function whatsapp(phoneId, naar, sjabloon, parameters) {
   const nummer = telefoonInternationaal(naar);
-  if (!whatsappKlaar() || !nummer) return false;
+  if (!whatsappKlaar(phoneId) || !nummer) return false;
   try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+    const res = await fetch(`https://graph.facebook.com/v21.0/${encodeURIComponent(phoneId)}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -234,6 +238,21 @@ async function whatsapp(naar, sjabloon, parameters) {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+// Modules van een bedrijf (company_modules), voor de cron.
+export async function modulesVan(companyId) {
+  const k = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!k || !isUuid(companyId)) return [];
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/company_modules?select=modules&company_id=eq.${companyId}`, {
+      headers: { apikey: k, Authorization: `Bearer ${k}` }, cache: "no-store",
+    });
+    const rijen = res.ok ? await res.json() : [];
+    return (rijen[0] && Array.isArray(rijen[0].modules)) ? rijen[0].modules : [];
+  } catch {
+    return [];
   }
 }
 
@@ -291,7 +310,67 @@ export async function meldNieuweAfspraak(a, agenda) {
   }
 }
 
+// ---- Wachtlijst (module 'wachtlijst') ----
+export async function wachtlijstAan(companyId) {
+  try { return !!(await rpc("sb_agenda_wachtlijst_aan", { p_company: companyId })); } catch { return false; }
+}
+export async function wachtlijstAanmelden(v) {
+  return rpc("sb_agenda_wachtlijst_aanmelden", {
+    p_company: v.company, p_behandeling: v.behandeling || null, p_datum: v.datum,
+    p_naam: v.naam, p_email: v.email, p_telefoon: v.telefoon || null,
+  });
+}
+export async function wachtlijstAfmelden(token) {
+  return rpc("sb_agenda_wachtlijst_afmelden", { p_token: token });
+}
+export async function reviewAfmelden(token) {
+  return rpc("sb_agenda_review_afmelden", { p_token: token });
+}
+export async function wachtlijstOpruimen() {
+  try { return (await rpc("sb_agenda_wachtlijst_opruimen", {})) || 0; } catch { return 0; }
+}
+export async function meldAanmeldingWachtlijst(rij, agenda) {
+  const bedrijf = agenda.naam || "de salon";
+  const ok = await mail({
+    to: rij.email,
+    subject: `Je staat op de wachtlijst bij ${bedrijf}`,
+    html: kader("Je staat op de wachtlijst", `<p>Hoi ${esc(String(rij.naam || "").split(" ")[0])}, komt er op
+      <strong>${esc(datumLang(rij.datum + "T12:00:00"))}</strong> een plek vrij${rij.behandeling_naam ? ` voor ${esc(rij.behandeling_naam)}` : ""},
+      dan krijg je meteen een mail. Wie het eerst boekt, heeft de plek.</p>`,
+      `Toch niet meer nodig? <a href="${SITE_URL}/api/agenda/wachtlijst/afmelden?t=${encodeURIComponent(rij.token)}" style="color:#6F7A85">Haal me van de wachtlijst</a>.`),
+    reply: agenda.melding_email || undefined,
+  });
+  await logBericht(agenda.company_id, null, "email", "wachtlijst_aanmelding", rij.email, ok);
+  return ok;
+}
+// Er is een plek vrijgekomen: iedereen op de wachtlijst van die dag krijgt een
+// mail (wie het eerst boekt, heeft hem). Daarna staan ze op 'gemaild'.
+async function meldWachtlijst(a, agenda) {
+  if (a.test) return 0;
+  const datum = new Date(a.start).toLocaleDateString("sv-SE", { timeZone: TZ });
+  if (new Date(a.start) < new Date()) return 0;
+  let lijst = [];
+  try { lijst = (await rpc("sb_agenda_wachtlijst_vrij", { p_company: agenda.company_id, p_datum: datum })) || []; } catch { return 0; }
+  const bedrijf = agenda.naam || "de salon";
+  let n = 0;
+  for (const w of lijst) {
+    const ok = await mail({
+      to: w.email,
+      subject: `Er is een plek vrij bij ${bedrijf} op ${datumLang(a.start)}`,
+      html: kader("Er is een plek vrijgekomen!", `<p>Hoi ${esc(String(w.naam || "").split(" ")[0])}, je stond op de wachtlijst.
+        Op <strong>${esc(datumLang(a.start))} om ${esc(tijdKort(a.start))}</strong> is net een plek vrijgekomen
+        (${esc(a.behandeling_naam)}, ${esc(String(a.eind ? Math.round((new Date(a.eind) - new Date(a.start)) / 60000) : ""))} minuten).
+        Wie het eerst boekt, heeft hem.</p>${knop(`${SITE_URL}/boek/${agenda.company_id}`, "Nu boeken")}`),
+      reply: agenda.melding_email || undefined,
+    });
+    await logBericht(agenda.company_id, a.id, "email", "wachtlijst_vrij", w.email, ok);
+    if (ok) n++;
+  }
+  return n;
+}
+
 export async function meldAnnulering(a, agenda, door) {
+  await meldWachtlijst(a, agenda).catch(() => 0);
   const bedrijf = agenda.naam || "de salon";
   const test = !!a.test;
   const ics = icsVoor({ ...a, status: "geannuleerd" }, bedrijf);
@@ -316,14 +395,17 @@ export async function meldAnnulering(a, agenda, door) {
   }
 }
 
-// Herinnering de dag ervoor. WhatsApp als de salon dat aan heeft, er een
-// telefoonnummer is en de bundel van deze maand nog niet op is; anders e-mail.
-export async function stuurHerinnering(a, agenda, teller) {
+// Herinnering de dag ervoor. WhatsApp als de salon de module heeft, haar eigen
+// nummer gekoppeld is en de klant een telefoonnummer gaf; anders e-mail.
+// Boven de bundel gaan we door (extra berichten à € 0,10 komen op de factuur),
+// tot een plafond van 3x de bundel; daarna e-mail.
+export async function stuurHerinnering(a, agenda, teller, modules = []) {
   const bedrijf = agenda.naam || "de salon";
   const ins = agenda.instellingen || {};
-  const bundelOver = ins.whatsapp_aan && (teller.whatsapp || 0) < (ins.whatsapp_bundel || 150);
-  if (bundelOver && a.klant_telefoon && whatsappKlaar()) {
-    const ok = await whatsapp(a.klant_telefoon, "afspraak_herinnering",
+  const bundel = whatsappBundel(modules);
+  const ruimte = bundel > 0 && (teller.whatsapp || 0) < bundel * WHATSAPP_PLAFOND;
+  if (ruimte && a.klant_telefoon && whatsappKlaar(ins.whatsapp_phone_id) && !a.test) {
+    const ok = await whatsapp(ins.whatsapp_phone_id, a.klant_telefoon, "afspraak_herinnering",
       [bedrijf, a.behandeling_naam, datumLang(a.start), tijdKort(a.start)]);
     await logBericht(agenda.company_id, a.id, "whatsapp", "herinnering", a.klant_telefoon, ok);
     if (ok) { teller.whatsapp = (teller.whatsapp || 0) + 1; return "whatsapp"; }
@@ -355,32 +437,14 @@ export async function stuurReviewverzoek(a, agenda, token) {
     html: kader(`Bedankt voor je bezoek${voornaam ? ", " + esc(voornaam) : ""}!`,
       `<p>Gisteren was je bij <strong>${esc(bedrijf)}</strong> voor ${esc(a.behandeling_naam)}. Ben je blij met het resultaat?
        Een korte review helpt de salon enorm. Het kost je een minuutje.</p>
-       ${knop(`${KLANT_APP}/r/${token}`, "Review schrijven")}`),
+       ${knop(`${KLANT_APP}/r/${token}`, "Review schrijven")}`,
+      `Liever geen reviewverzoeken meer van ${esc(bedrijf)}? <a href="${SITE_URL}/api/agenda/review-afmelden?t=${encodeURIComponent(token)}" style="color:#6F7A85">Afmelden</a>.`),
     reply: agenda.melding_email || undefined,
   });
   await logBericht(agenda.company_id, a.id, "email", "reviewverzoek", a.klant_email, ok);
   return ok;
 }
 
-// Salon compleet: een tijd na de behandeling een vriendelijke uitnodiging om
-// opnieuw te boeken. Alleen als de klant nog geen nieuwe afspraak heeft (dat
-// filtert de database al).
-export async function stuurTerugkom(a) {
-  if (!a.klant_email) return false;
-  const bedrij = a.salon || "de salon";
-  const voornaam = String(a.klant_naam || "").split(" ")[0] || "";
-  const ok = await mail({
-    to: a.klant_email,
-    subject: `Tijd voor een nieuwe afspraak bij ${bedrij}?`,
-    html: kader(`Hoi${voornaam ? " " + esc(voornaam) : ""}!`,
-      `<p>Het is alweer ${esc(a.weken)} weken geleden dat je bij <strong>${esc(bedrij)}</strong> was voor ${esc(a.behandeling_naam)}.
-       Zin om weer langs te komen? Je kiest zelf een moment dat jou uitkomt.</p>
-       ${knop(`${SITE_URL}/boek/${a.company_id}`, "Plan je volgende afspraak")}`),
-    reply: a.melding_email || undefined,
-  });
-  await logBericht(a.company_id, a.id, "email", "terugkom", a.klant_email, ok);
-  return ok;
-}
 
 // CORS: de boekingswidget draait ook op klantsites (WordPress) op een ander domein.
 export const CORS = {

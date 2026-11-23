@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import {
   herinneringenLijst, herinneringGezet, testOpruimen, berichtenMaand, agendaVoorBedrijf, stuurHerinnering,
   reviewverzoekenLijst, reviewverzoekMaak, stuurReviewverzoek,
-  terugkomLijst, terugkomGezet, stuurTerugkom,
+  modulesVan, wachtlijstOpruimen,
 } from "../../../../lib/agenda";
 
 export const runtime = "nodejs";
@@ -19,16 +19,17 @@ export async function GET(req) {
   const magDoor = geheim ? kop === `Bearer ${geheim}` || sleutel === geheim : agent.startsWith("vercel-cron/");
   if (!magDoor) return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 401 });
 
-  const uitkomst = { verstuurd: 0, whatsapp: 0, email: 0, overgeslagen: 0, opgeruimd: 0, reviewverzoeken: 0, terugkom: 0 };
+  const uitkomst = { verstuurd: 0, whatsapp: 0, email: 0, overgeslagen: 0, opgeruimd: 0, reviewverzoeken: 0, wachtlijst_opgeruimd: 0 };
   try {
     const lijst = await herinneringenLijst();
-    const agendas = {}, tellers = {};
+    const agendas = {}, tellers = {}, modules = {};
     for (const a of lijst) {
       if (!agendas[a.company_id]) {
         agendas[a.company_id] = await agendaVoorBedrijf(a.company_id);
         tellers[a.company_id] = await berichtenMaand(a.company_id);
+        modules[a.company_id] = await modulesVan(a.company_id);
       }
-      const kanaal = agendas[a.company_id] ? await stuurHerinnering(a, agendas[a.company_id], tellers[a.company_id]) : null;
+      const kanaal = agendas[a.company_id] ? await stuurHerinnering(a, agendas[a.company_id], tellers[a.company_id], modules[a.company_id]) : null;
       await herinneringGezet(a.id);
       if (kanaal) { uitkomst.verstuurd++; uitkomst[kanaal]++; } else uitkomst.overgeslagen++;
     }
@@ -38,11 +39,8 @@ export async function GET(req) {
       const token = await reviewverzoekMaak(a.id);
       if (token && agendas[a.company_id] && (await stuurReviewverzoek(a, agendas[a.company_id], token))) uitkomst.reviewverzoeken++;
     }
-    // Salon compleet: "tijd voor een nieuwe afspraak?" (eenmalig per afspraak).
-    for (const a of await terugkomLijst()) {
-      if (await stuurTerugkom(a)) uitkomst.terugkom++;
-      await terugkomGezet(a.id);
-    }
+    // "Tijd voor een nieuwe afspraak?" staat geparkeerd (nov 2026).
+    uitkomst.wachtlijst_opgeruimd = await wachtlijstOpruimen();
     uitkomst.opgeruimd = (await testOpruimen()) || 0;
     return NextResponse.json({ ok: true, ...uitkomst });
   } catch (e) {

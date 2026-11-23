@@ -42,6 +42,10 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
   const [klaar, setKlaar] = useState(null);
   const [testMail, setTestMail] = useState("");
   const [testMailStand, setTestMailStand] = useState("");
+  // Wachtlijst (module): alleen als de salon hem aan heeft.
+  const [metWacht, setMetWacht] = useState(false);
+  const [wacht, setWacht] = useState(null);          // null = dicht, anders formulier-state
+  const [wachtKlaar, setWachtKlaar] = useState("");
 
   const c = agenda?.company_id;
   const alleMw = agenda?.medewerkers || [];
@@ -52,7 +56,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
     if (!beh) return;
     setDagen(null); setDag(""); setTijden(null); setTijd("");
     fetch(`${basis}/api/agenda/dagen?c=${c}&b=${beh.id}${mq}`).then((r) => r.json())
-      .then((j) => { const d = j.dagen || []; setDagen(d); if (d[0]) setDag(d[0]); })
+      .then((j) => { const d = j.dagen || []; setDagen(d); setMetWacht(!!j.wachtlijst && !test); if (d[0]) setDag(d[0]); })
       .catch(() => setDagen([]));
   }, [beh, mq, c, basis]);
 
@@ -89,6 +93,24 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
     } finally {
       setBezig(false);
     }
+  }
+
+  async function wachtAanmelden(e) {
+    e.preventDefault();
+    setFout("");
+    if (!wacht.datum) { setFout("Kies de dag waarop je graag zou komen."); return; }
+    if (!wacht.naam.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(wacht.email.trim())) { setFout("Vul je naam en een geldig e-mailadres in."); return; }
+    setBezig(true);
+    try {
+      const res = await fetch(`${basis}/api/agenda/wachtlijst`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ c, b: beh.id, datum: wacht.datum, naam: wacht.naam, email: wacht.email, telefoon: wacht.telefoon, website: wacht.website }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) setFout(j.error || "Aanmelden lukte niet.");
+      else { setWachtKlaar(wacht.datum); setWacht(null); }
+    } catch { setFout("Geen verbinding. Probeer het zo nog eens."); }
+    setBezig(false);
   }
 
   async function bewaarTestMail() {
@@ -184,7 +206,7 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
             <>
               <div style={s.label}>Kies een dag</div>
               {dagen === null ? <div style={s.klein}>Even kijken wanneer er plek is…</div>
-                : dagen.length === 0 ? <div style={s.klein}>Er is de komende weken geen plek meer voor deze behandeling. Bel ons even.</div>
+                : dagen.length === 0 ? <div style={s.klein}>Er is de komende weken geen plek meer voor deze behandeling.{metWacht ? " Zet je hieronder op de wachtlijst." : " Bel ons even."}</div>
                 : (
                   <div style={s.dagen}>
                     {dagen.map((d) => { const l = dagLabel(d); return (
@@ -205,6 +227,28 @@ export default function AgendaWidget({ agenda, test = false, kleur = "#1A2B3D", 
                         <button key={t} type="button" onClick={() => setTijd(t)} style={s.tijd}>{t}</button>
                       ))}</div>}
                 </>
+              )}
+              {metWacht && dagen !== null && (
+                wachtKlaar ? (
+                  <div style={{ ...s.klein, marginTop: 14, fontWeight: 700 }}>Je staat op de wachtlijst voor {(() => { const l = dagLabel(wachtKlaar); return `${l.dag} ${l.nr} ${l.maand}`; })()}. Komt er een plek vrij, dan krijg je meteen een mail.</div>
+                ) : wacht ? (
+                  <form onSubmit={wachtAanmelden} style={{ marginTop: 14 }}>
+                    <div style={s.label}>Op de wachtlijst</div>
+                    <p style={s.klein}>Kies de dag waarop je graag zou komen. Valt er die dag een afspraak af, dan mailen we je meteen.</p>
+                    <input aria-label="Dag" type="date" value={wacht.datum} min={new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" })} onChange={(e) => setWacht({ ...wacht, datum: e.target.value })} style={s.veld} />
+                    <input aria-label="Naam" placeholder="Je naam" value={wacht.naam} onChange={(e) => setWacht({ ...wacht, naam: e.target.value })} style={s.veld} autoComplete="name" />
+                    <input aria-label="E-mail" placeholder="E-mailadres" value={wacht.email} onChange={(e) => setWacht({ ...wacht, email: e.target.value })} style={s.veld} type="email" autoComplete="email" />
+                    <input aria-label="Telefoon" placeholder="Telefoonnummer (optioneel)" value={wacht.telefoon} onChange={(e) => setWacht({ ...wacht, telefoon: e.target.value })} style={s.veld} type="tel" autoComplete="tel" />
+                    <input tabIndex={-1} autoComplete="off" value={wacht.website} onChange={(e) => setWacht({ ...wacht, website: e.target.value })}
+                      style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0 }} aria-hidden="true" />
+                    <button type="submit" disabled={bezig} style={s.knop}>{bezig ? "Bezig…" : "Zet me op de wachtlijst"}</button>
+                    <button type="button" onClick={() => setWacht(null)} style={{ ...s.terug, marginTop: 6 }}>Annuleren</button>
+                  </form>
+                ) : (
+                  <button type="button" onClick={() => setWacht({ datum: dag || "", naam: form.naam, email: form.email, telefoon: form.telefoon, website: "" })} style={{ ...s.terug, marginTop: 14 }}>
+                    Staat jouw dag er niet tussen of is hij vol? Zet je op de wachtlijst →
+                  </button>
+                )
               )}
             </>
           ) : (

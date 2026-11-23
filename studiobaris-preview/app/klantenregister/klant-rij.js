@@ -36,6 +36,10 @@ function datumPlus14(iso) {
   return `${d.getDate()} ${MAANDEN[d.getMonth()]}`;
 }
 
+const inputStijlKlein = {
+  padding: "6px 9px", borderRadius: 8, border: `1px solid ${KLEUR.lijn2}`, fontSize: 13, fontFamily: "inherit",
+};
+
 const actieKnop = {
   background: "#fff", color: KLEUR.klei, border: `1px solid ${KLEUR.lijn2}`,
   padding: "6px 11px", borderRadius: 8, fontSize: 12.5, fontWeight: 700,
@@ -289,39 +293,61 @@ function AppLinkBlok({ app: startApp, telefoon, bedrijf }) {
   );
 }
 
-// Modules per klant (nov 2026): welke extra tabbladen de klant in zijn app
+// Modules per klant (salons, nov 2026): welke extra's de salon in haar app
 // krijgt. Staat los van het maandbedrag: dat pas je zelf aan bij De afspraak,
 // zodat een vinkje nooit stilletjes de incasso verandert.
+const APP_URL = process.env.NEXT_PUBLIC_KLANT_APP_URL || "https://app.studiobaris.nl";
 const MODULES_SALON = [
-  { key: "salon_compleet", label: "Salon compleet", uitleg: "Cadeaubonnen online verkopen en inwisselen, \"tijd voor een nieuwe afspraak?\"-mail.", klaar: true },
+  {
+    key: "cadeaubonnen", label: "Cadeaubonnen", prijs: 0,
+    uitleg: "Online cadeaubonnen verkopen (iDEAL via eigen Mollie, of overboeking), inwisselen met restwaarde, verkopen aan de balie.",
+    letOp: "Let op: de klant heeft een eigen Mollie-account nodig om online met iDEAL te laten betalen (zonder Mollie kan alleen per overboeking).\n\nStuur de klant de handleiding:\n" + APP_URL + "/hulp/mollie\n\nDaar staat ook de btw-uitleg: een cadeaubon is omzet bij inwisselen, niet bij verkoop.\n\nHeb je dit met de klant besproken?",
+  },
+  {
+    key: "wachtlijst", label: "Wachtlijst", prijs: 0,
+    uitleg: "Is een dag vol, dan zetten klanten zich op de wachtlijst. Valt er een afspraak af, dan krijgen ze meteen een mail.",
+  },
+  {
+    key: "whatsapp_s", label: "WhatsApp S", prijs: 9.95,
+    uitleg: "Herinneringen via WhatsApp vanaf het eigen nummer van de salon, tot 100 per maand. Daarboven € 0,10 per bericht.",
+    letOp: "Let op: WhatsApp gaat altijd vanaf het EIGEN nummer van de salon. Dat nummer moet eerst via Meta aan ons account gekoppeld worden; vul daarna hieronder het phone-number-ID in. Tot die tijd gaan herinneringen per e-mail.\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 9,95).",
+  },
+  {
+    key: "whatsapp_m", label: "WhatsApp M", prijs: 19.95,
+    uitleg: "Idem, tot 250 per maand. Daarboven € 0,10 per bericht.",
+    letOp: "Let op: WhatsApp gaat altijd vanaf het EIGEN nummer van de salon. Dat nummer moet eerst via Meta aan ons account gekoppeld worden; vul daarna hieronder het phone-number-ID in. Tot die tijd gaan herinneringen per e-mail.\n\nVergeet niet het maandbedrag aan te passen bij De afspraak (+ € 19,95).",
+  },
 ];
-const MODULES = [
-  { key: "facturatie", label: "Facturatie", uitleg: "Facturen inspreken, prijslijst, bonnetjes, reviewverzoek na betaling.", klaar: true },
-  { key: "offertes", label: "Offertes", uitleg: "Offertes inspreken, stelposten, klant geeft online akkoord, met één tik naar factuur.", klaar: true },
-];
-const PRIJS_COMPLEET = 49.95;
+const MODULE_LABEL = Object.fromEntries(MODULES_SALON.map((m) => [m.key, m.label]));
+const PRIJS_SALON = 39.95;
+const WA_BUNDEL = { whatsapp_s: 100, whatsapp_m: 250 };
 
 function ModulesBlok({ app, maandbedrag }) {
   const [mods, setMods] = useState(app?.modules || []);
   const [info, setInfo] = useState({ op: app?.modules_op || null, door: app?.modules_door || null });
   const [bezig, setBezig] = useState("");
   const [fout, setFout] = useState("");
+  const [wa, setWa] = useState({ phone_id: app?.whatsapp?.phone_id || "", nummer: app?.whatsapp?.nummer || "" });
+  const [waOk, setWaOk] = useState("");
 
   if (!app) {
-    return (
-      <div style={{ fontSize: 13, color: KLEUR.label }}>
-        Nog geen app-account. Modules zet je aan zodra de app er is.
-      </div>
-    );
+    return <div style={{ fontSize: 13, color: KLEUR.label }}>Nog geen app-account. Modules zet je aan zodra de app er is.</div>;
+  }
+  if (app.soort !== "salon") {
+    return <div style={{ fontSize: 13, color: KLEUR.label }}>Voor vakmannen zijn er voorlopig geen extra modules.</div>;
   }
 
   async function wissel(key) {
+    const m = MODULES_SALON.find((x) => x.key === key);
     const aan = mods.includes(key);
-    const nieuw = aan ? mods.filter((m) => m !== key) : [...mods, key];
-    const label = [...MODULES, ...MODULES_SALON].find((m) => m.key === key)?.label || key;
+    let nieuw = aan ? mods.filter((x) => x !== key) : [...mods, key];
+    if (!aan && key === "whatsapp_s") nieuw = nieuw.filter((x) => x !== "whatsapp_m");
+    if (!aan && key === "whatsapp_m") nieuw = nieuw.filter((x) => x !== "whatsapp_s");
     const vraag = aan
-      ? `${label} uitzetten voor ${app.naam}? Het tabblad verdwijnt uit de app. Facturen en gegevens blijven bewaard.`
-      : `${label} aanzetten voor ${app.naam}? Het tabblad verschijnt meteen in de app.`;
+      ? `${m.label} uitzetten voor ${app.naam}?`
+      : m.letOp
+        ? m.letOp
+        : `${m.label} aanzetten voor ${app.naam}? Het verschijnt meteen in de app.`;
     if (!confirm(vraag)) return;
     setBezig(key); setFout("");
     try {
@@ -338,36 +364,65 @@ function ModulesBlok({ app, maandbedrag }) {
     setBezig("");
   }
 
-  const salon = app.soort === "salon";
-  const lijst = salon ? MODULES_SALON : MODULES;
-  const compleet = salon ? mods.includes("salon_compleet") : mods.includes("facturatie") || mods.includes("offertes");
-  const prijsCompleet = 49.95;
-  const bedragWijkt = compleet && Number(maandbedrag || 0) !== prijsCompleet;
+  async function bewaarWa() {
+    setBezig("wa"); setFout(""); setWaOk("");
+    try {
+      const r = await fetch("/api/klant/whatsapp", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: app.id, phone_id: wa.phone_id, nummer: wa.nummer }),
+      });
+      const j = await r.json();
+      if (!j.ok) setFout(j.error || "Opslaan mislukt.");
+      else { setWa({ phone_id: j.phone_id || "", nummer: j.nummer || "" }); setWaOk(j.phone_id ? "Nummer gekoppeld." : "Nummer losgekoppeld."); }
+    } catch {
+      setFout("Geen verbinding.");
+    }
+    setBezig("");
+  }
+
+  const extra = MODULES_SALON.filter((m) => mods.includes(m.key)).reduce((t, m) => t + m.prijs, 0);
+  const verwacht = Math.round((PRIJS_SALON + extra) * 100) / 100;
+  const bedragWijkt = extra > 0 && Number(maandbedrag || 0) < verwacht;
+  const waKey = mods.includes("whatsapp_m") ? "whatsapp_m" : mods.includes("whatsapp_s") ? "whatsapp_s" : null;
+  const bundel = waKey ? WA_BUNDEL[waKey] : 0;
+  const dezeMaand = app.whatsapp?.deze_maand || 0;
+  const boven = Math.max(0, dezeMaand - bundel);
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      {lijst.map((m) => (
-        <label key={m.key} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, opacity: m.klaar ? 1 : 0.55, cursor: m.klaar ? "pointer" : "default" }}>
-          <input
-            type="checkbox"
-            checked={mods.includes(m.key)}
-            disabled={!m.klaar || !!bezig}
-            onChange={() => wissel(m.key)}
-            style={{ width: 18, height: 18, marginTop: 1 }}
-          />
+      {MODULES_SALON.map((m) => (
+        <label key={m.key} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, cursor: "pointer" }}>
+          <input type="checkbox" checked={mods.includes(m.key)} disabled={!!bezig} onChange={() => wissel(m.key)} style={{ width: 18, height: 18, marginTop: 1 }} />
           <span>
-            <b>{m.label}</b>{bezig === m.key ? " · bezig…" : ""}
+            <b>{m.label}</b> <span style={{ color: KLEUR.label, fontWeight: 600 }}>{m.prijs ? `+ ${euro(m.prijs)} p/m` : "gratis"}</span>{bezig === m.key ? " · bezig…" : ""}
             <span style={{ display: "block", fontSize: 12, color: KLEUR.label }}>{m.uitleg}</span>
           </span>
         </label>
       ))}
+
+      {waKey && (
+        <div style={{ display: "grid", gap: 6, marginLeft: 28, padding: 10, borderRadius: 10, background: "#fff", border: `1px solid ${KLEUR.baanRand}` }}>
+          <div style={{ fontSize: 12, fontWeight: 700 }}>WhatsApp-nummer van de salon</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <input value={wa.nummer} onChange={(e) => setWa({ ...wa, nummer: e.target.value })} placeholder="06 12345678" style={{ ...inputStijlKlein, width: 130 }} />
+            <input value={wa.phone_id} onChange={(e) => setWa({ ...wa, phone_id: e.target.value })} placeholder="Phone-number-ID (Meta)" style={{ ...inputStijlKlein, width: 200 }} />
+            <button onClick={bewaarWa} disabled={bezig === "wa"} style={actieKnop}>{bezig === "wa" ? "Bezig…" : "Opslaan"}</button>
+          </div>
+          <div style={{ fontSize: 11.5, color: KLEUR.label }}>
+            {wa.phone_id ? `Herinneringen gaan vanaf ${wa.nummer || "het eigen nummer"}.` : "Nog niet gekoppeld: herinneringen gaan per e-mail."}
+            {" "}Deze maand {dezeMaand} van {bundel} WhatsApp-berichten{boven > 0 ? ` · ${boven} boven de bundel = ${euro(boven * 0.1)} extra op de factuur` : ""}.
+          </div>
+          {waOk && <div style={{ fontSize: 12, color: "#1E6B3A", fontWeight: 600 }}>{waOk}</div>}
+        </div>
+      )}
+
       <div style={{ fontSize: 12, color: KLEUR.label }}>
-        Pakket: <b>{salon ? (compleet ? "Salon compleet (voorstel € 49,95 p/m)" : "Salon (€ 39,95 p/m)") : compleet ? "Compleet (€ 49,95 p/m)" : "Website (€ 29,95 p/m)"}</b>
+        Verwacht maandbedrag: <b>{euro(verwacht)} p/m</b> (Salon {euro(PRIJS_SALON)}{extra ? ` + extra's ${euro(extra)}` : ""})
         {info.op ? ` · laatst gewijzigd ${korteDatum(info.op)}${info.door ? " door " + info.door : ""}` : ""}
       </div>
       {bedragWijkt && (
         <div style={{ fontSize: 12, color: KLEUR.kleiDonker || "#b45309", fontWeight: 600 }}>
-          Het maandbedrag staat nog op {maandbedrag ? euro(maandbedrag) : "—"}. Pas het zelf aan bij "De afspraak" als de klant Compleet afneemt.
+          Het maandbedrag staat nog op {maandbedrag ? euro(maandbedrag) : "—"}. Pas het zelf aan bij "De afspraak".
         </div>
       )}
       {fout && <div style={{ fontSize: 12, color: KLEUR.kleiDonker || "#b45309" }}>{fout}</div>}
@@ -421,7 +476,7 @@ export default function KlantRij({ r, variant, team = [], app = null }) {
             <PakketLabel type={r.pakket_type} />
             {app?.modules?.length > 0 && (
               <div style={{ fontSize: 11.5, color: KLEUR.klei, fontWeight: 700 }}>
-                + {app.modules.map((m) => (m === "facturatie" ? "Facturatie" : m === "offertes" ? "Offertes" : m === "salon_compleet" ? "Salon compleet" : m)).join(" + ")}
+                + {app.modules.map((m) => MODULE_LABEL[m] || m).join(" + ")}
               </div>
             )}
           </td>
@@ -480,6 +535,15 @@ export function KlantDetailActies({ r, variant, app = null }) {
         </div>
         <GegevensEditor slug={r.slug} data={r} defaultOpen />
       </div>
+
+      {variant !== "oud" && app?.soort === "salon" && (
+        <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>
+            Modules in de app
+          </div>
+          <ModulesBlok app={app} maandbedrag={r.maandbedrag} />
+        </div>
+      )}
 
       <div style={{ borderTop: `1px solid ${KLEUR.baanRand}`, paddingTop: 12 }}>
         <div style={{ fontSize: 11, letterSpacing: 1, textTransform: "uppercase", color: KLEUR.label, fontWeight: 700, marginBottom: 8 }}>

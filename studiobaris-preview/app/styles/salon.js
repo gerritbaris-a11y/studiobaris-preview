@@ -344,7 +344,7 @@ export default function SalonSite({ content, slug = "", isConcept, isReview, age
         <section className="sec" id="cadeaubon"><div className="w" style={{ textAlign: "center" }}>
           <div className="eb">Cadeau geven</div>
           <h2>Geef een cadeaubon</h2>
-          <p className="lead" style={{ marginLeft: "auto", marginRight: "auto" }}>Kies zelf het bedrag en betaal met je bank-app. Na je betaling krijg je de bon in je mail, om te printen of door te sturen. {cadeaubon.geldig_maanden ? `${cadeaubon.geldig_maanden} maanden geldig.` : ""}</p>
+          <p className="lead" style={{ marginLeft: "auto", marginRight: "auto" }}>Kies zelf het bedrag en betaal direct online{cadeaubon.mollie ? " met iDEAL" : ""}. Na je betaling krijg je de bon in je mail, om te printen of door te sturen. {cadeaubon.geldig_maanden ? `${cadeaubon.geldig_maanden} maanden geldig.` : ""}</p>
           <a className="knop" href={cadeauHref}>Cadeaubon kopen</a>
         </div></section>
       )}
