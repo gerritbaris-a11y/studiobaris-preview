@@ -4,7 +4,7 @@
 //
 // In de Drive (account van de bestaande factuur-backup) komt:
 //
-//   Back-up dashboard/   (eerst in StudioBaris > Facturen en Offertes > Backup)
+//   StudioBaris/Back-up/
 //     2026-11-29/                      ← één map per week, max. BEWAAR_WEKEN
 //       LEESMIJ.txt                    ← wat erin zit + hoe je het terugzet
 //       database/<schema>.<tabel>.csv  ← opent in Excel (puntkomma, UTF-8)
@@ -30,15 +30,14 @@ const DRIVE = "https://www.googleapis.com/drive/v3";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const MAP_MIME = "application/vnd.google-apps.folder";
 
-export const HOOFDMAP = "Back-up dashboard";
+export const HOOFDMAP = "StudioBaris/Back-up";
 export const SPIEGELMAP = "Bestanden (doorlopend bijgewerkt)";
 export const BEWAAR_WEKEN = 4;
-// Waar komt "Back-up dashboard"? De Drive-koppeling mag (scope drive.file)
-// alleen in mappen schrijven die de app zelf heeft gemaakt. De eerste keer
-// komt hij daarom in de bestaande factuur-"Backup"-map
-// (StudioBaris > Facturen en Offertes > Backup). Daarna wordt hij overal in de
-// Drive teruggevonden op naam, dus je mag hem gerust naar een andere map slepen.
-const OUDERMAP = process.env.GOOGLE_DRIVE_DASHBOARD_BACKUP_PARENT || process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || "root";
+// Alles komt in de vaste Drive-map StudioBaris > Back-up (eigendom van
+// peacestarmedia@gmail.com, binnen de met Gerrit gedeelde map StudioBaris).
+// Let op: de refresh token moet de volledige scope .../auth/drive hebben;
+// met drive.file mag de app niet in een map die hij niet zelf heeft gemaakt.
+const BACKUP_MAP_ID = process.env.GOOGLE_DRIVE_DASHBOARD_BACKUP_FOLDER_ID || "1JctPoHMPCCHkfEWuqjxj4EPecmTVsAoT";
 const PAGINA = 5000;
 
 // GitHub-repo's waarvan de code meegaat.
@@ -151,11 +150,7 @@ async function maakMap(naam, ouder) {
 }
 
 async function hoofdmap() {
-  const gevonden = await lijst(
-    `name = '${q(HOOFDMAP)}' and mimeType = '${MAP_MIME}' and 'me' in owners and trashed = false`
-  );
-  if (gevonden.length) return gevonden[0];
-  return maakMap(HOOFDMAP, OUDERMAP);
+  return { id: BACKUP_MAP_ID };
 }
 
 export async function logRun(soort, uitkomst) {
