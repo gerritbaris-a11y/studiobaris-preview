@@ -11,6 +11,14 @@
     {
       "path": "/api/agenda/herinneringen",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/backup/wekelijks",
+      "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/backup/bestanden",
+      "schedule": "30 3 * * *"
     }
   ]
 }

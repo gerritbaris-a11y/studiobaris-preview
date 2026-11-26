@@ -25,7 +25,7 @@
 
 let cachedToken = null; // { token, verlooptOm }
 
-async function haalToegangstoken() {
+export async function haalToegangstoken() {
   const clientId = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
