@@ -25,10 +25,34 @@
 
 let cachedToken = null; // { token, verlooptOm }
 
+// Refresh token: eerst die uit de database (gezet via de knop
+// /api/backup/koppelen in het dashboard), anders de oude env-variabele.
+async function haalRefreshToken() {
+  try {
+    const k = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ipiqrsxbsgylxhgzlhsd.supabase.co";
+    if (k) {
+      const res = await fetch(`${url}/rest/v1/rpc/sb_drive_token_get`, {
+        method: "POST",
+        headers: { apikey: k, Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+        body: "{}",
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const t = await res.json();
+        if (typeof t === "string" && t) return t;
+      }
+    }
+  } catch {}
+  return process.env.GOOGLE_DRIVE_REFRESH_TOKEN || null;
+}
+
 export async function haalToegangstoken() {
   const clientId = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_DRIVE_OAUTH_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  const nu0 = Math.floor(Date.now() / 1000);
+  if (cachedToken && cachedToken.verlooptOm > nu0 + 30) return cachedToken.token;
+  const refreshToken = await haalRefreshToken();
   if (!clientId || !clientSecret || !refreshToken) return null;
 
   const nu = Math.floor(Date.now() / 1000);

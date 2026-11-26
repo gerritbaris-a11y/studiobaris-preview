@@ -156,3 +156,47 @@ as $$
 $$;
 revoke all on function public.sb_backup_log(text, boolean, jsonb) from public, anon, authenticated;
 grant execute on function public.sb_backup_log(text, boolean, jsonb) to service_role;
+
+-- 6. Google Drive-koppeling: refresh token opgeslagen via /api/backup/koppelen
+--    (gaat zelf NIET mee in de backup).
+create table if not exists workflow.drive_koppeling (
+  id int primary key default 1 check (id = 1),
+  refresh_token text not null,
+  scope text,
+  bijgewerkt_op timestamptz not null default now()
+);
+alter table workflow.drive_koppeling enable row level security;
+revoke all on workflow.drive_koppeling from public, anon, authenticated;
+
+create or replace function public.sb_drive_token_get()
+returns text language sql security definer set search_path = public, pg_catalog
+as $$ select refresh_token from workflow.drive_koppeling where id = 1; $$;
+
+create or replace function public.sb_drive_token_set(p_token text, p_scope text)
+returns void language sql security definer set search_path = public, pg_catalog
+as $$
+  insert into workflow.drive_koppeling (id, refresh_token, scope, bijgewerkt_op)
+  values (1, p_token, p_scope, now())
+  on conflict (id) do update set refresh_token = excluded.refresh_token, scope = excluded.scope, bijgewerkt_op = now();
+$$;
+revoke all on function public.sb_drive_token_get() from public, anon, authenticated;
+revoke all on function public.sb_drive_token_set(text, text) from public, anon, authenticated;
+grant execute on function public.sb_drive_token_get() to service_role;
+grant execute on function public.sb_drive_token_set(text, text) to service_role;
+
+-- sb_backup_tabellen sluit sindsdien ook workflow.drive_koppeling uit:
+create or replace function public.sb_backup_tabellen()
+returns jsonb
+language sql
+security definer
+set search_path = public, pg_catalog
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object('schema', n.nspname, 'tabel', c.relname)
+                            order by n.nspname, c.relname), '[]'::jsonb)
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where c.relkind in ('r', 'p')
+    and n.nspname in ('public', 'workflow')
+    and not (n.nspname = 'public' and c.relname = 'ops_secrets')
+    and not (n.nspname = 'workflow' and c.relname = 'drive_koppeling');
+$$;
