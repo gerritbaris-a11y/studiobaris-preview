@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cronMagDoor } from "../../../../lib/cron-toegang";
-import { maakWekelijkseBackup } from "../../../../lib/dashboard-backup";
+import { maakWekelijkseBackup, logRun } from "../../../../lib/dashboard-backup";
 import { getTaken, maakTaak } from "../../../../lib/taken-data";
 
 export const runtime = "nodejs";
@@ -17,10 +17,12 @@ export async function GET(req) {
   try {
     const uitkomst = await maakWekelijkseBackup();
     console.log("[backup wekelijks]", JSON.stringify(uitkomst));
+    await logRun("wekelijks", uitkomst);
     return NextResponse.json(uitkomst);
   } catch (e) {
     const melding = String((e && e.message) || e);
     console.error("[backup wekelijks] mislukt:", melding);
+    await logRun("wekelijks", { ok: false, error: melding });
     try {
       const titel = "Wekelijkse back-up naar Google Drive mislukt";
       const taken = await getTaken();

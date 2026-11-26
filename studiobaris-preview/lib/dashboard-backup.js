@@ -4,7 +4,7 @@
 //
 // In de Drive (account van de bestaande factuur-backup) komt:
 //
-//   StudioBaris/Back-up dashboard/
+//   Back-up dashboard/   (eerst in StudioBaris > Facturen en Offertes > Backup)
 //     2026-11-29/                      ← één map per week, max. BEWAAR_WEKEN
 //       LEESMIJ.txt                    ← wat erin zit + hoe je het terugzet
 //       database/<schema>.<tabel>.csv  ← opent in Excel (puntkomma, UTF-8)
@@ -33,9 +33,12 @@ const MAP_MIME = "application/vnd.google-apps.folder";
 export const HOOFDMAP = "Back-up dashboard";
 export const SPIEGELMAP = "Bestanden (doorlopend bijgewerkt)";
 export const BEWAAR_WEKEN = 4;
-// "Back-up dashboard" staat in de gedeelde Drive-map "StudioBaris" (van Gerrit,
-// gedeeld met Levi), zodat iedereen er bij kan.
-const OUDERMAP = process.env.GOOGLE_DRIVE_DASHBOARD_BACKUP_PARENT || "1ZygNAkVJyIMbsgzfL66wNtM5zYqH8dQB";
+// Waar komt "Back-up dashboard"? De Drive-koppeling mag (scope drive.file)
+// alleen in mappen schrijven die de app zelf heeft gemaakt. De eerste keer
+// komt hij daarom in de bestaande factuur-"Backup"-map
+// (StudioBaris > Facturen en Offertes > Backup). Daarna wordt hij overal in de
+// Drive teruggevonden op naam, dus je mag hem gerust naar een andere map slepen.
+const OUDERMAP = process.env.GOOGLE_DRIVE_DASHBOARD_BACKUP_PARENT || process.env.GOOGLE_DRIVE_BACKUP_FOLDER_ID || "root";
 const PAGINA = 5000;
 
 // GitHub-repo's waarvan de code meegaat.
@@ -147,6 +150,20 @@ async function maakMap(naam, ouder) {
   });
 }
 
+async function hoofdmap() {
+  const gevonden = await lijst(
+    `name = '${q(HOOFDMAP)}' and mimeType = '${MAP_MIME}' and 'me' in owners and trashed = false`
+  );
+  if (gevonden.length) return gevonden[0];
+  return maakMap(HOOFDMAP, OUDERMAP);
+}
+
+export async function logRun(soort, uitkomst) {
+  try {
+    await rpc("sb_backup_log", { p_soort: soort, p_ok: !!(uitkomst && uitkomst.ok), p_uitkomst: uitkomst });
+  } catch {}
+}
+
 async function zoekOfMaakMap(naam, ouder) {
   return (await zoekMap(naam, ouder)) || maakMap(naam, ouder);
 }
@@ -256,7 +273,7 @@ export async function maakWekelijkseBackup() {
   const fouten = [];
   const datum = amsterdamDatum();
 
-  const hoofd = await zoekOfMaakMap(HOOFDMAP, OUDERMAP);
+  const hoofd = await hoofdmap();
 
   // Draait hij vandaag een tweede keer, dan vervangen we de map van vandaag.
   const bestaand = await zoekMap(datum, hoofd.id);
@@ -398,7 +415,7 @@ export async function maakWekelijkseBackup() {
 export async function spiegelBestanden({ tijdbudgetMs = 240000 } = {}) {
   const begin = Date.now();
   const fouten = [];
-  const hoofd = await zoekOfMaakMap(HOOFDMAP, OUDERMAP);
+  const hoofd = await hoofdmap();
   const spiegel = await zoekOfMaakMap(SPIEGELMAP, hoofd.id);
 
   const objecten = await rpc("sb_backup_bestanden");

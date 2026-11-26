@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cronMagDoor } from "../../../../lib/cron-toegang";
-import { spiegelBestanden } from "../../../../lib/dashboard-backup";
+import { spiegelBestanden, logRun } from "../../../../lib/dashboard-backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,9 +17,11 @@ export async function GET(req) {
   try {
     const uitkomst = await spiegelBestanden({ tijdbudgetMs: 240000 });
     console.log("[backup bestanden]", JSON.stringify(uitkomst));
+    await logRun("bestanden", uitkomst);
     return NextResponse.json(uitkomst);
   } catch (e) {
     console.error("[backup bestanden] mislukt:", String((e && e.message) || e));
+    await logRun("bestanden", { ok: false, error: String((e && e.message) || e) });
     return NextResponse.json({ ok: false, error: String((e && e.message) || e) }, { status: 500 });
   }
 }

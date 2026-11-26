@@ -134,3 +134,25 @@ grant execute on function public.sb_backup_tabellen() to service_role;
 grant execute on function public.sb_backup_tabel(text, text, int, int) to service_role;
 grant execute on function public.sb_backup_schema() to service_role;
 grant execute on function public.sb_backup_bestanden() to service_role;
+
+-- 5. Logboek van elke run (zodat te controleren is of de backup draait).
+create table if not exists workflow.backup_log (
+  id bigserial primary key,
+  gemaakt_op timestamptz not null default now(),
+  soort text not null,
+  ok boolean not null,
+  uitkomst jsonb
+);
+alter table workflow.backup_log enable row level security;
+
+create or replace function public.sb_backup_log(p_soort text, p_ok boolean, p_uitkomst jsonb)
+returns void
+language sql
+security definer
+set search_path = public, pg_catalog
+as $$
+  insert into workflow.backup_log (soort, ok, uitkomst) values (p_soort, p_ok, p_uitkomst);
+  delete from workflow.backup_log where gemaakt_op < now() - interval '90 days';
+$$;
+revoke all on function public.sb_backup_log(text, boolean, jsonb) from public, anon, authenticated;
+grant execute on function public.sb_backup_log(text, boolean, jsonb) to service_role;
