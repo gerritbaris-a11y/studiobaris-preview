@@ -15,7 +15,7 @@ export async function GET(req) {
     return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 401 });
   }
   try {
-    const uitkomst = await spiegelBestanden({ tijdbudgetMs: 240000 });
+    const uitkomst = await spiegelBestanden({ tijdbudgetMs: 150000 });
     console.log("[backup bestanden]", JSON.stringify(uitkomst));
     await logRun("bestanden", uitkomst);
     return NextResponse.json(uitkomst);
