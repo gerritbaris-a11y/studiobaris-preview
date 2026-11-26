@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/backup/bestanden",
-      "schedule": "40 16 26 11 *"
+      "schedule": "30 3 * * *"
     }
   ]
 }
