@@ -6,7 +6,7 @@ import { POST as intakePost } from "../../intake/route";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { STIJL_IDS as STIJLEN } from "../../../../lib/stijlen";
+import { STIJL_IDS as STIJLEN, SALON_STIJL_IDS } from "../../../../lib/stijlen";
 
 function tekst(x) {
   if (Array.isArray(x)) return x.filter(Boolean).join(", ");
@@ -61,7 +61,16 @@ export async function POST(req) {
   zet("website", v.website);
   if (["offline", "portaal", "geen"].includes(v.website_status)) fd.set("huisstijl_lezen", "nee");
   zet("notities", [v.reden, intake.notities].filter(Boolean).join("\n\n"));
-  fd.set("stijl", STIJLEN.includes(intake.stijl) ? intake.stijl : "stoer");
+  // Salonvoorstellen (intake.sector = "boeking") worden expliciet een
+  // salon-preview, met een salonstijl. Zonder sector: vakman zoals altijd
+  // (de intake herkent een salon dan nog aan de branche).
+  const isSalon = intake.sector === "boeking";
+  if (isSalon) {
+    fd.set("sector", "boeking");
+    if (SALON_STIJL_IDS.includes(intake.stijl)) fd.set("stijl", intake.stijl);
+  } else {
+    fd.set("stijl", STIJLEN.includes(intake.stijl) ? intake.stijl : "stoer");
+  }
   if (door) fd.set("verzamelaar", door);
   if (v.lead_id) fd.set("lead_id", v.lead_id);
   fd.set("bron", "Voorstel Claude");
