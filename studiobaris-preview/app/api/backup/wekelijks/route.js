@@ -16,9 +16,11 @@ export async function GET(req) {
   }
   try {
     const uitkomst = await maakWekelijkseBackup();
+    console.log("[backup wekelijks]", JSON.stringify(uitkomst));
     return NextResponse.json(uitkomst);
   } catch (e) {
     const melding = String((e && e.message) || e);
+    console.error("[backup wekelijks] mislukt:", melding);
     try {
       const titel = "Wekelijkse back-up naar Google Drive mislukt";
       const taken = await getTaken();

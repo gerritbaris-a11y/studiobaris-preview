@@ -4,7 +4,7 @@
 //
 // In de Drive (account van de bestaande factuur-backup) komt:
 //
-//   Back-up dashboard/
+//   StudioBaris/Back-up dashboard/
 //     2026-11-29/                      ← één map per week, max. BEWAAR_WEKEN
 //       LEESMIJ.txt                    ← wat erin zit + hoe je het terugzet
 //       database/<schema>.<tabel>.csv  ← opent in Excel (puntkomma, UTF-8)
@@ -33,6 +33,9 @@ const MAP_MIME = "application/vnd.google-apps.folder";
 export const HOOFDMAP = "Back-up dashboard";
 export const SPIEGELMAP = "Bestanden (doorlopend bijgewerkt)";
 export const BEWAAR_WEKEN = 4;
+// "Back-up dashboard" staat in de gedeelde Drive-map "StudioBaris" (van Gerrit,
+// gedeeld met Levi), zodat iedereen er bij kan.
+const OUDERMAP = process.env.GOOGLE_DRIVE_DASHBOARD_BACKUP_PARENT || "1ZygNAkVJyIMbsgzfL66wNtM5zYqH8dQB";
 const PAGINA = 5000;
 
 // GitHub-repo's waarvan de code meegaat.
@@ -253,7 +256,7 @@ export async function maakWekelijkseBackup() {
   const fouten = [];
   const datum = amsterdamDatum();
 
-  const hoofd = await zoekOfMaakMap(HOOFDMAP, "root");
+  const hoofd = await zoekOfMaakMap(HOOFDMAP, OUDERMAP);
 
   // Draait hij vandaag een tweede keer, dan vervangen we de map van vandaag.
   const bestaand = await zoekMap(datum, hoofd.id);
@@ -395,7 +398,7 @@ export async function maakWekelijkseBackup() {
 export async function spiegelBestanden({ tijdbudgetMs = 240000 } = {}) {
   const begin = Date.now();
   const fouten = [];
-  const hoofd = await zoekOfMaakMap(HOOFDMAP, "root");
+  const hoofd = await zoekOfMaakMap(HOOFDMAP, OUDERMAP);
   const spiegel = await zoekOfMaakMap(SPIEGELMAP, hoofd.id);
 
   const objecten = await rpc("sb_backup_bestanden");

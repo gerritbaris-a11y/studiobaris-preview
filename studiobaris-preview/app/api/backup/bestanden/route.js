@@ -15,8 +15,11 @@ export async function GET(req) {
     return NextResponse.json({ ok: false, error: "Geen toegang." }, { status: 401 });
   }
   try {
-    return NextResponse.json(await spiegelBestanden({ tijdbudgetMs: 240000 }));
+    const uitkomst = await spiegelBestanden({ tijdbudgetMs: 240000 });
+    console.log("[backup bestanden]", JSON.stringify(uitkomst));
+    return NextResponse.json(uitkomst);
   } catch (e) {
+    console.error("[backup bestanden] mislukt:", String((e && e.message) || e));
     return NextResponse.json({ ok: false, error: String((e && e.message) || e) }, { status: 500 });
   }
 }
