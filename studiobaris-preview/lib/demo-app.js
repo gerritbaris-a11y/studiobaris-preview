@@ -7,6 +7,7 @@
 
 import crypto from "crypto";
 import { isEsthetiekBranche } from "./segment";
+import { behandelingenUitContent, vakTekst } from "./behandelingen";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ipiqrsxbsgylxhgzlhsd.supabase.co";
@@ -174,8 +175,12 @@ export async function zetDemoModules(slug, modules, door) {
   // niet; daarom hier meteen omzetten naar de salon-app met agenda.
   if (rij.soort !== "salon") {
     const full = await sb("/rest/v1/rpc/get_full", { method: "POST", body: JSON.stringify({ p_slug: slug }) });
-    const branche = (full.ok && full.body && full.body.bedrijf && full.body.bedrijf.branche) || "";
-    await sb("/rest/v1/rpc/sb_agenda_standaard", { method: "POST", body: JSON.stringify({ p_company: rij.id, p_vak: branche, p_email: null }) });
+    const inhoud = (full.ok && full.body) || {};
+    const items = behandelingenUitContent(inhoud);
+    if (items.length) {
+      await sb("/rest/v1/rpc/sb_agenda_behandelingen_zet", { method: "POST", body: JSON.stringify({ p_company: rij.id, p_items: items }) });
+    }
+    await sb("/rest/v1/rpc/sb_agenda_standaard", { method: "POST", body: JSON.stringify({ p_company: rij.id, p_vak: vakTekst(inhoud), p_email: null }) });
   }
   const res = await sb("/rest/v1/company_modules?on_conflict=company_id", {
     method: "POST",

@@ -73,6 +73,12 @@ DIT IS EEN SALON (kapper, barbier, nagelstudio of beautysalon). Pas de teksten d
 - over_ons: wie de salon is en hoe het voelt om er binnen te komen, op basis van de feiten.
 - seo.titel: "<branche> in <plaats> | <bedrijfsnaam>". seo.meta_omschrijving: plaats, de belangrijkste behandelingen en dat je online een afspraak maakt. Maximaal 155 tekens.
 - projecten: alleen aangeleverd werk; een kapsel of set nagels heet "look" of "set", geen "project".
+- Kijk goed WAT voor salon dit is (kapper, barbier, nagelstudio, pedicure/voetzorg, massagepraktijk, schoonheidssalon, wimpers/brows, huidtherapie, zonnestudio, enzovoort) en houd ALLE diensten en behandelingen binnen dat vak. Een pedicure krijgt geen knipbehandelingen, een kapper geen gezichtsbehandelingen, tenzij dat aantoonbaar is aangeleverd.
+- Voeg BOVENOP het schema één extra sleutel "behandelingen" toe voor de online agenda: 4 tot 10 losse, boekbare behandelingen die deze salon echt doet.
+  "behandelingen": [{"categorie":"","naam":"","omschrijving":"","duur_min":45,"prijs":0,"prijs_vanaf":false}]
+  - Haal namen, duur en prijzen uit de aangeleverde informatie of de huidige website. Staan duur of prijs er niet, geef dan een realistische Nederlandse indicatie voor dit soort behandeling en zet in "_review.let_op" dat prijzen en duur in de agenda een indicatie zijn.
+  - categorie: een korte groep binnen het vak (bijv. "Voeten", "Massage", "Handen", "Knippen", "Gezicht"). omschrijving: één korte zin of "".
+  - prijs_vanaf = true als de prijs afhangt van lengte, hoeveelheid of situatie.
 `;
 
 export const SPOED_AANVULLING = `

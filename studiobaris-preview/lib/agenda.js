@@ -3,6 +3,8 @@
 // Database: supabase/agenda.sql. Mails via Resend, WhatsApp via de Meta Cloud
 // API (alleen als WHATSAPP_TOKEN + WHATSAPP_PHONE_ID zijn ingesteld; anders e-mail).
 
+import { behandelingenUitContent, vakTekst } from "./behandelingen";
+
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ipiqrsxbsgylxhgzlhsd.supabase.co";
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobaris.nl";
@@ -49,7 +51,7 @@ export async function agendaVoorPreview(slug, content) {
   if (!agenda.instellingen || !(agenda.behandelingen || []).length) {
     const b = (content && content.bedrijf) || {};
     const email = /@voorbeeld\.nl$/i.test(b.email || "") ? null : b.email || null; // nooit het nep-adres uit de voorbeeldvulling
-    await zetAgendaKlaar(agenda.company_id, b.branche || "", email);
+    await zetAgendaKlaar(agenda.company_id, content, email);
     agenda = await agendaVoorSlug(slug);
   }
   // Medewerkers uit de intake: eenmalig aanmaken, zodat de prospect in de
@@ -85,8 +87,18 @@ export async function eerstePlekLabel(agenda) {
   }
 }
 
-export async function zetAgendaKlaar(companyId, vak, email) {
-  return rpc("sb_agenda_standaard", { p_company: companyId, p_vak: vak || "", p_email: email || null });
+// Eerst de behandelingen van de salon zelf (intake of diensten op de preview),
+// daarna rooster en instellingen; de standaardlijst per vak is alleen nog
+// terugval als de preview geen behandelingen of diensten heeft.
+// `bron` mag de preview-content zijn of (oud gebruik) een losse vaktekst.
+export async function zetAgendaKlaar(companyId, bron, email) {
+  const content = bron && typeof bron === "object" ? bron : null;
+  const items = content ? behandelingenUitContent(content) : [];
+  if (items.length) {
+    try { await rpc("sb_agenda_behandelingen_zet", { p_company: companyId, p_items: items }); } catch {}
+  }
+  const vak = content ? vakTekst(content) : String(bron || "");
+  return rpc("sb_agenda_standaard", { p_company: companyId, p_vak: vak, p_email: email || null });
 }
 // medewerkerId: optioneel (klant koos een medewerker); leeg = geen voorkeur.
 export async function vrijeDagen(companyId, behandelingId, dagen = 21, medewerkerId = null) {
