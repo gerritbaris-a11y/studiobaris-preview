@@ -4,6 +4,8 @@ import WerkplekShell from "../werkplek-shell";
 import { KLEUR, HEAD, redenKleur } from "../werkplek-stijl";
 import { NieuweKlantKnop } from "../dashboard/dashboard-actions";
 import FilterBalk from "./filter-balk";
+import AppProefTab, { telLopend } from "./app-proef-tab";
+import { getProeven } from "../../lib/app-proef";
 import {
   laadRegister, tellers, leesFilters, filterEnPagineer, tabelRij, keuzes,
   STATUS_LABEL, SECTOR_LABEL, PAKKET_LABEL, PER_PAGINA,
@@ -77,7 +79,11 @@ export default async function KlantenregisterPage({ searchParams }) {
   const beheer = isBeheer(sessie);
 
   const f = leesFilters(searchParams || {});
-  const { rijen, kandidaten } = await laadRegister();
+  const [{ rijen, kandidaten }, proeven] = await Promise.all([
+    laadRegister(),
+    beheer ? getProeven() : Promise.resolve([]),
+  ]);
+  const appProef = beheer && f.status === "app-proef";
   const t = tellers(rijen);
   const k = keuzes(rijen);
   const res = filterEnPagineer(rijen, f);
@@ -95,6 +101,7 @@ export default async function KlantenregisterPage({ searchParams }) {
     ["oud", `Oud-klanten (${t.oud})`],
     ["alle", `Alle (${t.klant + t.toekomstig + t.oud})`],
   ];
+  if (beheer) tabs.push(["app-proef", `App-proef (${telLopend(proeven)})`]);
 
   return (
     <WerkplekShell
@@ -146,6 +153,9 @@ export default async function KlantenregisterPage({ searchParams }) {
           ))}
         </div>
 
+        {appProef ? (
+          <AppProefTab sp={searchParams || {}} verkopers={k.verkopers} />
+        ) : (<>
         <FilterBalk keuzes={k} sectorLabel={SECTOR_LABEL} />
 
         <div style={{ fontSize: 12.5, color: KLEUR.label, marginBottom: 8 }}>
@@ -218,6 +228,7 @@ export default async function KlantenregisterPage({ searchParams }) {
             {res.pagina < res.paginas && <Link href={url(f, { pagina: res.pagina + 1 })} style={chip(false)}>Volgende →</Link>}
           </div>
         )}
+        </>)}
       </div>
     </WerkplekShell>
   );

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getBetaalinfo, setBetaling, setRest } from "../../../../lib/server-data";
+import { getBetaalinfo, setBetaling, setRest, markeerKlant } from "../../../../lib/server-data";
+import { getAccount, zetToegang, APP_PRO_MAAND_EXCL } from "../../../../lib/app-proef";
 import { mollie, eersteIncasso, inclBtw, incassodagVoor } from "../../../../lib/mollie";
 import {
   setIncassodag, maakFactuur, setFactuurStatus, getFacturenKlant, bafToekennen,
@@ -20,6 +21,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://preview.studiobari
 // Mollie mag hier nooit een fout op terugkrijgen, anders blijft hij herhalen.
 // De factuur blijft dan op 'concept' en kan met één knop opnieuw de deur uit.
 async function factureer(opties) {
+  // Testbetalingen (Mollie test-modus) krijgen NOOIT een echte factuur of
+  // factuurnummer: anders ontstaat er een gat in de nummering zodra de test
+  // wordt opgeruimd. Geldt altijd, ook na de lancering.
+  if (opties && opties.testBetaling) return null;
   try {
     const factuur = await maakFactuur(opties);
     if (!factuur || !factuur.nummer) return null;
@@ -51,6 +56,13 @@ export async function POST(req) {
     const payment = await mollie(`/payments/${id}`);
     const slug = payment && payment.metadata && payment.metadata.slug;
     if (!slug) return new NextResponse("geen slug", { status: 200 });
+    const testBetaling = payment.mode === "test";
+
+    // Losse StudioBaris-app (alleen plugin): eerste betaling na de app-proef.
+    if (payment.metadata && payment.metadata.soort === "app_pro" && payment.sequenceType === "first") {
+      await verwerkAppPro(payment, slug, testBetaling);
+      return new NextResponse("ok", { status: 200 });
+    }
 
     // Slottermijn (optie 5, automatisch): de factuur bestaat al — die ging
     // 14 dagen eerder al de deur uit als vooraankondiging (zie
@@ -73,7 +85,7 @@ export async function POST(req) {
           // aan), maar geen betaald geld mag zonder factuur blijven staan.
           const info = await getBetaalinfo(slug);
           const bedrag = Number(info && info.slottermijn_bedrag) || 0;
-          if (bedrag > 0) {
+          if (bedrag > 0 && !testBetaling) {
             const factuur = await maakFactuur({
               slug, soort: "slottermijn", paymentId: payment.id, vervaldagen: 7,
               regels: [{ omschrijving: OMSCHRIJVING.slottermijn, bedrag_excl: bedrag }],
@@ -121,6 +133,7 @@ export async function POST(req) {
           // bevestigd, dus meteen op 'betaald' — niet pas bij een latere,
           // handmatige actie.
           const factuur = await factureer({
+            testBetaling,
             slug, soort: "slottermijn", paymentId: payment.id, vervaldagen: 7,
             regels: [{ omschrijving: OMSCHRIJVING.slottermijn, bedrag_excl: rest }],
           });
@@ -182,6 +195,7 @@ export async function POST(req) {
           // ontstaat, dus meteen op 'betaald' zetten in plaats van op
           // 'verstuurd' te laten staan tot iemand het met de hand rechtzet.
           const factuur = await factureer({
+            testBetaling,
             slug,
             soort,
             paymentId: payment.id,
@@ -202,6 +216,15 @@ export async function POST(req) {
     // administratie — het abonnement zelf (bedrag, interval, mandaat) wordt
     // uitsluitend hierboven bij "first" aangemaakt en hier nooit gewijzigd.
     if (payment.sequenceType === "recurring") {
+      // Losse app-klant: toegang meebewegen met de maandincasso.
+      const appId = payment.metadata && payment.metadata.soort === "app_pro_maand" && payment.metadata.company_id;
+      if (appId) {
+        if (payment.status === "paid") {
+          await zetToegang(appId, "pro", maandLater(payment.paidAt || new Date().toISOString()));
+        } else if (["failed", "canceled", "expired"].includes(payment.status)) {
+          await zetToegang(appId, "achterstallig");
+        }
+      }
       const periode = String(
         (payment.status === "paid" ? payment.paidAt : payment.createdAt) || new Date().toISOString()
       ).slice(0, 7);
@@ -214,7 +237,7 @@ export async function POST(req) {
         // toekomst, want er is al daadwerkelijk geïncasseerd.
         const info = await getBetaalinfo(slug);
         const maand = Number(info && info.maandbedrag) || 0;
-        if (maand > 0) {
+        if (maand > 0 && !testBetaling) {
           const factuur = await maakFactuur({
             slug,
             soort: "maandelijks",
@@ -268,4 +291,71 @@ export async function POST(req) {
     // Mollie verwacht 200; loggen kan via Vercel-logs.
     return new NextResponse("fout: " + String(e.message || e), { status: 200 });
   }
+}
+
+// "YYYY-MM-DD" één maand na de gegeven datum (zelfde dag, of de laatste dag
+// van de maand als die dag niet bestaat).
+function maandLater(iso) {
+  const d = new Date(iso);
+  const doel = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  const laatste = new Date(Date.UTC(doel.getUTCFullYear(), doel.getUTCMonth() + 1, 0)).getUTCDate();
+  doel.setUTCDate(Math.min(d.getUTCDate(), laatste));
+  return doel.toISOString().slice(0, 10);
+}
+
+// Eerste betaling van een losse app-klant (na of tijdens de app-proef).
+// Idempotent: een herhaalde webhook maakt geen tweede abonnement, klantnummer
+// of factuur.
+async function verwerkAppPro(payment, slug, testBetaling) {
+  const companyId = payment.metadata && payment.metadata.company_id;
+  if (payment.status !== "paid") {
+    if (["failed", "canceled", "expired"].includes(payment.status)) {
+      await setBetaling(slug, { status: "mislukt" });
+    }
+    return;
+  }
+
+  const info = await getBetaalinfo(slug);
+  const account = companyId ? await getAccount(companyId) : null;
+
+  // De betaalde maand gaat in op het einde van de proef (of vandaag, als de
+  // proef al voorbij is). De volgende incasso is een maand daarna.
+  const nu = new Date(payment.paidAt || Date.now());
+  const einde = account && account.proef_eindigt_op ? new Date(account.proef_eindigt_op) : null;
+  const ingang = einde && einde > nu ? einde : nu;
+  const start = eersteIncasso(ingang.toISOString());
+
+  if (info && !info.betaal_abonnement_id && payment.customerId) {
+    const sub = await mollie(`/customers/${payment.customerId}/subscriptions`, "POST", {
+      amount: { currency: "EUR", value: inclBtw(APP_PRO_MAAND_EXCL).toFixed(2) },
+      interval: "1 month",
+      startDate: start.datum,
+      description: `StudioBaris-app Pro ${slug}`,
+      webhookUrl: payment.webhookUrl || `${SITE_URL}/api/mollie/webhook`,
+      metadata: { slug, soort: "app_pro_maand", company_id: companyId || null },
+    });
+    await setBetaling(slug, { status: "actief", abonnement_id: sub.id, mandaat_id: payment.mandateId || null });
+    await setIncassodag(slug, start.dag);
+  } else {
+    await setBetaling(slug, { status: "actief", mandaat_id: payment.mandateId || null });
+  }
+
+  if (companyId) await zetToegang(companyId, "pro", start.datum);
+
+  // Klantnummer en factuur alleen bij een echte betaling. Een testbetaling
+  // verbruikt zo geen klantnummer en geen factuurnummer.
+  if (testBetaling) return;
+
+  await markeerKlant(slug, { maandbedrag: APP_PRO_MAAND_EXCL, websiteprijs: 0, pakket_type: "plugin" });
+
+  const periode = ingang.toISOString().slice(0, 7);
+  const factuur = await factureer({
+    slug,
+    soort: "maandelijks",
+    paymentId: payment.id,
+    periode,
+    vervaldagen: 14,
+    regels: [{ omschrijving: "StudioBaris-app Pro — maandabonnement", bedrag_excl: APP_PRO_MAAND_EXCL, periode }],
+  });
+  if (factuur && factuur.nummer) await setFactuurStatus(factuur.nummer, "betaald");
 }
