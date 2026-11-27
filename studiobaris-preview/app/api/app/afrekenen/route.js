@@ -63,6 +63,15 @@ export async function POST(req) {
 
     await setBetaling(slug, { status: "akkoord", provider: "mollie", klant_id: klantId, voorwaarden: true });
 
+    // Testversie (Vercel Preview): Mollie kan de beveiligde testversie niet
+    // bereiken, dus geven we het betaal-id mee aan de terugkeerpagina, die de
+    // betaling dan zelf (via Mollie gecontroleerd) laat verwerken.
+    if (process.env.VERCEL_ENV !== "production" && payment && payment.id) {
+      await mollie(`/payments/${payment.id}`, "PATCH", {
+        redirectUrl: `${paginaBasis(req)}/app/pro/klaar?k=${encodeURIComponent(afrekenToken(companyId))}&pid=${payment.id}`,
+      }).catch(() => {});
+    }
+
     const checkout = payment && payment._links && payment._links.checkout && payment._links.checkout.href;
     if (!checkout) return NextResponse.json({ ok: false, error: "Geen betaalpagina ontvangen van Mollie." }, { status: 502 });
     return NextResponse.json({ ok: true, checkoutUrl: checkout });
