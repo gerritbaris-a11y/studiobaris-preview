@@ -22,6 +22,10 @@
     {
       "path": "/api/backup/bestanden",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/app-proef/dagelijks",
+      "schedule": "30 6 * * *"
     }
   ]
 }
